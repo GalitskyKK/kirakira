@@ -1,0 +1,294 @@
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ChevronRight, ChevronLeft, Sparkles, Heart, Sprout } from 'lucide-react'
+import { Button, Card } from '@/components/ui'
+import { useUserStore } from '@/stores'
+
+interface OnboardingPageProps {
+  onComplete: () => void
+}
+
+const ONBOARDING_STEPS = [
+  {
+    id: 'welcome',
+    title: 'Добро пожаловать в KiraKira',
+    description: 'Ваш персональный цифровой сад эмоций',
+    icon: '🌸',
+    content: (
+      <div className="text-center space-y-4">
+        <div className="text-6xl mb-4">🌸</div>
+        <p className="text-gray-600 leading-relaxed">
+          KiraKira — это медитативное приложение, где ваши ежедневные эмоции 
+          превращаются в красивый цифровой сад.
+        </p>
+        <p className="text-gray-600 leading-relaxed">
+          Каждый день, отмечая свое настроение, вы выращиваете уникальные растения,
+          создавая персональное пространство для размышлений.
+        </p>
+      </div>
+    ),
+  },
+  {
+    id: 'mood-tracking',
+    title: 'Отслеживание настроения',
+    description: 'Ежедневная практика осознанности',
+    icon: '💭',
+    content: (
+      <div className="space-y-4">
+        <div className="flex justify-center mb-4">
+          <Heart size={48} className="text-red-400" />
+        </div>
+        <p className="text-gray-600 leading-relaxed text-center">
+          Каждый день вы будете отмечать свое настроение — от радости до грусти,
+          от спокойствия до тревоги.
+        </p>
+        <div className="grid grid-cols-3 gap-3 mt-6">
+          {['😊', '😌', '😰', '😢', '😠', '😟'].map((emoji, index) => (
+            <motion.div
+              key={emoji}
+              className="p-3 bg-gray-50 rounded-xl text-center text-2xl"
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              {emoji}
+            </motion.div>
+          ))}
+        </div>
+        <p className="text-sm text-gray-500 text-center">
+          Ваши эмоции — это не хорошо или плохо, это просто часть человеческого опыта
+        </p>
+      </div>
+    ),
+  },
+  {
+    id: 'garden-growth',
+    title: 'Рост сада',
+    description: 'Ваши эмоции становятся растениями',
+    icon: '🌱',
+    content: (
+      <div className="space-y-4">
+        <div className="flex justify-center mb-4">
+          <Sprout size={48} className="text-green-500" />
+        </div>
+        <p className="text-gray-600 leading-relaxed text-center">
+          Каждое настроение влияет на то, какое растение появится в вашем саду.
+          Радость приносит яркие цветы, спокойствие — водные элементы.
+        </p>
+        <div className="bg-garden-50 p-4 rounded-xl">
+          <div className="grid grid-cols-4 gap-4 text-center">
+            <div>
+              <div className="text-2xl mb-1">🌼</div>
+              <div className="text-xs text-gray-600">Радость</div>
+            </div>
+            <div>
+              <div className="text-2xl mb-1">💧</div>
+              <div className="text-xs text-gray-600">Спокойствие</div>
+            </div>
+            <div>
+              <div className="text-2xl mb-1">🌵</div>
+              <div className="text-xs text-gray-600">Стресс</div>
+            </div>
+            <div>
+              <div className="text-2xl mb-1">🍄</div>
+              <div className="text-xs text-gray-600">Грусть</div>
+            </div>
+          </div>
+        </div>
+        <p className="text-sm text-gray-500 text-center">
+          Со временем ваш сад станет уникальным отражением вашего эмоционального путешествия
+        </p>
+      </div>
+    ),
+  },
+  {
+    id: 'privacy',
+    title: 'Конфиденциальность',
+    description: 'Ваши данные остаются при вас',
+    icon: '🔒',
+    content: (
+      <div className="space-y-4">
+        <div className="flex justify-center mb-4">
+          <div className="p-3 bg-blue-100 rounded-full">
+            <div className="text-3xl">🔒</div>
+          </div>
+        </div>
+        <div className="space-y-3">
+          <div className="flex items-start space-x-3">
+            <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">Локальное хранение</p>
+              <p className="text-sm text-gray-600">
+                Все ваши данные хранятся только на вашем устройстве
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start space-x-3">
+            <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">Никакой аналитики</p>
+              <p className="text-sm text-gray-600">
+                Мы не отслеживаем ваше поведение и не собираем персональные данные
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start space-x-3">
+            <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">Анонимность</p>
+              <p className="text-sm text-gray-600">
+                Регистрация не требуется — начните пользоваться прямо сейчас
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'ready',
+    title: 'Готовы начать?',
+    description: 'Ваш сад ждет первое растение',
+    icon: '🌟',
+    content: (
+      <div className="text-center space-y-4">
+        <div className="flex justify-center mb-4">
+          <Sparkles size={48} className="text-yellow-500" />
+        </div>
+        <p className="text-gray-600 leading-relaxed">
+          Отметьте свое текущее настроение, чтобы вырастить первое растение 
+          в вашем персональном саду эмоций.
+        </p>
+        <div className="bg-gradient-to-r from-garden-50 to-blue-50 p-4 rounded-xl">
+          <p className="text-sm text-gray-700 font-medium mb-2">
+            💡 Совет для начинающих
+          </p>
+          <p className="text-sm text-gray-600">
+            Старайтесь отмечать настроение каждый день в одно и то же время.
+            Это поможет создать привычку и получить более точную картину ваших эмоций.
+          </p>
+        </div>
+      </div>
+    ),
+  },
+]
+
+export function OnboardingPage({ onComplete }: OnboardingPageProps) {
+  const [currentStep, setCurrentStep] = useState(0)
+  const { completeOnboarding } = useUserStore()
+
+  const handleNext = () => {
+    if (currentStep < ONBOARDING_STEPS.length - 1) {
+      setCurrentStep(currentStep + 1)
+    } else {
+      completeOnboarding()
+      onComplete()
+    }
+  }
+
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1)
+    }
+  }
+
+  const currentStepData = ONBOARDING_STEPS[currentStep]!
+  const isLastStep = currentStep === ONBOARDING_STEPS.length - 1
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-garden-50 to-blue-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-2xl mx-auto">
+        {/* Progress indicators */}
+        <div className="flex justify-center mb-8">
+          <div className="flex space-x-2">
+            {ONBOARDING_STEPS.map((_, index) => (
+              <motion.div
+                key={index}
+                className={`w-3 h-3 rounded-full transition-colors duration-300 ${
+                  index <= currentStep ? 'bg-garden-500' : 'bg-gray-300'
+                }`}
+                initial={{ scale: 0.8 }}
+                animate={{ 
+                  scale: index === currentStep ? 1.2 : 1,
+                  backgroundColor: index <= currentStep ? '#22c55e' : '#d1d5db'
+                }}
+                transition={{ duration: 0.3 }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Step content */}
+        <Card className="min-h-[500px]" padding="lg">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStep}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* Header */}
+              <div className="text-center mb-8">
+                <motion.div
+                  className="text-6xl mb-4"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+                >
+                  {currentStepData.icon}
+                </motion.div>
+                
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                  {currentStepData.title}
+                </h1>
+                
+                <p className="text-gray-600">
+                  {currentStepData.description}
+                </p>
+              </div>
+
+              {/* Content */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                {currentStepData.content}
+              </motion.div>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Navigation */}
+          <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              disabled={currentStep === 0}
+              leftIcon={<ChevronLeft size={16} />}
+            >
+              Назад
+            </Button>
+
+            <div className="text-sm text-gray-500">
+              {currentStep + 1} из {ONBOARDING_STEPS.length}
+            </div>
+
+            <Button
+              onClick={handleNext}
+              rightIcon={isLastStep ? <Sparkles size={16} /> : <ChevronRight size={16} />}
+            >
+              {isLastStep ? 'Начать!' : 'Далее'}
+            </Button>
+          </div>
+        </Card>
+      </div>
+    </div>
+  )
+}

@@ -1,0 +1,203 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Custom fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
+/* Base styles */
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-white text-gray-900;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  * {
+    @apply border-gray-200;
+  }
+  
+  /* Focus styles */
+  *:focus {
+    @apply outline-none;
+  }
+  
+  /* Scrollbar styles */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full hover:bg-gray-400;
+  }
+}
+
+/* Component layer for custom utilities */
+@layer components {
+  /* Garden animation utilities */
+  .garden-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(34, 197, 94, 0.1),
+      transparent
+    );
+    animation: shimmer 2s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  
+  /* Mood color utilities */
+  .mood-joy {
+    @apply text-yellow-500;
+    background-color: rgba(251, 191, 36, 0.1);
+  }
+  
+  .mood-calm {
+    @apply text-cyan-500;
+    background-color: rgba(6, 182, 212, 0.1);
+  }
+  
+  .mood-stress {
+    @apply text-red-500;
+    background-color: rgba(239, 68, 68, 0.1);
+  }
+  
+  .mood-sadness {
+    @apply text-blue-500;
+    background-color: rgba(59, 130, 246, 0.1);
+  }
+  
+  .mood-anger {
+    @apply text-red-600;
+    background-color: rgba(220, 38, 38, 0.1);
+  }
+  
+  .mood-anxiety {
+    @apply text-purple-500;
+    background-color: rgba(139, 92, 246, 0.1);
+  }
+  
+  /* Floating animation */
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  /* Pulse animation for interactive elements */
+  .pulse-subtle {
+    animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  @keyframes pulse-subtle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+  
+  /* Garden grid pattern */
+  .garden-grid {
+    background-image: 
+      linear-gradient(to right, rgba(229, 231, 235, 0.5) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(229, 231, 235, 0.5) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+  
+  /* Text selection */
+  ::selection {
+    @apply bg-garden-200 text-garden-900;
+  }
+  
+  /* Custom button variants */
+  .btn-garden {
+    @apply bg-garden-500 text-white hover:bg-garden-600 focus:ring-garden-500;
+  }
+  
+  .btn-mood {
+    @apply border-2 border-transparent hover:border-current transition-all duration-200;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+    backdrop-filter: blur(10px);
+  }
+}
+
+/* Utilities layer */
+@layer utilities {
+  /* Glass morphism effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+  }
+  
+  /* Text gradient */
+  .text-gradient {
+    background: linear-gradient(135deg, #22c55e, #059669);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Shadow variants */
+  .shadow-garden {
+    box-shadow: 0 10px 25px -5px rgba(34, 197, 94, 0.1), 0 4px 6px -2px rgba(34, 197, 94, 0.05);
+  }
+  
+  /* Animation delays */
+  .delay-100 { animation-delay: 0.1s; }
+  .delay-200 { animation-delay: 0.2s; }
+  .delay-300 { animation-delay: 0.3s; }
+  .delay-400 { animation-delay: 0.4s; }
+  .delay-500 { animation-delay: 0.5s; }
+}
+
+/* Print styles */
+@media print {
+  body {
+    @apply text-black bg-white;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .mood-joy { @apply text-yellow-600 bg-yellow-100; }
+  .mood-calm { @apply text-cyan-700 bg-cyan-100; }
+  .mood-stress { @apply text-red-700 bg-red-100; }
+  .mood-sadness { @apply text-blue-700 bg-blue-100; }
+  .mood-anger { @apply text-red-800 bg-red-100; }
+  .mood-anxiety { @apply text-purple-700 bg-purple-100; }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .float,
+  .pulse-subtle,
+  .garden-shimmer {
+    animation: none !important;
+  }
+}

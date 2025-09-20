@@ -1,0 +1,104 @@
+{
+  "name": "KiraKira - Цифровой сад эмоций",
+  "short_name": "KiraKira",
+  "description": "Медитативное приложение, где ваши ежедневные эмоции превращаются в красивый цифровой сад",
+  "theme_color": "#22c55e",
+  "background_color": "#f0fdf4",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "id": "/",
+  "categories": ["health", "lifestyle", "productivity"],
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "pwa-64x64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "maskable-icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-mobile-1.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Главная страница приложения"
+    },
+    {
+      "src": "screenshot-mobile-2.png",
+      "sizes": "390x844", 
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Отслеживание настроения"
+    },
+    {
+      "src": "screenshot-desktop-1.png",
+      "sizes": "1280x720",
+      "type": "image/png", 
+      "form_factor": "wide",
+      "label": "Цифровой сад на рабочем столе"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Отметить настроение",
+      "short_name": "Настроение",
+      "description": "Быстро отметить текущее настроение",
+      "url": "/?mood=true",
+      "icons": [
+        {
+          "src": "shortcut-mood-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Мой сад",
+      "short_name": "Сад",
+      "description": "Посмотреть на свой цифровой сад",
+      "url": "/?garden=true",
+      "icons": [
+        {
+          "src": "shortcut-garden-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "garden_screenshot",
+          "accept": ["image/*"]
+        }
+      ]
+    }
+  }
+}
