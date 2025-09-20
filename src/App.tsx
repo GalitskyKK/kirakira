@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useUserStore } from '@/stores'
 import { initializeStores } from '@/stores'
@@ -8,14 +13,14 @@ import { OnboardingPage } from '@/pages/OnboardingPage'
 import { LoadingSpinner } from '@/components/ui'
 
 function App() {
-  const { 
-    currentUser, 
-    hasCompletedOnboarding, 
+  const {
+    currentUser: _currentUser,
+    hasCompletedOnboarding,
     isLoading,
-    loadUser,
-    updateLastVisit 
+    loadUser: _loadUser,
+    updateLastVisit,
   } = useUserStore()
-  
+
   const [isInitializing, setIsInitializing] = useState(true)
   const [initError, setInitError] = useState<string | null>(null)
 
@@ -27,7 +32,9 @@ function App() {
         updateLastVisit()
       } catch (error) {
         console.error('Failed to initialize app:', error)
-        setInitError(error instanceof Error ? error.message : 'Initialization failed')
+        setInitError(
+          error instanceof Error ? error.message : 'Initialization failed'
+        )
       } finally {
         setIsInitializing(false)
       }
@@ -45,17 +52,17 @@ function App() {
   // Show loading state during initialization
   if (isInitializing || isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-garden-50 to-green-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-garden-50 to-green-50">
         <motion.div
           className="text-center"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="text-6xl mb-4">🌸</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">KiraKira</h1>
+          <div className="mb-4 text-6xl">🌸</div>
+          <h1 className="mb-4 text-2xl font-bold text-gray-900">KiraKira</h1>
           <LoadingSpinner size="lg" />
-          <p className="text-gray-600 mt-4">Загружаем ваш сад...</p>
+          <p className="mt-4 text-gray-600">Загружаем ваш сад...</p>
         </motion.div>
       </div>
     )
@@ -64,21 +71,21 @@ function App() {
   // Show error state if initialization failed
   if (initError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-red-50 to-orange-50">
         <motion.div
-          className="text-center max-w-md mx-auto p-8"
+          className="mx-auto max-w-md p-8 text-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="text-6xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+          <div className="mb-4 text-6xl">⚠️</div>
+          <h1 className="mb-4 text-2xl font-bold text-gray-900">
             Ошибка инициализации
           </h1>
-          <p className="text-gray-600 mb-6">{initError}</p>
+          <p className="mb-6 text-gray-600">{initError}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            className="rounded-lg bg-red-500 px-6 py-3 text-white transition-colors hover:bg-red-600"
           >
             Перезагрузить
           </button>

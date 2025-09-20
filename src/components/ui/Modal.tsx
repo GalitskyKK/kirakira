@@ -54,6 +54,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
           document.body.style.overflow = originalStyle
         }
       }
+      return undefined
     }, [isOpen])
 
     const sizeClasses = {
@@ -117,7 +118,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
               className={clsx(
                 'relative z-10 w-full',
                 sizeClasses[size],
-                'bg-white rounded-2xl shadow-2xl',
+                'rounded-2xl bg-white shadow-2xl',
                 'max-h-[90vh] overflow-hidden',
                 'mx-4',
                 className
@@ -129,7 +130,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
             >
               {/* Header */}
               {(title ?? showCloseButton) && (
-                <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                <div className="flex items-center justify-between border-b border-gray-200 p-4">
                   {title && (
                     <h2 className="text-lg font-semibold text-gray-900">
                       {title}
@@ -139,8 +140,8 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
                     <button
                       onClick={onClose}
                       className={clsx(
-                        'p-1 rounded-lg text-gray-400',
-                        'hover:text-gray-600 hover:bg-gray-100',
+                        'rounded-lg p-1 text-gray-400',
+                        'hover:bg-gray-100 hover:text-gray-600',
                         'focus:outline-none focus:ring-2 focus:ring-garden-500',
                         'transition-colors duration-200',
                         !title && 'ml-auto'
@@ -154,7 +155,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
               )}
 
               {/* Content */}
-              <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
+              <div className="max-h-[calc(90vh-80px)] overflow-y-auto">
                 {children}
               </div>
             </motion.div>
@@ -178,7 +179,7 @@ export function ModalHeader({ children, className }: ModalHeaderProps) {
   return (
     <div
       className={clsx(
-        'px-4 py-3 border-b border-gray-200',
+        'border-b border-gray-200 px-4 py-3',
         'font-semibold text-gray-900',
         className
       )}
@@ -206,8 +207,8 @@ export function ModalFooter({ children, className }: ModalFooterProps) {
   return (
     <div
       className={clsx(
-        'px-4 py-3 border-t border-gray-200',
-        'bg-gray-50 flex justify-end space-x-2',
+        'border-t border-gray-200 px-4 py-3',
+        'flex justify-end space-x-2 bg-gray-50',
         className
       )}
     >

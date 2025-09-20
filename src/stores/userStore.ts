@@ -1,15 +1,20 @@
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
-import type { 
-  User, 
-  UserState, 
-  UserPreferences, 
+import type {
+  User,
+  UserState,
+  UserPreferences,
   UserStats,
-  NotificationSettings,
-  PrivacySettings,
-  GardenPreferences 
+  // NotificationSettings,
+  // PrivacySettings,
+  // GardenPreferences,
 } from '@/types'
-import { saveUser, loadUser, saveOnboardingCompleted, isOnboardingCompleted } from '@/utils/storage'
+import {
+  saveUser,
+  loadUser,
+  saveOnboardingCompleted,
+  isOnboardingCompleted,
+} from '@/utils/storage'
 
 interface UserActions {
   // User management
@@ -18,14 +23,14 @@ interface UserActions {
   updateUser: (updates: Partial<User>) => Promise<void>
   updatePreferences: (preferences: Partial<UserPreferences>) => Promise<void>
   updateStats: (stats: Partial<UserStats>) => Promise<void>
-  
+
   // Authentication
   signOut: () => Promise<void>
-  
+
   // Onboarding
   completeOnboarding: () => void
   checkOnboardingStatus: () => boolean
-  
+
   // Utility actions
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
@@ -86,38 +91,39 @@ export const useUserStore = create<UserStore>()(
     // Actions
     loadUser: async () => {
       set({ isLoading: true, error: null })
-      
+
       try {
         const storedUser = loadUser()
         const onboardingCompleted = isOnboardingCompleted()
-        
+
         if (storedUser) {
-          set({ 
+          set({
             currentUser: storedUser,
             isAuthenticated: !storedUser.isAnonymous,
             hasCompletedOnboarding: onboardingCompleted,
-            isLoading: false 
+            isLoading: false,
           })
         } else {
-          set({ 
+          set({
             currentUser: null,
             isAuthenticated: false,
             hasCompletedOnboarding: onboardingCompleted,
-            isLoading: false 
+            isLoading: false,
           })
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to load user'
-        set({ 
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to load user'
+        set({
           error: errorMessage,
-          isLoading: false 
+          isLoading: false,
         })
       }
     },
 
     createAnonymousUser: async () => {
       set({ isLoading: true, error: null })
-      
+
       try {
         const newUser: User = {
           id: `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -126,25 +132,26 @@ export const useUserStore = create<UserStore>()(
           stats: createDefaultStats(),
           isAnonymous: true,
         }
-        
+
         const success = saveUser(newUser)
-        
+
         if (success) {
-          set({ 
+          set({
             currentUser: newUser,
             isAuthenticated: false, // Anonymous users are not "authenticated"
-            isLoading: false 
+            isLoading: false,
           })
-          
+
           return newUser
         } else {
           throw new Error('Failed to save user')
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to create user'
-        set({ 
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to create user'
+        set({
           error: errorMessage,
-          isLoading: false 
+          isLoading: false,
         })
         throw error
       }
@@ -152,47 +159,48 @@ export const useUserStore = create<UserStore>()(
 
     updateUser: async (updates: Partial<User>) => {
       const { currentUser } = get()
-      
+
       if (!currentUser) {
         set({ error: 'No user to update' })
         return
       }
-      
+
       set({ isLoading: true, error: null })
-      
+
       try {
         const updatedUser: User = {
           ...currentUser,
           ...updates,
         }
-        
+
         const success = saveUser(updatedUser)
-        
+
         if (success) {
-          set({ 
+          set({
             currentUser: updatedUser,
-            isLoading: false 
+            isLoading: false,
           })
         } else {
           throw new Error('Failed to save user updates')
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to update user'
-        set({ 
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to update user'
+        set({
           error: errorMessage,
-          isLoading: false 
+          isLoading: false,
         })
       }
     },
 
     updatePreferences: async (preferences: Partial<UserPreferences>) => {
       const { currentUser } = get()
-      
+
       if (!currentUser) {
         set({ error: 'No user to update' })
         return
       }
-      
+
       const updatedPreferences: UserPreferences = {
         ...currentUser.preferences,
         ...preferences,
@@ -210,45 +218,46 @@ export const useUserStore = create<UserStore>()(
           ...(preferences.garden ?? {}),
         },
       }
-      
+
       await get().updateUser({ preferences: updatedPreferences })
     },
 
     updateStats: async (stats: Partial<UserStats>) => {
       const { currentUser } = get()
-      
+
       if (!currentUser) {
         set({ error: 'No user to update' })
         return
       }
-      
+
       const updatedStats: UserStats = {
         ...currentUser.stats,
         ...stats,
       }
-      
+
       await get().updateUser({ stats: updatedStats })
     },
 
     signOut: async () => {
       set({ isLoading: true, error: null })
-      
+
       try {
         // Clear user data but keep as anonymous user
         await get().createAnonymousUser()
-        
-        set({ 
+
+        set({
           isAuthenticated: false,
           hasCompletedOnboarding: false,
-          isLoading: false 
+          isLoading: false,
         })
-        
+
         saveOnboardingCompleted(false)
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to sign out'
-        set({ 
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to sign out'
+        set({
           error: errorMessage,
-          isLoading: false 
+          isLoading: false,
         })
       }
     },
@@ -272,27 +281,27 @@ export const useUserStore = create<UserStore>()(
 
     incrementVisitCount: () => {
       const { currentUser } = get()
-      
+
       if (currentUser) {
         const updatedStats: UserStats = {
           ...currentUser.stats,
           totalDays: currentUser.stats.totalDays + 1,
           lastVisit: new Date(),
         }
-        
+
         void get().updateStats(updatedStats)
       }
     },
 
     updateLastVisit: () => {
       const { currentUser } = get()
-      
+
       if (currentUser) {
         const updatedStats: UserStats = {
           ...currentUser.stats,
           lastVisit: new Date(),
         }
-        
+
         void get().updateStats(updatedStats)
       }
     },
@@ -301,8 +310,8 @@ export const useUserStore = create<UserStore>()(
 
 // Subscribe to user changes and auto-save
 useUserStore.subscribe(
-  (state) => state.currentUser,
-  (user) => {
+  state => state.currentUser,
+  user => {
     if (user) {
       saveUser(user)
     }

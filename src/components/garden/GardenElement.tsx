@@ -1,6 +1,7 @@
-import { memo, useRef } from 'react'
+import { memo, useRef, useState } from 'react'
 import { motion, useDragControls, type PanInfo } from 'framer-motion'
 import { clsx } from 'clsx'
+import { PlantRenderer } from './plants'
 import type { GardenElement as GardenElementType, ViewMode } from '@/types'
 import { MOOD_CONFIG } from '@/types/mood'
 
@@ -30,13 +31,22 @@ export const GardenElement = memo(function GardenElement({
 
   const moodConfig = MOOD_CONFIG[element.moodInfluence]
   const isArrangementMode = viewMode === 'arrangement'
-  
+  const [showTooltip, setShowTooltip] = useState(false)
+
   // Calculate position in pixels
   const x = element.position.x * gridSize
   const y = element.position.y * gridSize
 
   const handleClick = () => {
     onClick?.(element)
+  }
+
+  const handleMouseEnter = () => {
+    setShowTooltip(true)
+  }
+
+  const handleMouseLeave = () => {
+    setShowTooltip(false)
   }
 
   const handleDragStart = () => {
@@ -49,16 +59,17 @@ export const GardenElement = memo(function GardenElement({
     // Calculate new grid position based on drag offset
     const newX = Math.round((x + info.offset.x) / gridSize)
     const newY = Math.round((y + info.offset.y) / gridSize)
-    
-    // Clamp to grid bounds
+
+    // Clamp to grid bounds (0-9 for 10x10 grid)
     const clampedX = Math.max(0, Math.min(9, newX))
     const clampedY = Math.max(0, Math.min(9, newY))
-    
+
     onDragEnd(element, clampedX, clampedY)
   }
 
   return (
     <motion.div
+      ref={constraintsRef}
       className={clsx(
         'absolute cursor-pointer select-none',
         'flex items-center justify-center',
@@ -74,62 +85,74 @@ export const GardenElement = memo(function GardenElement({
       }}
       drag={isArrangementMode}
       dragControls={dragControls}
+      dragConstraints={{
+        left: -x,
+        right: (9 - element.position.x) * gridSize,
+        top: -y,
+        bottom: (9 - element.position.y) * gridSize,
+      }}
+      dragSnapToOrigin={true}
       dragMomentum={false}
-      dragElastic={0.1}
+      dragElastic={0.2}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       whileHover={
         isArrangementMode
-          ? { scale: 1.1, zIndex: 10 }
-          : { scale: 1.05, zIndex: 10 }
+          ? {
+              scale: 1.1,
+              zIndex: 10,
+              filter:
+                'brightness(1.1) drop-shadow(0 4px 12px rgba(0,0,0,0.15))',
+            }
+          : {
+              scale: 1.05,
+              zIndex: 10,
+              filter: 'brightness(1.05) drop-shadow(0 2px 8px rgba(0,0,0,0.1))',
+            }
       }
       whileTap={{ scale: 0.95 }}
-      whileDrag={{ scale: 1.2, zIndex: 30, rotate: 5 }}
+      whileDrag={{
+        scale: 1.3,
+        zIndex: 30,
+        rotate: [0, 5, -5, 0],
+        filter: 'brightness(1.2) drop-shadow(0 8px 25px rgba(0,0,0,0.25))',
+        transition: { rotate: { repeat: Infinity, duration: 0.5 } },
+      }}
       onClick={handleClick}
-      initial={{ scale: 0, opacity: 0 }}
-      animate={{ 
-        scale: 1, 
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      initial={{ scale: 0, opacity: 0, y: -20 }}
+      animate={{
+        scale: 1,
         opacity: 1,
-        boxShadow: isSelected 
-          ? `0 0 0 3px ${moodConfig.color}40` 
-          : '0 0 0 0px transparent'
+        y: 0,
+        boxShadow: isSelected
+          ? [
+              `0 0 0 3px ${moodConfig.color}40`,
+              `0 4px 20px ${moodConfig.color}20`,
+            ].join(', ')
+          : '0 0 0 0px transparent',
       }}
       transition={{
         type: 'spring',
         stiffness: 300,
         damping: 20,
-        delay: Math.random() * 0.3, // Stagger animation
+        delay: Math.random() * 0.5, // Stagger animation
       }}
     >
-      {/* Element background with mood color */}
-      <motion.div
-        className={clsx(
-          'absolute inset-0 rounded-full',
-          'opacity-20',
-          isSelected && 'opacity-30'
-        )}
-        style={{ backgroundColor: element.color }}
-        animate={{
-          scale: isSelected ? 1.2 : 1,
-        }}
-        transition={{ duration: 0.2 }}
+      {/* Beautiful SVG Plant Renderer */}
+      <PlantRenderer
+        element={element}
+        size={gridSize * 1.2} // Larger plants that can overflow cell
+        isSelected={isSelected}
+        isHovered={showTooltip}
+        showTooltip={showTooltip && !isDragged}
       />
-
-      {/* Element emoji */}
-      <motion.div
-        className="relative text-2xl"
-        animate={{
-          y: isSelected ? -2 : 0,
-        }}
-        transition={{ duration: 0.2 }}
-      >
-        {element.emoji}
-      </motion.div>
 
       {/* Rarity indicator */}
       {element.rarity === 'rare' && (
         <motion.div
-          className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full"
+          className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-yellow-400"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.5 }}
@@ -138,7 +161,7 @@ export const GardenElement = memo(function GardenElement({
 
       {element.rarity === 'epic' && (
         <motion.div
-          className="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full"
+          className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-purple-500"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.5 }}
@@ -147,7 +170,7 @@ export const GardenElement = memo(function GardenElement({
 
       {element.rarity === 'legendary' && (
         <motion.div
-          className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"
+          className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500"
           initial={{ scale: 0 }}
           animate={{ scale: 1, rotate: 360 }}
           transition={{ delay: 0.5, rotate: { repeat: Infinity, duration: 3 } }}
@@ -157,7 +180,7 @@ export const GardenElement = memo(function GardenElement({
       {/* Seasonal effect */}
       {element.seasonalVariant === 'winter' && (
         <motion.div
-          className="absolute inset-0 pointer-events-none"
+          className="pointer-events-none absolute inset-0"
           initial={{ opacity: 0 }}
           animate={{ opacity: [0, 0.5, 0] }}
           transition={{ repeat: Infinity, duration: 2 }}
@@ -168,7 +191,7 @@ export const GardenElement = memo(function GardenElement({
 
       {element.seasonalVariant === 'autumn' && (
         <motion.div
-          className="absolute inset-0 pointer-events-none"
+          className="pointer-events-none absolute inset-0"
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 20, opacity: [0, 1, 0] }}
           transition={{ repeat: Infinity, duration: 3 }}
@@ -176,20 +199,6 @@ export const GardenElement = memo(function GardenElement({
           🍂
         </motion.div>
       )}
-
-      {/* Hover tooltip */}
-      <motion.div
-        className={clsx(
-          'absolute bottom-full left-1/2 transform -translate-x-1/2',
-          'bg-black text-white text-xs px-2 py-1 rounded',
-          'pointer-events-none whitespace-nowrap',
-          'opacity-0'
-        )}
-        whileHover={{ opacity: 1, y: -4 }}
-        transition={{ duration: 0.2 }}
-      >
-        {element.name}
-      </motion.div>
 
       {/* Click ripple effect */}
       <motion.div

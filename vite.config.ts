@@ -13,7 +13,8 @@ export default defineConfig({
       manifest: {
         name: 'KiraKira - Digital Emotional Garden',
         short_name: 'KiraKira',
-        description: 'A meditative PWA where your daily emotions bloom into a unique digital garden',
+        description:
+          'A meditative PWA where your daily emotions bloom into a unique digital garden',
         theme_color: '#10b981',
         background_color: '#f0fdf4',
         display: 'standalone',
@@ -24,20 +25,20 @@ export default defineConfig({
           {
             src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
           },
           {
             src: 'pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
-          }
-        ]
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable',
+          },
+        ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,avif}'],
@@ -49,16 +50,13 @@ export default defineConfig({
               cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
               },
-              cacheKeyWillBeUsed: async ({ request }) => {
-                return `${request.url}`
-              }
-            }
-          }
-        ]
-      }
-    })
+            },
+          },
+        ],
+      },
+    }),
   ],
   resolve: {
     alias: {
@@ -69,8 +67,8 @@ export default defineConfig({
       '@/utils': path.resolve(__dirname, './src/utils'),
       '@/types': path.resolve(__dirname, './src/types'),
       '@/assets': path.resolve(__dirname, './src/assets'),
-      '@/styles': path.resolve(__dirname, './src/styles')
-    }
+      '@/styles': path.resolve(__dirname, './src/styles'),
+    },
   },
   build: {
     target: 'esnext',
@@ -80,13 +78,13 @@ export default defineConfig({
           'react-vendor': ['react', 'react-dom'],
           'motion-vendor': ['framer-motion'],
           'router-vendor': ['react-router-dom'],
-          'date-vendor': ['date-fns']
-        }
-      }
-    }
+          'date-vendor': ['date-fns'],
+        },
+      },
+    },
   },
   server: {
     port: 3000,
-    open: true
-  }
+    open: true,
+  },
 })

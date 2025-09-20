@@ -2,12 +2,13 @@ import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { clsx } from 'clsx'
 import { useGardenState } from '@/hooks'
-import { GardenElement } from './GardenElement'
+// import { GardenElement } from './GardenElement'
 import { GardenGrid } from './GardenGrid'
 import { GardenStats } from './GardenStats'
 import { ElementDetails } from './ElementDetails'
 import { LoadingOverlay, Card } from '@/components/ui'
-import type { GardenElement as GardenElementType, ViewMode } from '@/types'
+import type { GardenElement as GardenElementType } from '@/types'
+import { ViewMode } from '@/types'
 
 interface GardenViewProps {
   className?: string
@@ -24,17 +25,18 @@ export function GardenView({ className }: GardenViewProps) {
     moveElementSafely,
   } = useGardenState()
 
-  const [draggedElement, setDraggedElement] = useState<GardenElementType | null>(null)
+  const [draggedElement, setDraggedElement] =
+    useState<GardenElementType | null>(null)
 
   const handleElementClick = useCallback(
     (element: GardenElementType) => {
-      if (viewMode === 'arrangement') {
+      if (viewMode === ViewMode.ARRANGEMENT) {
         // In arrangement mode, just select element for moving
         selectElement(element)
       } else {
         // In other modes, show details
         selectElement(element)
-        setViewMode('detail')
+        setViewMode(ViewMode.DETAIL)
       }
     },
     [viewMode, selectElement, setViewMode]
@@ -42,7 +44,7 @@ export function GardenView({ className }: GardenViewProps) {
 
   const handleElementDragStart = useCallback(
     (element: GardenElementType) => {
-      if (viewMode === 'arrangement') {
+      if (viewMode === ViewMode.ARRANGEMENT) {
         setDraggedElement(element)
       }
     },
@@ -52,8 +54,8 @@ export function GardenView({ className }: GardenViewProps) {
   const handleElementDragEnd = useCallback(
     async (element: GardenElementType, newX: number, newY: number) => {
       setDraggedElement(null)
-      
-      if (viewMode === 'arrangement') {
+
+      if (viewMode === ViewMode.ARRANGEMENT) {
         await moveElementSafely(element.id, { x: newX, y: newY })
       }
     },
@@ -62,16 +64,16 @@ export function GardenView({ className }: GardenViewProps) {
 
   const handleBackToOverview = useCallback(() => {
     selectElement(null)
-    setViewMode('overview')
+    setViewMode(ViewMode.OVERVIEW)
   }, [selectElement, setViewMode])
 
   if (!garden) {
     return (
       <Card className={clsx('min-h-[400px]', className)}>
-        <div className="flex items-center justify-center h-full p-8">
+        <div className="flex h-full items-center justify-center p-8">
           <div className="text-center">
-            <div className="text-6xl mb-4">🌱</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div className="mb-4 text-6xl">🌱</div>
+            <h3 className="mb-2 text-lg font-semibold text-gray-900">
               Ваш сад пуст
             </h3>
             <p className="text-gray-600">
@@ -110,7 +112,7 @@ export function GardenView({ className }: GardenViewProps) {
               className="h-full"
             >
               {/* Header */}
-              <div className="p-4 border-b border-gray-200">
+              <div className="border-b border-gray-200 p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-lg font-semibold text-gray-900">
@@ -120,12 +122,12 @@ export function GardenView({ className }: GardenViewProps) {
                       {garden.elements.length} растений
                     </p>
                   </div>
-                  
+
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => setViewMode('overview')}
+                      onClick={() => setViewMode(ViewMode.OVERVIEW)}
                       className={clsx(
-                        'px-3 py-1.5 text-sm rounded-lg transition-colors',
+                        'rounded-lg px-3 py-1.5 text-sm transition-colors',
                         viewMode === 'overview'
                           ? 'bg-garden-100 text-garden-700'
                           : 'text-gray-600 hover:bg-gray-100'
@@ -134,10 +136,10 @@ export function GardenView({ className }: GardenViewProps) {
                       Обзор
                     </button>
                     <button
-                      onClick={() => setViewMode('arrangement')}
+                      onClick={() => setViewMode(ViewMode.ARRANGEMENT)}
                       className={clsx(
-                        'px-3 py-1.5 text-sm rounded-lg transition-colors',
-                        viewMode === 'arrangement'
+                        'rounded-lg px-3 py-1.5 text-sm transition-colors',
+                        viewMode === ViewMode.ARRANGEMENT
                           ? 'bg-garden-100 text-garden-700'
                           : 'text-gray-600 hover:bg-gray-100'
                       )}
@@ -174,7 +176,7 @@ export function GardenView({ className }: GardenViewProps) {
                   </motion.div>
                 )}
 
-                {viewMode === 'arrangement' && (
+                {viewMode === ViewMode.ARRANGEMENT && (
                   <motion.div
                     className="w-80 border-l border-gray-200 p-4"
                     initial={{ opacity: 0, x: 20 }}
@@ -183,22 +185,28 @@ export function GardenView({ className }: GardenViewProps) {
                   >
                     <div className="space-y-4">
                       <div>
-                        <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                        <h3 className="mb-2 text-sm font-semibold text-gray-900">
                           Режим редактирования
                         </h3>
                         <p className="text-xs text-gray-600">
-                          Перетащите растения, чтобы изменить их расположение в саду.
+                          Перетащите растения, чтобы изменить их расположение в
+                          саду.
                         </p>
                       </div>
 
                       {selectedElement && (
                         <Card padding="sm" variant="outlined">
                           <div className="flex items-center space-x-3">
-                            <div className="text-2xl">{selectedElement.emoji}</div>
+                            <div className="text-2xl">
+                              {selectedElement.emoji}
+                            </div>
                             <div>
-                              <p className="font-medium text-sm">{selectedElement.name}</p>
+                              <p className="text-sm font-medium">
+                                {selectedElement.name}
+                              </p>
                               <p className="text-xs text-gray-600">
-                                Позиция: {selectedElement.position.x}, {selectedElement.position.y}
+                                Позиция: {selectedElement.position.x},{' '}
+                                {selectedElement.position.y}
                               </p>
                             </div>
                           </div>

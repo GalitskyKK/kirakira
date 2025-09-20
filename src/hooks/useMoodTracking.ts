@@ -36,9 +36,11 @@ export function useMoodTracking() {
   }, [lastCheckin])
 
   // Get recent mood trend
-  const recentTrend = useMemo(() => {
+  const recentTrend = useMemo((): readonly MoodEntry[] => {
     const recent = getRecentMoods(7) // Last 7 days
-    return recent.sort((a, b) => a.date.getTime() - b.date.getTime())
+    return [...recent].sort(
+      (a: MoodEntry, b: MoodEntry) => a.date.getTime() - b.date.getTime()
+    )
   }, [getRecentMoods])
 
   // Get mood recommendation based on patterns
@@ -128,8 +130,12 @@ export function useMoodTracking() {
   const getMoodFrequency = useCallback(
     (mood: MoodType, period: 'week' | 'month' | 'year' = 'month'): number => {
       const periodHistory = getMoodHistoryForPeriod(period)
-      const moodCount = periodHistory.filter(entry => entry.mood === mood).length
-      return periodHistory.length > 0 ? (moodCount / periodHistory.length) * 100 : 0
+      const moodCount = periodHistory.filter(
+        entry => entry.mood === mood
+      ).length
+      return periodHistory.length > 0
+        ? (moodCount / periodHistory.length) * 100
+        : 0
     },
     [getMoodHistoryForPeriod]
   )
@@ -137,10 +143,16 @@ export function useMoodTracking() {
   // Check if user has checked in consistently
   const getConsistencyScore = useCallback((): number => {
     const last30Days = getMoodHistoryForPeriod('month')
-    const expectedDays = Math.min(30, 
-      Math.floor((new Date().getTime() - (moodHistory[moodHistory.length - 1]?.date.getTime() ?? new Date().getTime())) / (24 * 60 * 60 * 1000)) + 1
+    const expectedDays = Math.min(
+      30,
+      Math.floor(
+        (new Date().getTime() -
+          (moodHistory[moodHistory.length - 1]?.date.getTime() ??
+            new Date().getTime())) /
+          (24 * 60 * 60 * 1000)
+      ) + 1
     )
-    
+
     if (expectedDays === 0) return 0
     return Math.round((last30Days.length / expectedDays) * 100)
   }, [getMoodHistoryForPeriod, moodHistory])
@@ -159,7 +171,7 @@ export function useMoodTracking() {
   const isGoodTimeToCheckin = useCallback((): boolean => {
     const now = new Date()
     const hours = now.getHours()
-    
+
     // Good time is between 6 AM and 11 PM
     return hours >= 6 && hours <= 23
   }, [])

@@ -7,7 +7,7 @@ import type {
   Position2D,
   MoodType,
 } from '@/types'
-import { ViewMode } from '@/types'
+import { ViewMode, SeasonalVariant } from '@/types'
 import {
   generateDailyElement,
   canUnlockTodaysElement,
@@ -87,7 +87,7 @@ export const useGardenStore = create<GardenStore>()(
           createdAt: new Date(),
           lastVisited: new Date(),
           streak: 0,
-          season: 'spring', // Will be updated based on current date
+          season: SeasonalVariant.SPRING, // Will be updated based on current date
         }
 
         const success = saveGarden(newGarden)

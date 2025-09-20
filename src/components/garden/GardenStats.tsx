@@ -14,31 +14,44 @@ export function GardenStats({ garden }: GardenStatsProps) {
     const elements = garden.elements
 
     // Group by type
-    const byType = elements.reduce((acc, element) => {
-      acc[element.type] = (acc[element.type] ?? 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const byType = elements.reduce(
+      (acc, element) => {
+        acc[element.type] = (acc[element.type] ?? 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
     // Group by rarity
-    const byRarity = elements.reduce((acc, element) => {
-      acc[element.rarity] = (acc[element.rarity] ?? 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const byRarity = elements.reduce(
+      (acc, element) => {
+        acc[element.rarity] = (acc[element.rarity] ?? 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
     // Group by mood
-    const byMood = elements.reduce((acc, element) => {
-      acc[element.moodInfluence] = (acc[element.moodInfluence] ?? 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const byMood = elements.reduce(
+      (acc, element) => {
+        acc[element.moodInfluence] = (acc[element.moodInfluence] ?? 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
     // Calculate garden age
-    const oldestElement = elements.reduce((oldest, current) => 
-      current.unlockDate < oldest.unlockDate ? current : oldest
-    , elements[0])
+    const oldestElement = elements.reduce(
+      (oldest, current) =>
+        oldest && current.unlockDate < oldest.unlockDate ? current : oldest,
+      elements[0]
+    )
 
-    const newestElement = elements.reduce((newest, current) =>
-      current.unlockDate > newest.unlockDate ? current : newest
-    , elements[0])
+    const newestElement = elements.reduce(
+      (newest, current) =>
+        newest && current.unlockDate > newest.unlockDate ? current : newest,
+      elements[0]
+    )
 
     return {
       total: elements.length,
@@ -47,10 +60,12 @@ export function GardenStats({ garden }: GardenStatsProps) {
       byMood,
       oldestElement,
       newestElement,
-      gardenAge: oldestElement ? formatDistanceToNow(oldestElement.unlockDate, { 
-        locale: ru,
-        addSuffix: true 
-      }) : null,
+      gardenAge: oldestElement
+        ? formatDistanceToNow(oldestElement.unlockDate, {
+            locale: ru,
+            addSuffix: true,
+          })
+        : null,
     }
   }, [garden.elements])
 
@@ -75,7 +90,7 @@ export function GardenStats({ garden }: GardenStatsProps) {
 
   const rarityLabels: Record<string, string> = {
     common: 'Обычные',
-    uncommon: 'Необычные', 
+    uncommon: 'Необычные',
     rare: 'Редкие',
     epic: 'Эпические',
     legendary: 'Легендарные',
@@ -93,7 +108,7 @@ export function GardenStats({ garden }: GardenStatsProps) {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">
+        <h3 className="mb-3 text-lg font-semibold text-gray-900">
           Статистика сада
         </h3>
       </div>
@@ -101,21 +116,23 @@ export function GardenStats({ garden }: GardenStatsProps) {
       {/* Overview Stats */}
       <Card padding="sm">
         <div className="space-y-3">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600">Всего растений</span>
             <span className="font-semibold text-garden-600">{stats.total}</span>
           </div>
-          
-          <div className="flex justify-between items-center">
+
+          <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600">Возраст сада</span>
             <span className="text-sm font-medium">
               {stats.gardenAge ?? 'Новый сад'}
             </span>
           </div>
-          
-          <div className="flex justify-between items-center">
+
+          <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600">Серия дней</span>
-            <span className="font-semibold text-orange-600">{garden.streak}</span>
+            <span className="font-semibold text-orange-600">
+              {garden.streak}
+            </span>
           </div>
         </div>
       </Card>
@@ -123,9 +140,7 @@ export function GardenStats({ garden }: GardenStatsProps) {
       {/* Types Distribution */}
       {Object.keys(stats.byType).length > 0 && (
         <Card padding="sm">
-          <h4 className="text-sm font-semibold text-gray-900 mb-3">
-            По типам
-          </h4>
+          <h4 className="mb-3 text-sm font-semibold text-gray-900">По типам</h4>
           <div className="space-y-2">
             {Object.entries(stats.byType).map(([type, count]) => (
               <motion.div
@@ -137,7 +152,7 @@ export function GardenStats({ garden }: GardenStatsProps) {
               >
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">{typeEmojis[type] ?? '🌿'}</span>
-                  <span className="text-sm text-gray-600 capitalize">
+                  <span className="text-sm capitalize text-gray-600">
                     {type}
                   </span>
                 </div>
@@ -151,7 +166,7 @@ export function GardenStats({ garden }: GardenStatsProps) {
       {/* Rarity Distribution */}
       {Object.keys(stats.byRarity).length > 0 && (
         <Card padding="sm">
-          <h4 className="text-sm font-semibold text-gray-900 mb-3">
+          <h4 className="mb-3 text-sm font-semibold text-gray-900">
             По редкости
           </h4>
           <div className="space-y-2">
@@ -163,7 +178,9 @@ export function GardenStats({ garden }: GardenStatsProps) {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: Math.random() * 0.3 }}
               >
-                <span className={`text-sm font-medium ${rarityColors[rarity] ?? 'text-gray-600'}`}>
+                <span
+                  className={`text-sm font-medium ${rarityColors[rarity] ?? 'text-gray-600'}`}
+                >
                   {rarityLabels[rarity] ?? rarity}
                 </span>
                 <span className="text-sm font-medium">{count}</span>
@@ -176,7 +193,7 @@ export function GardenStats({ garden }: GardenStatsProps) {
       {/* Mood Distribution */}
       {Object.keys(stats.byMood).length > 0 && (
         <Card padding="sm">
-          <h4 className="text-sm font-semibold text-gray-900 mb-3">
+          <h4 className="mb-3 text-sm font-semibold text-gray-900">
             По настроению
           </h4>
           <div className="space-y-2">
@@ -201,7 +218,7 @@ export function GardenStats({ garden }: GardenStatsProps) {
       {/* Recent Elements */}
       {stats.newestElement && (
         <Card padding="sm">
-          <h4 className="text-sm font-semibold text-gray-900 mb-3">
+          <h4 className="mb-3 text-sm font-semibold text-gray-900">
             Последнее растение
           </h4>
           <div className="flex items-center space-x-3">

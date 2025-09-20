@@ -88,8 +88,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           className
         )}
         disabled={disabledState}
-        whileTap={disabledState ? undefined : { scale: 0.98 }}
-        whileHover={disabledState ? undefined : { scale: 1.02 }}
+        {...(!disabledState && { whileTap: { scale: 0.98 } })}
+        {...(!disabledState && { whileHover: { scale: 1.02 } })}
         transition={{
           type: 'spring',
           stiffness: 400,
@@ -108,7 +108,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             }}
           >
             <svg
-              className="w-4 h-4"
+              className="h-4 w-4"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -127,11 +127,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           <span className="mr-2 flex-shrink-0">{leftIcon}</span>
         )}
 
-        <span className="truncate">{children}</span>
+        <span className="truncate">{children as React.ReactNode}</span>
 
-        {rightIcon && (
-          <span className="ml-2 flex-shrink-0">{rightIcon}</span>
-        )}
+        {rightIcon && <span className="ml-2 flex-shrink-0">{rightIcon}</span>}
       </motion.button>
     )
   }

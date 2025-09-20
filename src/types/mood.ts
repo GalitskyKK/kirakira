@@ -1,4 +1,5 @@
 import type { MoodType } from './garden'
+import { ElementType } from './garden'
 
 export interface MoodEntry {
   readonly id: string
@@ -6,7 +7,7 @@ export interface MoodEntry {
   readonly date: Date
   readonly mood: MoodType
   readonly intensity: MoodIntensity
-  readonly note?: string
+  readonly note?: string | undefined
   readonly createdAt: Date
 }
 
@@ -42,7 +43,7 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
     emoji: '😊',
     label: 'Радость',
     description: 'Чувствую себя счастливо и энергично',
-    elementTypes: ['flower', 'decoration'],
+    elementTypes: [ElementType.FLOWER, ElementType.DECORATION],
     rarityBonus: 0.2,
   },
   calm: {
@@ -50,7 +51,7 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
     emoji: '😌',
     label: 'Спокойствие',
     description: 'Ощущаю умиротворение и баланс',
-    elementTypes: ['water', 'tree'],
+    elementTypes: [ElementType.WATER, ElementType.TREE],
     rarityBonus: 0.1,
   },
   stress: {
@@ -58,7 +59,7 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
     emoji: '😰',
     label: 'Стресс',
     description: 'Чувствую напряжение и беспокойство',
-    elementTypes: ['stone', 'crystal'],
+    elementTypes: [ElementType.STONE, ElementType.CRYSTAL],
     rarityBonus: 0.0,
   },
   sadness: {
@@ -66,7 +67,7 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
     emoji: '😢',
     label: 'Грусть',
     description: 'Ощущаю печаль или меланхолию',
-    elementTypes: ['mushroom', 'grass'],
+    elementTypes: [ElementType.MUSHROOM, ElementType.GRASS],
     rarityBonus: 0.05,
   },
   anger: {
@@ -74,7 +75,7 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
     emoji: '😠',
     label: 'Гнев',
     description: 'Чувствую раздражение или злость',
-    elementTypes: ['stone', 'crystal'],
+    elementTypes: [ElementType.STONE, ElementType.CRYSTAL],
     rarityBonus: 0.0,
   },
   anxiety: {
@@ -82,7 +83,7 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
     emoji: '😰',
     label: 'Тревога',
     description: 'Ощущаю беспокойство и волнение',
-    elementTypes: ['mushroom', 'decoration'],
+    elementTypes: [ElementType.MUSHROOM, ElementType.DECORATION],
     rarityBonus: 0.1,
   },
 } as const
@@ -92,6 +93,6 @@ export interface MoodConfig {
   readonly emoji: string
   readonly label: string
   readonly description: string
-  readonly elementTypes: readonly string[]
+  readonly elementTypes: readonly ElementType[]
   readonly rarityBonus: number
 }

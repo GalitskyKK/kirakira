@@ -13,7 +13,7 @@ interface ElementTemplate {
 
 // Element templates with rarity distribution
 const ELEMENT_TEMPLATES: readonly ElementTemplate[] = [
-  // Common flowers (50% chance)
+  // Common flowers (for Joy)
   {
     type: ElementType.FLOWER,
     name: 'Ромашка',
@@ -31,6 +31,16 @@ const ELEMENT_TEMPLATES: readonly ElementTemplate[] = [
     rarity: RarityLevel.COMMON,
   },
   {
+    type: ElementType.FLOWER,
+    name: 'Незабудка',
+    description: 'Нежный голубой цветок',
+    emoji: '🌸',
+    baseColor: '#93c5fd',
+    rarity: RarityLevel.COMMON,
+  },
+
+  // Common elements for other moods
+  {
     type: ElementType.GRASS,
     name: 'Трава',
     description: 'Свежая зеленая трава',
@@ -39,11 +49,46 @@ const ELEMENT_TEMPLATES: readonly ElementTemplate[] = [
     rarity: RarityLevel.COMMON,
   },
   {
+    type: ElementType.GRASS,
+    name: 'Мох',
+    description: 'Мягкий зеленый мох',
+    emoji: '🍀',
+    baseColor: '#16a34a',
+    rarity: RarityLevel.COMMON,
+  },
+
+  {
     type: ElementType.MUSHROOM,
     name: 'Грибок',
     description: 'Маленький лесной гриб',
     emoji: '🍄',
     baseColor: '#8b4513',
+    rarity: RarityLevel.COMMON,
+  },
+  {
+    type: ElementType.MUSHROOM,
+    name: 'Поганка',
+    description: 'Загадочный темный гриб',
+    emoji: '🍄‍🟫',
+    baseColor: '#6b7280',
+    rarity: RarityLevel.COMMON,
+  },
+
+  // Decorative elements (for Joy/Anxiety)
+  {
+    type: ElementType.DECORATION,
+    name: 'Бабочка',
+    description: 'Красочная бабочка',
+    emoji: '🦋',
+    baseColor: '#f59e0b',
+    rarity: RarityLevel.COMMON,
+  },
+  {
+    type: ElementType.DECORATION,
+    name: 'Светлячок',
+    description: 'Мерцающий светлячок',
+    emoji: '✨',
+    baseColor: '#fbbf24',
     rarity: RarityLevel.COMMON,
   },
 
@@ -71,6 +116,78 @@ const ELEMENT_TEMPLATES: readonly ElementTemplate[] = [
     emoji: '🪨',
     baseColor: '#6b7280',
     rarity: RarityLevel.UNCOMMON,
+  },
+  {
+    type: ElementType.STONE,
+    name: 'Галька',
+    description: 'Округлая морская галька',
+    emoji: '🥌',
+    baseColor: '#9ca3af',
+    rarity: RarityLevel.UNCOMMON,
+  },
+
+  // Water elements (for Calm)
+  {
+    type: ElementType.WATER,
+    name: 'Капля',
+    description: 'Чистая дождевая капля',
+    emoji: '💧',
+    baseColor: '#3b82f6',
+    rarity: RarityLevel.COMMON,
+  },
+  {
+    type: ElementType.WATER,
+    name: 'Лужа',
+    description: 'Небольшая водная лужица',
+    emoji: '🌊',
+    baseColor: '#06b6d4',
+    rarity: RarityLevel.COMMON,
+  },
+  {
+    type: ElementType.WATER,
+    name: 'Источник',
+    description: 'Чистый горный источник',
+    emoji: '⛲',
+    baseColor: '#0ea5e9',
+    rarity: RarityLevel.UNCOMMON,
+  },
+
+  // More stone elements for Stress/Anger
+  {
+    type: ElementType.STONE,
+    name: 'Булыжник',
+    description: 'Прочный серый камень',
+    emoji: '⚫',
+    baseColor: '#4b5563',
+    rarity: RarityLevel.COMMON,
+  },
+
+  // More crystal elements for Stress/Anger
+  {
+    type: ElementType.CRYSTAL,
+    name: 'Кварц',
+    description: 'Прозрачный кристалл',
+    emoji: '🔹',
+    baseColor: '#e5e7eb',
+    rarity: RarityLevel.UNCOMMON,
+  },
+
+  // Tree elements for Calm
+  {
+    type: ElementType.TREE,
+    name: 'Росток',
+    description: 'Маленький зеленый росток',
+    emoji: '🌱',
+    baseColor: '#22c55e',
+    rarity: RarityLevel.COMMON,
+  },
+  {
+    type: ElementType.TREE,
+    name: 'Веточка',
+    description: 'Тонкая зеленая веточка',
+    emoji: '🌿',
+    baseColor: '#16a34a',
+    rarity: RarityLevel.COMMON,
   },
 
   // Rare elements (15% chance)
@@ -114,6 +231,22 @@ const ELEMENT_TEMPLATES: readonly ElementTemplate[] = [
     description: 'Магический кристалл',
     emoji: '💎',
     baseColor: '#3b82f6',
+    rarity: RarityLevel.EPIC,
+  },
+  {
+    type: ElementType.CRYSTAL,
+    name: 'Аметист',
+    description: 'Фиолетовый кристалл спокойствия',
+    emoji: '🔮',
+    baseColor: '#8b5cf6',
+    rarity: RarityLevel.EPIC,
+  },
+  {
+    type: ElementType.MUSHROOM,
+    name: 'Мухомор',
+    description: 'Ядовитый красный гриб',
+    emoji: '🍄',
+    baseColor: '#dc2626',
     rarity: RarityLevel.EPIC,
   },
 
@@ -204,11 +337,20 @@ function selectElementTemplate(
   const moodConfig = MOOD_CONFIG[mood]
   const preferredTypes = new Set(moodConfig.elementTypes)
 
-  // Filter templates by mood preference (60% chance to use preferred types)
-  const usePreferred = random.next() < 0.6
-  const filteredTemplates = usePreferred
-    ? ELEMENT_TEMPLATES.filter(t => preferredTypes.has(t.type))
-    : ELEMENT_TEMPLATES
+  // Always use preferred element types for mood consistency (100%)
+  let filteredTemplates = ELEMENT_TEMPLATES.filter(t =>
+    preferredTypes.has(t.type)
+  )
+
+  // If no preferred templates found, fallback to all templates
+  if (filteredTemplates.length === 0) {
+    console.warn(
+      `No preferred templates found for mood: ${mood}, using all templates`
+    )
+    filteredTemplates = [...ELEMENT_TEMPLATES]
+  }
+
+  const usePreferred = true // Always true now
 
   // Apply rarity bonus
   const adjustedWeights = Object.entries(RARITY_WEIGHTS).reduce(
@@ -238,18 +380,41 @@ function selectElementTemplate(
     }
   }
 
-  // Get templates of selected rarity
-  const rarityTemplates = filteredTemplates.filter(
+  // Get templates of selected rarity from filtered templates
+  let rarityTemplates = filteredTemplates.filter(
     t => t.rarity === selectedRarity
   )
 
-  // Fallback to all templates if no match
+  // If no templates of selected rarity found, try lower rarities first
+  if (rarityTemplates.length === 0) {
+    const fallbackRarities = [
+      RarityLevel.COMMON,
+      RarityLevel.UNCOMMON,
+      RarityLevel.RARE,
+      RarityLevel.EPIC,
+      RarityLevel.LEGENDARY,
+    ]
+
+    for (const rarity of fallbackRarities) {
+      rarityTemplates = filteredTemplates.filter(t => t.rarity === rarity)
+      if (rarityTemplates.length > 0) break
+    }
+  }
+
+  // Final fallback to all filtered templates
   const availableTemplates =
     rarityTemplates.length > 0 ? rarityTemplates : filteredTemplates
 
   // Select random template
   const templateIndex = random.nextInt(0, availableTemplates.length - 1)
-  return availableTemplates[templateIndex]!
+  const selectedTemplate = availableTemplates[templateIndex]!
+
+  // Debug logging (remove in production)
+  console.log(
+    `Mood: ${mood}, UsePreferred: ${usePreferred}, FilteredCount: ${filteredTemplates.length}, SelectedRarity: ${selectedRarity}, AvailableCount: ${availableTemplates.length}, Selected: ${selectedTemplate.name} (${selectedTemplate.type})`
+  )
+
+  return selectedTemplate
 }
 
 /**
@@ -303,7 +468,7 @@ function generatePosition(
 function adjustElementColor(
   baseColor: string,
   mood: MoodType,
-  season: SeasonalVariant,
+  _season: SeasonalVariant,
   random: SeededRandom
 ): string {
   const moodConfig = MOOD_CONFIG[mood]

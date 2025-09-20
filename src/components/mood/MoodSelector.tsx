@@ -7,19 +7,34 @@ import { MOOD_CONFIG } from '@/types/mood'
 import type { MoodType, MoodIntensity } from '@/types'
 
 interface MoodSelectorProps {
-  onMoodSelected?: (mood: MoodType, intensity: MoodIntensity, note?: string) => void
+  onMoodSelected?: (
+    mood: MoodType,
+    intensity: MoodIntensity,
+    note?: string
+  ) => void
   isLoading?: boolean
   className?: string
 }
 
-export function MoodSelector({ onMoodSelected, isLoading = false, className }: MoodSelectorProps) {
+export function MoodSelector({
+  onMoodSelected,
+  isLoading = false,
+  className,
+}: MoodSelectorProps) {
   const { canCheckinToday, todaysMood } = useMoodTracking()
-  const [selectedMood, setSelectedMood] = useState<MoodType | null>(todaysMood?.mood ?? null)
-  const [selectedIntensity, setSelectedIntensity] = useState<MoodIntensity>(todaysMood?.intensity ?? 2)
+  const [selectedMood, setSelectedMood] = useState<MoodType | null>(
+    todaysMood?.mood ?? null
+  )
+  const [selectedIntensity, setSelectedIntensity] = useState<MoodIntensity>(
+    todaysMood?.intensity ?? 2
+  )
   const [note, setNote] = useState(todaysMood?.note ?? '')
   const [step, setStep] = useState<'mood' | 'intensity' | 'note'>('mood')
 
-  const moods = Object.entries(MOOD_CONFIG) as [MoodType, typeof MOOD_CONFIG[MoodType]][]
+  const moods = Object.entries(MOOD_CONFIG) as [
+    MoodType,
+    (typeof MOOD_CONFIG)[MoodType],
+  ][]
 
   const handleMoodSelect = (mood: MoodType) => {
     setSelectedMood(mood)
@@ -33,7 +48,11 @@ export function MoodSelector({ onMoodSelected, isLoading = false, className }: M
 
   const handleSubmit = () => {
     if (selectedMood) {
-      onMoodSelected?.(selectedMood, selectedIntensity, note.trim() || undefined)
+      onMoodSelected?.(
+        selectedMood,
+        selectedIntensity,
+        note.trim() || undefined
+      )
     }
   }
 
@@ -48,16 +67,15 @@ export function MoodSelector({ onMoodSelected, isLoading = false, className }: M
   const isAlreadyCheckedIn = !canCheckinToday()
 
   return (
-    <Card className={clsx('w-full max-w-md mx-auto', className)} padding="lg">
-      <div className="text-center mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">
+    <Card className={clsx('mx-auto w-full max-w-md', className)} padding="lg">
+      <div className="mb-6 text-center">
+        <h2 className="mb-2 text-xl font-semibold text-gray-900">
           {isAlreadyCheckedIn ? 'Сегодняшнее настроение' : 'Как дела?'}
         </h2>
         <p className="text-sm text-gray-600">
-          {isAlreadyCheckedIn 
+          {isAlreadyCheckedIn
             ? 'Вы уже отметили настроение сегодня'
-            : 'Выберите, что лучше всего описывает ваше настроение'
-          }
+            : 'Выберите, что лучше всего описывает ваше настроение'}
         </p>
       </div>
 
@@ -75,23 +93,31 @@ export function MoodSelector({ onMoodSelected, isLoading = false, className }: M
                 <motion.button
                   key={moodKey}
                   className={clsx(
-                    'p-4 rounded-2xl border-2 transition-all duration-200',
+                    'rounded-2xl border-2 p-4 transition-all duration-200',
                     'focus:outline-none focus:ring-2 focus:ring-offset-2',
                     selectedMood === moodKey
-                      ? 'border-current shadow-md scale-105'
-                      : 'border-gray-200 hover:border-gray-300 hover:scale-102',
+                      ? 'scale-105 border-current shadow-md'
+                      : 'hover:scale-102 border-gray-200 hover:border-gray-300',
                     isAlreadyCheckedIn && 'cursor-not-allowed opacity-50'
                   )}
                   style={{
-                    color: selectedMood === moodKey ? moodConfig.color : undefined,
-                    backgroundColor: selectedMood === moodKey ? `${moodConfig.color}10` : undefined,
+                    color:
+                      selectedMood === moodKey ? moodConfig.color : undefined,
+                    backgroundColor:
+                      selectedMood === moodKey
+                        ? `${moodConfig.color}10`
+                        : undefined,
                   }}
-                  onClick={() => !isAlreadyCheckedIn && handleMoodSelect(moodKey)}
+                  onClick={() =>
+                    !isAlreadyCheckedIn && handleMoodSelect(moodKey)
+                  }
                   disabled={isAlreadyCheckedIn}
-                  whileHover={!isAlreadyCheckedIn ? { scale: 1.02 } : undefined}
-                  whileTap={!isAlreadyCheckedIn ? { scale: 0.98 } : undefined}
+                  {...(!isAlreadyCheckedIn && {
+                    whileHover: { scale: 1.02 },
+                    whileTap: { scale: 0.98 },
+                  })}
                 >
-                  <div className="text-3xl mb-2">{moodConfig.emoji}</div>
+                  <div className="mb-2 text-3xl">{moodConfig.emoji}</div>
                   <div className="text-sm font-medium">{moodConfig.label}</div>
                 </motion.button>
               ))}
@@ -107,50 +133,58 @@ export function MoodSelector({ onMoodSelected, isLoading = false, className }: M
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="text-center mb-6">
-              <div className="text-4xl mb-2">{MOOD_CONFIG[selectedMood].emoji}</div>
+            <div className="mb-6 text-center">
+              <div className="mb-2 text-4xl">
+                {MOOD_CONFIG[selectedMood].emoji}
+              </div>
               <h3 className="text-lg font-medium text-gray-900">
                 {MOOD_CONFIG[selectedMood].label}
               </h3>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="mt-1 text-sm text-gray-600">
                 Насколько сильно вы это чувствуете?
               </p>
             </div>
 
             <div className="space-y-3">
-              {[1, 2, 3].map((intensity) => {
+              {[1, 2, 3].map(intensity => {
                 const labels = ['Слабо', 'Умеренно', 'Сильно']
                 const isSelected = selectedIntensity === intensity
-                
+
                 return (
                   <motion.button
                     key={intensity}
                     className={clsx(
-                      'w-full p-4 rounded-xl border-2 text-left transition-all duration-200',
+                      'w-full rounded-xl border-2 p-4 text-left transition-all duration-200',
                       'focus:outline-none focus:ring-2 focus:ring-offset-2',
                       isSelected
                         ? 'border-current shadow-md'
                         : 'border-gray-200 hover:border-gray-300'
                     )}
                     style={{
-                      color: isSelected ? MOOD_CONFIG[selectedMood].color : undefined,
-                      backgroundColor: isSelected ? `${MOOD_CONFIG[selectedMood].color}10` : undefined,
+                      color: isSelected
+                        ? MOOD_CONFIG[selectedMood].color
+                        : undefined,
+                      backgroundColor: isSelected
+                        ? `${MOOD_CONFIG[selectedMood].color}10`
+                        : undefined,
                     }}
-                    onClick={() => handleIntensitySelect(intensity as MoodIntensity)}
+                    onClick={() =>
+                      handleIntensitySelect(intensity as MoodIntensity)
+                    }
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-medium">{labels[intensity - 1]}</span>
+                      <span className="font-medium">
+                        {labels[intensity - 1]}
+                      </span>
                       <div className="flex space-x-1">
                         {Array.from({ length: 3 }, (_, i) => (
                           <div
                             key={i}
                             className={clsx(
-                              'w-2 h-2 rounded-full',
-                              i < intensity
-                                ? 'bg-current'
-                                : 'bg-gray-300'
+                              'h-2 w-2 rounded-full',
+                              i < intensity ? 'bg-current' : 'bg-gray-300'
                             )}
                           />
                         ))}
@@ -161,7 +195,7 @@ export function MoodSelector({ onMoodSelected, isLoading = false, className }: M
               })}
             </div>
 
-            <div className="flex space-x-3 mt-6">
+            <div className="mt-6 flex space-x-3">
               <Button variant="outline" onClick={handleBack} fullWidth>
                 Назад
               </Button>
@@ -180,42 +214,40 @@ export function MoodSelector({ onMoodSelected, isLoading = false, className }: M
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="text-center mb-6">
-              <div className="text-4xl mb-2">{MOOD_CONFIG[selectedMood].emoji}</div>
+            <div className="mb-6 text-center">
+              <div className="mb-2 text-4xl">
+                {MOOD_CONFIG[selectedMood].emoji}
+              </div>
               <h3 className="text-lg font-medium text-gray-900">
                 Добавить заметку
               </h3>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="mt-1 text-sm text-gray-600">
                 Что происходит в вашей жизни? (необязательно)
               </p>
             </div>
 
             <textarea
               value={note}
-              onChange={(e) => setNote(e.target.value)}
+              onChange={e => setNote(e.target.value)}
               placeholder="Расскажите о своем дне..."
               className={clsx(
-                'w-full p-4 border border-gray-300 rounded-xl',
-                'focus:outline-none focus:ring-2 focus:ring-garden-500 focus:border-transparent',
+                'w-full rounded-xl border border-gray-300 p-4',
+                'focus:border-transparent focus:outline-none focus:ring-2 focus:ring-garden-500',
                 'resize-none text-sm'
               )}
               rows={4}
               maxLength={200}
             />
-            
-            <div className="text-right text-xs text-gray-500 mt-1">
+
+            <div className="mt-1 text-right text-xs text-gray-500">
               {note.length}/200
             </div>
 
-            <div className="flex space-x-3 mt-6">
+            <div className="mt-6 flex space-x-3">
               <Button variant="outline" onClick={handleBack} fullWidth>
                 Назад
               </Button>
-              <Button 
-                onClick={handleSubmit} 
-                isLoading={isLoading}
-                fullWidth
-              >
+              <Button onClick={handleSubmit} isLoading={isLoading} fullWidth>
                 {isAlreadyCheckedIn ? 'Обновить' : 'Сохранить'}
               </Button>
             </div>
@@ -225,7 +257,7 @@ export function MoodSelector({ onMoodSelected, isLoading = false, className }: M
 
       {isAlreadyCheckedIn && todaysMood && (
         <motion.div
-          className="mt-6 p-4 bg-green-50 rounded-xl border border-green-200"
+          className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -237,10 +269,11 @@ export function MoodSelector({ onMoodSelected, isLoading = false, className }: M
                 {MOOD_CONFIG[todaysMood.mood].label}
               </p>
               <p className="text-xs text-green-600">
-                Интенсивность: {['Слабо', 'Умеренно', 'Сильно'][todaysMood.intensity - 1]}
+                Интенсивность:{' '}
+                {['Слабо', 'Умеренно', 'Сильно'][todaysMood.intensity - 1]}
               </p>
               {todaysMood.note && (
-                <p className="text-xs text-green-700 mt-1">
+                <p className="mt-1 text-xs text-green-700">
                   "{todaysMood.note}"
                 </p>
               )}

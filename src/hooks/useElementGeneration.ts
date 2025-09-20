@@ -1,6 +1,10 @@
 import { useCallback, useMemo } from 'react'
 import { useUserStore, useGardenStore, useMoodStore } from '@/stores'
-import { generateDailyElement, canUnlockTodaysElement, calculateStreak } from '@/utils/elementGeneration'
+import {
+  generateDailyElement,
+  canUnlockTodaysElement,
+  calculateStreak,
+} from '@/utils/elementGeneration'
 import { getDaysSinceRegistration } from '@/utils/dateHelpers'
 import type { GardenElement, MoodType, Position2D } from '@/types'
 
@@ -41,7 +45,7 @@ export function useElementGeneration() {
 
       try {
         const existingPositions = currentGarden.elements.map(el => el.position)
-        
+
         const element = generateDailyElement(
           currentUser.id,
           currentUser.registrationDate,
@@ -93,7 +97,7 @@ export function useElementGeneration() {
 
     // Find first available position (spiral outward from center)
     const center = { x: 4, y: 4 }
-    
+
     // Check center first
     if (!occupiedPositions.has(`${center.x},${center.y}`)) {
       return center
@@ -101,11 +105,19 @@ export function useElementGeneration() {
 
     // Spiral outward
     for (let radius = 1; radius < 5; radius++) {
-      for (let x = Math.max(0, center.x - radius); x <= Math.min(9, center.x + radius); x++) {
-        for (let y = Math.max(0, center.y - radius); y <= Math.min(9, center.y + radius); y++) {
+      for (
+        let x = Math.max(0, center.x - radius);
+        x <= Math.min(9, center.x + radius);
+        x++
+      ) {
+        for (
+          let y = Math.max(0, center.y - radius);
+          y <= Math.min(9, center.y + radius);
+          y++
+        ) {
           // Only check positions on the edge of current radius
           if (
-            Math.abs(x - center.x) === radius || 
+            Math.abs(x - center.x) === radius ||
             Math.abs(y - center.y) === radius
           ) {
             if (!occupiedPositions.has(`${x},${y}`)) {
@@ -135,7 +147,7 @@ export function useElementGeneration() {
 
   // Get rarity distribution for current user
   const getRarityProbabilities = useCallback(
-    (mood: MoodType): Record<string, number> => {
+    (_mood: MoodType): Record<string, number> => {
       if (!currentUser) {
         return {
           common: 50,
@@ -157,10 +169,10 @@ export function useElementGeneration() {
 
       // Apply streak bonus (small increase in rare element chance)
       const streakBonus = Math.min(streakInfo.current * 0.5, 10) // Max 10% bonus
-      
+
       // Apply mood bonus
       const moodBonus = todaysMood ? 2 : 0 // 2% bonus if mood is tracked
-      
+
       return {
         common: Math.max(0, base.common - streakBonus - moodBonus),
         uncommon: base.uncommon,
@@ -193,9 +205,7 @@ export function useElementGeneration() {
       nextMilestone,
       lastMilestone,
       daysToNext: nextMilestone ? nextMilestone.day - currentDay : 0,
-      progress: nextMilestone 
-        ? (currentDay / nextMilestone.day) * 100
-        : 100,
+      progress: nextMilestone ? (currentDay / nextMilestone.day) * 100 : 100,
     }
   }, [daysSinceRegistration])
 

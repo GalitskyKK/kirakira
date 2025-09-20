@@ -1,42 +1,57 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Sprout, TrendingUp, Calendar } from 'lucide-react'
 import { GardenView } from '@/components/garden'
 import { MoodCheckin, MoodStats } from '@/components/mood'
+import { MobileLayout } from '@/components/layout/MobileLayout'
 import { Card } from '@/components/ui'
 import { useGardenState, useMoodTracking, useElementGeneration } from '@/hooks'
 import { formatDate } from '@/utils/dateHelpers'
 
 export function HomePage() {
-  const { garden, gardenStats } = useGardenState()
+  const { garden: _garden, gardenStats } = useGardenState()
   const { todaysMood, streakCount } = useMoodTracking()
   const { canUnlock, getMilestoneInfo } = useElementGeneration()
+  const [isMobile, setIsMobile] = useState(false)
 
   const milestoneInfo = getMilestoneInfo
 
+  // Check screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768) // md breakpoint
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Mobile layout
+  if (isMobile) {
+    return <MobileLayout />
+  }
+
+  // Desktop layout
   return (
     <div className="min-h-screen bg-gradient-to-br from-garden-50 to-green-50">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
+      <div className="container mx-auto max-w-7xl px-4 py-6">
         {/* Header */}
         <motion.div
-          className="text-center mb-8"
+          className="mb-8 text-center"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            🌸 KiraKira
-          </h1>
-          <p className="text-lg text-gray-600">
-            Ваш цифровой сад эмоций
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="mb-2 text-4xl font-bold text-gray-900">🌸 KiraKira</h1>
+          <p className="text-lg text-gray-600">Ваш цифровой сад эмоций</p>
+          <p className="mt-1 text-sm text-gray-500">
             {formatDate(new Date(), 'EEEE, dd MMMM yyyy', 'ru')}
           </p>
         </motion.div>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Mood Check-in */}
           <motion.div
             className="lg:col-span-1"
@@ -47,16 +62,16 @@ export function HomePage() {
             <MoodCheckin className="mb-6" />
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="mb-6 grid grid-cols-2 gap-3">
               <Card padding="sm" className="text-center">
-                <div className="text-2xl text-garden-600 mb-1">
+                <div className="mb-1 text-2xl text-garden-600">
                   {gardenStats.totalElements}
                 </div>
                 <div className="text-xs text-gray-600">Растений</div>
               </Card>
-              
+
               <Card padding="sm" className="text-center">
-                <div className="text-2xl text-orange-600 mb-1">
+                <div className="mb-1 text-2xl text-orange-600">
                   {streakCount}
                 </div>
                 <div className="text-xs text-gray-600">Дней подряд</div>
@@ -66,7 +81,7 @@ export function HomePage() {
             {/* Milestone Progress */}
             {milestoneInfo.nextMilestone && (
               <Card padding="sm" className="mb-6">
-                <div className="flex items-center space-x-2 mb-2">
+                <div className="mb-2 flex items-center space-x-2">
                   <Calendar size={16} className="text-purple-600" />
                   <span className="text-sm font-medium text-gray-900">
                     До достижения
@@ -77,13 +92,13 @@ export function HomePage() {
                     <span className="text-gray-600">
                       {milestoneInfo.nextMilestone.title}
                     </span>
-                    <span className="text-gray-900 font-medium">
+                    <span className="font-medium text-gray-900">
                       {milestoneInfo.daysToNext} дн.
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="h-2 w-full rounded-full bg-gray-200">
                     <motion.div
-                      className="bg-purple-500 h-2 rounded-full"
+                      className="h-2 rounded-full bg-purple-500"
                       initial={{ width: 0 }}
                       animate={{ width: `${milestoneInfo.progress}%` }}
                       transition={{ duration: 1, delay: 0.5 }}
@@ -133,10 +148,10 @@ export function HomePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Mood Statistics */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+              <h2 className="mb-4 flex items-center space-x-2 text-xl font-semibold text-gray-900">
                 <TrendingUp size={24} className="text-blue-600" />
                 <span>Статистика настроения</span>
               </h2>
@@ -145,57 +160,72 @@ export function HomePage() {
 
             {/* Garden Insights */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+              <h2 className="mb-4 flex items-center space-x-2 text-xl font-semibold text-gray-900">
                 <Sprout size={24} className="text-green-600" />
                 <span>Инсайты сада</span>
               </h2>
-              
+
               <div className="space-y-4">
                 <Card padding="sm">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                  <h3 className="mb-3 text-sm font-semibold text-gray-900">
                     Состав сада
                   </h3>
-                  
+
                   {Object.keys(gardenStats.elementsByType).length > 0 ? (
                     <div className="space-y-2">
-                      {Object.entries(gardenStats.elementsByType).map(([type, count]) => (
-                        <div key={type} className="flex justify-between text-sm">
-                          <span className="text-gray-600 capitalize">{type}</span>
-                          <span className="font-medium">{count}</span>
-                        </div>
-                      ))}
+                      {Object.entries(gardenStats.elementsByType).map(
+                        ([type, count]) => (
+                          <div
+                            key={type}
+                            className="flex justify-between text-sm"
+                          >
+                            <span className="capitalize text-gray-600">
+                              {type}
+                            </span>
+                            <span className="font-medium">{count}</span>
+                          </div>
+                        )
+                      )}
                     </div>
                   ) : (
                     <p className="text-sm text-gray-500">
-                      Сад пуст. Отметьте настроение, чтобы вырастить первое растение!
+                      Сад пуст. Отметьте настроение, чтобы вырастить первое
+                      растение!
                     </p>
                   )}
                 </Card>
 
                 <Card padding="sm">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                  <h3 className="mb-3 text-sm font-semibold text-gray-900">
                     Редкость элементов
                   </h3>
-                  
+
                   {Object.keys(gardenStats.elementsByRarity).length > 0 ? (
                     <div className="space-y-2">
-                      {Object.entries(gardenStats.elementsByRarity).map(([rarity, count]) => {
-                        const colors: Record<string, string> = {
-                          common: 'text-gray-600',
-                          uncommon: 'text-green-600',
-                          rare: 'text-blue-600',
-                          epic: 'text-purple-600',
-                          legendary: 'text-yellow-600',
+                      {Object.entries(gardenStats.elementsByRarity).map(
+                        ([rarity, count]) => {
+                          const colors: Record<string, string> = {
+                            common: 'text-gray-600',
+                            uncommon: 'text-green-600',
+                            rare: 'text-blue-600',
+                            epic: 'text-purple-600',
+                            legendary: 'text-yellow-600',
+                          }
+                          return (
+                            <div
+                              key={rarity}
+                              className="flex justify-between text-sm"
+                            >
+                              <span
+                                className={`capitalize ${colors[rarity] ?? 'text-gray-600'}`}
+                              >
+                                {rarity}
+                              </span>
+                              <span className="font-medium">{count}</span>
+                            </div>
+                          )
                         }
-                        return (
-                          <div key={rarity} className="flex justify-between text-sm">
-                            <span className={`capitalize ${colors[rarity] ?? 'text-gray-600'}`}>
-                              {rarity}
-                            </span>
-                            <span className="font-medium">{count}</span>
-                          </div>
-                        )
-                      })}
+                      )}
                     </div>
                   ) : (
                     <p className="text-sm text-gray-500">
@@ -206,15 +236,22 @@ export function HomePage() {
 
                 {gardenStats.newestElement && (
                   <Card padding="sm">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                    <h3 className="mb-3 text-sm font-semibold text-gray-900">
                       Последнее растение
                     </h3>
                     <div className="flex items-center space-x-3">
-                      <div className="text-2xl">{gardenStats.newestElement.emoji}</div>
+                      <div className="text-2xl">
+                        {gardenStats.newestElement.emoji}
+                      </div>
                       <div>
-                        <p className="text-sm font-medium">{gardenStats.newestElement.name}</p>
+                        <p className="text-sm font-medium">
+                          {gardenStats.newestElement.name}
+                        </p>
                         <p className="text-xs text-gray-600">
-                          {formatDate(gardenStats.newestElement.unlockDate, 'dd MMM в HH:mm')}
+                          {formatDate(
+                            gardenStats.newestElement.unlockDate,
+                            'dd MMM в HH:mm'
+                          )}
                         </p>
                       </div>
                     </div>
