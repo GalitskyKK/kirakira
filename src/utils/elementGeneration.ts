@@ -419,6 +419,7 @@ function selectElementTemplate(
 
 /**
  * Generates a valid position within the garden grid
+ * Optimized for shelf layout: 4 shelves (y: 0-3) with positions (x: 0-9)
  */
 function generatePosition(
   random: SeededRandom,
@@ -427,10 +428,14 @@ function generatePosition(
   const maxAttempts = 100
   let attempts = 0
 
+  // Shelf system: 4 shelves (y: 0-3), up to 10 positions per shelf (x: 0-9)
+  const SHELF_COUNT = 4
+  const MAX_POSITIONS_PER_SHELF = 10
+
   while (attempts < maxAttempts) {
     const position: Position2D = {
-      x: random.nextInt(0, 9), // 10x10 grid (0-9)
-      y: random.nextInt(0, 9),
+      x: random.nextInt(0, MAX_POSITIONS_PER_SHELF - 1), // Position on shelf (0-9)
+      y: random.nextInt(0, SHELF_COUNT - 1), // Shelf number (0-3)
     }
 
     // Check if position is already occupied
@@ -439,26 +444,39 @@ function generatePosition(
     )
 
     if (!isOccupied) {
+      console.log('🎲 Generated random position for new element:', {
+        position,
+        shelfNumber: position.y,
+        positionOnShelf: position.x,
+        attempt: attempts + 1,
+      })
       return position
     }
 
     attempts++
   }
 
-  // Fallback: find first available position
-  for (let y = 0; y < 10; y++) {
-    for (let x = 0; x < 10; x++) {
+  // Fallback: find first available position (shelf by shelf)
+  for (let y = 0; y < SHELF_COUNT; y++) {
+    for (let x = 0; x < MAX_POSITIONS_PER_SHELF; x++) {
       const position: Position2D = { x, y }
       const isOccupied = existingPositions.some(
         pos => pos.x === position.x && pos.y === position.y
       )
       if (!isOccupied) {
+        console.log('🔄 Fallback position found for new element:', {
+          position,
+          shelfNumber: position.y,
+          positionOnShelf: position.x,
+          fallback: true,
+        })
         return position
       }
     }
   }
 
-  // Ultimate fallback (should never happen)
+  // Ultimate fallback: top-left corner of first shelf
+  console.warn('⚠️ All positions occupied, using ultimate fallback (0,0)')
   return { x: 0, y: 0 }
 }
 

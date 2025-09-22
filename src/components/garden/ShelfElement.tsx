@@ -56,9 +56,8 @@ export const ShelfElement = memo(function ShelfElement({
   }, [])
 
   const moodConfig = MOOD_CONFIG[element.moodInfluence]
-  const isArrangementMode = viewMode === 'arrangement'
 
-  // Debug: console.log('ShelfElement render:', element.name, 'isArrangementMode:', isArrangementMode, 'viewMode:', viewMode)
+  // Debug: console.log('ShelfElement render:', element.name, 'viewMode:', viewMode)
 
   // Responsive design hook
   const [isMobile, setIsMobile] = useState(false)
@@ -306,19 +305,11 @@ export const ShelfElement = memo(function ShelfElement({
           ? `brightness(1.2) drop-shadow(0 8px 25px ${moodConfig.color}40)`
           : 'brightness(1) drop-shadow(0 4px 12px rgba(0,0,0,0.15))',
       }}
-      whileHover={
-        isArrangementMode
-          ? {
-              scale: 1.1,
-              y: -8,
-              filter: `brightness(1.15) drop-shadow(0 12px 30px ${moodConfig.color}30)`,
-            }
-          : {
-              scale: 1.05,
-              y: -4,
-              filter: `brightness(1.1) drop-shadow(0 8px 20px ${moodConfig.color}25)`,
-            }
-      }
+      whileHover={{
+        scale: 1.05,
+        y: -4,
+        filter: `brightness(1.1) drop-shadow(0 8px 20px ${moodConfig.color}25)`,
+      }}
       whileTap={{ scale: 0.95 }}
       whileDrag={{
         scale: 1.2,

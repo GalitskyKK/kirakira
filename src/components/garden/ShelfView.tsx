@@ -163,7 +163,6 @@ export function ShelfView({
     return shelfData
   }, [elements, ELEMENTS_PER_SHELF])
 
-  const isArrangementMode = viewMode === 'arrangement'
   const isElementMoving = elementBeingMoved !== null
 
   return (
@@ -319,8 +318,8 @@ export function ShelfView({
                   />
                 </div>
 
-                {/* Drop zones for arrangement mode and element moving */}
-                {(isArrangementMode || isElementMoving) && (
+                {/* Drop zones for element moving */}
+                {isElementMoving && (
                   <div
                     className={clsx(
                       'drop-zones absolute inset-x-0 top-4 flex items-end justify-center',
@@ -625,26 +624,6 @@ export function ShelfView({
             />
           ))}
         </motion.div>
-
-        {/* Arrangement mode info */}
-        {isArrangementMode && (
-          <motion.div
-            className="arrangement-info absolute right-4 top-4 rounded-lg bg-white/90 px-4 py-3 text-sm text-gray-700 shadow-lg backdrop-blur-sm"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 1 }}
-          >
-            <div className="flex items-center space-x-2">
-              <span className="text-lg">📖</span>
-              <div>
-                <p className="font-medium">Режим расстановки</p>
-                <p className="text-xs text-gray-600">
-                  Перетащите элементы между полками
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        )}
       </motion.div>
     </div>
   )

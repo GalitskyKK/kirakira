@@ -87,7 +87,7 @@ export function useElementGeneration() {
     [currentUser]
   )
 
-  // Get next available position in garden
+  // Get next available position in garden (optimized for shelf layout)
   const getNextAvailablePosition = useCallback((): Position2D | null => {
     if (!currentGarden) return { x: 0, y: 0 }
 
@@ -95,48 +95,27 @@ export function useElementGeneration() {
       currentGarden.elements.map(el => `${el.position.x},${el.position.y}`)
     )
 
-    // Find first available position (spiral outward from center)
-    const center = { x: 4, y: 4 }
+    // Shelf system constants
+    const SHELF_COUNT = 4 // 4 shelves (y: 0-3)
+    const MAX_POSITIONS_PER_SHELF = 10 // Up to 10 positions per shelf (x: 0-9)
 
-    // Check center first
-    if (!occupiedPositions.has(`${center.x},${center.y}`)) {
-      return center
-    }
-
-    // Spiral outward
-    for (let radius = 1; radius < 5; radius++) {
-      for (
-        let x = Math.max(0, center.x - radius);
-        x <= Math.min(9, center.x + radius);
-        x++
-      ) {
-        for (
-          let y = Math.max(0, center.y - radius);
-          y <= Math.min(9, center.y + radius);
-          y++
-        ) {
-          // Only check positions on the edge of current radius
-          if (
-            Math.abs(x - center.x) === radius ||
-            Math.abs(y - center.y) === radius
-          ) {
-            if (!occupiedPositions.has(`${x},${y}`)) {
-              return { x, y }
-            }
-          }
-        }
-      }
-    }
-
-    // If spiral fails, try linear search
-    for (let y = 0; y < 10; y++) {
-      for (let x = 0; x < 10; x++) {
+    // Start from top shelf, left to right, then move to next shelf
+    for (let y = 0; y < SHELF_COUNT; y++) {
+      for (let x = 0; x < MAX_POSITIONS_PER_SHELF; x++) {
         if (!occupiedPositions.has(`${x},${y}`)) {
+          console.log('📍 Next available position found:', {
+            position: { x, y },
+            shelfNumber: y,
+            positionOnShelf: x,
+            totalOccupied: occupiedPositions.size,
+          })
           return { x, y }
         }
       }
     }
 
+    // If all positions occupied
+    console.warn('⚠️ All shelf positions are occupied!')
     return null // Garden is full
   }, [currentGarden])
 

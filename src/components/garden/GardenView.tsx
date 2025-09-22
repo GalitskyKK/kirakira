@@ -2,8 +2,6 @@ import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { clsx } from 'clsx'
 import { useGardenState } from '@/hooks'
-// import { GardenElement } from './GardenElement'
-import { GardenGrid } from './GardenGrid'
 import { ShelfView } from './ShelfView'
 import { GardenStats } from './GardenStats'
 import { ElementDetails } from './ElementDetails'
@@ -14,8 +12,6 @@ import { ViewMode } from '@/types'
 interface GardenViewProps {
   className?: string
 }
-
-type DisplayMode = 'grid' | 'shelf'
 
 export function GardenView({ className }: GardenViewProps) {
   const {
@@ -28,9 +24,7 @@ export function GardenView({ className }: GardenViewProps) {
     moveElementSafely,
   } = useGardenState()
 
-  const [draggedElement, setDraggedElement] =
-    useState<GardenElementType | null>(null)
-  const [displayMode, setDisplayMode] = useState<DisplayMode>('shelf')
+  const [draggedElement] = useState<GardenElementType | null>(null)
   const [elementBeingMoved, setElementBeingMoved] =
     useState<GardenElementType | null>(null) // Элемент для перемещения
 
@@ -47,10 +41,6 @@ export function GardenView({ className }: GardenViewProps) {
         console.log('🚫 Cancelling movement mode due to element click')
         setElementBeingMoved(null)
         selectElement(null)
-      } else if (viewMode === ViewMode.ARRANGEMENT) {
-        console.log('📝 Showing details in arrangement mode')
-        selectElement(element)
-        setViewMode(ViewMode.DETAIL)
       } else {
         console.log('📖 Showing details in normal mode')
         selectElement(element)
@@ -81,26 +71,6 @@ export function GardenView({ className }: GardenViewProps) {
     [viewMode, selectElement, elementBeingMoved]
   )
 
-  const handleElementDragStart = useCallback(
-    (element: GardenElementType) => {
-      if (viewMode === ViewMode.ARRANGEMENT) {
-        setDraggedElement(element)
-      }
-    },
-    [viewMode]
-  )
-
-  const handleElementDragEnd = useCallback(
-    async (element: GardenElementType, newX: number, newY: number) => {
-      setDraggedElement(null)
-
-      if (viewMode === ViewMode.ARRANGEMENT) {
-        await moveElementSafely(element.id, { x: newX, y: newY })
-      }
-    },
-    [viewMode, moveElementSafely]
-  )
-
   const handleSlotClick = useCallback(
     async (shelfIndex: number, position: number) => {
       console.log('🎯 handleSlotClick called:', {
@@ -113,9 +83,8 @@ export function GardenView({ className }: GardenViewProps) {
       if (elementBeingMoved) {
         console.log('✅ Element is being moved, proceeding with move')
         try {
-          // ИСПРАВЛЕННЫЙ маппинг: прямое размещение в точную позицию слота
-          const elementsPerShelf =
-            displayMode === 'shelf' ? (window.innerWidth < 1024 ? 4 : 5) : 5 // Соответствует логике ShelfView
+          // Элементы на полке зависят от размера экрана (соответствует логике ShelfView)
+          const elementsPerShelf = window.innerWidth < 1024 ? 4 : 5
 
           // БЕЗОПАСНЫЕ координаты с проверками границ
           const maxPosition = elementsPerShelf - 1
@@ -166,7 +135,7 @@ export function GardenView({ className }: GardenViewProps) {
         console.log('⚠️ No element being moved, ignoring slot click')
       }
     },
-    [elementBeingMoved, moveElementSafely, selectElement, displayMode]
+    [elementBeingMoved, moveElementSafely, selectElement]
   )
 
   const handleConfirmMovement = useCallback(() => {
@@ -280,42 +249,6 @@ export function GardenView({ className }: GardenViewProps) {
                         >
                           Обзор
                         </button>
-                        <button
-                          onClick={() => setViewMode(ViewMode.ARRANGEMENT)}
-                          className={clsx(
-                            'rounded-lg px-3 py-1.5 text-sm transition-colors',
-                            viewMode === ViewMode.ARRANGEMENT
-                              ? 'bg-garden-100 text-garden-700'
-                              : 'text-gray-600 hover:bg-gray-100'
-                          )}
-                        >
-                          Редактировать
-                        </button>
-
-                        {/* Display mode toggle */}
-                        <div className="border-l border-gray-200 pl-2">
-                          <button
-                            onClick={() =>
-                              setDisplayMode(
-                                displayMode === 'grid' ? 'shelf' : 'grid'
-                              )
-                            }
-                            className={clsx(
-                              'rounded-lg px-3 py-1.5 text-sm transition-colors',
-                              'flex items-center space-x-1 text-gray-600 hover:bg-gray-100'
-                            )}
-                            title={
-                              displayMode === 'grid'
-                                ? 'Переключить на полки'
-                                : 'Переключить на сетку'
-                            }
-                          >
-                            <span>{displayMode === 'grid' ? '📚' : '⊞'}</span>
-                            <span>
-                              {displayMode === 'grid' ? 'Полки' : 'Сетка'}
-                            </span>
-                          </button>
-                        </div>
                       </>
                     )}
                   </div>
@@ -324,30 +257,18 @@ export function GardenView({ className }: GardenViewProps) {
 
               {/* Mobile-first adaptive layout */}
               <div className="flex h-full flex-col lg:flex-row">
-                {/* Garden Display */}
+                {/* Garden Display - Shelf View Only */}
                 <div className="flex-1 p-2 sm:p-4">
-                  {displayMode === 'grid' ? (
-                    <GardenGrid
-                      elements={garden.elements}
-                      selectedElement={selectedElement}
-                      draggedElement={draggedElement}
-                      viewMode={viewMode}
-                      onElementClick={handleElementClick}
-                      onElementDragStart={handleElementDragStart}
-                      onElementDragEnd={handleElementDragEnd}
-                    />
-                  ) : (
-                    <ShelfView
-                      elements={garden.elements}
-                      selectedElement={selectedElement}
-                      draggedElement={draggedElement}
-                      elementBeingMoved={elementBeingMoved}
-                      viewMode={viewMode}
-                      onElementClick={handleElementClick}
-                      onElementLongPress={handleElementLongPress}
-                      onSlotClick={handleSlotClick}
-                    />
-                  )}
+                  <ShelfView
+                    elements={garden.elements}
+                    selectedElement={selectedElement}
+                    draggedElement={draggedElement}
+                    elementBeingMoved={elementBeingMoved}
+                    viewMode={viewMode}
+                    onElementClick={handleElementClick}
+                    onElementLongPress={handleElementLongPress}
+                    onSlotClick={handleSlotClick}
+                  />
                 </div>
 
                 {/* Sidebar - Hidden on mobile, shown on desktop */}
@@ -359,46 +280,6 @@ export function GardenView({ className }: GardenViewProps) {
                     transition={{ delay: 0.2 }}
                   >
                     <GardenStats garden={garden} />
-                  </motion.div>
-                )}
-
-                {viewMode === ViewMode.ARRANGEMENT && (
-                  <motion.div
-                    className="border-t border-gray-200 p-4 lg:w-80 lg:border-l lg:border-t-0"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="mb-2 text-sm font-semibold text-gray-900">
-                          Режим редактирования
-                        </h3>
-                        <p className="text-xs text-gray-600">
-                          Перетащите растения, чтобы изменить их расположение в
-                          саду.
-                        </p>
-                      </div>
-
-                      {selectedElement && (
-                        <Card padding="sm" variant="outlined">
-                          <div className="flex items-center space-x-3">
-                            <div className="text-2xl">
-                              {selectedElement.emoji}
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium">
-                                {selectedElement.name}
-                              </p>
-                              <p className="text-xs text-gray-600">
-                                Позиция: {selectedElement.position.x},{' '}
-                                {selectedElement.position.y}
-                              </p>
-                            </div>
-                          </div>
-                        </Card>
-                      )}
-                    </div>
                   </motion.div>
                 )}
               </div>
