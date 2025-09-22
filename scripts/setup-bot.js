@@ -5,7 +5,8 @@
  * Устанавливает команды, описание и webhook
  */
 
-const https = require('https')
+import https from 'https'
+import { fileURLToPath } from 'url'
 
 const BOT_TOKEN = '8300088116:AAGnsuXBd1eP3vChaxPOIpxCOQxKDANE-zU'
 const BOT_API_URL = `https://api.telegram.org/bot${BOT_TOKEN}`
@@ -217,8 +218,9 @@ async function main() {
 }
 
 // Запускаем скрипт
-if (require.main === module) {
+const __filename = fileURLToPath(import.meta.url)
+if (process.argv[1] === __filename) {
   main().catch(console.error)
 }
 
-module.exports = { setCommands, setDescription, setWebhook, getBotInfo }
+export { setCommands, setDescription, setWebhook, getBotInfo }

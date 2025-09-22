@@ -10,7 +10,7 @@
 const BOT_TOKEN =
   process.env.TELEGRAM_BOT_TOKEN ||
   '8300088116:AAGnsuXBd1eP3vChaxPOIpxCOQxKDANE-zU'
-const MINI_APP_URL = process.env.VITE_APP_URL || 'https://your-domain.com'
+const MINI_APP_URL = process.env.VITE_APP_URL || 'kirakira-theta.vercel.app'
 
 /**
  * Отправляет сообщение пользователю
@@ -138,7 +138,10 @@ async function handleCommand(message) {
                 { text: '😰 Тревога', callback_data: 'mood_anxiety' },
               ],
               [
-                { text: '📱 Открыть полное приложение', web_app: { url: MINI_APP_URL } },
+                {
+                  text: '📱 Открыть полное приложение',
+                  web_app: { url: MINI_APP_URL },
+                },
               ],
             ],
           },
@@ -176,19 +179,34 @@ async function handleCommand(message) {
           reply_markup: {
             inline_keyboard: [
               [
-                { text: '✨ Редкие элементы (100⭐)', callback_data: 'buy_rare_elements' },
+                {
+                  text: '✨ Редкие элементы (100⭐)',
+                  callback_data: 'buy_rare_elements',
+                },
               ],
               [
-                { text: '👑 Сезонные темы (50⭐)', callback_data: 'buy_seasonal_themes' },
+                {
+                  text: '👑 Сезонные темы (50⭐)',
+                  callback_data: 'buy_seasonal_themes',
+                },
               ],
               [
-                { text: '📊 Аналитика Pro (75⭐)', callback_data: 'buy_analytics_pro' },
+                {
+                  text: '📊 Аналитика Pro (75⭐)',
+                  callback_data: 'buy_analytics_pro',
+                },
               ],
               [
-                { text: '🎁 Купить все со скидкой (200⭐)', callback_data: 'buy_premium_bundle' },
+                {
+                  text: '🎁 Купить все со скидкой (200⭐)',
+                  callback_data: 'buy_premium_bundle',
+                },
               ],
               [
-                { text: '📱 Открыть приложение', web_app: { url: MINI_APP_URL } },
+                {
+                  text: '📱 Открыть приложение',
+                  web_app: { url: MINI_APP_URL },
+                },
               ],
             ],
           },
@@ -263,7 +281,7 @@ async function handleCommand(message) {
  */
 async function handleCallbackQuery(callbackQuery) {
   const { id, from, data, message } = callbackQuery
-  
+
   try {
     if (data.startsWith('mood_')) {
       await handleMoodSelection(callbackQuery)
@@ -304,14 +322,18 @@ async function handleCallbackQuery(callbackQuery) {
               [
                 {
                   text: '👥 Пригласить друзей',
-                  switch_inline_query: '🌸 Попробуй KiraKira — создай свой эмоциональный сад!'
-                }
+                  switch_inline_query:
+                    '🌸 Попробуй KiraKira — создай свой эмоциональный сад!',
+                },
               ],
               [
-                { text: '📱 Открыть для шаринга', web_app: { url: MINI_APP_URL } }
-              ]
-            ]
-          }
+                {
+                  text: '📱 Открыть для шаринга',
+                  web_app: { url: MINI_APP_URL },
+                },
+              ],
+            ],
+          },
         }
       )
     } else if (data.startsWith('confirm_purchase_')) {
@@ -322,21 +344,26 @@ async function handleCallbackQuery(callbackQuery) {
         {
           reply_markup: {
             inline_keyboard: [
-              [{ text: '📱 Открыть приложение', web_app: { url: MINI_APP_URL } }]
-            ]
-          }
+              [
+                {
+                  text: '📱 Открыть приложение',
+                  web_app: { url: MINI_APP_URL },
+                },
+              ],
+            ],
+          },
         }
       )
     }
   } catch (error) {
     console.error('Callback query error:', error)
   }
-  
+
   // Убираем "часики" с кнопки
   await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ callback_query_id: id })
+    body: JSON.stringify({ callback_query_id: id }),
   })
 }
 
@@ -346,28 +373,28 @@ async function handleCallbackQuery(callbackQuery) {
 async function handleMoodSelection(callbackQuery) {
   const { from, data, message } = callbackQuery
   const mood = data.replace('mood_', '')
-  
+
   const moodEmojis = {
     joy: '😊',
-    calm: '😌', 
+    calm: '😌',
     stress: '😰',
     sadness: '😢',
     anger: '😠',
-    anxiety: '😰'
+    anxiety: '😰',
   }
-  
+
   const moodElements = {
     joy: '🌸 красивый цветок',
     calm: '🌿 спокойную траву',
-    stress: '⚡ энергетический кристалл', 
+    stress: '⚡ энергетический кристалл',
     sadness: '🍄 тихий гриб',
     anger: '🔥 огненный камень',
-    anxiety: '💎 защитный кристалл'
+    anxiety: '💎 защитный кристалл',
   }
-  
+
   const element = moodElements[mood] || '🌱 растение'
   const emoji = moodEmojis[mood] || '🌸'
-  
+
   await sendMessage(
     message.chat.id,
     `${emoji} *Настроение отмечено!*
@@ -383,13 +410,11 @@ _Приходи завтра, чтобы отметить новое настр�
         inline_keyboard: [
           [
             { text: '🌱 Посмотреть сад', web_app: { url: MINI_APP_URL } },
-            { text: '📊 Статистика', callback_data: 'show_stats' }
+            { text: '📊 Статистика', callback_data: 'show_stats' },
           ],
-          [
-            { text: '🔗 Поделиться', callback_data: 'share_garden' }
-          ]
-        ]
-      }
+          [{ text: '🔗 Поделиться', callback_data: 'share_garden' }],
+        ],
+      },
     }
   )
 }
@@ -399,17 +424,33 @@ _Приходи завтра, чтобы отметить новое настр�
  */
 async function handlePremiumPurchase(callbackQuery) {
   const { from, data, message } = callbackQuery
-  
+
   const premiumItems = {
-    buy_rare_elements: { name: 'Редкие элементы сада', price: 100, id: 'rare_elements' },
-    buy_seasonal_themes: { name: 'Сезонные темы', price: 50, id: 'seasonal_themes' },
-    buy_analytics_pro: { name: 'Аналитика Pro', price: 75, id: 'analytics_pro' },
-    buy_premium_bundle: { name: 'Премиум комплект', price: 200, id: 'premium_bundle' }
+    buy_rare_elements: {
+      name: 'Редкие элементы сада',
+      price: 100,
+      id: 'rare_elements',
+    },
+    buy_seasonal_themes: {
+      name: 'Сезонные темы',
+      price: 50,
+      id: 'seasonal_themes',
+    },
+    buy_analytics_pro: {
+      name: 'Аналитика Pro',
+      price: 75,
+      id: 'analytics_pro',
+    },
+    buy_premium_bundle: {
+      name: 'Премиум комплект',
+      price: 200,
+      id: 'premium_bundle',
+    },
   }
-  
+
   const item = premiumItems[data]
   if (!item) return
-  
+
   // Создаем invoice для Telegram Stars
   await sendMessage(
     message.chat.id,
@@ -422,16 +463,14 @@ async function handlePremiumPurchase(callbackQuery) {
       reply_markup: {
         inline_keyboard: [
           [
-            { 
-              text: `💳 Купить за ${item.price}⭐`, 
-              callback_data: `confirm_purchase_${item.id}` 
-            }
+            {
+              text: `💳 Купить за ${item.price}⭐`,
+              callback_data: `confirm_purchase_${item.id}`,
+            },
           ],
-          [
-            { text: '📱 Открыть приложение', web_app: { url: MINI_APP_URL } }
-          ]
-        ]
-      }
+          [{ text: '📱 Открыть приложение', web_app: { url: MINI_APP_URL } }],
+        ],
+      },
     }
   )
 }
@@ -442,14 +481,16 @@ async function handlePremiumPurchase(callbackQuery) {
 async function handleStatsCommand(chatId, userId) {
   // Здесь должна быть реальная статистика из базы данных
   // Для демо показываем примерную статистику
-  
+
   const demoStats = {
     totalDays: Math.floor(Math.random() * 30) + 1,
     currentStreak: Math.floor(Math.random() * 7) + 1,
     gardenElements: Math.floor(Math.random() * 20) + 5,
-    dominantMood: ['радость', 'спокойствие', 'энергия'][Math.floor(Math.random() * 3)]
+    dominantMood: ['радость', 'спокойствие', 'энергия'][
+      Math.floor(Math.random() * 3)
+    ],
   }
-  
+
   await sendMessage(
     chatId,
     `📊 *Твоя статистика KiraKira*
@@ -468,13 +509,16 @@ _Продолжай отмечать настроения каждый день,
         inline_keyboard: [
           [
             { text: '🌱 Открыть сад', web_app: { url: MINI_APP_URL } },
-            { text: '😊 Отметить настроение', callback_data: 'quick_mood' }
+            { text: '😊 Отметить настроение', callback_data: 'quick_mood' },
           ],
           [
-            { text: '⭐ Премиум аналитика', callback_data: 'buy_analytics_pro' }
-          ]
-        ]
-      }
+            {
+              text: '⭐ Премиум аналитика',
+              callback_data: 'buy_analytics_pro',
+            },
+          ],
+        ],
+      },
     }
   )
 }
