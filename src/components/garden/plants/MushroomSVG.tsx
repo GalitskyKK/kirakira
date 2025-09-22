@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useId } from 'react'
 import { RarityLevel } from '@/types'
 
 interface MushroomSVGProps {
@@ -18,9 +19,8 @@ export function MushroomSVG({
   isHovered: _isHovered = false,
   name: _name = 'Mushroom',
 }: MushroomSVGProps) {
-  const getGradientId = () =>
-    `mushroom-gradient-${Math.random().toString(36).substr(2, 9)}`
-  const gradientId = getGradientId()
+  const uniqueId = useId()
+  const gradientId = `mushroom-${uniqueId}`
 
   const getRarityGlow = () => {
     switch (rarity) {
@@ -152,22 +152,22 @@ export function MushroomSVG({
         {/* Stem */}
         <motion.rect
           x="48"
-          y="50"
+          y="45"
           width="4"
-          height="35"
+          height="40"
           fill={`url(#${gradientId}-stem)`}
           rx="2"
-          initial={{ scaleY: 0, y: 85 }}
-          animate={{ scaleY: 1, y: 50 }}
+          initial={{ scaleY: 0, y: 40 }}
+          animate={{ scaleY: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.5 }}
         />
 
         {/* Stem texture */}
         <motion.line
           x1="48.5"
-          y1="55"
+          y1="45"
           x2="48.5"
-          y2="80"
+          y2="35"
           stroke="#d1d5db"
           strokeWidth="0.5"
           initial={{ opacity: 0 }}

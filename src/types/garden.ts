@@ -12,11 +12,17 @@ export enum ElementType {
   MUSHROOM = 'mushroom',
   CRYSTAL = 'crystal',
   DECORATION = 'decoration',
+  // Премиум элементы
+  RAINBOW_FLOWER = 'rainbow_flower',
+  GLOWING_CRYSTAL = 'glowing_crystal',
+  MYSTIC_MUSHROOM = 'mystic_mushroom',
+  AURORA_TREE = 'aurora_tree',
+  STARLIGHT_DECORATION = 'starlight_decoration',
 }
 
 export enum RarityLevel {
   COMMON = 'common',
-  UNCOMMON = 'uncommon', 
+  UNCOMMON = 'uncommon',
   RARE = 'rare',
   EPIC = 'epic',
   LEGENDARY = 'legendary',
@@ -67,9 +73,9 @@ export enum ViewMode {
   ARRANGEMENT = 'arrangement',
 }
 
-export type MoodType = 
+export type MoodType =
   | 'joy'
-  | 'calm' 
+  | 'calm'
   | 'stress'
   | 'sadness'
   | 'anger'

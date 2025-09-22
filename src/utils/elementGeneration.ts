@@ -1,6 +1,7 @@
 import { addDays, differenceInDays, format } from 'date-fns'
 import type { GardenElement, MoodType, Position2D } from '@/types'
 import { ElementType, RarityLevel, SeasonalVariant, MOOD_CONFIG } from '@/types'
+import { premiumUtils } from '@/stores'
 
 interface ElementTemplate {
   readonly type: ElementType
@@ -267,7 +268,58 @@ const ELEMENT_TEMPLATES: readonly ElementTemplate[] = [
     baseColor: '#fbbf24',
     rarity: RarityLevel.LEGENDARY,
   },
+
+  // ПРЕМИУМ ЭЛЕМЕНТЫ (доступны только с премиум подпиской)
+  {
+    type: ElementType.RAINBOW_FLOWER,
+    name: 'Радужный Цветок',
+    description: 'Переливающийся всеми цветами радуги цветок',
+    emoji: '🌈',
+    baseColor: '#ff69b4',
+    rarity: RarityLevel.LEGENDARY,
+  },
+  {
+    type: ElementType.GLOWING_CRYSTAL,
+    name: 'Светящийся Кристалл',
+    description: 'Мистический кристалл с внутренним светом',
+    emoji: '💫',
+    baseColor: '#6366f1',
+    rarity: RarityLevel.LEGENDARY,
+  },
+  {
+    type: ElementType.MYSTIC_MUSHROOM,
+    name: 'Мистический Гриб',
+    description: 'Волшебный гриб с магическими спорами',
+    emoji: '🔮',
+    baseColor: '#8b5cf6',
+    rarity: RarityLevel.LEGENDARY,
+  },
+  {
+    type: ElementType.AURORA_TREE,
+    name: 'Дерево Авроры',
+    description: 'Дерево, светящееся северным сиянием',
+    emoji: '🌲',
+    baseColor: '#10b981',
+    rarity: RarityLevel.LEGENDARY,
+  },
+  {
+    type: ElementType.STARLIGHT_DECORATION,
+    name: 'Звездное Украшение',
+    description: 'Декорация из чистого звездного света',
+    emoji: '⭐',
+    baseColor: '#fbbf24',
+    rarity: RarityLevel.LEGENDARY,
+  },
 ] as const
+
+// Премиум типы элементов
+const PREMIUM_ELEMENT_TYPES = new Set([
+  ElementType.RAINBOW_FLOWER,
+  ElementType.GLOWING_CRYSTAL,
+  ElementType.MYSTIC_MUSHROOM,
+  ElementType.AURORA_TREE,
+  ElementType.STARLIGHT_DECORATION,
+])
 
 // Rarity weights for random generation
 const RARITY_WEIGHTS: Record<RarityLevel, number> = {
@@ -337,17 +389,30 @@ function selectElementTemplate(
   const moodConfig = MOOD_CONFIG[mood]
   const preferredTypes = new Set(moodConfig.elementTypes)
 
-  // Always use preferred element types for mood consistency (100%)
-  let filteredTemplates = ELEMENT_TEMPLATES.filter(t =>
-    preferredTypes.has(t.type)
-  )
+  // Filter out premium elements if user doesn't have premium access
+  const hasPremiumAccess = premiumUtils.hasRareElements()
 
-  // If no preferred templates found, fallback to all templates
+  // Always use preferred element types for mood consistency (100%)
+  let filteredTemplates = ELEMENT_TEMPLATES.filter(t => {
+    // Check if element type is preferred for this mood
+    const isPreferred = preferredTypes.has(t.type)
+
+    // Check if element is premium and user has access
+    const isPremiumElement = PREMIUM_ELEMENT_TYPES.has(t.type)
+    const canUsePremium = !isPremiumElement || hasPremiumAccess
+
+    return isPreferred && canUsePremium
+  })
+
+  // If no preferred templates found, fallback to available templates (excluding premium if no access)
   if (filteredTemplates.length === 0) {
     console.warn(
-      `No preferred templates found for mood: ${mood}, using all templates`
+      `No preferred templates found for mood: ${mood}, using fallback templates`
     )
-    filteredTemplates = [...ELEMENT_TEMPLATES]
+    filteredTemplates = ELEMENT_TEMPLATES.filter(t => {
+      const isPremiumElement = PREMIUM_ELEMENT_TYPES.has(t.type)
+      return !isPremiumElement || hasPremiumAccess
+    })
   }
 
   const usePreferred = true // Always true now

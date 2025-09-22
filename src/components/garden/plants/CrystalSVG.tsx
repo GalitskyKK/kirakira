@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useId } from 'react'
 import { RarityLevel } from '@/types'
 
 interface CrystalSVGProps {
@@ -18,9 +19,8 @@ export function CrystalSVG({
   isHovered: _isHovered = false,
   name: _name = 'Crystal',
 }: CrystalSVGProps) {
-  const getGradientId = () =>
-    `crystal-gradient-${Math.random().toString(36).substr(2, 9)}`
-  const gradientId = getGradientId()
+  const uniqueId = useId()
+  const gradientId = `crystal-${uniqueId}`
 
   const getRarityGlow = () => {
     switch (rarity) {

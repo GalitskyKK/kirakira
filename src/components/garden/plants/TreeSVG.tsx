@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useId } from 'react'
 import { RarityLevel } from '@/types'
 
 interface TreeSVGProps {
@@ -18,9 +19,8 @@ export function TreeSVG({
   isHovered: _isHovered = false,
   name: _name = 'Tree',
 }: TreeSVGProps) {
-  const getGradientId = () =>
-    `tree-gradient-${Math.random().toString(36).substr(2, 9)}`
-  const gradientId = getGradientId()
+  const uniqueId = useId()
+  const gradientId = `tree-${uniqueId}`
 
   const getRarityGlow = () => {
     switch (rarity) {
@@ -144,28 +144,28 @@ export function TreeSVG({
           </filter>
         </defs>
 
-        {/* Trunk */}
+        {/* Trunk - extended up to connect with crown */}
         <motion.rect
           x="45"
-          y="60"
+          y="45"
           width="10"
-          height="35"
+          height="45"
           fill={`url(#${gradientId}-trunk)`}
           rx="2"
           filter={`url(#${gradientId}-shadow)`}
-          initial={{ scaleY: 0, y: 95 }}
-          animate={{ scaleY: 1, y: 60 }}
+          initial={{ scaleY: 0, y: 50 }}
+          animate={{ scaleY: 1, y: 5 }}
           transition={{ duration: 1, delay: 0.3 }}
         />
 
         {/* Trunk texture lines */}
-        {Array.from({ length: 4 }, (_, i) => (
+        {Array.from({ length: 6 }, (_, i) => (
           <motion.line
             key={i}
             x1="46"
-            y1={70 + i * 6}
+            y1={65 + i * 6}
             x2="54"
-            y2={70 + i * 6}
+            y2={65 + i * 6}
             stroke="#78350f"
             strokeWidth="0.5"
             opacity="0.6"

@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useId } from 'react'
 import { RarityLevel } from '@/types'
 
 interface FlowerSVGProps {
@@ -18,9 +19,8 @@ export function FlowerSVG({
   isHovered: _isHovered = false, // Acknowledged but not used in this component
   name: _name = 'Flower', // Acknowledged but not used in this component
 }: FlowerSVGProps) {
-  const getGradientId = () =>
-    `flower-gradient-${Math.random().toString(36).substr(2, 9)}`
-  const gradientId = getGradientId()
+  const uniqueId = useId()
+  const gradientId = `flower-${uniqueId}`
 
   const getRarityGlow = () => {
     switch (rarity) {

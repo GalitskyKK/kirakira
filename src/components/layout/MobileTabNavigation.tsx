@@ -75,10 +75,9 @@ export function MobileTabNavigation({
               {/* Active indicator */}
               {isActive && (
                 <motion.div
-                  className="absolute left-1/2 top-0 h-1 w-8 rounded-b-full bg-garden-500"
+                  className="absolute left-1/2 top-0 h-1 w-8 -translate-x-1/2 rounded-b-full bg-garden-500"
                   layoutId="activeTab"
                   initial={false}
-                  style={{ x: '-50%' }}
                   transition={{
                     type: 'spring',
                     stiffness: 300,

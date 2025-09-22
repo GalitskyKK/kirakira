@@ -4,6 +4,10 @@ import { TreeSVG } from './TreeSVG'
 import { CrystalSVG } from './CrystalSVG'
 import { MushroomSVG } from './MushroomSVG'
 import { StoneSVG } from './StoneSVG'
+// Премиум элементы
+import { RainbowFlowerSVG } from './RainbowFlowerSVG'
+import { GlowingCrystalSVG } from './GlowingCrystalSVG'
+import { MysticMushroomSVG } from './MysticMushroomSVG'
 import type { GardenElement } from '@/types'
 import { ElementType, RarityLevel } from '@/types'
 
@@ -49,6 +53,22 @@ export function PlantRenderer({
 
       case ElementType.STONE:
         return <StoneSVG {...commonProps} />
+
+      // Премиум элементы
+      case ElementType.RAINBOW_FLOWER:
+        return <RainbowFlowerSVG {...commonProps} />
+
+      case ElementType.GLOWING_CRYSTAL:
+        return <GlowingCrystalSVG {...commonProps} />
+
+      case ElementType.MYSTIC_MUSHROOM:
+        return <MysticMushroomSVG {...commonProps} />
+
+      case ElementType.AURORA_TREE:
+        return <TreeSVG {...commonProps} /> // Используем обычное дерево с особыми эффектами
+
+      case ElementType.STARLIGHT_DECORATION:
+        return <CrystalSVG {...commonProps} /> // Используем кристалл с особыми эффектами
 
       case ElementType.GRASS:
         // Simple grass animation as fallback

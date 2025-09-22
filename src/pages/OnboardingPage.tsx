@@ -101,56 +101,56 @@ const ONBOARDING_STEPS = [
       </div>
     ),
   },
-  {
-    id: 'privacy',
-    title: 'Конфиденциальность',
-    description: 'Ваши данные остаются при вас',
-    icon: '🔒',
-    content: (
-      <div className="space-y-4">
-        <div className="flex justify-center mb-4">
-          <div className="p-3 bg-blue-100 rounded-full">
-            <div className="text-3xl">🔒</div>
-          </div>
-        </div>
-        <div className="space-y-3">
-          <div className="flex items-start space-x-3">
-            <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            </div>
-            <div>
-              <p className="font-medium text-gray-900">Локальное хранение</p>
-              <p className="text-sm text-gray-600">
-                Все ваши данные хранятся только на вашем устройстве
-              </p>
-            </div>
-          </div>
-          <div className="flex items-start space-x-3">
-            <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            </div>
-            <div>
-              <p className="font-medium text-gray-900">Никакой аналитики</p>
-              <p className="text-sm text-gray-600">
-                Мы не отслеживаем ваше поведение и не собираем персональные данные
-              </p>
-            </div>
-          </div>
-          <div className="flex items-start space-x-3">
-            <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            </div>
-            <div>
-              <p className="font-medium text-gray-900">Анонимность</p>
-              <p className="text-sm text-gray-600">
-                Регистрация не требуется — начните пользоваться прямо сейчас
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    ),
-  },
+  // {
+  //   id: 'privacy',
+  //   title: 'Конфиденциальность',
+  //   description: 'Ваши данные остаются при вас',
+  //   icon: '🔒',
+  //   content: (
+  //     <div className="space-y-4">
+  //       <div className="flex justify-center mb-4">
+  //         <div className="p-3 bg-blue-100 rounded-full">
+  //           <div className="text-3xl">🔒</div>
+  //         </div>
+  //       </div>
+  //       <div className="space-y-3">
+  //         <div className="flex items-start space-x-3">
+  //           <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+  //             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+  //           </div>
+  //           <div>
+  //             <p className="font-medium text-gray-900">Локальное хранение</p>
+  //             <p className="text-sm text-gray-600">
+  //               Все ваши данные хранятся только на вашем устройстве
+  //             </p>
+  //           </div>
+  //         </div>
+  //         <div className="flex items-start space-x-3">
+  //           <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+  //             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+  //           </div>
+  //           <div>
+  //             <p className="font-medium text-gray-900">Никакой аналитики</p>
+  //             <p className="text-sm text-gray-600">
+  //               Мы не отслеживаем ваше поведение и не собираем персональные данные
+  //             </p>
+  //           </div>
+  //         </div>
+  //         <div className="flex items-start space-x-3">
+  //           <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+  //             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+  //           </div>
+  //           <div>
+  //             <p className="font-medium text-gray-900">Анонимность</p>
+  //             <p className="text-sm text-gray-600">
+  //               Регистрация не требуется — начните пользоваться прямо сейчас
+  //             </p>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   ),
+  // },
   {
     id: 'ready',
     title: 'Готовы начать?',

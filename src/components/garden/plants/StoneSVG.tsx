@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useId } from 'react'
 import { RarityLevel } from '@/types'
 
 interface StoneSVGProps {
@@ -18,9 +19,8 @@ export function StoneSVG({
   isHovered: _isHovered = false,
   name: _name = 'Stone',
 }: StoneSVGProps) {
-  const getGradientId = () =>
-    `stone-gradient-${Math.random().toString(36).substr(2, 9)}`
-  const gradientId = getGradientId()
+  const uniqueId = useId()
+  const gradientId = `stone-${uniqueId}`
 
   const getRarityGlow = () => {
     switch (rarity) {

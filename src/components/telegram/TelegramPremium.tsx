@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Star, Gift, Crown, Sparkles } from 'lucide-react'
+import { Star, Gift, Crown, Sparkles, Check } from 'lucide-react'
 import { useTelegram, useTelegramButtons } from '@/hooks'
+import { usePremiumStore } from '@/stores'
 import { Card } from '@/components/ui'
 
 interface PremiumFeature {
@@ -40,19 +41,6 @@ const PREMIUM_FEATURES: PremiumFeature[] = [
       'Зимняя сказка',
     ],
   },
-  {
-    id: 'analytics_pro',
-    name: 'Расширенная аналитика',
-    description: 'Подробная статистика вашего эмоционального путешествия',
-    price: 75,
-    icon: <Star className="h-6 w-6" />,
-    benefits: [
-      'Тренды настроений',
-      'Корреляции со временем',
-      'Экспорт данных',
-      'Персональные инсайты',
-    ],
-  },
 ]
 
 interface TelegramPremiumProps {
@@ -67,6 +55,7 @@ export function TelegramPremium({
   const { webApp, showAlert, showConfirm, hapticFeedback, isTelegramEnv } =
     useTelegram()
   const { setMainButton, hideMainButton } = useTelegramButtons()
+  const { unlockFeature, hasFeature } = usePremiumStore()
   const [selectedFeature, setSelectedFeature] = useState<PremiumFeature | null>(
     null
   )
@@ -74,6 +63,13 @@ export function TelegramPremium({
 
   const handleFeatureSelect = useCallback(
     (feature: PremiumFeature) => {
+      // Не позволяем выбирать уже купленные функции
+      if (hasFeature(feature.id)) {
+        hapticFeedback('light')
+        showAlert('Эта функция уже куплена!')
+        return
+      }
+
       setSelectedFeature(feature)
       hapticFeedback('light')
 
@@ -87,7 +83,7 @@ export function TelegramPremium({
         })
       }
     },
-    [hapticFeedback, isTelegramEnv, setMainButton]
+    [hapticFeedback, isTelegramEnv, setMainButton, hasFeature, showAlert]
   )
 
   const handlePurchase = useCallback(
@@ -118,8 +114,12 @@ export function TelegramPremium({
           hideMainButton()
 
           if (status === 'paid') {
+            // Разблокируем премиум функцию
+            unlockFeature(feature.id)
             hapticFeedback('success')
-            showAlert('Покупка успешно завершена! 🎉')
+            showAlert(
+              'Покупка успешно завершена! Премиум функции разблокированы! 🎉'
+            )
             onPurchaseSuccess?.(feature.id)
           } else if (status === 'cancelled') {
             hapticFeedback('error')
@@ -244,20 +244,29 @@ export function TelegramPremium({
                     </div>
                   </div>
                   <div className="flex flex-col items-end space-y-2">
-                    <div className="flex items-center space-x-1">
-                      <Star className="h-4 w-4 text-yellow-500" />
-                      <span className="font-bold">{feature.price}</span>
-                    </div>
-                    <button
-                      onClick={e => {
-                        e.stopPropagation()
-                        handleGiftFeature(feature)
-                      }}
-                      className="flex items-center space-x-1 rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-600 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400"
-                    >
-                      <Gift className="h-3 w-3" />
-                      <span>Подарить</span>
-                    </button>
+                    {hasFeature(feature.id) ? (
+                      <div className="flex items-center space-x-1 rounded-full bg-green-100 px-3 py-1 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                        <Check className="h-4 w-4" />
+                        <span className="text-sm font-medium">Куплено</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center space-x-1">
+                          <Star className="h-4 w-4 text-yellow-500" />
+                          <span className="font-bold">{feature.price}</span>
+                        </div>
+                        <button
+                          onClick={e => {
+                            e.stopPropagation()
+                            handleGiftFeature(feature)
+                          }}
+                          className="flex items-center space-x-1 rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-600 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400"
+                        >
+                          <Gift className="h-3 w-3" />
+                          <span>Подарить</span>
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 

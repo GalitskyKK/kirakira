@@ -10,6 +10,7 @@ import { useUserStore } from '@/stores'
 import { initializeStores } from '@/stores'
 import { HomePage } from '@/pages/HomePage'
 import { OnboardingPage } from '@/pages/OnboardingPage'
+import { ShowcasePage } from '@/pages/ShowcasePage'
 import { LoadingSpinner } from '@/components/ui'
 import { useTelegram, useTelegramTheme } from '@/hooks'
 import { telegramStorage } from '@/utils/telegramStorage'
@@ -169,6 +170,20 @@ function App() {
                   transition={{ duration: 0.3 }}
                 >
                   <HomePage />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/showcase"
+              element={
+                <motion.div
+                  key="showcase"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ShowcasePage />
                 </motion.div>
               }
             />

@@ -43,7 +43,12 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
     emoji: '😊',
     label: 'Радость',
     description: 'Чувствую себя счастливо и энергично',
-    elementTypes: [ElementType.FLOWER, ElementType.DECORATION],
+    elementTypes: [
+      ElementType.FLOWER,
+      ElementType.DECORATION,
+      ElementType.RAINBOW_FLOWER,
+      ElementType.STARLIGHT_DECORATION,
+    ],
     rarityBonus: 0.2,
   },
   calm: {
@@ -51,7 +56,11 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
     emoji: '😌',
     label: 'Спокойствие',
     description: 'Ощущаю умиротворение и баланс',
-    elementTypes: [ElementType.WATER, ElementType.TREE],
+    elementTypes: [
+      ElementType.WATER,
+      ElementType.TREE,
+      ElementType.AURORA_TREE,
+    ],
     rarityBonus: 0.1,
   },
   stress: {
@@ -59,7 +68,11 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
     emoji: '😰',
     label: 'Стресс',
     description: 'Чувствую напряжение и беспокойство',
-    elementTypes: [ElementType.STONE, ElementType.CRYSTAL],
+    elementTypes: [
+      ElementType.STONE,
+      ElementType.CRYSTAL,
+      ElementType.GLOWING_CRYSTAL,
+    ],
     rarityBonus: 0.0,
   },
   sadness: {
@@ -67,7 +80,11 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
     emoji: '😢',
     label: 'Грусть',
     description: 'Ощущаю печаль или меланхолию',
-    elementTypes: [ElementType.MUSHROOM, ElementType.GRASS],
+    elementTypes: [
+      ElementType.MUSHROOM,
+      ElementType.GRASS,
+      ElementType.MYSTIC_MUSHROOM,
+    ],
     rarityBonus: 0.05,
   },
   anger: {
@@ -75,7 +92,11 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
     emoji: '😠',
     label: 'Гнев',
     description: 'Чувствую раздражение или злость',
-    elementTypes: [ElementType.STONE, ElementType.CRYSTAL],
+    elementTypes: [
+      ElementType.STONE,
+      ElementType.CRYSTAL,
+      ElementType.GLOWING_CRYSTAL,
+    ],
     rarityBonus: 0.0,
   },
   anxiety: {
@@ -83,7 +104,12 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
     emoji: '😰',
     label: 'Тревога',
     description: 'Ощущаю беспокойство и волнение',
-    elementTypes: [ElementType.MUSHROOM, ElementType.DECORATION],
+    elementTypes: [
+      ElementType.MUSHROOM,
+      ElementType.DECORATION,
+      ElementType.MYSTIC_MUSHROOM,
+      ElementType.STARLIGHT_DECORATION,
+    ],
     rarityBonus: 0.1,
   },
 } as const
