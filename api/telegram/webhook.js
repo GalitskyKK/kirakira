@@ -7,11 +7,16 @@
  */
 
 // Конфигурация
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
-const MINI_APP_URL = process.env.VITE_APP_URL || 'kirakira-theta.vercel.app'
+const BOT_TOKEN =
+  process.env.TELEGRAM_BOT_TOKEN || process.env.VITE_TELEGRAM_BOT_TOKEN
+const MINI_APP_URL =
+  process.env.VITE_APP_URL || 'https://kirakira-theta.vercel.app'
 
+// В Vercel Functions переменные могут быть доступны с префиксом VITE_
 if (!BOT_TOKEN) {
-  console.error('❌ TELEGRAM_BOT_TOKEN environment variable is required')
+  console.error(
+    '❌ Neither TELEGRAM_BOT_TOKEN nor VITE_TELEGRAM_BOT_TOKEN found'
+  )
 }
 
 /**
@@ -640,7 +645,22 @@ async function handleInlineQuery(inlineQuery) {
  * Главный обработчик webhook'а
  */
 export default async function handler(req, res) {
-  // Только POST запросы
+  // Проверяем наличие токена
+  if (!BOT_TOKEN) {
+    console.error('❌ TELEGRAM_BOT_TOKEN environment variable is missing')
+    return res.status(500).json({ error: 'Bot token not configured' })
+  }
+
+  // GET запрос для проверки статуса
+  if (req.method === 'GET') {
+    return res.status(200).json({
+      status: 'Webhook is running',
+      botConfigured: !!BOT_TOKEN,
+      timestamp: new Date().toISOString(),
+    })
+  }
+
+  // Только POST запросы для webhook
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
