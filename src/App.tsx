@@ -11,6 +11,8 @@ import { initializeStores } from '@/stores'
 import { HomePage } from '@/pages/HomePage'
 import { OnboardingPage } from '@/pages/OnboardingPage'
 import { LoadingSpinner } from '@/components/ui'
+import { useTelegram, useTelegramTheme } from '@/hooks'
+import { telegramStorage } from '@/utils/telegramStorage'
 
 function App() {
   const {
@@ -24,10 +26,37 @@ function App() {
   const [isInitializing, setIsInitializing] = useState(true)
   const [initError, setInitError] = useState<string | null>(null)
 
+  // Telegram интеграция
+  const {
+    user: telegramUser,
+    isTelegramEnv,
+    isReady: telegramReady,
+  } = useTelegram()
+  const { colorScheme } = useTelegramTheme()
+
   // Initialize app
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        // Инициализируем Telegram хранилище если доступно
+        if (isTelegramEnv) {
+          telegramStorage.initialize()
+
+          // Ждем готовности Telegram WebApp
+          if (!telegramReady) {
+            await new Promise(resolve => {
+              const checkReady = () => {
+                if (telegramReady) {
+                  resolve(void 0)
+                } else {
+                  setTimeout(checkReady, 100)
+                }
+              }
+              checkReady()
+            })
+          }
+        }
+
         await initializeStores()
         updateLastVisit()
       } catch (error) {
@@ -41,7 +70,14 @@ function App() {
     }
 
     void initializeApp()
-  }, [updateLastVisit])
+  }, [updateLastVisit, isTelegramEnv, telegramReady])
+
+  // Применяем тему Telegram к корневому элементу
+  useEffect(() => {
+    if (isTelegramEnv) {
+      document.documentElement.classList.toggle('dark', colorScheme === 'dark')
+    }
+  }, [isTelegramEnv, colorScheme])
 
   // Handle onboarding completion
   const handleOnboardingComplete = () => {
@@ -51,8 +87,14 @@ function App() {
 
   // Show loading state during initialization
   if (isInitializing || isLoading) {
+    const bgClass = isTelegramEnv
+      ? 'bg-[var(--tg-bg-color,#ffffff)]'
+      : 'bg-gradient-to-br from-garden-50 to-green-50'
+
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-garden-50 to-green-50">
+      <div
+        className={`flex min-h-screen items-center justify-center ${bgClass}`}
+      >
         <motion.div
           className="text-center"
           initial={{ opacity: 0, scale: 0.9 }}
@@ -60,9 +102,20 @@ function App() {
           transition={{ duration: 0.5 }}
         >
           <div className="mb-4 text-6xl">🌸</div>
-          <h1 className="mb-4 text-2xl font-bold text-gray-900">KiraKira</h1>
+          <h1 className="mb-4 text-2xl font-bold text-[var(--tg-text-color,#000000)]">
+            KiraKira
+          </h1>
           <LoadingSpinner size="lg" />
-          <p className="mt-4 text-gray-600">Загружаем ваш сад...</p>
+          <p className="mt-4 text-[var(--tg-hint-color,#666666)]">
+            {isTelegramEnv
+              ? '🌱 Инициализируем ваш эмоциональный сад...'
+              : 'Загружаем ваш сад...'}
+          </p>
+          {isTelegramEnv && telegramUser && (
+            <p className="mt-2 text-sm text-[var(--tg-hint-color,#666666)]">
+              Добро пожаловать, {telegramUser.firstName}! 👋
+            </p>
+          )}
         </motion.div>
       </div>
     )

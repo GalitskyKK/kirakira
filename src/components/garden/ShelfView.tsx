@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { clsx } from 'clsx'
-import { ShelfElement } from './ShelfElement'
+import { ShelfElement } from './ShelfElement.tsx'
 import type { GardenElement as GardenElementType, ViewMode } from '@/types'
 
 interface ShelfViewProps {

@@ -4,7 +4,13 @@
   "version": "0.1.0",
   "type": "module",
   "description": "A meditative PWA where your daily emotions bloom into a unique digital garden",
-  "keywords": ["meditation", "mood-tracking", "pwa", "digital-garden", "mindfulness"],
+  "keywords": [
+    "meditation",
+    "mood-tracking",
+    "pwa",
+    "digital-garden",
+    "mindfulness"
+  ],
   "author": "KiraKira Team",
   "license": "MIT",
   "scripts": {
@@ -18,7 +24,9 @@
     "lint:fix": "eslint . --ext ts,tsx --fix",
     "type-check": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\""
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "setup-bot": "node scripts/setup-bot.js",
+    "setup-bot:prod": "node scripts/setup-bot.js https://kirakira-theta.vercel.app"
   },
   "dependencies": {
     "react": "^18.2.0",

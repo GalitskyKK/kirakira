@@ -18,6 +18,69 @@ npm run build
 npm run preview
 ```
 
+## 📱 Telegram Mini App
+
+KiraKira is also available as a **Telegram Mini App**! Experience your emotional garden directly in Telegram with additional features:
+
+- **Bot**: [@KiraKiraGardenBot](https://t.me/KiraKiraGardenBot)
+- **CloudStorage sync** - Sync between devices automatically
+- **Haptic feedback** - Touch feedback on mobile
+- **Share gardens** - Send beautiful garden screenshots
+- **Telegram Stars** - Premium features and gifts
+- **Native integration** - Works seamlessly in Telegram
+
+### Quick Telegram Setup
+
+1. **Create environment file** `.env.local` (for local development):
+
+   ```env
+   VITE_TELEGRAM_BOT_TOKEN=8300088116:AAGnsuXBd1eP3vChaxPOIpxCOQxKDANE-zU
+   VITE_TELEGRAM_BOT_USERNAME=KiraKiraGardenBot
+   VITE_APP_URL=http://localhost:3000
+   ```
+
+2. **Auto-configure the bot**:
+
+   ```bash
+   npm run setup-bot
+   ```
+
+3. **Set up HTTPS for testing**:
+
+   ```bash
+   npx ngrok http 3000
+   # Copy the HTTPS URL (e.g. https://abc123.ngrok-free.app)
+   ```
+
+4. **Configure Mini App in BotFather**:
+   - Open [@BotFather](https://t.me/BotFather)
+   - Send `/mybots` → Select your bot → `Configure Mini App`
+   - Enter your ngrok HTTPS URL
+
+5. **Test it!** Open [@KiraKiraGardenBot](https://t.me/KiraKiraGardenBot)
+
+### 🚀 Already have Vercel project? (kirakira-theta.vercel.app)
+
+1. **Add Environment Variables** in [Vercel Dashboard](https://vercel.com/dashboard):
+
+   ```
+   VITE_TELEGRAM_BOT_TOKEN = 8300088116:AAGnsuXBd1eP3vChaxPOIpxCOQxKDANE-zU
+   VITE_TELEGRAM_BOT_USERNAME = KiraKiraGardenBot
+   VITE_APP_URL = https://kirakira-theta.vercel.app
+   ```
+
+2. **Redeploy** your project in Vercel
+
+3. **Configure production bot**:
+
+   ```bash
+   npm run setup-bot:prod https://kirakira-theta.vercel.app
+   ```
+
+4. **Set Mini App URL** in [@BotFather](https://t.me/BotFather): `https://kirakira-theta.vercel.app`
+
+📚 **Documentation**: [Quick Start](./docs/QUICK_START.md) | [Full Integration Guide](./docs/TELEGRAM_INTEGRATION.md) | [Vercel Setup](./docs/VERCEL_SETUP.md)
+
 ## 📱 Features
 
 - **Mood Tracking** - Daily emotional check-ins with beautiful UI
@@ -73,10 +136,15 @@ npm run type-check # TypeScript type checking
 
 ### Environment Variables
 
-Copy `.env.example` to `.env.local` and configure:
+Create `.env.local` for configuration:
 
 ```bash
-# Optional Supabase integration
+# Telegram Mini App (recommended)
+VITE_TELEGRAM_BOT_TOKEN=8300088116:AAGnsuXBd1eP3vChaxPOIpxCOQxKDANE-zU
+VITE_TELEGRAM_BOT_USERNAME=KiraKiraGardenBot
+VITE_APP_URL=http://localhost:3000
+
+# Optional Supabase integration (advanced)
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
@@ -84,7 +152,7 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ## 🌱 How It Works
 
 1. **Daily Check-in** - Users select their current mood
-2. **Element Generation** - Mood influences plant type and characteristics  
+2. **Element Generation** - Mood influences plant type and characteristics
 3. **Garden Growth** - New elements appear based on mood patterns
 4. **Visual Journey** - Garden becomes a personal emotional landscape
 
@@ -140,4 +208,4 @@ MIT License - see [LICENSE](LICENSE) for details
 
 **Created with 🌸 for mental wellness and digital mindfulness**
 
-*KiraKira - Where emotions bloom into beauty*
+_KiraKira - Where emotions bloom into beauty_
