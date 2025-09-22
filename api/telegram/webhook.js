@@ -121,29 +121,77 @@ async function handleCommand(message) {
     case 'mood':
       await sendMessage(
         chat.id,
-        '😊 *Время отметить настроение!*\n\nОткрой приложение и поделись тем, как ты себя чувствуешь сегодня. Каждая эмоция станет частью твоего сада.',
+        '😊 *Как дела сегодня?*\n\nВыбери свое текущее настроение, и я добавлю соответствующий элемент в твой сад!',
         {
-          reply_markup: createMiniAppKeyboard(),
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: '😊 Радость', callback_data: 'mood_joy' },
+                { text: '😌 Спокойствие', callback_data: 'mood_calm' },
+              ],
+              [
+                { text: '😰 Стресс', callback_data: 'mood_stress' },
+                { text: '😢 Грусть', callback_data: 'mood_sadness' },
+              ],
+              [
+                { text: '😠 Гнев', callback_data: 'mood_anger' },
+                { text: '😰 Тревога', callback_data: 'mood_anxiety' },
+              ],
+              [
+                { text: '📱 Открыть полное приложение', web_app: { url: MINI_APP_URL } },
+              ],
+            ],
+          },
         }
       )
       break
 
     case 'stats':
-      await sendMessage(
-        chat.id,
-        '📊 *Твоя статистика ждет!*\n\nПосмотри на прогресс своего эмоционального путешествия, тренды настроений и достижения.',
-        {
-          reply_markup: createMiniAppKeyboard(),
-        }
-      )
+      await handleStatsCommand(chat.id, from.id)
       break
 
     case 'premium':
       await sendMessage(
         chat.id,
-        '⭐ *Премиум возможности*\n\nРазблокируй редкие элементы сада, сезонные темы и расширенную аналитику за Telegram Stars!',
+        `⭐ *Премиум возможности KiraKira*
+
+✨ *Редкие элементы сада* — 100⭐
+• Радужные цветы
+• Светящиеся кристаллы  
+• Мистические грибы
+• Эксклюзивные анимации
+
+👑 *Сезонные темы* — 50⭐
+• Весенняя палитра
+• Летний солнечный сад
+• Осенние краски
+• Зимняя сказка
+
+📊 *Расширенная аналитика* — 75⭐
+• Тренды настроений
+• Детальные графики
+• Прогнозы эмоций
+• Экспорт данных`,
         {
-          reply_markup: createMiniAppKeyboard(),
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: '✨ Редкие элементы (100⭐)', callback_data: 'buy_rare_elements' },
+              ],
+              [
+                { text: '👑 Сезонные темы (50⭐)', callback_data: 'buy_seasonal_themes' },
+              ],
+              [
+                { text: '📊 Аналитика Pro (75⭐)', callback_data: 'buy_analytics_pro' },
+              ],
+              [
+                { text: '🎁 Купить все со скидкой (200⭐)', callback_data: 'buy_premium_bundle' },
+              ],
+              [
+                { text: '📱 Открыть приложение', web_app: { url: MINI_APP_URL } },
+              ],
+            ],
+          },
         }
       )
       break
@@ -208,6 +256,227 @@ async function handleCommand(message) {
         }
       )
   }
+}
+
+/**
+ * Обрабатывает нажатия на inline кнопки
+ */
+async function handleCallbackQuery(callbackQuery) {
+  const { id, from, data, message } = callbackQuery
+  
+  try {
+    if (data.startsWith('mood_')) {
+      await handleMoodSelection(callbackQuery)
+    } else if (data.startsWith('buy_')) {
+      await handlePremiumPurchase(callbackQuery)
+    } else if (data === 'show_stats') {
+      await handleStatsCommand(message.chat.id, from.id)
+    } else if (data === 'quick_mood') {
+      await sendMessage(
+        message.chat.id,
+        '😊 *Как дела сегодня?*\n\nВыбери свое текущее настроение:',
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: '😊 Радость', callback_data: 'mood_joy' },
+                { text: '😌 Спокойствие', callback_data: 'mood_calm' },
+              ],
+              [
+                { text: '😰 Стресс', callback_data: 'mood_stress' },
+                { text: '😢 Грусть', callback_data: 'mood_sadness' },
+              ],
+              [
+                { text: '😠 Гнев', callback_data: 'mood_anger' },
+                { text: '😰 Тревога', callback_data: 'mood_anxiety' },
+              ],
+            ],
+          },
+        }
+      )
+    } else if (data === 'share_garden') {
+      await sendMessage(
+        message.chat.id,
+        '🔗 *Поделись своим эмоциональным садом!*',
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: '👥 Пригласить друзей',
+                  switch_inline_query: '🌸 Попробуй KiraKira — создай свой эмоциональный сад!'
+                }
+              ],
+              [
+                { text: '📱 Открыть для шаринга', web_app: { url: MINI_APP_URL } }
+              ]
+            ]
+          }
+        }
+      )
+    } else if (data.startsWith('confirm_purchase_')) {
+      const itemId = data.replace('confirm_purchase_', '')
+      await sendMessage(
+        message.chat.id,
+        '🚧 *Функция в разработке*\n\nПокупки через Telegram Stars будут доступны в ближайшем обновлении!\n\nА пока откройте приложение для полного функционала.',
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '📱 Открыть приложение', web_app: { url: MINI_APP_URL } }]
+            ]
+          }
+        }
+      )
+    }
+  } catch (error) {
+    console.error('Callback query error:', error)
+  }
+  
+  // Убираем "часики" с кнопки
+  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ callback_query_id: id })
+  })
+}
+
+/**
+ * Обрабатывает выбор настроения
+ */
+async function handleMoodSelection(callbackQuery) {
+  const { from, data, message } = callbackQuery
+  const mood = data.replace('mood_', '')
+  
+  const moodEmojis = {
+    joy: '😊',
+    calm: '😌', 
+    stress: '😰',
+    sadness: '😢',
+    anger: '😠',
+    anxiety: '😰'
+  }
+  
+  const moodElements = {
+    joy: '🌸 красивый цветок',
+    calm: '🌿 спокойную траву',
+    stress: '⚡ энергетический кристалл', 
+    sadness: '🍄 тихий гриб',
+    anger: '🔥 огненный камень',
+    anxiety: '💎 защитный кристалл'
+  }
+  
+  const element = moodElements[mood] || '🌱 растение'
+  const emoji = moodEmojis[mood] || '🌸'
+  
+  await sendMessage(
+    message.chat.id,
+    `${emoji} *Настроение отмечено!*
+
+Твое настроение "${mood}" добавило ${element} в твой сад. 
+
+🌱 Элементы сада: каждая эмоция превращается в уникальное растение или кристалл
+📱 Открой приложение, чтобы увидеть свой растущий сад!
+
+_Приходи завтра, чтобы отметить новое настроение!_`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: '🌱 Посмотреть сад', web_app: { url: MINI_APP_URL } },
+            { text: '📊 Статистика', callback_data: 'show_stats' }
+          ],
+          [
+            { text: '🔗 Поделиться', callback_data: 'share_garden' }
+          ]
+        ]
+      }
+    }
+  )
+}
+
+/**
+ * Обрабатывает покупку премиума
+ */
+async function handlePremiumPurchase(callbackQuery) {
+  const { from, data, message } = callbackQuery
+  
+  const premiumItems = {
+    buy_rare_elements: { name: 'Редкие элементы сада', price: 100, id: 'rare_elements' },
+    buy_seasonal_themes: { name: 'Сезонные темы', price: 50, id: 'seasonal_themes' },
+    buy_analytics_pro: { name: 'Аналитика Pro', price: 75, id: 'analytics_pro' },
+    buy_premium_bundle: { name: 'Премиум комплект', price: 200, id: 'premium_bundle' }
+  }
+  
+  const item = premiumItems[data]
+  if (!item) return
+  
+  // Создаем invoice для Telegram Stars
+  await sendMessage(
+    message.chat.id,
+    `⭐ *${item.name}*
+
+Цена: ${item.price} Telegram Stars
+
+После покупки функция станет доступна в приложении немедленно!`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { 
+              text: `💳 Купить за ${item.price}⭐`, 
+              callback_data: `confirm_purchase_${item.id}` 
+            }
+          ],
+          [
+            { text: '📱 Открыть приложение', web_app: { url: MINI_APP_URL } }
+          ]
+        ]
+      }
+    }
+  )
+}
+
+/**
+ * Показывает статистику пользователя
+ */
+async function handleStatsCommand(chatId, userId) {
+  // Здесь должна быть реальная статистика из базы данных
+  // Для демо показываем примерную статистику
+  
+  const demoStats = {
+    totalDays: Math.floor(Math.random() * 30) + 1,
+    currentStreak: Math.floor(Math.random() * 7) + 1,
+    gardenElements: Math.floor(Math.random() * 20) + 5,
+    dominantMood: ['радость', 'спокойствие', 'энергия'][Math.floor(Math.random() * 3)]
+  }
+  
+  await sendMessage(
+    chatId,
+    `📊 *Твоя статистика KiraKira*
+
+🗓️ Дней с приложением: ${demoStats.totalDays}
+🔥 Текущая серия: ${demoStats.currentStreak} дней
+🌱 Элементов в саду: ${demoStats.gardenElements}
+😊 Преобладающее настроение: ${demoStats.dominantMood}
+
+📈 *Прогресс последних дней:*
+🌸🌿🍄⚡🌸🌿🔥
+
+_Продолжай отмечать настроения каждый день, чтобы вырастить еще более красивый сад!_`,
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: '🌱 Открыть сад', web_app: { url: MINI_APP_URL } },
+            { text: '😊 Отметить настроение', callback_data: 'quick_mood' }
+          ],
+          [
+            { text: '⭐ Премиум аналитика', callback_data: 'buy_analytics_pro' }
+          ]
+        ]
+      }
+    }
+  )
 }
 
 /**
@@ -340,6 +609,8 @@ export default async function handler(req, res) {
       } else if (update.message.successful_payment) {
         await handleSuccessfulPayment(update.message)
       }
+    } else if (update.callback_query) {
+      await handleCallbackQuery(update.callback_query)
     } else if (update.pre_checkout_query) {
       await handlePreCheckoutQuery(update.pre_checkout_query)
     } else if (update.inline_query) {
