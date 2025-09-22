@@ -8,7 +8,16 @@
 import https from 'https'
 import { fileURLToPath } from 'url'
 
-const BOT_TOKEN = '8300088116:AAGnsuXBd1eP3vChaxPOIpxCOQxKDANE-zU'
+const BOT_TOKEN =
+  process.env.TELEGRAM_BOT_TOKEN || process.env.VITE_TELEGRAM_BOT_TOKEN
+
+if (!BOT_TOKEN) {
+  console.error('❌ Telegram bot token is required!')
+  console.error(
+    'Set TELEGRAM_BOT_TOKEN or VITE_TELEGRAM_BOT_TOKEN environment variable'
+  )
+  process.exit(1)
+}
 const BOT_API_URL = `https://api.telegram.org/bot${BOT_TOKEN}`
 
 // Команды бота

@@ -7,10 +7,12 @@
  */
 
 // Конфигурация
-const BOT_TOKEN =
-  process.env.TELEGRAM_BOT_TOKEN ||
-  '8300088116:AAGnsuXBd1eP3vChaxPOIpxCOQxKDANE-zU'
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const MINI_APP_URL = process.env.VITE_APP_URL || 'kirakira-theta.vercel.app'
+
+if (!BOT_TOKEN) {
+  console.error('❌ TELEGRAM_BOT_TOKEN environment variable is required')
+}
 
 /**
  * Отправляет сообщение пользователю
