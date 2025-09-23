@@ -10,9 +10,15 @@ import { useUserStore } from '@/stores'
 import { initializeStores } from '@/stores'
 import { HomePage } from '@/pages/HomePage'
 import { OnboardingPage } from '@/pages/OnboardingPage'
-import { ShowcasePage } from '@/pages/ShowcasePage'
 import { AuthPage } from '@/pages/AuthPage'
+// ShowcasePage импортируется условно только в DEV режиме
 import { LoadingSpinner } from '@/components/ui'
+import { lazy, Suspense } from 'react'
+
+// Динамический импорт ShowcasePage только в DEV режиме
+const ShowcasePage = import.meta.env.DEV
+  ? lazy(() => import('@/pages/ShowcasePage'))
+  : null
 import { TelegramDiagnostic } from '@/components/TelegramDiagnostic'
 import { useTelegram, useTelegramTheme } from '@/hooks'
 import { telegramStorage } from '@/utils/telegramStorage'
@@ -454,20 +460,25 @@ function App() {
                 </motion.div>
               }
             />
-            <Route
-              path="/showcase"
-              element={
-                <motion.div
-                  key="showcase"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <ShowcasePage />
-                </motion.div>
-              }
-            />
+            {/* Showcase роут доступен только в DEV режиме */}
+            {import.meta.env.DEV && ShowcasePage && (
+              <Route
+                path="/showcase"
+                element={
+                  <motion.div
+                    key="showcase"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <ShowcasePage />
+                    </Suspense>
+                  </motion.div>
+                }
+              />
+            )}
             <Route
               path="/auth"
               element={
