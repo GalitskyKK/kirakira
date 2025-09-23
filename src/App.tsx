@@ -13,10 +13,26 @@ import { OnboardingPage } from '@/pages/OnboardingPage'
 import { ShowcasePage } from '@/pages/ShowcasePage'
 import { AuthPage } from '@/pages/AuthPage'
 import { LoadingSpinner } from '@/components/ui'
+import { TelegramDiagnostic } from '@/components/TelegramDiagnostic'
 import { useTelegram, useTelegramTheme } from '@/hooks'
 import { telegramStorage } from '@/utils/telegramStorage'
 
 function App() {
+  console.log('🔍 APP.TSX COMPONENT MOUNTING...')
+
+  // 🚨 ПРОВЕРКА ДИАГНОСТИЧЕСКОГО РЕЖИМА
+  const urlParams = new URLSearchParams(window.location.search)
+  const forceDiagnostic =
+    urlParams.get('diagnostic') === '1' ||
+    urlParams.get('force_diagnostic') === '1'
+  const isTelegramEnv = !!window.Telegram?.WebApp
+
+  // 🚨 ПОКАЗАТЬ ДИАГНОСТИКУ ПРИ ПРОБЛЕМАХ В TELEGRAM
+  if (forceDiagnostic || (isTelegramEnv && urlParams.get('debug') === '1')) {
+    console.log('🚨 ПОКАЗЫВАЕМ ДИАГНОСТИЧЕСКУЮ СТРАНИЦУ')
+    return <TelegramDiagnostic />
+  }
+
   const {
     currentUser,
     hasCompletedOnboarding,
@@ -28,6 +44,13 @@ function App() {
     createTelegramUser,
   } = useUserStore()
 
+  console.log('🔍 USER STORE LOADED:', {
+    currentUser: !!currentUser,
+    hasCompletedOnboarding,
+    isAuthenticated,
+    isLoading,
+  })
+
   const [isInitializing, setIsInitializing] = useState(true)
   const [initError, setInitError] = useState<string | null>(null)
   const [showAuth, setShowAuth] = useState(false)
@@ -35,10 +58,19 @@ function App() {
   // Telegram интеграция
   const {
     user: telegramUser,
-    isTelegramEnv,
+    isTelegramEnv: _isTelegramEnv, // уже объявлено выше
     isReady: telegramReady,
   } = useTelegram()
+
+  console.log('🔍 TELEGRAM HOOKS LOADED:', {
+    telegramUser: !!telegramUser,
+    isTelegramEnv,
+    telegramReady,
+  })
+
   const { colorScheme } = useTelegramTheme()
+
+  console.log('🔍 TELEGRAM THEME LOADED:', { colorScheme })
 
   // Initialize app
   useEffect(() => {
@@ -234,7 +266,7 @@ function App() {
   // Show loading state during initialization
   if (isInitializing || isLoading) {
     // 🔍 ОТЛАДКА ЭКРАНА ЗАГРУЗКИ
-    console.log('🔍 ОТОБРАЖАЕТСЯ ЭКРАН ЗАГРУЗКИ:', {
+    console.log('🔍 РЕНДЕРИМ ЭКРАН ЗАГРУЗКИ:', {
       isInitializing,
       isLoading,
       isTelegramEnv,
@@ -245,6 +277,8 @@ function App() {
       isAuthenticated,
       initError,
     })
+
+    console.log('🔍 НАЧАЛО РЕНДЕРИНГА LOADING SCREEN...')
 
     const bgClass = isTelegramEnv
       ? 'bg-[var(--tg-bg-color,#ffffff)]'
@@ -347,8 +381,16 @@ function App() {
     )
   }
 
+  console.log('🔍 ОСНОВНАЯ ЛОГИКА РЕНДЕРИНГА:', {
+    initError: !!initError,
+    hasCompletedOnboarding,
+    isAuthenticated,
+    isTelegramEnv,
+  })
+
   // Show error state if initialization failed
   if (initError) {
+    console.log('🔍 РЕНДЕРИМ ERROR STATE')
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-red-50 to-orange-50">
         <motion.div
@@ -375,11 +417,13 @@ function App() {
 
   // Show onboarding for new users
   if (!hasCompletedOnboarding) {
+    console.log('🔍 РЕНДЕРИМ ONBOARDING PAGE')
     return <OnboardingPage onComplete={handleOnboardingComplete} />
   }
 
   // Show auth screen for non-authenticated users (optional)
   if (showAuth && !isAuthenticated && !isTelegramEnv) {
+    console.log('🔍 РЕНДЕРИМ AUTH PAGE')
     return (
       <AuthPage
         onSuccess={() => setShowAuth(false)}
@@ -387,6 +431,8 @@ function App() {
       />
     )
   }
+
+  console.log('🔍 РЕНДЕРИМ ОСНОВНОЕ ПРИЛОЖЕНИЕ (ROUTER)')
 
   // Main app routing
   return (
