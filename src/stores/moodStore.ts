@@ -15,7 +15,7 @@ import { saveMoodHistory, loadMoodHistory } from '@/utils/storage'
 interface MoodActions {
   // Mood management
   loadMoodHistory: () => void
-  syncMoodHistory: () => Promise<void>
+  syncMoodHistory: (forceSync?: boolean) => Promise<void>
   addMoodEntry: (
     mood: MoodType,
     intensity: MoodIntensity,
@@ -98,7 +98,7 @@ export const useMoodStore = create<MoodStore>()(
     },
 
     // 🔄 СИНХРОНИЗАЦИЯ С SUPABASE
-    syncMoodHistory: async () => {
+    syncMoodHistory: async (forceSync = false) => {
       try {
         const userStore = useUserStore.getState()
         const currentUser = userStore.currentUser
@@ -113,14 +113,14 @@ export const useMoodStore = create<MoodStore>()(
         const now = Date.now()
         const lastSync = state.lastSyncTime
 
-        if (now - lastSync < 10000) {
+        if (!forceSync && now - lastSync < 10000) {
           // 10 секунд
           console.log('⏳ Skipping mood sync - too soon since last sync')
           return
         }
 
         console.log(
-          `🔄 Syncing mood history for user ${currentUser.telegramId}`
+          `🔄 Syncing mood history for user ${currentUser.telegramId}${forceSync ? ' (forced)' : ''}`
         )
 
         // Обновляем время последней синхронизации

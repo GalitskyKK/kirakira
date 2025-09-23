@@ -210,35 +210,81 @@ async function addGardenElement(telegramUserId, mood) {
       `Adding garden element for mood ${mood} for user ${telegramUserId}`
     )
 
-    // Простое маппирование настроений на типы элементов
+    // Простое маппирование настроений на типы элементов (lowercase для БД)
     const moodToElement = {
-      joy: 'FLOWER',
-      calm: 'TREE',
-      stress: 'CRYSTAL',
-      sadness: 'MUSHROOM',
-      anger: 'STONE',
-      anxiety: 'CRYSTAL',
+      joy: 'flower',
+      calm: 'tree',
+      stress: 'crystal',
+      sadness: 'mushroom',
+      anger: 'stone',
+      anxiety: 'crystal',
     }
 
-    const moodToRarity = {
-      joy: 'common',
-      calm: 'common',
-      stress: 'uncommon',
-      sadness: 'common',
-      anger: 'uncommon',
-      anxiety: 'rare',
+    // 🎲 СИСТЕМА БОНУСОВ К РЕДКОСТИ (НЕ ГАРАНТИРОВАННАЯ РЕДКОСТЬ!)
+    const moodRarityBonuses = {
+      joy: 20, // 😊 +20% бонус к шансу редкости
+      calm: 10, // 😌 +10% бонус к шансу редкости
+      anxiety: 10, // 😰 +10% бонус к шансу редкости
+      sadness: 5, // 😢 +5% бонус к шансу редкости
+      stress: 0, // 😰 без бонуса
+      anger: 0, // 😠 без бонуса
     }
+
+    // 🎲 ГЕНЕРИРУЕМ РЕДКОСТЬ С УЧЕТОМ БОНУСА (КАК В ПРИЛОЖЕНИИ!)
+    function generateRarityWithBonus(rarityBonusPercent) {
+      // ✅ ТОЧНО ТАКИЕ ЖЕ БАЗОВЫЕ ВЕСА КАК В ПРИЛОЖЕНИИ
+      const RARITY_WEIGHTS = {
+        common: 50,
+        uncommon: 30,
+        rare: 15,
+        epic: 4,
+        legendary: 1,
+      }
+
+      // ✅ ТОЧНО ТАКАЯ ЖЕ ЛОГИКА КАК В ПРИЛОЖЕНИИ
+      // Конвертируем процент в десятичную дробь (20 -> 0.2)
+      const rarityBonus = rarityBonusPercent / 100
+
+      // Применяем бонус: weight + rarityBonus * weight
+      const adjustedWeights = {}
+      for (const [rarity, weight] of Object.entries(RARITY_WEIGHTS)) {
+        adjustedWeights[rarity] = weight + rarityBonus * weight
+      }
+
+      // Считаем общий вес
+      const totalWeight = Object.values(adjustedWeights).reduce(
+        (sum, weight) => sum + weight,
+        0
+      )
+
+      // Генерируем случайное число от 0 до totalWeight
+      let randomWeight = Math.random() * totalWeight
+
+      // Выбираем редкость по весам (начинаем с самых редких)
+      for (const [rarity, weight] of Object.entries(adjustedWeights)) {
+        randomWeight -= weight
+        if (randomWeight <= 0) {
+          return rarity
+        }
+      }
+
+      // Fallback
+      return 'common'
+    }
+
+    const rarityBonus = moodRarityBonuses[mood] || 0
+    const generatedRarity = generateRarityWithBonus(rarityBonus)
 
     // Генерируем простой элемент сада
     const element = {
-      type: moodToElement[mood] || 'FLOWER',
+      type: moodToElement[mood] || 'flower', // ✅ ИСПРАВЛЕНО: lowercase
       position: {
         x: Math.floor(Math.random() * 10), // Случайная позиция 0-9
         y: Math.floor(Math.random() * 4), // Случайная полка 0-3
       },
       unlockDate: new Date().toISOString(),
       mood: mood,
-      rarity: moodToRarity[mood] || 'common',
+      rarity: generatedRarity, // 🎲 Случайная редкость с бонусом от настроения
     }
 
     // Запрос к API приложения для создания элемента сада

@@ -127,18 +127,20 @@ function App() {
 
         await initializeStores()
 
-        // 🔄 ПРИНУДИТЕЛЬНАЯ СИНХРОНИЗАЦИЯ ДАННЫХ для Telegram пользователей
+        // 🔄 ОДНОРАЗОВАЯ СИНХРОНИЗАЦИЯ ДАННЫХ для Telegram пользователей
         if (telegramUser && telegramReady) {
           try {
-            console.log('🔄 Принудительная синхронизация stores с сервером...')
+            console.log(
+              '🔄 Одноразовая синхронизация stores с сервером при входе...'
+            )
 
-            // Получаем stores и принудительно синхронизируем
+            // Получаем stores и принудительно синхронизируем ОДИН РАЗ
             const { useMoodStore } = await import('@/stores/moodStore')
             const { useGardenStore } = await import('@/stores/gardenStore')
 
-            // Принудительно синхронизируем данные
-            await useMoodStore.getState().syncMoodHistory()
-            await useGardenStore.getState().syncGarden()
+            // Принудительно синхронизируем данные (один раз при входе)
+            await useMoodStore.getState().syncMoodHistory(true) // forceSync = true
+            await useGardenStore.getState().syncGarden(true) // forceSync = true
 
             console.log('✅ Stores синхронизированы с сервером')
           } catch (storesSyncError) {

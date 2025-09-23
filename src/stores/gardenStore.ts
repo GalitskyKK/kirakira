@@ -23,7 +23,7 @@ interface GardenActions {
 
   // Element management
   unlockTodaysElement: (mood: MoodType) => Promise<GardenElement | null>
-  syncGarden: () => Promise<void>
+  syncGarden: (forceSync?: boolean) => Promise<void>
   moveElement: (elementId: string, newPosition: Position2D) => void
   selectElement: (element: GardenElement | null) => void
 
@@ -83,7 +83,7 @@ export const useGardenStore = create<GardenStore>()(
     },
 
     // 🔄 СИНХРОНИЗАЦИЯ С SUPABASE
-    syncGarden: async () => {
+    syncGarden: async (forceSync = false) => {
       try {
         const userStore = useUserStore.getState()
         const currentUser = userStore.currentUser
@@ -98,13 +98,15 @@ export const useGardenStore = create<GardenStore>()(
         const now = Date.now()
         const lastSync = state.lastSyncTime
 
-        if (now - lastSync < 10000) {
+        if (!forceSync && now - lastSync < 10000) {
           // 10 секунд
           console.log('⏳ Skipping garden sync - too soon since last sync')
           return
         }
 
-        console.log(`🔄 Syncing garden for user ${currentUser.telegramId}`)
+        console.log(
+          `🔄 Syncing garden for user ${currentUser.telegramId}${forceSync ? ' (forced)' : ''}`
+        )
 
         // Обновляем время последней синхронизации
         set({ lastSyncTime: now })
