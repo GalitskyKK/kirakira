@@ -149,7 +149,7 @@ export const useGardenStore = create<GardenStore>()(
                     y: serverElement.position_y,
                   },
                   unlockDate: new Date(serverElement.unlock_date),
-                  moodInfluence: serverElement.mood_when_unlocked,
+                  moodInfluence: serverElement.mood_influence || 'joy', // Use correct field name with fallback
                   rarity: serverElement.rarity,
                   createdAt: new Date(serverElement.created_at),
                 })

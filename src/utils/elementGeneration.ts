@@ -389,7 +389,7 @@ function selectElementTemplate(
   rarityBonus: number = 0
 ): ElementTemplate {
   // Apply mood influence to filter preferred element types
-  const moodConfig = MOOD_CONFIG[mood]
+  const moodConfig = MOOD_CONFIG[mood] || MOOD_CONFIG.joy // Fallback to joy if invalid mood
   const preferredTypes = new Set(moodConfig.elementTypes)
 
   // Filter out premium elements if user doesn't have premium access
@@ -557,7 +557,7 @@ function adjustElementColor(
   _season: SeasonalVariant,
   random: SeededRandom
 ): string {
-  const moodConfig = MOOD_CONFIG[mood]
+  const moodConfig = MOOD_CONFIG[mood] || MOOD_CONFIG.joy // Fallback to joy if invalid mood
   const moodInfluence = 0.3
 
   // Simple color blending (in a real app, you'd use a proper color library)
@@ -585,7 +585,7 @@ export function generateDailyElement(
   const random = new SeededRandom(seed)
 
   // Get mood configuration and bonuses
-  const moodConfig = MOOD_CONFIG[mood]
+  const moodConfig = MOOD_CONFIG[mood] || MOOD_CONFIG.joy // Fallback to joy if invalid mood
   const rarityBonus = moodConfig.rarityBonus
 
   // Select element template

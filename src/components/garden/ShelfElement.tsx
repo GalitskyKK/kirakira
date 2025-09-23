@@ -55,7 +55,7 @@ export const ShelfElement = memo(function ShelfElement({
     }
   }, [])
 
-  const moodConfig = MOOD_CONFIG[element.moodInfluence]
+  const moodConfig = MOOD_CONFIG[element.moodInfluence] || MOOD_CONFIG.joy // Fallback to joy if invalid mood
 
   // Debug: console.log('ShelfElement render:', element.name, 'viewMode:', viewMode)
 
