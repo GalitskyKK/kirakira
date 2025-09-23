@@ -74,29 +74,31 @@ export class ErrorBoundary extends React.Component<
               </div>
             </div>
 
-            {/* Minimized error info */}
-            <details className="mb-6">
-              <summary className="cursor-pointer rounded-lg bg-yellow-100/50 p-3 text-sm font-semibold">
-                🔧 Техническая информация
-              </summary>
-              <div className="mt-3 rounded-lg bg-gray-100/50 p-3 text-xs">
-                <div className="space-y-1">
-                  <div>
-                    <strong>Статус:</strong> Восстановление данных
+            {/* Скрытая техническая информация только для разработчика */}
+            {process.env['NODE_ENV'] === 'development' && (
+              <details className="mb-6">
+                <summary className="cursor-pointer rounded-lg bg-yellow-100/50 p-3 text-sm font-semibold">
+                  🔧 Техническая информация (dev only)
+                </summary>
+                <div className="mt-3 rounded-lg bg-gray-100/50 p-3 text-xs">
+                  <div className="space-y-1">
+                    <div>
+                      <strong>Статус:</strong> Восстановление данных
+                    </div>
+                    {isTelegramEnv && (
+                      <div>
+                        <strong>Platform:</strong> Telegram Mini App
+                      </div>
+                    )}
+                    {this.state.error?.message && (
+                      <div>
+                        <strong>Детали:</strong> {this.state.error.message}
+                      </div>
+                    )}
                   </div>
-                  {isTelegramEnv && (
-                    <div>
-                      <strong>Platform:</strong> Telegram Mini App
-                    </div>
-                  )}
-                  {this.state.error?.message && (
-                    <div>
-                      <strong>Детали:</strong> {this.state.error.message}
-                    </div>
-                  )}
                 </div>
-              </div>
-            </details>
+              </details>
+            )}
 
             <div className="space-y-3">
               <button

@@ -8,12 +8,12 @@ import type {
   MoodType,
 } from '@/types'
 import { ViewMode, SeasonalVariant } from '@/types'
+import { useUserStore } from './userStore'
 import {
   generateDailyElement,
   canUnlockTodaysElement,
 } from '@/utils/elementGeneration'
 import { saveGarden, loadGarden } from '@/utils/storage'
-import { useUserStore } from './userStore'
 
 interface GardenActions {
   // Garden management
@@ -24,7 +24,7 @@ interface GardenActions {
   // Element management
   unlockTodaysElement: (mood: MoodType) => Promise<GardenElement | null>
   syncGarden: (forceSync?: boolean) => Promise<void>
-  moveElement: (elementId: string, newPosition: Position2D) => void
+  moveElement: (elementId: string, newPosition: Position2D) => Promise<void>
   selectElement: (element: GardenElement | null) => void
 
   // View management
@@ -351,7 +351,7 @@ export const useGardenStore = create<GardenStore>()(
       }
     },
 
-    moveElement: (elementId: string, newPosition: Position2D) => {
+    moveElement: async (elementId: string, newPosition: Position2D) => {
       const { currentGarden } = get()
 
       if (!currentGarden) {
@@ -394,6 +394,38 @@ export const useGardenStore = create<GardenStore>()(
             currentGarden: updatedGarden,
             isLoading: false,
           })
+
+          // 📡 ОТПРАВЛЯЕМ ОБНОВЛЕНИЕ ПОЗИЦИИ НА СЕРВЕР для синхронизации между устройствами
+          const userStore = useUserStore.getState()
+          const currentUser = userStore.currentUser
+
+          if (currentUser?.telegramId) {
+            try {
+              const response = await fetch('/api/garden/update-position', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  telegramUserId: currentUser.telegramId,
+                  elementId,
+                  position: newPosition,
+                }),
+              })
+
+              if (!response.ok) {
+                console.warn(
+                  '⚠️ Failed to sync element position to server:',
+                  response.status
+                )
+              } else {
+                console.log('✅ Element position synced to server successfully')
+              }
+            } catch (serverError) {
+              console.warn(
+                '⚠️ Server position sync failed, but local save succeeded:',
+                serverError
+              )
+            }
+          }
         } else {
           throw new Error('Failed to save element position')
         }
