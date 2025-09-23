@@ -10,6 +10,23 @@ interface GardenStatsProps {
 }
 
 export function GardenStats({ garden }: GardenStatsProps) {
+  // Локализация типов элементов
+  const typeLabels: Record<string, string> = {
+    flower: 'Цветок',
+    tree: 'Дерево',
+    stone: 'Камень',
+    water: 'Вода',
+    grass: 'Трава',
+    mushroom: 'Гриб',
+    crystal: 'Кристалл',
+    decoration: 'Декорация',
+    rainbow_flower: 'Радужный цветок',
+    glowing_crystal: 'Светящийся кристалл',
+    mystic_mushroom: 'Мистический гриб',
+    aurora_tree: 'Северное дерево',
+    starlight_decoration: 'Звездное украшение',
+  }
+
   const stats = useMemo(() => {
     const elements = garden.elements
 
@@ -152,8 +169,8 @@ export function GardenStats({ garden }: GardenStatsProps) {
               >
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">{typeEmojis[type] ?? '🌿'}</span>
-                  <span className="text-sm capitalize text-gray-600">
-                    {type}
+                  <span className="text-sm text-gray-600">
+                    {typeLabels[type] ?? type}
                   </span>
                 </div>
                 <span className="text-sm font-medium">{count}</span>

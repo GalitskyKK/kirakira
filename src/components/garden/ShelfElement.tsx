@@ -57,6 +57,15 @@ export const ShelfElement = memo(function ShelfElement({
 
   const moodConfig = MOOD_CONFIG[element.moodInfluence] || MOOD_CONFIG.joy // Fallback to joy if invalid mood
 
+  // Локализация редкости
+  const rarityLabels: Record<string, string> = {
+    common: 'Обычный',
+    uncommon: 'Необычный',
+    rare: 'Редкий',
+    epic: 'Эпический',
+    legendary: 'Легендарный',
+  }
+
   // Debug: console.log('ShelfElement render:', element.name, 'viewMode:', viewMode)
 
   // Responsive design hook
@@ -522,8 +531,8 @@ export const ShelfElement = memo(function ShelfElement({
             <div className="font-semibold">{element.name}</div>
             <div className="text-gray-300">{moodConfig.label}</div>
             {element.rarity !== 'common' && (
-              <div className="capitalize text-yellow-300">
-                ⭐ {element.rarity}
+              <div className="text-yellow-300">
+                ⭐ {rarityLabels[element.rarity] ?? element.rarity}
               </div>
             )}
 

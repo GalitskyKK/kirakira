@@ -4,6 +4,7 @@ import { ru } from 'date-fns/locale'
 import { ArrowLeft, Calendar, Heart, Star } from 'lucide-react'
 import { Button, Card } from '@/components/ui'
 import { MOOD_CONFIG } from '@/types/mood'
+import { PlantRenderer } from '@/components/garden/plants'
 import type { GardenElement } from '@/types'
 
 interface ElementDetailsProps {
@@ -75,7 +76,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
         {/* Element Display */}
         <Card padding="lg" className="text-center">
           <motion.div
-            className="mb-4 text-8xl"
+            className="mb-4 flex justify-center"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{
@@ -84,7 +85,9 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
               damping: 20,
             }}
           >
-            {element.emoji}
+            <div className="relative drop-shadow-lg">
+              <PlantRenderer element={element} size={120} />
+            </div>
           </motion.div>
 
           <h3 className="mb-2 text-2xl font-bold text-gray-900">

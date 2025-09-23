@@ -10,14 +10,22 @@
  * @param {string} mood - Настроение пользователя
  * @param {Date} date - Дата записи
  * @param {string} note - Дополнительная заметка (опционально)
+ * @param {number} intensity - Интенсивность настроения (1-3)
  * @returns {Promise<boolean>} Успешность сохранения
  */
-async function saveMoodRecord(telegramUserId, mood, date, note = null) {
+async function saveMoodRecord(
+  telegramUserId,
+  mood,
+  date,
+  note = null,
+  intensity = 2
+) {
   try {
     console.log(`🗄️ Recording mood to Supabase for user ${telegramUserId}:`, {
       mood,
       date: date.toISOString(),
       note,
+      intensity,
     })
 
     // 🗄️ SUPABASE для всех окружений
@@ -37,6 +45,7 @@ async function saveMoodRecord(telegramUserId, mood, date, note = null) {
           mood: mood,
           mood_date: date.toISOString().split('T')[0], // Только дата без времени
           note: note,
+          intensity: intensity,
           created_at: new Date().toISOString(),
         }
 
@@ -180,7 +189,13 @@ export default async function handler(req, res) {
     })
 
     // Сохраняем запись настроения
-    const saved = await saveMoodRecord(telegramUserId, mood, recordDate, note)
+    const saved = await saveMoodRecord(
+      telegramUserId,
+      mood,
+      recordDate,
+      note,
+      intensity
+    )
 
     if (!saved) {
       return res.status(500).json({

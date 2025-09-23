@@ -178,7 +178,7 @@ export const useMoodStore = create<MoodStore>()(
                 userId: currentUser.id,
                 date: new Date(serverMood.mood_date || serverMood.created_at),
                 mood: serverMood.mood,
-                intensity: 'medium', // По умолчанию
+                intensity: serverMood.intensity || 2, // Из БД или по умолчанию
                 note: serverMood.note || undefined,
                 createdAt: new Date(serverMood.created_at),
               }))
