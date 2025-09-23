@@ -244,6 +244,8 @@ async function getUserDataByTelegramId(telegramId) {
  */
 async function getFromServerStorage(telegramId) {
   try {
+    console.log(`📡 Loading data from Supabase for user ${telegramId}`)
+
     // 🗄️ SUPABASE для всех окружений
     if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
       try {
@@ -272,6 +274,8 @@ async function getFromServerStorage(telegramId) {
           return null
         }
 
+        console.log(`✅ Found user ${telegramId} in Supabase:`, user)
+
         // Получаем настроения пользователя
         const { data: moods, error: moodsError } = await supabase
           .from('mood_entries')
@@ -283,6 +287,10 @@ async function getFromServerStorage(telegramId) {
           console.warn(
             `⚠️ Error fetching moods for ${telegramId}:`,
             moodsError.message
+          )
+        } else {
+          console.log(
+            `📊 Found ${moods?.length || 0} moods for user ${telegramId}`
           )
         }
 
@@ -297,6 +305,10 @@ async function getFromServerStorage(telegramId) {
           console.warn(
             `⚠️ Error fetching garden for ${telegramId}:`,
             gardenError.message
+          )
+        } else {
+          console.log(
+            `🌱 Found ${gardenElements?.length || 0} garden elements for user ${telegramId}`
           )
         }
 
@@ -339,6 +351,12 @@ async function getFromServerStorage(telegramId) {
         }
 
         console.log(`📂 Found user data in Supabase for ${telegramId}`)
+        console.log(`✅ Returning userData for ${telegramId}:`, {
+          userExists: !!userData.user,
+          moodsCount: userData.moods?.length || 0,
+          gardenElementsCount: userData.garden?.elements?.length || 0,
+        })
+
         return userData
       } catch (supabaseError) {
         console.warn(

@@ -112,26 +112,44 @@ export const useMoodStore = create<MoodStore>()(
         )
 
         // Получаем актуальные данные пользователя с сервера
+        console.log(`📡 Fetching user stats for ${currentUser.telegramId}...`)
         const response = await fetch(
           `/api/user/stats?telegramId=${currentUser.telegramId}`
         )
+
+        console.log(`📡 User stats response:`, {
+          status: response.status,
+          ok: response.ok,
+          url: response.url,
+        })
 
         if (!response.ok) {
           throw new Error(`Failed to fetch user data: ${response.status}`)
         }
 
         const result = await response.json()
+        console.log(`📡 User stats result:`, result)
 
         if (result.success && result.data.hasData) {
           console.log('✅ Server has mood data - loading full history')
 
           // 📖 Загружаем полную историю настроений с сервера
+          console.log(
+            `📖 Fetching mood history for ${currentUser.telegramId}...`
+          )
           const historyResponse = await fetch(
             `/api/mood/history?telegramId=${currentUser.telegramId}`
           )
 
+          console.log(`📖 Mood history response:`, {
+            status: historyResponse.status,
+            ok: historyResponse.ok,
+            url: historyResponse.url,
+          })
+
           if (historyResponse.ok) {
             const historyResult = await historyResponse.json()
+            console.log(`📖 Mood history result:`, historyResult)
 
             if (
               historyResult.success &&

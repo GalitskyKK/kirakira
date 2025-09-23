@@ -107,11 +107,45 @@ function App() {
               }
             } else {
               console.log('✅ Пользователь уже корректно авторизован')
+
+              // 🔄 ПРИНУДИТЕЛЬНАЯ СИНХРОНИЗАЦИЯ для существующих пользователей
+              try {
+                console.log(
+                  '🔄 Принудительная синхронизация данных с сервера...'
+                )
+                await syncFromSupabase(telegramUser.telegramId)
+                console.log('✅ Принудительная синхронизация завершена')
+              } catch (syncError) {
+                console.warn(
+                  '⚠️ Ошибка принудительной синхронизации:',
+                  syncError
+                )
+              }
             }
           }
         }
 
         await initializeStores()
+
+        // 🔄 ПРИНУДИТЕЛЬНАЯ СИНХРОНИЗАЦИЯ ДАННЫХ для Telegram пользователей
+        if (telegramUser && telegramReady) {
+          try {
+            console.log('🔄 Принудительная синхронизация stores с сервером...')
+
+            // Получаем stores и принудительно синхронизируем
+            const { useMoodStore } = await import('@/stores/moodStore')
+            const { useGardenStore } = await import('@/stores/gardenStore')
+
+            // Принудительно синхронизируем данные
+            await useMoodStore.getState().syncMoodHistory()
+            await useGardenStore.getState().syncGarden()
+
+            console.log('✅ Stores синхронизированы с сервером')
+          } catch (storesSyncError) {
+            console.warn('⚠️ Ошибка синхронизации stores:', storesSyncError)
+          }
+        }
+
         updateLastVisit()
       } catch (error) {
         console.error('Failed to initialize app:', error)
