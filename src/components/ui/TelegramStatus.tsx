@@ -6,12 +6,32 @@ export function TelegramStatus() {
   const { isTelegramEnv, user: telegramUser } = useTelegram()
   const { currentUser } = useUserStore()
 
+  // 🐛 DEBUG INFO
+  console.log('🔍 TelegramStatus Debug:', {
+    isTelegramEnv,
+    telegramUser: telegramUser
+      ? {
+          telegramId: telegramUser.telegramId,
+          firstName: telegramUser.firstName,
+          username: telegramUser.username,
+        }
+      : null,
+    currentUser: currentUser
+      ? {
+          id: currentUser.id,
+          telegramId: currentUser.telegramId,
+          isAnonymous: currentUser.isAnonymous,
+        }
+      : null,
+  })
+
   if (!isTelegramEnv) return null
 
   const isConnected =
     telegramUser &&
     currentUser &&
-    currentUser.telegramId === telegramUser.telegramId
+    currentUser.telegramId === telegramUser.telegramId &&
+    !currentUser.isAnonymous
 
   return (
     <motion.div

@@ -48,6 +48,8 @@ interface UserActions {
   setError: (error: string | null) => void
   incrementVisitCount: () => void
   updateLastVisit: () => void
+  clearAllUserData: () => Promise<void>
+  syncFromSupabase: (telegramId: number) => Promise<void>
 }
 
 type UserStore = UserState & UserActions
@@ -415,6 +417,117 @@ export const useUserStore = create<UserStore>()(
         }
 
         void get().updateStats(updatedStats)
+      }
+    },
+
+    // 🗑️ ПРИНУДИТЕЛЬНАЯ ОЧИСТКА ВСЕХ ДАННЫХ
+    clearAllUserData: async () => {
+      set({ isLoading: true, error: null })
+
+      try {
+        // 1. Очистить localStorage
+        localStorage.clear()
+
+        // 2. Очистить Telegram CloudStorage
+        if (telegramStorage.isAvailable) {
+          await telegramStorage.clearAllData()
+          console.log('✅ CloudStorage cleared')
+        }
+
+        // 3. Очистить другие stores
+        const { clearMoodHistory } = await import('./moodStore').then(m =>
+          m.useMoodStore.getState()
+        )
+        const { clearGarden } = await import('./gardenStore').then(m =>
+          m.useGardenStore.getState()
+        )
+
+        clearMoodHistory()
+        clearGarden()
+        console.log('✅ Mood and Garden stores cleared')
+
+        // 4. Сбросить состояние пользователя
+        set({
+          currentUser: null,
+          isAuthenticated: false,
+          hasCompletedOnboarding: false,
+          isLoading: false,
+          error: null,
+        })
+
+        console.log('✅ All user data cleared')
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to clear data'
+        set({ error: errorMessage, isLoading: false })
+        console.error('❌ Failed to clear user data:', error)
+      }
+    },
+
+    // 🔄 СИНХРОНИЗАЦИЯ ИЗ SUPABASE
+    syncFromSupabase: async (telegramId: number) => {
+      set({ isLoading: true, error: null })
+
+      try {
+        console.log(`🔄 Syncing user data from Supabase for ${telegramId}`)
+
+        // Запрашиваем данные из API
+        const response = await fetch(`/api/user/stats?telegramId=${telegramId}`)
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch user data: ${response.status}`)
+        }
+
+        const result = await response.json()
+
+        if (!result.success || !result.data.hasData) {
+          console.log(
+            `📝 No server data for user ${telegramId} - keeping current state`
+          )
+          set({ isLoading: false })
+          return
+        }
+
+        // Создаем пользователя на основе данных с сервера
+        const serverStats = result.data
+        const syncedUser: User = {
+          id: `tg_${telegramId}`,
+          telegramId: telegramId,
+          registrationDate: new Date(), // Берем из серверных данных если есть
+          preferences: DEFAULT_PREFERENCES,
+          stats: {
+            ...createDefaultStats(),
+            totalDays: serverStats.totalDays || 0,
+            currentStreak: serverStats.currentStreak || 0,
+            longestStreak: serverStats.longestStreak || 0,
+            totalElements: serverStats.totalElements || 0,
+            rareElementsFound: serverStats.rareElementsFound || 0,
+            gardensShared: serverStats.gardensShared || 0,
+          },
+          isAnonymous: false,
+        }
+
+        // Сохраняем локально
+        const success = saveUser(syncedUser)
+
+        if (success) {
+          set({
+            currentUser: syncedUser,
+            isAuthenticated: true,
+            isLoading: false,
+          })
+
+          console.log(`✅ User data synced from Supabase for ${telegramId}`)
+        } else {
+          throw new Error('Failed to save synced user')
+        }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : 'Failed to sync from Supabase'
+        set({ error: errorMessage, isLoading: false })
+        console.error('❌ Supabase sync failed:', error)
       }
     },
   }))

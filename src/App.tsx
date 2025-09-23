@@ -18,12 +18,15 @@ import { telegramStorage } from '@/utils/telegramStorage'
 
 function App() {
   const {
-    currentUser: _currentUser,
+    currentUser,
     hasCompletedOnboarding,
     isAuthenticated,
     isLoading,
     loadUser: _loadUser,
     updateLastVisit,
+    clearAllUserData,
+    syncFromSupabase,
+    createTelegramUser,
   } = useUserStore()
 
   const [isInitializing, setIsInitializing] = useState(true)
@@ -60,40 +63,50 @@ function App() {
             })
           }
 
-          // Автоматически создаем пользователя из Telegram данных
+          // 🔄 ПРАВИЛЬНАЯ СИНХРОНИЗАЦИЯ С TELEGRAM
           if (telegramUser && telegramReady) {
-            const { createTelegramUser, currentUser } = useUserStore.getState()
+            console.log('🔄 Начинаем синхронизацию Telegram пользователя:', {
+              telegramId: telegramUser.telegramId,
+              firstName: telegramUser.firstName,
+              currentUserTelegramId: currentUser?.telegramId,
+            })
 
-            // Проверяем, не авторизован ли уже пользователь с этим Telegram ID
+            // Если это другой пользователь или первый вход - очищаем данные
             if (
               !currentUser ||
               currentUser.telegramId !== telegramUser.telegramId
             ) {
               try {
-                console.log(
-                  '🔄 Создаем/синхронизируем пользователя Telegram:',
-                  {
+                console.log('🗑️ Очищаем старые данные перед синхронизацией...')
+                await clearAllUserData()
+
+                console.log('🔄 Синхронизируем данные из Supabase...')
+                await syncFromSupabase(telegramUser.telegramId)
+
+                // Если нет данных на сервере - создаем нового пользователя
+                const { currentUser: syncedUser } = useUserStore.getState()
+                if (!syncedUser) {
+                  console.log('📝 Создаем нового Telegram пользователя...')
+                  await createTelegramUser({
                     telegramId: telegramUser.telegramId,
                     firstName: telegramUser.firstName,
+                    lastName: telegramUser.lastName,
                     username: telegramUser.username,
-                  }
-                )
+                    photoUrl: telegramUser.photoUrl,
+                    authDate: new Date(),
+                    hash: 'telegram_miniapp',
+                  })
+                }
 
-                await createTelegramUser({
-                  telegramId: telegramUser.telegramId,
-                  firstName: telegramUser.firstName,
-                  lastName: telegramUser.lastName,
-                  username: telegramUser.username,
-                  photoUrl: telegramUser.photoUrl,
-                  authDate: new Date(),
-                  hash: 'telegram_miniapp', // Для Mini App не нужен реальный hash
-                })
-                console.log('✅ Пользователь Telegram создан/синхронизирован')
+                console.log('✅ Telegram синхронизация завершена')
               } catch (error) {
-                console.warn('⚠️ Ошибка автоматической авторизации:', error)
+                console.error('❌ Ошибка синхронизации Telegram:', error)
+                setInitError(
+                  `Telegram sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+                )
               }
             } else {
-              console.log('✅ Пользователь уже авторизован через Telegram')
+              console.log('✅ Пользователь уже корректно авторизован')
             }
           }
         }
