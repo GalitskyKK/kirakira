@@ -25,7 +25,7 @@ export function CrystalSVG({
   const getRarityGlow = () => {
     switch (rarity) {
       case RarityLevel.UNCOMMON:
-        return '#22c55e'
+        return '#22c56e'
       case RarityLevel.RARE:
         return '#3b82f6'
       case RarityLevel.EPIC:
