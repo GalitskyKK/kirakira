@@ -4,70 +4,197 @@
  */
 
 /**
- * Получает реальную статистику пользователя из localStorage
+ * ИСПРАВЛЕННЫЙ ПОДХОД: API будет получать данные от самого приложения
+ * Статистика вычисляется на основе реальных пользовательских данных
  * @param {string} telegramId - ID пользователя в Telegram
- * @returns {Object|null} Статистика пользователя или null
+ * @param {Object} userData - Данные пользователя от приложения (опционально)
+ * @returns {Promise<Object|null>} Статистика пользователя или null
  */
-function getUserStatsFromStorage(telegramId) {
+async function getUserRealStats(telegramId, userData = null) {
   try {
-    // Ключи для хранения данных пользователя в localStorage
-    const userKey = `kirakira-user-${telegramId}`
-    const moodKey = `kirakira-mood-${telegramId}`
-    const gardenKey = `kirakira-garden-${telegramId}`
+    console.log(`Computing REAL stats for Telegram user: ${telegramId}`)
 
-    // В реальности эти данные были бы в базе данных
-    // Пока симулируем получение из localStorage через телеграм ID
+    // Если данные переданы от приложения - используем их
+    if (userData) {
+      console.log(`Using provided user data for ${telegramId}`)
+      return computeStatsFromUserData(userData)
+    }
+
+    // TODO: В будущем здесь будет запрос к базе данных
+    // const userRecord = await db.users.findByTelegramId(telegramId)
+    // const moods = await db.moods.findByUserId(userRecord.id)
+    // const garden = await db.gardens.findByUserId(userRecord.id)
+
     console.log(
-      `Searching for user data with keys: ${userKey}, ${moodKey}, ${gardenKey}`
+      `No data provided for user ${telegramId} - returning new user stats`
     )
-
-    // Возвращаем null, так как в серверном контексте нет доступа к localStorage
-    // В продакшене здесь был бы запрос к базе данных
     return null
   } catch (error) {
-    console.error('Error getting user stats from storage:', error)
+    console.error('Error getting real user stats:', error)
     return null
   }
 }
 
 /**
- * Генерирует демо-статистику на основе Telegram ID для консистентности
- * @param {string} telegramId - ID пользователя в Telegram
- * @returns {Object} Консистентная статистика пользователя
+ * Вычисляет статистику на основе реальных данных пользователя
  */
-function generateConsistentDemoStats(telegramId) {
-  // Используем Telegram ID как seed для генерации консистентных данных
-  const seed = parseInt(telegramId) || 0
-  const random = max => (seed * 9301 + 49297) % max
+function computeStatsFromUserData(userData) {
+  try {
+    const { user, moods = [], garden = {} } = userData
 
-  const totalDays = Math.max(1, random(45) + 1) // 1-45 дней
-  const currentStreak = Math.min(totalDays, random(10) + 1) // До 10 дней подряд
-  const totalElements = Math.max(5, random(100) + 5) // 5-105 элементов
-
-  const moods = [
-    'радость',
-    'спокойствие',
-    'энергия',
-    'вдохновение',
-    'умиротворение',
-  ]
-  const dominantMood = moods[random(moods.length)]
-
-  return {
-    totalDays,
-    currentStreak,
-    longestStreak: Math.max(currentStreak, random(15) + 1),
-    totalElements,
-    rareElementsFound: Math.max(0, random(totalElements / 5)),
-    gardensShared: random(5),
-    dominantMood,
-    lastVisit: new Date(Date.now() - random(7) * 24 * 60 * 60 * 1000), // Последние 7 дней
-    hasData: totalDays > 0,
-    moodHistory: [], // Пустая история для демо
-    achievements: ['first_mood', 'week_streak', 'rare_collector'].slice(
+    // Вычисляем реальную статистику
+    const now = new Date()
+    const registrationDate = user?.registrationDate
+      ? new Date(user.registrationDate)
+      : now
+    const totalDays = Math.max(
       0,
-      random(3) + 1
-    ),
+      Math.ceil((now - registrationDate) / (1000 * 60 * 60 * 24))
+    )
+
+    // Подсчитываем серию дней из реальных записей настроений
+    let currentStreak = 0
+    let longestStreak = 0
+
+    if (moods.length > 0) {
+      const sortedMoods = moods.sort(
+        (a, b) => new Date(b.date) - new Date(a.date)
+      )
+      let streak = 0
+      let maxStreak = 0
+      let lastDate = null
+
+      for (const mood of sortedMoods) {
+        const moodDate = new Date(mood.date)
+        moodDate.setHours(0, 0, 0, 0)
+
+        if (!lastDate) {
+          streak = 1
+          lastDate = moodDate
+        } else {
+          const dayDiff = Math.ceil(
+            (lastDate - moodDate) / (1000 * 60 * 60 * 24)
+          )
+
+          if (dayDiff === 1) {
+            streak++
+          } else {
+            if (streak > maxStreak) maxStreak = streak
+            streak = 1
+          }
+
+          lastDate = moodDate
+        }
+      }
+
+      currentStreak = streak
+      longestStreak = Math.max(maxStreak, streak)
+    }
+
+    // Подсчитываем элементы сада
+    const gardenElements = garden.elements || []
+    const totalElements = gardenElements.length
+    const rareElementsFound = gardenElements.filter(el =>
+      [
+        'rainbow_flower',
+        'glowing_crystal',
+        'mystic_mushroom',
+        'aurora_tree',
+      ].includes(el.type)
+    ).length
+
+    // Определяем доминирующее настроение
+    const moodCounts = {}
+    moods.forEach(mood => {
+      moodCounts[mood.mood] = (moodCounts[mood.mood] || 0) + 1
+    })
+
+    const dominantMoodKey = Object.keys(moodCounts).reduce(
+      (a, b) => (moodCounts[a] > moodCounts[b] ? a : b),
+      'calm'
+    )
+
+    const realStats = {
+      totalDays,
+      currentStreak,
+      longestStreak,
+      totalElements,
+      rareElementsFound, // ЦЕЛОЕ ЧИСЛО, не дробное!
+      gardensShared: user?.stats?.gardensShared || 0,
+      dominantMood: translateMood(dominantMoodKey),
+      lastVisit: new Date(),
+      hasData: totalDays > 0 || moods.length > 0,
+      moodHistory: moods.slice(0, 10), // Последние 10 записей
+      achievements: calculateAchievements(
+        totalDays,
+        currentStreak,
+        totalElements,
+        rareElementsFound
+      ),
+    }
+
+    console.log(`Real stats computed:`, realStats)
+    return realStats
+  } catch (error) {
+    console.error('Error computing stats from user data:', error)
+    return null
+  }
+}
+
+/**
+ * Переводит настроение на русский язык
+ */
+function translateMood(mood) {
+  const translations = {
+    joy: 'радость',
+    calm: 'спокойствие',
+    stress: 'стресс',
+    sadness: 'грусть',
+    anger: 'гнев',
+    anxiety: 'тревога',
+  }
+  return translations[mood] || mood
+}
+
+/**
+ * Вычисляет достижения пользователя
+ */
+function calculateAchievements(
+  totalDays,
+  currentStreak,
+  totalElements,
+  rareElements
+) {
+  const achievements = []
+
+  if (totalDays >= 1) achievements.push('first_day')
+  if (currentStreak >= 7) achievements.push('week_streak')
+  if (currentStreak >= 30) achievements.push('month_streak')
+  if (totalElements >= 10) achievements.push('garden_starter')
+  if (totalElements >= 50) achievements.push('garden_master')
+  if (rareElements >= 1) achievements.push('rare_collector')
+  if (rareElements >= 5) achievements.push('rare_master')
+
+  return achievements
+}
+
+/**
+ * Возвращает дефолтную статистику для новых пользователей
+ * @returns {Object} Пустая статистика для новых пользователей
+ */
+function getNewUserStats() {
+  return {
+    totalDays: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    totalElements: 0,
+    rareElementsFound: 0,
+    gardensShared: 0,
+    dominantMood: 'спокойствие',
+    lastVisit: new Date(),
+    hasData: false,
+    moodHistory: [],
+    achievements: [],
   }
 }
 
@@ -77,8 +204,8 @@ function generateConsistentDemoStats(telegramId) {
  * @param {Response} res - Vercel Functions response object
  */
 export default async function handler(req, res) {
-  // Проверяем метод запроса
-  if (req.method !== 'GET') {
+  // Поддерживаем GET (новые пользователи) и POST (с данными приложения)
+  if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
@@ -89,22 +216,31 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'telegramId is required' })
     }
 
-    console.log(`Fetching stats for Telegram user: ${telegramId}`)
+    console.log(`Fetching REAL stats for Telegram user: ${telegramId}`)
 
-    // Пытаемся получить реальные данные пользователя
-    let stats = getUserStatsFromStorage(telegramId)
+    // Проверяем, передал ли приложение пользовательские данные в POST запросе
+    let userData = null
+    if (req.method === 'POST' && req.body) {
+      userData = req.body
+      console.log(`POST request with user data for ${telegramId}`)
+    }
+
+    // Получаем РЕАЛЬНЫЕ данные пользователя
+    let stats = await getUserRealStats(telegramId, userData)
 
     if (!stats) {
-      // Если реальных данных нет, генерируем консистентные демо-данные
-      // В продакшене здесь был бы возврат пустых данных для новых пользователей
-      stats = generateConsistentDemoStats(telegramId)
-      console.log(`Generated demo stats for user ${telegramId}:`, stats)
+      // Для новых пользователей возвращаем нулевую статистику, НЕ фейковые данные
+      stats = getNewUserStats()
+      console.log(`New user ${telegramId} - returning zero stats`)
+    } else {
+      console.log(`Real stats computed for user ${telegramId}:`, stats)
     }
 
     res.status(200).json({
       success: true,
       data: stats,
       timestamp: new Date().toISOString(),
+      source: stats.hasData ? 'real_data' : 'new_user',
     })
   } catch (error) {
     console.error('Error fetching user stats:', error)
