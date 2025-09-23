@@ -1,11 +1,12 @@
 import { motion } from 'framer-motion'
 import { useId } from 'react'
-import { RarityLevel } from '@/types'
+import { RarityLevel, SeasonalVariant } from '@/types'
 
 interface TreeSVGProps {
   size?: number
   color?: string
   rarity?: RarityLevel
+  season?: SeasonalVariant | undefined
   isSelected?: boolean
   isHovered?: boolean
   name?: string
@@ -15,12 +16,18 @@ export function TreeSVG({
   size = 64,
   color = '#22c55e',
   rarity = RarityLevel.COMMON,
+  season,
   isSelected = false,
   isHovered: _isHovered = false,
-  name: _name = 'Tree',
+  name = 'Tree',
 }: TreeSVGProps) {
   const uniqueId = useId()
   const gradientId = `tree-${uniqueId}`
+
+  // Определяем тип дерева по имени
+  const isSprout = name === 'Росток'
+  const isBranch = name === 'Веточка'
+  const isSapling = name === 'Саженец'
 
   const getRarityGlow = () => {
     switch (rarity) {
@@ -36,6 +43,43 @@ export function TreeSVG({
         return color
     }
   }
+
+  const getSeasonalColors = () => {
+    switch (season) {
+      case SeasonalVariant.SPRING:
+        return {
+          trunk: '#8b4513',
+          leaves: '#84cc16',
+          accent: '#a3e635',
+        }
+      case SeasonalVariant.SUMMER:
+        return {
+          trunk: '#8b4513',
+          leaves: '#22c55e',
+          accent: '#4ade80',
+        }
+      case SeasonalVariant.AUTUMN:
+        return {
+          trunk: '#8b4513',
+          leaves: '#ea580c',
+          accent: '#f59e0b',
+        }
+      case SeasonalVariant.WINTER:
+        return {
+          trunk: '#6b7280',
+          leaves: '#94a3b8',
+          accent: '#cbd5e1',
+        }
+      default:
+        return {
+          trunk: '#8b4513',
+          leaves: color,
+          accent: '#4ade80',
+        }
+    }
+  }
+
+  const seasonalColors = getSeasonalColors()
 
   return (
     <motion.div
@@ -144,19 +188,217 @@ export function TreeSVG({
           </filter>
         </defs>
 
-        {/* Trunk - extended up to connect with crown */}
-        <motion.rect
-          x="45"
-          y="45"
-          width="10"
-          height="45"
-          fill={`url(#${gradientId}-trunk)`}
-          rx="2"
-          filter={`url(#${gradientId}-shadow)`}
-          initial={{ scaleY: 0, y: 50 }}
-          animate={{ scaleY: 1, y: 5 }}
-          transition={{ duration: 1, delay: 0.3 }}
-        />
+        {/* Рендер в зависимости от типа дерева */}
+        {isSprout ? (
+          // РОСТОК - маленький, простой, только начинающий расти
+          <motion.g
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+          >
+            {/* Простой тонкий стебель */}
+            <motion.rect
+              x="48"
+              y="60"
+              width="4"
+              height="25"
+              fill={seasonalColors.trunk}
+              rx="2"
+              initial={{ scaleY: 0 }}
+              animate={{ scaleY: 1 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              style={{ transformOrigin: 'center bottom' }}
+            />
+
+            {/* Несколько маленьких листочков */}
+            <motion.g
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <circle cx="50" cy="58" r="3" fill={seasonalColors.leaves} />
+              <circle
+                cx="46"
+                cy="60"
+                r="2"
+                fill={seasonalColors.accent}
+                opacity="0.8"
+              />
+              <circle
+                cx="54"
+                cy="62"
+                r="2.5"
+                fill={seasonalColors.leaves}
+                opacity="0.9"
+              />
+            </motion.g>
+
+            {/* Росток из земли */}
+            <ellipse
+              cx="50"
+              cy="85"
+              rx="6"
+              ry="2"
+              fill={seasonalColors.trunk}
+              opacity="0.3"
+            />
+          </motion.g>
+        ) : isBranch ? (
+          // ВЕТОЧКА - тонкая, изогнутая, с листьями
+          <motion.g
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+          >
+            {/* Изогнутая веточка */}
+            <motion.path
+              d="M20 80 Q30 70 40 65 Q50 60 60 58 Q70 56 80 55"
+              stroke={seasonalColors.trunk}
+              strokeWidth="4"
+              fill="none"
+              strokeLinecap="round"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 1, delay: 0.2 }}
+            />
+
+            {/* Боковые веточки */}
+            <motion.path
+              d="M35 67 Q30 63 25 65"
+              stroke={seasonalColors.trunk}
+              strokeWidth="2"
+              fill="none"
+              strokeLinecap="round"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 0.5, delay: 0.8 }}
+            />
+            <motion.path
+              d="M55 59 Q60 55 65 57"
+              stroke={seasonalColors.trunk}
+              strokeWidth="2"
+              fill="none"
+              strokeLinecap="round"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 0.5, delay: 1 }}
+            />
+
+            {/* Листья на веточке */}
+            <motion.g
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 1.2 }}
+            >
+              <circle cx="25" cy="65" r="3" fill={seasonalColors.leaves} />
+              <circle cx="40" cy="65" r="2.5" fill={seasonalColors.accent} />
+              <circle cx="65" cy="57" r="3" fill={seasonalColors.leaves} />
+              <circle cx="80" cy="55" r="2" fill={seasonalColors.accent} />
+            </motion.g>
+          </motion.g>
+        ) : isSapling ? (
+          // САЖЕНЕЦ - молодое дерево, среднего размера
+          <motion.g
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+          >
+            {/* Ствол молодого дерева */}
+            <motion.rect
+              x="47"
+              y="55"
+              width="6"
+              height="35"
+              fill={seasonalColors.trunk}
+              rx="3"
+              initial={{ scaleY: 0 }}
+              animate={{ scaleY: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              style={{ transformOrigin: 'center bottom' }}
+            />
+
+            {/* Небольшая крона */}
+            <motion.circle
+              cx="50"
+              cy="50"
+              r="12"
+              fill={seasonalColors.leaves}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{
+                type: 'spring',
+                stiffness: 200,
+                damping: 15,
+                delay: 0.6,
+              }}
+            />
+
+            {/* Несколько веточек */}
+            <motion.g
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 1 }}
+            >
+              <path
+                d="M47 60 Q40 55 35 58"
+                stroke={seasonalColors.trunk}
+                strokeWidth="2"
+                fill="none"
+                strokeLinecap="round"
+              />
+              <path
+                d="M53 60 Q60 55 65 58"
+                stroke={seasonalColors.trunk}
+                strokeWidth="2"
+                fill="none"
+                strokeLinecap="round"
+              />
+
+              {/* Листья на веточках */}
+              <circle cx="35" cy="58" r="2" fill={seasonalColors.accent} />
+              <circle cx="65" cy="58" r="2" fill={seasonalColors.accent} />
+            </motion.g>
+
+            {/* Акцентные листья */}
+            <motion.g
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 1.2 }}
+            >
+              {Array.from({ length: 6 }, (_, i) => {
+                const angle = i * 60
+                const radius = 8
+                const x = 50 + Math.cos((angle * Math.PI) / 180) * radius
+                const y = 50 + Math.sin((angle * Math.PI) / 180) * radius
+
+                return (
+                  <circle
+                    key={i}
+                    cx={x}
+                    cy={y}
+                    r={1.5}
+                    fill={seasonalColors.accent}
+                    opacity="0.8"
+                  />
+                )
+              })}
+            </motion.g>
+          </motion.g>
+        ) : (
+          // Обычное дерево для остальных случаев
+          <motion.rect
+            x="45"
+            y="45"
+            width="10"
+            height="45"
+            fill={seasonalColors.trunk}
+            rx="2"
+            filter={`url(#${gradientId}-shadow)`}
+            initial={{ scaleY: 0, y: 50 }}
+            animate={{ scaleY: 1, y: 5 }}
+            transition={{ duration: 1, delay: 0.3 }}
+          />
+        )}
 
         {/* Trunk texture lines */}
         {Array.from({ length: 6 }, (_, i) => (

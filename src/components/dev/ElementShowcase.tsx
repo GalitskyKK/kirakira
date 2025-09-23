@@ -5,9 +5,13 @@ import {
   CrystalSVG,
   MushroomSVG,
   StoneSVG,
+  GrassSVG,
+  WaterSVG,
+  DecorationSVG,
   RainbowFlowerSVG,
   GlowingCrystalSVG,
   MysticMushroomSVG,
+  StarlightDecorationSVG,
 } from '../garden/plants'
 import { ElementType, RarityLevel, SeasonalVariant, MOOD_CONFIG } from '@/types'
 import { Card } from '@/components/ui/Card'
@@ -21,7 +25,7 @@ if (!import.meta.env.DEV) {
   throw new Error('ElementShowcase доступен только в режиме разработки')
 }
 
-// Маппинг элементов к компонентам (с заглушками для недостающих)
+// Маппинг элементов к компонентам - теперь все уникальные!
 const getElementComponent = (elementType: ElementType) => {
   switch (elementType) {
     case ElementType.FLOWER:
@@ -31,7 +35,7 @@ const getElementComponent = (elementType: ElementType) => {
     case ElementType.TREE:
       return TreeSVG
     case ElementType.AURORA_TREE:
-      return TreeSVG // Используем обычное дерево с особыми эффектами
+      return TreeSVG // Используем TreeSVG с особыми эффектами
     case ElementType.CRYSTAL:
       return CrystalSVG
     case ElementType.GLOWING_CRYSTAL:
@@ -42,15 +46,14 @@ const getElementComponent = (elementType: ElementType) => {
       return MysticMushroomSVG
     case ElementType.STONE:
       return StoneSVG
-    // Заглушки для элементов без собственных компонентов
     case ElementType.GRASS:
-      return FlowerSVG // TODO: создать GrassSVG
+      return GrassSVG
     case ElementType.WATER:
-      return CrystalSVG // TODO: создать WaterSVG (похож на каплю)
+      return WaterSVG
     case ElementType.DECORATION:
-      return FlowerSVG // TODO: создать DecorationSVG
+      return DecorationSVG
     case ElementType.STARLIGHT_DECORATION:
-      return GlowingCrystalSVG // TODO: создать StarlightDecorationSVG
+      return StarlightDecorationSVG
     default:
       return FlowerSVG
   }
@@ -247,6 +250,9 @@ export function ElementShowcase() {
                         <Component
                           size={element.isPremium ? 90 : 80}
                           color={element.baseColor}
+                          rarity={element.rarity}
+                          season={element.season}
+                          name={element.name}
                         />
                       </div>
                       <h3 className="mb-1 font-medium text-gray-800">
