@@ -35,7 +35,7 @@ async function saveGardenElement(telegramUserId, element) {
           position_x: element.position.x,
           position_y: element.position.y,
           rarity: element.rarity,
-          mood_when_unlocked: element.mood,
+          mood_influence: element.mood, // ✅ ИСПРАВЛЕНО: mood_influence, не mood_when_unlocked
           unlock_date: element.unlockDate,
           created_at: new Date().toISOString(),
         }

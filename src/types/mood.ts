@@ -24,6 +24,7 @@ export interface MoodState {
   readonly error: string | null
   readonly streakCount: number
   readonly lastCheckin: Date | null
+  readonly lastSyncTime: number // Время последней синхронизации для ограничения запросов
 }
 
 export interface MoodStats {

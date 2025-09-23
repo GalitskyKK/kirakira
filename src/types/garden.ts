@@ -65,6 +65,7 @@ export interface GardenState {
   readonly error: string | null
   readonly viewMode: ViewMode
   readonly selectedElement: GardenElement | null
+  readonly lastSyncTime: number // Время последней синхронизации для ограничения запросов
 }
 
 export enum ViewMode {

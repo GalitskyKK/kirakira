@@ -49,6 +49,7 @@ export const useGardenStore = create<GardenStore>()(
     error: null,
     viewMode: ViewMode.OVERVIEW,
     selectedElement: null,
+    lastSyncTime: 0,
 
     // Actions
     loadGarden: () => {
@@ -92,7 +93,21 @@ export const useGardenStore = create<GardenStore>()(
           return
         }
 
+        // 🚫 ОГРАНИЧЕНИЕ: не синхронизируем чаще раз в 10 секунд
+        const state = get()
+        const now = Date.now()
+        const lastSync = state.lastSyncTime
+
+        if (now - lastSync < 10000) {
+          // 10 секунд
+          console.log('⏳ Skipping garden sync - too soon since last sync')
+          return
+        }
+
         console.log(`🔄 Syncing garden for user ${currentUser.telegramId}`)
+
+        // Обновляем время последней синхронизации
+        set({ lastSyncTime: now })
 
         // Получаем актуальные данные пользователя с сервера
         const response = await fetch(

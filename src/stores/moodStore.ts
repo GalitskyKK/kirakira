@@ -53,6 +53,7 @@ export const useMoodStore = create<MoodStore>()(
     error: null,
     streakCount: 0,
     lastCheckin: null,
+    lastSyncTime: 0,
 
     // Actions
     loadMoodHistory: () => {
@@ -107,9 +108,23 @@ export const useMoodStore = create<MoodStore>()(
           return
         }
 
+        // 🚫 ОГРАНИЧЕНИЕ: не синхронизируем чаще раз в 10 секунд
+        const state = get()
+        const now = Date.now()
+        const lastSync = state.lastSyncTime
+
+        if (now - lastSync < 10000) {
+          // 10 секунд
+          console.log('⏳ Skipping mood sync - too soon since last sync')
+          return
+        }
+
         console.log(
           `🔄 Syncing mood history for user ${currentUser.telegramId}`
         )
+
+        // Обновляем время последней синхронизации
+        set({ lastSyncTime: now })
 
         // Получаем актуальные данные пользователя с сервера
         console.log(`📡 Fetching user stats for ${currentUser.telegramId}...`)

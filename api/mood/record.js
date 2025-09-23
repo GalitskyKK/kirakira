@@ -40,6 +40,8 @@ async function saveMoodRecord(telegramUserId, mood, date, note = null) {
           created_at: new Date().toISOString(),
         }
 
+        console.log(`🔍 ОТЛАДКА: Сохраняем mood entry:`, moodEntry)
+
         // Сохраняем в базу данных (upsert для избежания дублей)
         const { data, error } = await supabase
           .from('mood_entries')
