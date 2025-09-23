@@ -106,9 +106,56 @@ export const useGardenStore = create<GardenStore>()(
         const result = await response.json()
 
         if (result.success && result.data.hasData) {
-          // Если есть данные на сервере - обновляем локальное состояние
-          // TODO: Здесь нужно получить полную историю элементов сада из API
-          console.log('✅ Server has garden data - local state may need update')
+          console.log('✅ Server has garden data - loading full history')
+
+          // 🌱 Загружаем полную историю элементов сада с сервера
+          const historyResponse = await fetch(
+            `/api/garden/history?telegramId=${currentUser.telegramId}`
+          )
+
+          if (historyResponse.ok) {
+            const historyResult = await historyResponse.json()
+
+            if (
+              historyResult.success &&
+              historyResult.data.gardenElements.length > 0
+            ) {
+              const serverElements = historyResult.data.gardenElements
+
+              // Конвертируем серверные данные в формат приложения
+              const convertedElements = serverElements.map(
+                (serverElement: any) => ({
+                  id: `element_${serverElement.id || Date.now()}`,
+                  type: serverElement.element_type,
+                  position: {
+                    x: serverElement.position_x,
+                    y: serverElement.position_y,
+                  },
+                  unlockDate: new Date(serverElement.unlock_date),
+                  moodInfluence: serverElement.mood_when_unlocked,
+                  rarity: serverElement.rarity,
+                  createdAt: new Date(serverElement.created_at),
+                })
+              )
+
+              // Обновляем сад если есть
+              const { currentGarden } = get()
+              if (currentGarden) {
+                const updatedGarden = {
+                  ...currentGarden,
+                  elements: convertedElements,
+                  lastVisited: new Date(),
+                }
+
+                set({ currentGarden: updatedGarden })
+                saveGarden(updatedGarden)
+
+                console.log(
+                  `✅ Synced ${convertedElements.length} garden elements from server`
+                )
+              }
+            }
+          }
         } else {
           console.log('📝 No server garden data - local state is primary')
         }

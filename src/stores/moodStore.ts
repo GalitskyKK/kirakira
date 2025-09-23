@@ -123,9 +123,63 @@ export const useMoodStore = create<MoodStore>()(
         const result = await response.json()
 
         if (result.success && result.data.hasData) {
-          // Если есть данные на сервере - обновляем локальное состояние
-          // TODO: Здесь нужно получить полную историю настроений из API
-          console.log('✅ Server has mood data - local state may need update')
+          console.log('✅ Server has mood data - loading full history')
+
+          // 📖 Загружаем полную историю настроений с сервера
+          const historyResponse = await fetch(
+            `/api/mood/history?telegramId=${currentUser.telegramId}`
+          )
+
+          if (historyResponse.ok) {
+            const historyResult = await historyResponse.json()
+
+            if (
+              historyResult.success &&
+              historyResult.data.moodHistory.length > 0
+            ) {
+              const serverMoods = historyResult.data.moodHistory
+
+              // Конвертируем серверные данные в формат приложения
+              const convertedMoods = serverMoods.map((serverMood: any) => ({
+                id: `mood_${serverMood.id || Date.now()}`,
+                userId: currentUser.id,
+                date: new Date(serverMood.mood_date || serverMood.created_at),
+                mood: serverMood.mood,
+                intensity: 'medium', // По умолчанию
+                note: serverMood.note || undefined,
+                createdAt: new Date(serverMood.created_at),
+              }))
+
+              // Обновляем локальное состояние
+              const today = new Date()
+              today.setHours(0, 0, 0, 0)
+
+              const todaysMood =
+                convertedMoods.find((entry: any) => {
+                  const entryDate = new Date(entry.date)
+                  entryDate.setHours(0, 0, 0, 0)
+                  return entryDate.getTime() === today.getTime()
+                }) || null
+
+              const stats = calculateMoodStats(convertedMoods)
+              const lastEntry =
+                convertedMoods.length > 0 ? convertedMoods[0] : null
+
+              set({
+                moodHistory: convertedMoods,
+                todaysMood,
+                streakCount: stats.currentStreak,
+                lastCheckin: lastEntry?.date ?? null,
+              })
+
+              // Также сохраняем локально для кэширования
+              saveMoodHistory(convertedMoods)
+
+              console.log(
+                `✅ Synced ${convertedMoods.length} moods from server`
+              )
+            }
+          }
         } else {
           console.log('📝 No server mood data - local state is primary')
         }

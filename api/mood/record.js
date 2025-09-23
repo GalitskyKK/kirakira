@@ -128,6 +128,14 @@ async function updateUserStatsCache(supabase, telegramUserId) {
  * @param {Response} res - Vercel Functions response object
  */
 export default async function handler(req, res) {
+  // 🔍 ОТЛАДКА: Логируем все входящие запросы
+  console.log('🔍 API /mood/record called:', {
+    method: req.method,
+    headers: req.headers,
+    body: req.body,
+    timestamp: new Date().toISOString(),
+  })
+
   // Проверяем метод запроса
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })

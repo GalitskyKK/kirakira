@@ -199,6 +199,84 @@ async function updateUserMood(telegramUserId, mood) {
 }
 
 /**
+ * 🌱 Добавляет элемент сада для пользователя через API
+ * @param {number} telegramUserId - ID пользователя в Telegram
+ * @param {string} mood - Настроение пользователя
+ * @returns {Promise<Object>} Результат добавления элемента
+ */
+async function addGardenElement(telegramUserId, mood) {
+  try {
+    console.log(
+      `Adding garden element for mood ${mood} for user ${telegramUserId}`
+    )
+
+    // Простое маппирование настроений на типы элементов
+    const moodToElement = {
+      joy: 'FLOWER',
+      calm: 'TREE',
+      stress: 'CRYSTAL',
+      sadness: 'MUSHROOM',
+      anger: 'STONE',
+      anxiety: 'CRYSTAL',
+    }
+
+    const moodToRarity = {
+      joy: 'common',
+      calm: 'common',
+      stress: 'uncommon',
+      sadness: 'common',
+      anger: 'uncommon',
+      anxiety: 'rare',
+    }
+
+    // Генерируем простой элемент сада
+    const element = {
+      type: moodToElement[mood] || 'FLOWER',
+      position: {
+        x: Math.floor(Math.random() * 10), // Случайная позиция 0-9
+        y: Math.floor(Math.random() * 4), // Случайная полка 0-3
+      },
+      unlockDate: new Date().toISOString(),
+      mood: mood,
+      rarity: moodToRarity[mood] || 'common',
+    }
+
+    // Запрос к API приложения для создания элемента сада
+    const response = await fetch(`${MINI_APP_URL}/api/garden/add-element`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        telegramId: telegramUserId,
+        element,
+      }),
+    })
+
+    if (!response.ok) {
+      console.error(`Garden element API failed: ${response.status}`)
+      return {
+        success: false,
+        error: `API request failed with status ${response.status}`,
+      }
+    }
+
+    const result = await response.json()
+
+    if (result.success) {
+      console.log(
+        `Garden element ${element.type} added successfully for user ${telegramUserId}`
+      )
+      return { success: true, element, data: result.data }
+    } else {
+      console.error(`Garden element creation failed: ${result.error}`)
+      return { success: false, error: result.error }
+    }
+  } catch (error) {
+    console.error('Error adding garden element:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+/**
  * Валидирует платежные данные
  * @param {number} amount - Сумма платежа
  * @param {string} currency - Валюта платежа
@@ -632,6 +710,12 @@ async function handleMoodSelection(callbackQuery) {
 
   // Записываем настроение в приложение
   const moodResult = await updateUserMood(from.id, mood)
+
+  // 🌱 Добавляем элемент сада если настроение записалось успешно
+  let gardenResult = null
+  if (moodResult.success) {
+    gardenResult = await addGardenElement(from.id, mood)
+  }
 
   const moodEmojis = {
     joy: '😊',
