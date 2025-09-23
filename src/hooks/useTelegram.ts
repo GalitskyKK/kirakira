@@ -20,53 +20,73 @@ export function useTelegram() {
 
   // Инициализация Telegram WebApp
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      const tg = window.Telegram.WebApp
-      setWebApp(tg)
+    const initTelegramWebApp = () => {
+      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+        const tg = window.Telegram.WebApp
+        setWebApp(tg)
 
-      // Извлекаем данные пользователя
-      if (tg.initDataUnsafe.user) {
-        const telegramUser = tg.initDataUnsafe.user
-        const userProfile: TelegramUserProfile = {
-          telegramId: telegramUser.id,
-          firstName: telegramUser.first_name,
+        // Извлекаем данные пользователя
+        if (tg.initDataUnsafe.user) {
+          const telegramUser = tg.initDataUnsafe.user
+          const userProfile: TelegramUserProfile = {
+            telegramId: telegramUser.id,
+            firstName: telegramUser.first_name,
+          }
+
+          // Добавляем опциональные поля только если они есть
+          if (telegramUser.username)
+            userProfile.username = telegramUser.username
+          if (telegramUser.last_name)
+            userProfile.lastName = telegramUser.last_name
+          if (telegramUser.language_code)
+            userProfile.languageCode = telegramUser.language_code
+          if (telegramUser.is_premium !== undefined)
+            userProfile.isPremium = telegramUser.is_premium
+          if (telegramUser.photo_url)
+            userProfile.photoUrl = telegramUser.photo_url
+
+          setUser(userProfile)
         }
 
-        // Добавляем опциональные поля только если они есть
-        if (telegramUser.username) userProfile.username = telegramUser.username
-        if (telegramUser.last_name)
-          userProfile.lastName = telegramUser.last_name
-        if (telegramUser.language_code)
-          userProfile.languageCode = telegramUser.language_code
-        if (telegramUser.is_premium !== undefined)
-          userProfile.isPremium = telegramUser.is_premium
-        if (telegramUser.photo_url)
-          userProfile.photoUrl = telegramUser.photo_url
+        // Устанавливаем начальные значения
+        setIsExpanded(tg.isExpanded)
+        setColorScheme(tg.colorScheme)
+        setThemeParams(tg.themeParams)
 
-        setUser(userProfile)
+        // Готовность к работе
+        tg.ready()
+        setIsReady(true)
+
+        // Расширяем приложение на весь экран
+        tg.expand()
+
+        return true // Успешная инициализация
       }
+      return false // Не инициализирован
+    }
 
-      // Устанавливаем начальные значения
-      setIsExpanded(tg.isExpanded)
-      setColorScheme(tg.colorScheme)
-      setThemeParams(tg.themeParams)
+    // Пытаемся инициализировать сразу
+    if (!initTelegramWebApp()) {
+      // Если не получилось, ждем загрузки скрипта
+      const checkTelegram = setInterval(() => {
+        if (initTelegramWebApp()) {
+          clearInterval(checkTelegram)
+        }
+      }, 100) // Проверяем каждые 100мс
 
-      // Готовность к работе
-      tg.ready()
-      setIsReady(true)
-
-      // Расширяем приложение на весь экран
-      tg.expand()
-
+      // Очистка при размонтировании
       return () => {
-        // Очистка при размонтировании
+        clearInterval(checkTelegram)
         setWebApp(null)
         setIsReady(false)
       }
     }
 
-    // Возвращаем undefined, если условие не выполнено
-    return undefined
+    // Очистка при размонтировании (если инициализация прошла сразу)
+    return () => {
+      setWebApp(null)
+      setIsReady(false)
+    }
   }, [])
 
   // Подписка на события

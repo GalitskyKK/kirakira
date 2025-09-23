@@ -6,7 +6,7 @@ export function TelegramStatus() {
   const { isTelegramEnv, user: telegramUser } = useTelegram()
   const { currentUser } = useUserStore()
 
-  // 🔍 ДИАГНОСТИКА (временно убираем проверку isTelegramEnv)
+  // 🔍 ДИАГНОСТИКА (временно показываем данные для отладки)
   const debugInfo = {
     isTelegramEnv,
     telegramUser: telegramUser ? `ID:${telegramUser.telegramId}` : 'null',
