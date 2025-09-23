@@ -200,14 +200,35 @@ async function getUserDataByTelegramId(telegramId) {
       return userData
     }
 
-    // Если нет данных на сервере, создаем базовые данные для пользователя Telegram
-    const telegramUserData = await generateTelegramUserData(telegramId)
+    // ❌ НЕ ГЕНЕРИРУЕМ ФЕЙКОВЫЕ ДАННЫЕ ДЛЯ РЕАЛЬНЫХ ПОЛЬЗОВАТЕЛЕЙ!
+    // Для новых пользователей просто возвращаем null
+    console.log(`👤 User ${telegramId} is truly new - no fake data generation`)
 
-    if (telegramUserData) {
-      // Сохраняем сгенерированные данные для будущих запросов
-      await saveToServerStorage(telegramId, telegramUserData)
-      return telegramUserData
+    // Можно создать базовую запись пользователя без фейковых настроений
+    const newUserRecord = {
+      user: {
+        id: `tg_${telegramId}`,
+        telegramId: parseInt(telegramId),
+        registrationDate: new Date().toISOString(),
+        lastVisitDate: new Date().toISOString(),
+        isAnonymous: false,
+        stats: {
+          firstVisit: new Date().toISOString(),
+          lastVisit: new Date().toISOString(),
+          totalDays: 0,
+          currentStreak: 0,
+          longestStreak: 0,
+          gardensShared: 0,
+        },
+      },
+      moods: [], // ✅ ПУСТОЙ массив настроений!
+      garden: {
+        elements: [], // ✅ ПУСТОЙ сад!
+      },
     }
+
+    // Сохраняем только базовую запись пользователя
+    await saveToServerStorage(telegramId, newUserRecord)
 
     return null
   } catch (error) {
@@ -463,91 +484,9 @@ async function saveToServerStorage(telegramId, userData) {
   }
 }
 
-/**
- * Генерирует реальные базовые данные для пользователя Telegram
- * @param {string} telegramId - ID пользователя
- * @returns {Promise<Object|null>} Данные пользователя
- */
-async function generateTelegramUserData(telegramId) {
-  try {
-    // 🎯 Генерируем консистентные данные на основе telegramId
-    const seed = parseInt(telegramId) || 1
-    const random = max => ((seed * 9301 + 49297) % 233280) % max
-
-    const now = new Date()
-    // Пользователь зарегистрирован от 1 до 30 дней назад
-    const daysAgo = random(30) + 1
-    const registrationDate = new Date(
-      now.getTime() - daysAgo * 24 * 60 * 60 * 1000
-    )
-
-    // Генерируем реалистичную историю настроений
-    const moods = []
-    const moodTypes = ['joy', 'calm', 'stress', 'sadness', 'anger', 'anxiety']
-
-    // Создаем записи настроений для части дней
-    const activeDays = Math.min(daysAgo, random(daysAgo) + 1)
-
-    for (let i = 0; i < activeDays; i++) {
-      const moodDate = new Date(
-        registrationDate.getTime() + i * 24 * 60 * 60 * 1000
-      )
-      const mood = moodTypes[random(moodTypes.length)]
-
-      moods.push({
-        id: `mood_${telegramId}_${i}`,
-        mood: mood,
-        date: moodDate.toISOString(),
-        telegramUserId: parseInt(telegramId),
-        createdAt: moodDate.toISOString(),
-      })
-    }
-
-    // Генерируем элементы сада на основе настроений
-    const gardenElements = []
-    moods.forEach((mood, index) => {
-      const elementTypes = {
-        joy: 'flower',
-        calm: 'tree',
-        stress: 'crystal',
-        sadness: 'mushroom',
-        anger: 'stone',
-        anxiety: 'crystal',
-      }
-
-      gardenElements.push({
-        id: `element_${telegramId}_${index}`,
-        type: elementTypes[mood.mood] || 'flower',
-        position: { x: random(100), y: random(100) },
-        unlockDate: mood.date,
-        moodInfluence: mood.mood,
-        rarity: random(100) < 10 ? 'rare' : 'common',
-      })
-    })
-
-    const userData = {
-      user: {
-        id: `tg_${telegramId}`,
-        telegramId: parseInt(telegramId),
-        registrationDate: registrationDate.toISOString(),
-        lastVisitDate: now.toISOString(),
-        isAnonymous: false,
-      },
-      moods: moods,
-      garden: {
-        elements: gardenElements,
-      },
-    }
-
-    console.log(
-      `🎲 Generated realistic data for Telegram user ${telegramId}: ${daysAgo} days, ${moods.length} moods, ${gardenElements.length} elements`
-    )
-    return userData
-  } catch (error) {
-    console.error(`Error generating data for ${telegramId}:`, error)
-    return null
-  }
-}
+// ❌ ФУНКЦИЯ УДАЛЕНА: generateTelegramUserData()
+// Больше не генерируем фейковые данные для реальных пользователей!
+// Новые пользователи начинают с пустыми данными и сами заполняют свой сад.
 
 /**
  * Возвращает дефолтную статистику для новых пользователей
