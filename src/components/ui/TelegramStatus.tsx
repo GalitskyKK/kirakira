@@ -6,26 +6,17 @@ export function TelegramStatus() {
   const { isTelegramEnv, user: telegramUser } = useTelegram()
   const { currentUser } = useUserStore()
 
-  // 🐛 DEBUG INFO
-  console.log('🔍 TelegramStatus Debug:', {
+  // 🔍 ДИАГНОСТИКА (временно убираем проверку isTelegramEnv)
+  const debugInfo = {
     isTelegramEnv,
-    telegramUser: telegramUser
-      ? {
-          telegramId: telegramUser.telegramId,
-          firstName: telegramUser.firstName,
-          username: telegramUser.username,
-        }
-      : null,
+    telegramUser: telegramUser ? `ID:${telegramUser.telegramId}` : 'null',
     currentUser: currentUser
-      ? {
-          id: currentUser.id,
-          telegramId: currentUser.telegramId,
-          isAnonymous: currentUser.isAnonymous,
-        }
-      : null,
-  })
+      ? `ID:${currentUser.id}, TG:${currentUser.telegramId}, anon:${currentUser.isAnonymous}`
+      : 'null',
+  }
 
-  if (!isTelegramEnv) return null
+  // 🚨 ВРЕМЕННО ВСЕГДА ПОКАЗЫВАЕМ ДЛЯ ДИАГНОСТИКИ
+  // if (!isTelegramEnv) return null
 
   const isConnected =
     telegramUser &&
@@ -39,6 +30,14 @@ export function TelegramStatus() {
       animate={{ opacity: 1, y: 0 }}
       className="mb-4 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 p-3 shadow-sm"
     >
+      {/* 🔍 ВИЗУАЛЬНАЯ ДИАГНОСТИКА */}
+      <div className="mb-2 rounded bg-gray-100 p-2 font-mono text-xs">
+        <div>🔍 TG Env: {debugInfo.isTelegramEnv ? '✅' : '❌'}</div>
+        <div>👤 TG User: {debugInfo.telegramUser}</div>
+        <div>📱 App User: {debugInfo.currentUser}</div>
+        <div>🔗 Connected: {isConnected ? '✅' : '❌'}</div>
+      </div>
+
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <div
@@ -67,6 +66,12 @@ export function TelegramStatus() {
       {!isConnected && telegramUser && (
         <div className="mt-2 text-xs text-amber-600">
           ⚠️ Данные пока локальные. Перезапустите приложение для синхронизации.
+        </div>
+      )}
+
+      {!debugInfo.isTelegramEnv && (
+        <div className="mt-2 text-xs text-red-600">
+          🚨 Не определяется как Telegram среда!
         </div>
       )}
     </motion.div>
