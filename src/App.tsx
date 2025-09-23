@@ -62,22 +62,38 @@ function App() {
 
           // Автоматически создаем пользователя из Telegram данных
           if (telegramUser && telegramReady) {
-            const { createTelegramUser } = useUserStore.getState()
-            try {
-              await createTelegramUser({
-                telegramId: telegramUser.telegramId,
-                firstName: telegramUser.firstName,
-                lastName: telegramUser.lastName,
-                username: telegramUser.username,
-                photoUrl: telegramUser.photoUrl,
-                authDate: new Date(),
-                hash: 'telegram_miniapp', // Для Mini App не нужен реальный hash
-              })
-              console.log(
-                '✅ Автоматическая авторизация через Telegram Mini App'
-              )
-            } catch (error) {
-              console.warn('⚠️ Ошибка автоматической авторизации:', error)
+            const { createTelegramUser, currentUser } = useUserStore.getState()
+
+            // Проверяем, не авторизован ли уже пользователь с этим Telegram ID
+            if (
+              !currentUser ||
+              currentUser.telegramId !== telegramUser.telegramId
+            ) {
+              try {
+                console.log(
+                  '🔄 Создаем/синхронизируем пользователя Telegram:',
+                  {
+                    telegramId: telegramUser.telegramId,
+                    firstName: telegramUser.firstName,
+                    username: telegramUser.username,
+                  }
+                )
+
+                await createTelegramUser({
+                  telegramId: telegramUser.telegramId,
+                  firstName: telegramUser.firstName,
+                  lastName: telegramUser.lastName,
+                  username: telegramUser.username,
+                  photoUrl: telegramUser.photoUrl,
+                  authDate: new Date(),
+                  hash: 'telegram_miniapp', // Для Mini App не нужен реальный hash
+                })
+                console.log('✅ Пользователь Telegram создан/синхронизирован')
+              } catch (error) {
+                console.warn('⚠️ Ошибка автоматической авторизации:', error)
+              }
+            } else {
+              console.log('✅ Пользователь уже авторизован через Telegram')
             }
           }
         }
@@ -137,9 +153,14 @@ function App() {
               : 'Загружаем ваш сад...'}
           </p>
           {isTelegramEnv && telegramUser && (
-            <p className="mt-2 text-sm text-[var(--tg-hint-color,#666666)]">
-              Добро пожаловать, {telegramUser.firstName}! 👋
-            </p>
+            <div className="mt-4 rounded-lg bg-blue-100/50 p-3">
+              <p className="text-sm text-[var(--tg-hint-color,#666666)]">
+                👋 Добро пожаловать, {telegramUser.firstName}!
+              </p>
+              <p className="mt-1 text-xs text-[var(--tg-hint-color,#666666)]">
+                🔄 Автоматическая синхронизация через Telegram
+              </p>
+            </div>
           )}
         </motion.div>
       </div>

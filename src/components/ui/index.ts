@@ -2,10 +2,11 @@
 export { Button } from './Button'
 export { Card, CardHeader, CardBody, CardFooter } from './Card'
 export { Modal, ModalHeader, ModalBody, ModalFooter } from './Modal'
-export { 
-  LoadingSpinner, 
-  LoadingOverlay, 
-  Skeleton, 
-  ElementSkeleton, 
-  GardenSkeleton 
+export {
+  LoadingSpinner,
+  LoadingOverlay,
+  Skeleton,
+  ElementSkeleton,
+  GardenSkeleton,
 } from './LoadingSpinner'
+export { TelegramStatus } from './TelegramStatus'

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { MobileTabNavigation } from './MobileTabNavigation'
 import { GardenView } from '@/components/garden'
 import { MoodCheckin, MoodStats } from '@/components/mood'
+import { TelegramStatus } from '@/components/ui'
 import { useGardenState, useMoodTracking } from '@/hooks'
 
 const tabVariants = {
@@ -41,6 +42,9 @@ export function MobileLayout() {
       case 'mood':
         return (
           <div className="space-y-6 p-4">
+            {/* Telegram Status */}
+            <TelegramStatus />
+
             {/* Quick Status */}
             <div className="text-center">
               <h1 className="mb-2 text-2xl font-bold text-gray-900">
