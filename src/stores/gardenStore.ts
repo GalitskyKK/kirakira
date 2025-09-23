@@ -13,6 +13,7 @@ import {
   canUnlockTodaysElement,
 } from '@/utils/elementGeneration'
 import { saveGarden, loadGarden } from '@/utils/storage'
+import { useUserStore } from './userStore'
 
 interface GardenActions {
   // Garden management
@@ -21,7 +22,8 @@ interface GardenActions {
   updateGarden: (updates: Partial<Garden>) => void
 
   // Element management
-  unlockTodaysElement: (mood: MoodType) => GardenElement | null
+  unlockTodaysElement: (mood: MoodType) => Promise<GardenElement | null>
+  syncGarden: () => Promise<void>
   moveElement: (elementId: string, newPosition: Position2D) => void
   selectElement: (element: GardenElement | null) => void
 
@@ -66,6 +68,9 @@ export const useGardenStore = create<GardenStore>()(
             isLoading: false,
           })
         }
+
+        // 🔄 Автоматически синхронизируем с сервером
+        void get().syncGarden()
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to load garden'
@@ -73,6 +78,42 @@ export const useGardenStore = create<GardenStore>()(
           error: errorMessage,
           isLoading: false,
         })
+      }
+    },
+
+    // 🔄 СИНХРОНИЗАЦИЯ С SUPABASE
+    syncGarden: async () => {
+      try {
+        const userStore = useUserStore.getState()
+        const currentUser = userStore.currentUser
+
+        if (!currentUser?.telegramId) {
+          console.log('📝 No Telegram user - skipping garden sync')
+          return
+        }
+
+        console.log(`🔄 Syncing garden for user ${currentUser.telegramId}`)
+
+        // Получаем актуальные данные пользователя с сервера
+        const response = await fetch(
+          `/api/user/stats?telegramId=${currentUser.telegramId}`
+        )
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch user data: ${response.status}`)
+        }
+
+        const result = await response.json()
+
+        if (result.success && result.data.hasData) {
+          // Если есть данные на сервере - обновляем локальное состояние
+          // TODO: Здесь нужно получить полную историю элементов сада из API
+          console.log('✅ Server has garden data - local state may need update')
+        } else {
+          console.log('📝 No server garden data - local state is primary')
+        }
+      } catch (error) {
+        console.warn('⚠️ Garden sync failed:', error)
       }
     },
 
@@ -147,7 +188,7 @@ export const useGardenStore = create<GardenStore>()(
       }
     },
 
-    unlockTodaysElement: (mood: MoodType) => {
+    unlockTodaysElement: async (mood: MoodType) => {
       const { currentGarden } = get()
 
       if (!currentGarden) {
@@ -186,9 +227,46 @@ export const useGardenStore = create<GardenStore>()(
           lastVisited: new Date(),
         }
 
-        const success = saveGarden(updatedGarden)
+        const localSuccess = saveGarden(updatedGarden)
 
-        if (success) {
+        if (localSuccess) {
+          // 📡 ОТПРАВЛЯЕМ ЭЛЕМЕНТ НА СЕРВЕР для синхронизации между устройствами
+          try {
+            const userStore = useUserStore.getState()
+            const currentUser = userStore.currentUser
+
+            if (currentUser?.telegramId) {
+              const response = await fetch('/api/garden/add-element', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  telegramId: currentUser.telegramId,
+                  element: {
+                    type: newElement.type,
+                    position: newElement.position,
+                    unlockDate: newElement.unlockDate.toISOString(),
+                    mood: mood,
+                    rarity: newElement.rarity,
+                  },
+                }),
+              })
+
+              if (!response.ok) {
+                console.warn(
+                  '⚠️ Failed to sync garden element to server:',
+                  response.status
+                )
+              } else {
+                console.log('✅ Garden element synced to server successfully')
+              }
+            }
+          } catch (serverError) {
+            console.warn(
+              '⚠️ Server sync failed, but local save succeeded:',
+              serverError
+            )
+          }
+
           set({
             currentGarden: updatedGarden,
             isLoading: false,
@@ -196,7 +274,7 @@ export const useGardenStore = create<GardenStore>()(
           })
           return newElement
         } else {
-          throw new Error('Failed to save new element')
+          throw new Error('Failed to save new element locally')
         }
       } catch (error) {
         const errorMessage =

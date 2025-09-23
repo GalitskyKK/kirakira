@@ -15,11 +15,12 @@ import { saveMoodHistory, loadMoodHistory } from '@/utils/storage'
 interface MoodActions {
   // Mood management
   loadMoodHistory: () => void
+  syncMoodHistory: () => Promise<void>
   addMoodEntry: (
     mood: MoodType,
     intensity: MoodIntensity,
     note?: string
-  ) => MoodEntry | null
+  ) => Promise<MoodEntry | null>
   updateTodaysMood: (
     mood: MoodType,
     intensity: MoodIntensity,
@@ -82,6 +83,9 @@ export const useMoodStore = create<MoodStore>()(
           lastCheckin: lastEntry?.date ?? null,
           isLoading: false,
         })
+
+        // 🔄 Автоматически синхронизируем с сервером
+        void get().syncMoodHistory()
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to load mood history'
@@ -92,7 +96,49 @@ export const useMoodStore = create<MoodStore>()(
       }
     },
 
-    addMoodEntry: (mood: MoodType, intensity: MoodIntensity, note?: string) => {
+    // 🔄 СИНХРОНИЗАЦИЯ С SUPABASE
+    syncMoodHistory: async () => {
+      try {
+        const userStore = useUserStore.getState()
+        const currentUser = userStore.currentUser
+
+        if (!currentUser?.telegramId) {
+          console.log('📝 No Telegram user - skipping mood sync')
+          return
+        }
+
+        console.log(
+          `🔄 Syncing mood history for user ${currentUser.telegramId}`
+        )
+
+        // Получаем актуальные данные пользователя с сервера
+        const response = await fetch(
+          `/api/user/stats?telegramId=${currentUser.telegramId}`
+        )
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch user data: ${response.status}`)
+        }
+
+        const result = await response.json()
+
+        if (result.success && result.data.hasData) {
+          // Если есть данные на сервере - обновляем локальное состояние
+          // TODO: Здесь нужно получить полную историю настроений из API
+          console.log('✅ Server has mood data - local state may need update')
+        } else {
+          console.log('📝 No server mood data - local state is primary')
+        }
+      } catch (error) {
+        console.warn('⚠️ Mood sync failed:', error)
+      }
+    },
+
+    addMoodEntry: async (
+      mood: MoodType,
+      intensity: MoodIntensity,
+      note?: string
+    ) => {
       const { moodHistory } = get()
 
       // Check if already checked in today
@@ -106,11 +152,15 @@ export const useMoodStore = create<MoodStore>()(
       try {
         // Get current user from user store
         const userStore = useUserStore.getState()
-        const currentUserId = userStore.currentUser?.id ?? 'anonymous'
+        const currentUser = userStore.currentUser
+
+        if (!currentUser) {
+          throw new Error('No user found')
+        }
 
         const newEntry: MoodEntry = {
           id: `mood_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          userId: currentUserId,
+          userId: currentUser.id,
           date: new Date(),
           mood,
           intensity,
@@ -118,11 +168,38 @@ export const useMoodStore = create<MoodStore>()(
           createdAt: new Date(),
         }
 
+        // 🔄 СИНХРОНИЗАЦИЯ: Сохраняем локально И на сервер
         const updatedHistory = [newEntry, ...moodHistory]
-        const success = saveMoodHistory(updatedHistory)
+        const localSuccess = saveMoodHistory(updatedHistory)
 
-        if (success) {
-          // Update streak count
+        if (localSuccess) {
+          // 📡 ОТПРАВЛЯЕМ НА СЕРВЕР для синхронизации между устройствами
+          try {
+            const response = await fetch('/api/mood/record', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                telegramId: currentUser.telegramId,
+                mood,
+                intensity,
+                note,
+                date: newEntry.date.toISOString(),
+              }),
+            })
+
+            if (!response.ok) {
+              console.warn('⚠️ Failed to sync mood to server:', response.status)
+            } else {
+              console.log('✅ Mood synced to server successfully')
+            }
+          } catch (serverError) {
+            console.warn(
+              '⚠️ Server sync failed, but local save succeeded:',
+              serverError
+            )
+          }
+
+          // Update local state
           const stats = calculateMoodStats(updatedHistory)
 
           set({
@@ -135,7 +212,7 @@ export const useMoodStore = create<MoodStore>()(
 
           return newEntry
         } else {
-          throw new Error('Failed to save mood entry')
+          throw new Error('Failed to save mood entry locally')
         }
       } catch (error) {
         const errorMessage =
