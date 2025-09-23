@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-useless-constructor, no-var, @typescript-eslint/no-unsafe-return, @typescript-eslint/prefer-nullish-coalescing, @typescript-eslint/strict-boolean-expressions, @typescript-eslint/no-dynamic-delete */
 import '@testing-library/jest-dom'
 
 // Mock IntersectionObserver with proper typing

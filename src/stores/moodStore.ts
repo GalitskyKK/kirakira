@@ -14,12 +14,12 @@ import { saveMoodHistory, loadMoodHistory } from '@/utils/storage'
 
 interface MoodActions {
   // Mood management
-  loadMoodHistory: () => Promise<void>
+  loadMoodHistory: () => void
   addMoodEntry: (
     mood: MoodType,
     intensity: MoodIntensity,
     note?: string
-  ) => Promise<MoodEntry | null>
+  ) => MoodEntry | null
   updateTodaysMood: (
     mood: MoodType,
     intensity: MoodIntensity,
@@ -54,7 +54,7 @@ export const useMoodStore = create<MoodStore>()(
     lastCheckin: null,
 
     // Actions
-    loadMoodHistory: async () => {
+    loadMoodHistory: () => {
       set({ isLoading: true, error: null })
 
       try {
@@ -92,11 +92,7 @@ export const useMoodStore = create<MoodStore>()(
       }
     },
 
-    addMoodEntry: async (
-      mood: MoodType,
-      intensity: MoodIntensity,
-      note?: string
-    ) => {
+    addMoodEntry: (mood: MoodType, intensity: MoodIntensity, note?: string) => {
       const { moodHistory } = get()
 
       // Check if already checked in today

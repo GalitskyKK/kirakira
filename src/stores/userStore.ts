@@ -28,10 +28,10 @@ interface TelegramUserData {
 
 interface UserActions {
   // User management
-  loadUser: () => Promise<void>
-  createAnonymousUser: () => Promise<User>
-  createTelegramUser: (telegramData: TelegramUserData) => Promise<User>
-  updateUser: (updates: Partial<User>) => Promise<void>
+  loadUser: () => void
+  createAnonymousUser: () => User
+  createTelegramUser: (telegramData: TelegramUserData) => User
+  updateUser: (updates: Partial<User>) => void
   updatePreferences: (preferences: Partial<UserPreferences>) => Promise<void>
   updateStats: (stats: Partial<UserStats>) => Promise<void>
 
@@ -100,7 +100,7 @@ export const useUserStore = create<UserStore>()(
     hasCompletedOnboarding: false,
 
     // Actions
-    loadUser: async () => {
+    loadUser: () => {
       set({ isLoading: true, error: null })
 
       try {
@@ -132,7 +132,7 @@ export const useUserStore = create<UserStore>()(
       }
     },
 
-    createAnonymousUser: async () => {
+    createAnonymousUser: () => {
       set({ isLoading: true, error: null })
 
       try {
@@ -168,7 +168,7 @@ export const useUserStore = create<UserStore>()(
       }
     },
 
-    createTelegramUser: async (telegramData: TelegramUserData) => {
+    createTelegramUser: (telegramData: TelegramUserData) => {
       set({ isLoading: true, error: null })
 
       try {
@@ -232,7 +232,7 @@ export const useUserStore = create<UserStore>()(
       }
     },
 
-    updateUser: async (updates: Partial<User>) => {
+    updateUser: (updates: Partial<User>) => {
       const { currentUser } = get()
 
       if (!currentUser) {

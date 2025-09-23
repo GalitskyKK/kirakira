@@ -139,7 +139,7 @@ export function ShelfView({
         })
 
         if (shelfData[shelfIndex] && positionOnShelf < ELEMENTS_PER_SHELF) {
-          shelfData[shelfIndex]!.elements.push({
+          shelfData[shelfIndex].elements.push({
             element,
             position: positionOnShelf,
           })
@@ -230,7 +230,7 @@ export function ShelfView({
           )}
         >
           {Array.from({ length: SHELF_COUNT }, (_, shelfIndex) => {
-            const shelfElements = shelves[shelfIndex]?.elements || []
+            const shelfElements = shelves[shelfIndex]?.elements ?? []
 
             return (
               <motion.div
@@ -481,8 +481,8 @@ export function ShelfView({
                               viewMode={viewMode}
                               elementWidth={ELEMENT_WIDTH}
                               elementSpacing={ELEMENT_SPACING}
-                              onClick={onElementClick || (() => {})}
-                              onLongPress={onElementLongPress || (() => {})}
+                              onClick={onElementClick ?? (() => {})}
+                              onLongPress={onElementLongPress ?? (() => {})}
                             />
                           )
                         } else {

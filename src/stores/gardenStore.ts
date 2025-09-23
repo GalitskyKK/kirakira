@@ -16,13 +16,13 @@ import { saveGarden, loadGarden } from '@/utils/storage'
 
 interface GardenActions {
   // Garden management
-  loadGarden: () => Promise<void>
-  createGarden: (userId: string) => Promise<void>
-  updateGarden: (updates: Partial<Garden>) => Promise<void>
+  loadGarden: () => void
+  createGarden: (userId: string) => void
+  updateGarden: (updates: Partial<Garden>) => void
 
   // Element management
-  unlockTodaysElement: (mood: MoodType) => Promise<GardenElement | null>
-  moveElement: (elementId: string, newPosition: Position2D) => Promise<void>
+  unlockTodaysElement: (mood: MoodType) => GardenElement | null
+  moveElement: (elementId: string, newPosition: Position2D) => void
   selectElement: (element: GardenElement | null) => void
 
   // View management
@@ -49,7 +49,7 @@ export const useGardenStore = create<GardenStore>()(
     selectedElement: null,
 
     // Actions
-    loadGarden: async () => {
+    loadGarden: () => {
       set({ isLoading: true, error: null })
 
       try {
@@ -76,7 +76,7 @@ export const useGardenStore = create<GardenStore>()(
       }
     },
 
-    createGarden: async (userId: string) => {
+    createGarden: (userId: string) => {
       set({ isLoading: true, error: null })
 
       try {
@@ -110,7 +110,7 @@ export const useGardenStore = create<GardenStore>()(
       }
     },
 
-    updateGarden: async (updates: Partial<Garden>) => {
+    updateGarden: (updates: Partial<Garden>) => {
       const { currentGarden } = get()
 
       if (!currentGarden) {
@@ -147,7 +147,7 @@ export const useGardenStore = create<GardenStore>()(
       }
     },
 
-    unlockTodaysElement: async (mood: MoodType) => {
+    unlockTodaysElement: (mood: MoodType) => {
       const { currentGarden } = get()
 
       if (!currentGarden) {
@@ -209,7 +209,7 @@ export const useGardenStore = create<GardenStore>()(
       }
     },
 
-    moveElement: async (elementId: string, newPosition: Position2D) => {
+    moveElement: (elementId: string, newPosition: Position2D) => {
       const { currentGarden } = get()
 
       if (!currentGarden) {

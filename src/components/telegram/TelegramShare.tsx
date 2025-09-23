@@ -31,14 +31,14 @@ export function TelegramShare({
     const recentMoodTypes = recentMoods.slice(0, 7).map(mood => mood.mood)
     const dominantMood = recentMoodTypes.reduce(
       (acc, mood) => {
-        acc[mood] = (acc[mood] || 0) + 1
+        acc[mood] = (acc[mood] ?? 0) + 1
         return acc
       },
       {} as Record<string, number>
     )
 
     const topMood = Object.entries(dominantMood).sort(
-      ([, a], [, b]) => (b as number) - (a as number)
+      ([, a], [, b]) => b - a
     )[0]?.[0]
 
     const moodEmojis = {
@@ -78,7 +78,7 @@ export function TelegramShare({
         text: `🌸 Посмотрите на мой эмоциональный сад в KiraKira!\n\n${description}\n\n🔗 Начните свое путешествие: https://t.me/KiraKiraGardenBot?startapp`,
         parse_mode: 'Markdown',
       })
-    } catch (error) {
+    } catch {
       showAlert('Ошибка при отправке сообщения')
     }
   }, [webApp, hapticFeedback, generateGardenDescription, showAlert])
@@ -101,7 +101,7 @@ export function TelegramShare({
       shareGarden(imageUrl, description)
 
       hapticFeedback('success')
-    } catch (error) {
+    } catch {
       hapticFeedback('error')
       showAlert('Ошибка при создании скриншота')
     } finally {
@@ -146,7 +146,7 @@ export function TelegramShare({
   }, [hapticFeedback, showAlert, webApp])
 
   // Шаринг в Stories
-  const handleShareToStory = useCallback(async () => {
+  const handleShareToStory = useCallback(() => {
     if (!webApp || !lastSharedImage) {
       showAlert('Сначала создайте скриншот сада')
       return
@@ -163,7 +163,7 @@ export function TelegramShare({
       } else {
         showAlert('Stories не поддерживаются в данной версии Telegram')
       }
-    } catch (error) {
+    } catch {
       showAlert('Ошибка при публикации в Stories')
     }
   }, [webApp, lastSharedImage, hapticFeedback, showAlert])

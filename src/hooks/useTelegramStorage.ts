@@ -75,7 +75,7 @@ export function useTelegramStorage() {
               },
             }
             resolve(restoredUser)
-          } catch (parseError) {
+          } catch {
             setSyncError('Ошибка парсинга данных пользователя')
             resolve(null)
           }
@@ -141,7 +141,7 @@ export function useTelegramStorage() {
               })),
             }
             resolve(restoredGarden)
-          } catch (parseError) {
+          } catch {
             setSyncError('Ошибка парсинга данных сада')
             resolve(null)
           }
@@ -205,7 +205,7 @@ export function useTelegramStorage() {
               createdAt: new Date(entry.createdAt),
             }))
             resolve(restoredHistory)
-          } catch (parseError) {
+          } catch {
             setSyncError('Ошибка парсинга истории настроений')
             resolve([])
           }
