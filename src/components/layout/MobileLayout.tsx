@@ -42,9 +42,6 @@ export function MobileLayout() {
       case 'mood':
         return (
           <div className="space-y-6 p-4">
-            {/* Telegram Status */}
-            <TelegramStatus />
-
             {/* Quick Status */}
             <div className="text-center">
               <h1 className="mb-2 text-2xl font-bold text-gray-900">
@@ -152,6 +149,11 @@ export function MobileLayout() {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-garden-50 to-green-50 pb-24">
+      {/* Telegram Status - Always visible */}
+      <div className="p-4 pb-0">
+        <TelegramStatus />
+      </div>
+
       {/* Content Area */}
       <div className="relative overflow-hidden">
         <AnimatePresence mode="wait" custom={direction}>

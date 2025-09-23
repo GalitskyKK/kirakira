@@ -5,65 +5,150 @@
  */
 
 /**
- * РЕАЛЬНО активирует премиум функцию для пользователя
- * Приложение синхронизирует изменения через CloudStorage автоматически
+ * 🗄️ SUPABASE: Активирует премиум функцию для пользователя в базе данных
  * @param {number} telegramUserId - ID пользователя в Telegram
  * @param {string} featureId - ID премиум функции
+ * @param {string} transactionId - ID транзакции (опционально)
  * @returns {Promise<boolean>} Успешность активации
  */
-async function activatePremiumFeature(telegramUserId, featureId) {
+async function activatePremiumFeature(
+  telegramUserId,
+  featureId,
+  transactionId = null
+) {
   try {
     console.log(
-      `✅ REALLY activating premium feature for user ${telegramUserId}:`,
+      `🗄️ Activating premium feature in Supabase for user ${telegramUserId}:`,
       {
         featureId,
+        transactionId,
         activatedAt: new Date().toISOString(),
       }
     )
 
-    const activatedAt = new Date().toISOString()
+    // 🗄️ SUPABASE для всех окружений
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        // Динамический импорт для совместимости
+        const { createClient } = await import('@supabase/supabase-js')
 
-    // Создаем запись об активации
-    const activationRecord = {
+        const supabase = createClient(
+          process.env.SUPABASE_URL,
+          process.env.SUPABASE_SERVICE_ROLE_KEY
+        )
+
+        // Подготавливаем запись об активации
+        const activationRecord = {
+          telegram_id: telegramUserId,
+          feature_id: featureId,
+          transaction_id: transactionId,
+          activated_at: new Date().toISOString(),
+          expires_at: null, // Премиум функции не истекают (пока)
+        }
+
+        // Сохраняем активацию в базу данных (upsert для избежания дублей)
+        const { data, error } = await supabase
+          .from('premium_features')
+          .upsert(activationRecord, {
+            onConflict: 'telegram_id,feature_id',
+          })
+          .select()
+
+        if (error) {
+          throw new Error(
+            `Supabase premium activation failed: ${error.message}`
+          )
+        }
+
+        // Логируем что именно активировали
+        switch (featureId) {
+          case 'rare_elements':
+            console.log(
+              `✅ REALLY unlocked rare elements for user ${telegramUserId}`
+            )
+            break
+
+          case 'seasonal_themes':
+            console.log(
+              `✅ REALLY unlocked seasonal themes for user ${telegramUserId}`
+            )
+            break
+
+          case 'analytics':
+            console.log(
+              `✅ REALLY unlocked analytics for user ${telegramUserId}`
+            )
+            break
+
+          case 'premium_bundle':
+            console.log(
+              `✅ REALLY unlocked premium bundle (ALL features) for user ${telegramUserId}`
+            )
+
+            // Для premium_bundle активируем все премиум функции
+            const allFeatures = [
+              'rare_elements',
+              'seasonal_themes',
+              'analytics',
+            ]
+            const bundlePromises = allFeatures.map(feature =>
+              supabase.from('premium_features').upsert(
+                {
+                  telegram_id: telegramUserId,
+                  feature_id: feature,
+                  transaction_id: transactionId,
+                  activated_at: new Date().toISOString(),
+                  expires_at: null,
+                },
+                {
+                  onConflict: 'telegram_id,feature_id',
+                }
+              )
+            )
+
+            const bundleResults = await Promise.allSettled(bundlePromises)
+            const failedFeatures = bundleResults.filter(
+              result => result.status === 'rejected'
+            )
+
+            if (failedFeatures.length > 0) {
+              console.warn(
+                `⚠️ Some bundle features failed to activate:`,
+                failedFeatures
+              )
+            } else {
+              console.log(
+                `✅ All bundle features activated for user ${telegramUserId}`
+              )
+            }
+            break
+
+          default:
+            console.error(`Unknown feature ID: ${featureId}`)
+            return false
+        }
+
+        console.log(
+          `✅ Premium feature ${featureId} saved to Supabase for user ${telegramUserId}`
+        )
+        return true
+      } catch (supabaseError) {
+        console.error(
+          `❌ Supabase premium activation failed:`,
+          supabaseError.message
+        )
+        return false
+      }
+    }
+
+    // 🔄 Fallback: просто логируем для разработки
+    console.log(`📝 Premium feature activated (no database):`, {
       telegramUserId,
       featureId,
-      activated: true,
-      activatedAt,
-      paymentConfirmed: true,
-    }
+      transactionId,
+      activatedAt: new Date().toISOString(),
+    })
 
-    // Логируем что именно активируем
-    switch (featureId) {
-      case 'rare_elements':
-        console.log(
-          `✅ REALLY unlocked rare elements for user ${telegramUserId}`
-        )
-        break
-
-      case 'seasonal_themes':
-        console.log(
-          `✅ REALLY unlocked seasonal themes for user ${telegramUserId}`
-        )
-        break
-
-      case 'premium_bundle':
-        console.log(
-          `✅ REALLY unlocked premium bundle (ALL features) for user ${telegramUserId}`
-        )
-        break
-
-      default:
-        console.error(`Unknown feature ID: ${featureId}`)
-        return false
-    }
-
-    // TODO: В продакшене здесь будет запись в базу данных
-    // await db.premiumFeatures.create(activationRecord)
-
-    // Приложение само синхронизирует активацию через Telegram CloudStorage
-    // API просто подтверждает успешную активацию
-
-    console.log('✅ Premium feature activated. App will sync via CloudStorage.')
     return true
   } catch (error) {
     console.error('Error activating premium feature:', error)

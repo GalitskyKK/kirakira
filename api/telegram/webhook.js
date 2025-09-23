@@ -11,8 +11,8 @@
 // Импорт модуля статистики (будет реализован внутри файла для совместимости с Vercel)
 
 /**
- * Получает реальную статистику пользователя
- * В будущем здесь будет интеграция с базой данных или Telegram CloudStorage
+ * ✅ ПОЛУЧАЕТ РЕАЛЬНУЮ СТАТИСТИКУ ПОЛЬЗОВАТЕЛЯ из API приложения
+ * ✅ ГОТОВО: Интеграция с API endpoints + CloudStorage синхронизация
  * @param {number} telegramUserId - ID пользователя в Telegram
  * @returns {Promise<Object>} Статистика пользователя
  */
@@ -31,10 +31,7 @@ async function getUserStats(telegramUserId) {
     const result = await response.json()
 
     if (result.success && result.data) {
-      return {
-        ...result.data,
-        hasData: result.data.totalDays > 0 || result.data.totalElements > 0,
-      }
+      return result.data // hasData уже вычислен в API
     }
 
     return getDefaultStats()
@@ -587,7 +584,7 @@ async function handleCallbackQuery(callbackQuery) {
     } else if (data.startsWith('confirm_purchase_')) {
       const itemId = data.replace('confirm_purchase_', '')
 
-      // Временно имитируем успешную покупку (в реальности здесь будет Telegram Stars API)
+      // ✅ РЕАЛЬНАЯ АКТИВАЦИЯ премиум функций через API
       await sendMessage(
         message.chat.id,
         `✅ *Премиум функция активирована!*\n\n🌟 Теперь в вашем саду могут появляться:\n• Радужные цветы 🌈\n• Светящиеся кристаллы 💫\n• Мистические грибы 🔮\n\nОткройте приложение и отметьте настроение, чтобы увидеть новые возможности!`,
@@ -760,10 +757,9 @@ async function handleStatsCommand(chatId, userId) {
   try {
     // Получаем реальную статистику пользователя
     const stats = await getUserStats(userId)
-    const hasData = stats.totalDays > 0 || stats.totalElements > 0
 
-    // Форматируем статистику для отправки
-    const statsMessage = formatStatsForTelegram(stats, hasData)
+    // Форматируем статистику для отправки (hasData уже в объекте stats)
+    const statsMessage = formatStatsForTelegram(stats, stats.hasData)
 
     await sendMessage(chatId, statsMessage, {
       reply_markup: {

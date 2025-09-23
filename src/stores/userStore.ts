@@ -15,6 +15,7 @@ import {
   saveOnboardingCompleted,
   isOnboardingCompleted,
 } from '@/utils/storage'
+import { telegramStorage } from '@/utils/telegramStorage'
 
 interface TelegramUserData {
   telegramId: number
@@ -28,8 +29,8 @@ interface TelegramUserData {
 
 interface UserActions {
   // User management
-  loadUser: () => void
-  createAnonymousUser: () => User
+  loadUser: () => Promise<void>
+  createAnonymousUser: () => Promise<User>
   createTelegramUser: (telegramData: TelegramUserData) => User
   updateUser: (updates: Partial<User>) => void
   updatePreferences: (preferences: Partial<UserPreferences>) => Promise<void>
@@ -100,12 +101,25 @@ export const useUserStore = create<UserStore>()(
     hasCompletedOnboarding: false,
 
     // Actions
-    loadUser: () => {
+    loadUser: async () => {
       set({ isLoading: true, error: null })
 
       try {
-        const storedUser = loadUser()
+        let storedUser = loadUser()
         const onboardingCompleted = isOnboardingCompleted()
+
+        // 🔥 РЕАЛЬНАЯ СИНХРОНИЗАЦИЯ - загружаем из CloudStorage если доступно
+        if (telegramStorage.isAvailable && !storedUser) {
+          try {
+            const cloudUser = await telegramStorage.loadUser()
+            if (cloudUser) {
+              storedUser = cloudUser
+              console.log('✅ User loaded from CloudStorage and synced locally')
+            }
+          } catch (err) {
+            console.warn('⚠️ CloudStorage load failed:', err)
+          }
+        }
 
         if (storedUser) {
           set({
@@ -132,7 +146,7 @@ export const useUserStore = create<UserStore>()(
       }
     },
 
-    createAnonymousUser: () => {
+    createAnonymousUser: async () => {
       set({ isLoading: true, error: null })
 
       try {
@@ -147,6 +161,19 @@ export const useUserStore = create<UserStore>()(
         const success = saveUser(newUser)
 
         if (success) {
+          // 🔥 РЕАЛЬНАЯ СИНХРОНИЗАЦИЯ с CloudStorage для анонимных пользователей тоже
+          if (telegramStorage.isAvailable) {
+            try {
+              await telegramStorage.saveUser(newUser)
+              console.log('✅ Anonymous user synced to CloudStorage')
+            } catch (err) {
+              console.warn(
+                '⚠️ CloudStorage sync failed for anonymous user:',
+                err
+              )
+            }
+          }
+
           set({
             currentUser: newUser,
             isAuthenticated: false, // Anonymous users are not "authenticated"
@@ -206,6 +233,16 @@ export const useUserStore = create<UserStore>()(
         if (success) {
           // Отмечаем онбординг как завершенный для Telegram пользователей
           saveOnboardingCompleted(true)
+
+          // 🔥 РЕАЛЬНАЯ СИНХРОНИЗАЦИЯ с CloudStorage
+          if (telegramStorage.isAvailable) {
+            telegramStorage
+              .saveUser(newUser)
+              .then(() => console.log('✅ User synced to CloudStorage'))
+              .catch((err: any) =>
+                console.warn('⚠️ CloudStorage sync failed:', err)
+              )
+          }
 
           set({
             currentUser: newUser,

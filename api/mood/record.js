@@ -5,42 +5,120 @@
  */
 
 /**
- * РЕАЛЬНО сохраняет настроение пользователя
- * Приложение синхронизирует данные через CloudStorage автоматически
+ * 🗄️ SUPABASE: Сохраняет настроение пользователя в базу данных
  * @param {number} telegramUserId - ID пользователя в Telegram
  * @param {string} mood - Настроение пользователя
  * @param {Date} date - Дата записи
+ * @param {string} note - Дополнительная заметка (опционально)
  * @returns {Promise<boolean>} Успешность сохранения
  */
-async function saveMoodRecord(telegramUserId, mood, date) {
+async function saveMoodRecord(telegramUserId, mood, date, note = null) {
   try {
-    console.log(`✅ REALLY recording mood for user ${telegramUserId}:`, {
+    console.log(`🗄️ Recording mood to Supabase for user ${telegramUserId}:`, {
       mood,
       date: date.toISOString(),
+      note,
     })
 
-    // Создаем запись настроения
-    const moodEntry = {
-      id: `mood_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      mood,
-      date: date.toISOString(),
-      telegramUserId,
-      createdAt: new Date().toISOString(),
+    // 🗄️ SUPABASE для всех окружений
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        // Динамический импорт для совместимости
+        const { createClient } = await import('@supabase/supabase-js')
+
+        const supabase = createClient(
+          process.env.SUPABASE_URL,
+          process.env.SUPABASE_SERVICE_ROLE_KEY
+        )
+
+        // Подготавливаем запись настроения
+        const moodEntry = {
+          telegram_id: telegramUserId,
+          mood: mood,
+          mood_date: date.toISOString().split('T')[0], // Только дата без времени
+          note: note,
+          created_at: new Date().toISOString(),
+        }
+
+        // Сохраняем в базу данных (upsert для избежания дублей)
+        const { data, error } = await supabase
+          .from('mood_entries')
+          .upsert(moodEntry, {
+            onConflict: 'telegram_id,mood_date',
+          })
+          .select()
+
+        if (error) {
+          throw new Error(`Supabase mood insert failed: ${error.message}`)
+        }
+
+        // Обновляем кэшированную статистику пользователя
+        await updateUserStatsCache(supabase, telegramUserId)
+
+        console.log(`✅ Mood saved to Supabase for user ${telegramUserId}`)
+        return true
+      } catch (supabaseError) {
+        console.error(`❌ Supabase mood save failed:`, supabaseError.message)
+        return false
+      }
     }
 
-    // TODO: В продакшене здесь будет запись в базу данных
-    // await db.moodRecords.create(moodEntry)
+    // 🔄 Fallback: просто логируем для разработки
+    console.log(`📝 Mood recorded (no database):`, {
+      telegramUserId,
+      mood,
+      date: date.toISOString(),
+      note,
+    })
 
-    // Приложение само синхронизирует данные через Telegram CloudStorage
-    // API просто подтверждает получение данных
-
-    console.log(
-      '✅ Mood recorded successfully. App will sync via CloudStorage.'
-    )
     return true
   } catch (error) {
     console.error('Error recording mood:', error)
     return false
+  }
+}
+
+/**
+ * 📊 Обновляет кэшированную статистику пользователя после записи настроения
+ * @param {Object} supabase - Клиент Supabase
+ * @param {number} telegramUserId - ID пользователя
+ */
+async function updateUserStatsCache(supabase, telegramUserId) {
+  try {
+    // Получаем текущую статистику из функции БД
+    const { data: stats, error } = await supabase.rpc('get_user_stats', {
+      user_telegram_id: telegramUserId,
+    })
+
+    if (error) {
+      console.warn(`⚠️ Stats update warning:`, error.message)
+      return
+    }
+
+    if (stats && stats.length > 0) {
+      const userStats = stats[0]
+
+      // Обновляем кэшированные поля в таблице users
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({
+          total_days: userStats.total_days,
+          current_streak: userStats.current_streak,
+          longest_streak: userStats.longest_streak,
+          total_elements: userStats.total_elements,
+          rare_elements_found: userStats.rare_elements_found,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('telegram_id', telegramUserId)
+
+      if (updateError) {
+        console.warn(`⚠️ User stats cache update warning:`, updateError.message)
+      } else {
+        console.log(`📊 Updated stats cache for user ${telegramUserId}`)
+      }
+    }
+  } catch (error) {
+    console.warn(`⚠️ Stats cache update failed:`, error.message)
   }
 }
 
