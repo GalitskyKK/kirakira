@@ -73,8 +73,8 @@ function generateConsistentDemoStats(telegramId) {
 
 /**
  * API handler для получения статистики пользователя
- * @param {Object} req - Next.js API request object
- * @param {Object} res - Next.js API response object
+ * @param {Request} req - Vercel Functions request object
+ * @param {Response} res - Vercel Functions response object
  */
 export default async function handler(req, res) {
   // Проверяем метод запроса
