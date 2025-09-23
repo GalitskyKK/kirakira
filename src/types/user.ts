@@ -2,6 +2,11 @@ export interface User {
   readonly id: string
   readonly email?: string
   readonly username?: string
+  readonly firstName?: string
+  readonly lastName?: string
+  readonly photoUrl?: string
+  readonly telegramId?: number
+  readonly lastVisitDate?: Date
   readonly registrationDate: Date
   readonly preferences: UserPreferences
   readonly stats: UserStats

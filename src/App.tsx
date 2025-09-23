@@ -11,6 +11,7 @@ import { initializeStores } from '@/stores'
 import { HomePage } from '@/pages/HomePage'
 import { OnboardingPage } from '@/pages/OnboardingPage'
 import { ShowcasePage } from '@/pages/ShowcasePage'
+import { AuthPage } from '@/pages/AuthPage'
 import { LoadingSpinner } from '@/components/ui'
 import { useTelegram, useTelegramTheme } from '@/hooks'
 import { telegramStorage } from '@/utils/telegramStorage'
@@ -19,6 +20,7 @@ function App() {
   const {
     currentUser: _currentUser,
     hasCompletedOnboarding,
+    isAuthenticated,
     isLoading,
     loadUser: _loadUser,
     updateLastVisit,
@@ -26,6 +28,7 @@ function App() {
 
   const [isInitializing, setIsInitializing] = useState(true)
   const [initError, setInitError] = useState<string | null>(null)
+  const [showAuth, setShowAuth] = useState(false)
 
   // Telegram интеграция
   const {
@@ -55,6 +58,27 @@ function App() {
               }
               checkReady()
             })
+          }
+
+          // Автоматически создаем пользователя из Telegram данных
+          if (telegramUser && telegramReady) {
+            const { createTelegramUser } = useUserStore.getState()
+            try {
+              await createTelegramUser({
+                telegramId: telegramUser.telegramId,
+                firstName: telegramUser.firstName,
+                lastName: telegramUser.lastName,
+                username: telegramUser.username,
+                photoUrl: telegramUser.photoUrl,
+                authDate: new Date(),
+                hash: 'telegram_miniapp', // Для Mini App не нужен реальный hash
+              })
+              console.log(
+                '✅ Автоматическая авторизация через Telegram Mini App'
+              )
+            } catch (error) {
+              console.warn('⚠️ Ошибка автоматической авторизации:', error)
+            }
           }
         }
 
@@ -153,6 +177,16 @@ function App() {
     return <OnboardingPage onComplete={handleOnboardingComplete} />
   }
 
+  // Show auth screen for non-authenticated users (optional)
+  if (showAuth && !isAuthenticated && !isTelegramEnv) {
+    return (
+      <AuthPage
+        onSuccess={() => setShowAuth(false)}
+        onError={error => console.error('Auth error:', error)}
+      />
+    )
+  }
+
   // Main app routing
   return (
     <Router>
@@ -184,6 +218,23 @@ function App() {
                   transition={{ duration: 0.3 }}
                 >
                   <ShowcasePage />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/auth"
+              element={
+                <motion.div
+                  key="auth"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <AuthPage
+                    onSuccess={() => window.location.replace('/')}
+                    onError={error => console.error('Auth error:', error)}
+                  />
                 </motion.div>
               }
             />

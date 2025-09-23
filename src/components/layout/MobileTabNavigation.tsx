@@ -75,7 +75,7 @@ export function MobileTabNavigation({
               {/* Active indicator */}
               {isActive && (
                 <motion.div
-                  className="absolute left-1/2 top-0 h-1 w-8 -translate-x-1/2 rounded-b-full bg-garden-500"
+                  className="absolute inset-x-0 top-0 flex justify-center"
                   layoutId="activeTab"
                   initial={false}
                   transition={{
@@ -83,7 +83,9 @@ export function MobileTabNavigation({
                     stiffness: 300,
                     damping: 30,
                   }}
-                />
+                >
+                  <div className="h-1 w-8 rounded-b-full bg-garden-500" />
+                </motion.div>
               )}
 
               {/* Icon with pulse effect when active */}

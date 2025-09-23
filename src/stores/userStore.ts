@@ -16,10 +16,21 @@ import {
   isOnboardingCompleted,
 } from '@/utils/storage'
 
+interface TelegramUserData {
+  telegramId: number
+  firstName: string
+  lastName: string | undefined
+  username: string | undefined
+  photoUrl: string | undefined
+  authDate: Date
+  hash: string
+}
+
 interface UserActions {
   // User management
   loadUser: () => Promise<void>
   createAnonymousUser: () => Promise<User>
+  createTelegramUser: (telegramData: TelegramUserData) => Promise<User>
   updateUser: (updates: Partial<User>) => Promise<void>
   updatePreferences: (preferences: Partial<UserPreferences>) => Promise<void>
   updateStats: (stats: Partial<UserStats>) => Promise<void>
@@ -149,6 +160,70 @@ export const useUserStore = create<UserStore>()(
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to create user'
+        set({
+          error: errorMessage,
+          isLoading: false,
+        })
+        throw error
+      }
+    },
+
+    createTelegramUser: async (telegramData: TelegramUserData) => {
+      set({ isLoading: true, error: null })
+
+      try {
+        // Проверяем, есть ли уже пользователь с таким Telegram ID
+        const existingUser = loadUser()
+        if (
+          existingUser &&
+          existingUser.telegramId === telegramData.telegramId
+        ) {
+          console.log('Пользователь с таким Telegram ID уже существует')
+          set({
+            currentUser: existingUser,
+            isAuthenticated: true,
+            isLoading: false,
+          })
+          return existingUser
+        }
+
+        const newUser: User = {
+          id: `tg_${telegramData.telegramId}`,
+          telegramId: telegramData.telegramId,
+          firstName: telegramData.firstName,
+          ...(telegramData.lastName && { lastName: telegramData.lastName }),
+          ...(telegramData.username && { username: telegramData.username }),
+          ...(telegramData.photoUrl && { photoUrl: telegramData.photoUrl }),
+          registrationDate: new Date(),
+          lastVisitDate: new Date(),
+          preferences: DEFAULT_PREFERENCES,
+          stats: createDefaultStats(),
+          isAnonymous: false,
+        }
+
+        const success = saveUser(newUser)
+
+        if (success) {
+          // Отмечаем онбординг как завершенный для Telegram пользователей
+          saveOnboardingCompleted(true)
+
+          set({
+            currentUser: newUser,
+            isAuthenticated: true,
+            hasCompletedOnboarding: true,
+            isLoading: false,
+          })
+
+          console.log('Telegram пользователь создан:', newUser)
+          return newUser
+        } else {
+          throw new Error('Failed to save Telegram user')
+        }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : 'Failed to create Telegram user'
         set({
           error: errorMessage,
           isLoading: false,

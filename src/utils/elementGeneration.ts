@@ -312,8 +312,11 @@ const ELEMENT_TEMPLATES: readonly ElementTemplate[] = [
   },
 ] as const
 
+// Экспортируем все элементы для showcase
+export { ELEMENT_TEMPLATES }
+
 // Премиум типы элементов
-const PREMIUM_ELEMENT_TYPES = new Set([
+export const PREMIUM_ELEMENT_TYPES = new Set([
   ElementType.RAINBOW_FLOWER,
   ElementType.GLOWING_CRYSTAL,
   ElementType.MYSTIC_MUSHROOM,
