@@ -1,24 +1,21 @@
 /**
- * API эндпоинт для записи настроения пользователя
- * POST /api/mood/record
- * Body: { telegramUserId: number, mood: string, date: string }
+ * API эндпоинт для добавления элемента сада
+ * POST /api/garden/add-element
+ * Body: { telegramId: number, element: { type, position, unlockDate, mood, rarity } }
  */
 
 /**
- * 🗄️ SUPABASE: Сохраняет настроение пользователя в базу данных
+ * 🗄️ SUPABASE: Сохраняет элемент сада в базу данных
  * @param {number} telegramUserId - ID пользователя в Telegram
- * @param {string} mood - Настроение пользователя
- * @param {Date} date - Дата записи
- * @param {string} note - Дополнительная заметка (опционально)
+ * @param {Object} element - Элемент сада
  * @returns {Promise<boolean>} Успешность сохранения
  */
-async function saveMoodRecord(telegramUserId, mood, date, note = null) {
+async function saveGardenElement(telegramUserId, element) {
   try {
-    console.log(`🗄️ Recording mood to Supabase for user ${telegramUserId}:`, {
-      mood,
-      date: date.toISOString(),
-      note,
-    })
+    console.log(
+      `🌱 Saving garden element to Supabase for user ${telegramUserId}:`,
+      element
+    )
 
     // 🗄️ SUPABASE для всех окружений
     if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -31,55 +28,56 @@ async function saveMoodRecord(telegramUserId, mood, date, note = null) {
           process.env.SUPABASE_SERVICE_ROLE_KEY
         )
 
-        // Подготавливаем запись настроения
-        const moodEntry = {
+        // Подготавливаем запись элемента сада
+        const gardenEntry = {
           telegram_id: telegramUserId,
-          mood: mood,
-          mood_date: date.toISOString().split('T')[0], // Только дата без времени
-          note: note,
+          element_type: element.type,
+          position_x: element.position.x,
+          position_y: element.position.y,
+          rarity: element.rarity,
+          mood_when_unlocked: element.mood,
+          unlock_date: element.unlockDate,
           created_at: new Date().toISOString(),
         }
 
-        // Сохраняем в базу данных (upsert для избежания дублей)
+        // Сохраняем в базу данных
         const { data, error } = await supabase
-          .from('mood_entries')
-          .upsert(moodEntry, {
-            onConflict: 'telegram_id,mood_date',
-          })
+          .from('garden_elements')
+          .insert(gardenEntry)
           .select()
 
         if (error) {
-          throw new Error(`Supabase mood insert failed: ${error.message}`)
+          throw new Error(`Supabase garden insert failed: ${error.message}`)
         }
 
         // Обновляем кэшированную статистику пользователя
         await updateUserStatsCache(supabase, telegramUserId)
 
-        console.log(`✅ Mood saved to Supabase for user ${telegramUserId}`)
+        console.log(
+          `✅ Garden element saved to Supabase for user ${telegramUserId}`
+        )
         return true
       } catch (supabaseError) {
-        console.error(`❌ Supabase mood save failed:`, supabaseError.message)
+        console.error(`❌ Supabase garden save failed:`, supabaseError.message)
         return false
       }
     }
 
     // 🔄 Fallback: просто логируем для разработки
-    console.log(`📝 Mood recorded (no database):`, {
+    console.log(`📝 Garden element recorded (no database):`, {
       telegramUserId,
-      mood,
-      date: date.toISOString(),
-      note,
+      element,
     })
 
     return true
   } catch (error) {
-    console.error('Error recording mood:', error)
+    console.error('Error saving garden element:', error)
     return false
   }
 }
 
 /**
- * 📊 Обновляет кэшированную статистику пользователя после записи настроения
+ * 📊 Обновляет кэшированную статистику пользователя после добавления элемента
  * @param {Object} supabase - Клиент Supabase
  * @param {number} telegramUserId - ID пользователя
  */
@@ -123,7 +121,7 @@ async function updateUserStatsCache(supabase, telegramUserId) {
 }
 
 /**
- * API handler для записи настроения пользователя
+ * API handler для добавления элемента сада
  * @param {Request} req - Vercel Functions request object
  * @param {Response} res - Vercel Functions response object
  */
@@ -134,63 +132,55 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { telegramUserId, mood, date, note, intensity } = req.body
+    const { telegramId, element } = req.body
 
     // Валидация входных данных
-    if (!telegramUserId || typeof telegramUserId !== 'number') {
-      return res
-        .status(400)
-        .json({ error: 'telegramUserId (number) is required' })
+    if (!telegramId || typeof telegramId !== 'number') {
+      return res.status(400).json({ error: 'telegramId (number) is required' })
     }
 
-    if (!mood || typeof mood !== 'string') {
-      return res.status(400).json({ error: 'mood (string) is required' })
+    if (!element || typeof element !== 'object') {
+      return res.status(400).json({ error: 'element (object) is required' })
     }
 
-    // Проверяем валидность настроения
-    const validMoods = ['joy', 'calm', 'stress', 'sadness', 'anger', 'anxiety']
-    if (!validMoods.includes(mood)) {
+    // Валидация элемента сада
+    if (
+      !element.type ||
+      !element.position ||
+      !element.rarity ||
+      !element.mood
+    ) {
       return res.status(400).json({
-        error: 'Invalid mood value',
-        validMoods: validMoods,
+        error: 'element must contain: type, position, rarity, mood',
       })
     }
 
-    // Получаем дату записи
-    const recordDate = date ? new Date(date) : new Date()
+    console.log(
+      `Adding garden element for Telegram user ${telegramId}:`,
+      element
+    )
 
-    // Проверяем валидность даты
-    if (isNaN(recordDate.getTime())) {
-      return res.status(400).json({ error: 'Invalid date format' })
-    }
-
-    console.log(`Recording mood for Telegram user ${telegramUserId}:`, {
-      mood,
-      date: recordDate.toISOString(),
-    })
-
-    // Сохраняем запись настроения
-    const saved = await saveMoodRecord(telegramUserId, mood, recordDate, note)
+    // Сохраняем элемент сада
+    const saved = await saveGardenElement(telegramId, element)
 
     if (!saved) {
       return res.status(500).json({
         success: false,
-        error: 'Failed to save mood record',
+        error: 'Failed to save garden element',
       })
     }
 
     res.status(200).json({
       success: true,
       data: {
-        telegramUserId,
-        mood,
-        date: recordDate,
-        recorded: true,
+        telegramId,
+        element,
+        saved: true,
       },
-      message: 'Mood recorded successfully',
+      message: 'Garden element saved successfully',
     })
   } catch (error) {
-    console.error('Error recording mood:', error)
+    console.error('Error saving garden element:', error)
     res.status(500).json({
       success: false,
       error: 'Internal server error',

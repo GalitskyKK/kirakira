@@ -179,7 +179,7 @@ export const useMoodStore = create<MoodStore>()(
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                telegramId: currentUser.telegramId,
+                telegramUserId: currentUser.telegramId,
                 mood,
                 intensity,
                 note,
