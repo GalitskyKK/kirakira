@@ -23,7 +23,6 @@ function App() {
     isAuthenticated,
     isLoading,
     loadUser: _loadUser,
-    updateLastVisit,
     clearAllUserData,
     syncFromSupabase,
     createTelegramUser,
@@ -67,24 +66,46 @@ function App() {
           : null,
       })
 
+      // 🕐 ОБЪЯВЛЯЕМ ТАЙМАУТ В ОБЛАСТИ ВИДИМОСТИ ФУНКЦИИ
+      let initTimeout: NodeJS.Timeout | null = null
+
       try {
+        // 🕐 КРИТИЧНЫЙ ТАЙМАУТ для Telegram - если инициализация не завершится за 10 сек, принудительно продолжаем
+        initTimeout = setTimeout(() => {
+          console.warn('⚠️ ТАЙМАУТ ИНИЦИАЛИЗАЦИИ! Принудительно завершаем...')
+          setIsInitializing(false)
+        }, 10000) // 10 секунд
+
         // Инициализируем Telegram хранилище если доступно
         if (isTelegramEnv) {
           console.log('📱 Инициализируем Telegram хранилище...')
           telegramStorage.initialize()
 
-          // Ждем готовности Telegram WebApp
+          // 🚀 УПРОЩЕННАЯ ЛОГИКА: Ждем Telegram готовности максимум 5 секунд
           if (!telegramReady) {
-            await new Promise(resolve => {
-              const checkReady = () => {
-                if (telegramReady) {
-                  resolve(void 0)
-                } else {
-                  setTimeout(checkReady, 100)
+            console.log('⏳ Ждем готовности Telegram WebApp (макс 5 сек)...')
+
+            await Promise.race([
+              new Promise(resolve => {
+                const checkReady = () => {
+                  if (telegramReady) {
+                    console.log('✅ Telegram WebApp готов!')
+                    resolve(void 0)
+                  } else {
+                    setTimeout(checkReady, 100)
+                  }
                 }
-              }
-              checkReady()
-            })
+                checkReady()
+              }),
+              new Promise(resolve => {
+                setTimeout(() => {
+                  console.warn(
+                    '⚠️ Таймаут ожидания Telegram WebApp - продолжаем без него'
+                  )
+                  resolve(void 0)
+                }, 5000) // 5 секунд таймаут
+              }),
+            ])
           }
 
           // 🔄 ПРАВИЛЬНАЯ СИНХРОНИЗАЦИЯ С TELEGRAM
@@ -172,10 +193,14 @@ function App() {
           }
         }
 
-        updateLastVisit()
+        // updateLastVisit() перенесено в loadUser() после инициализации пользователя
 
+        // 🏁 ОЧИЩАЕМ ТАЙМАУТ при успешной инициализации
+        if (initTimeout) clearTimeout(initTimeout)
         console.log('✅ ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА УСПЕШНО!')
       } catch (error) {
+        // 🏁 ОЧИЩАЕМ ТАЙМАУТ при ошибке
+        if (initTimeout) clearTimeout(initTimeout)
         console.error('❌ ОШИБКА ИНИЦИАЛИЗАЦИИ:', error)
         console.error(
           '❌ Stack trace:',
@@ -191,7 +216,7 @@ function App() {
     }
 
     void initializeApp()
-  }, [updateLastVisit, isTelegramEnv, telegramReady])
+  }, []) // 🚀 УБИРАЕМ ВСЕ ЗАВИСИМОСТИ - инициализация должна происходить ТОЛЬКО ОДИН РАЗ!
 
   // Применяем тему Telegram к корневому элементу
   useEffect(() => {
@@ -246,20 +271,65 @@ function App() {
               : 'Загружаем ваш сад...'}
           </p>
 
-          {/* 🔍 ДИАГНОСТИЧЕСКАЯ ИНФОРМАЦИЯ (только для отладки) */}
+          {/* 🔍 РАСШИРЕННАЯ ДИАГНОСТИКА для Telegram */}
           {isTelegramEnv && (
-            <div className="mt-4 rounded-lg bg-yellow-100/50 p-2 text-xs">
-              <div>
-                Init: {isInitializing ? '⏳' : '✅'} | Loading:{' '}
-                {isLoading ? '⏳' : '✅'}
+            <div className="mt-4 space-y-2 rounded-lg bg-yellow-100/50 p-3 text-xs">
+              <div className="font-semibold">🔍 Диагностика Telegram:</div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  Init: {isInitializing ? '⏳ Инициализация' : '✅ Готов'}
+                </div>
+                <div>Loading: {isLoading ? '⏳ Загрузка' : '✅ Загружен'}</div>
               </div>
-              <div>
-                TG Ready: {telegramReady ? '✅' : '❌'} | User:{' '}
-                {telegramUser ? '✅' : '❌'}
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  TG Ready: {telegramReady ? '✅ Готов' : '❌ НЕ готов'}
+                </div>
+                <div>User: {telegramUser ? '✅ Есть' : '❌ НЕТ'}</div>
               </div>
-              {initError && (
-                <div className="text-red-600">Error: {initError}</div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  Auth:{' '}
+                  {isAuthenticated ? '✅ Авторизован' : '❌ НЕ авторизован'}
+                </div>
+                <div>
+                  TG API: {window.Telegram?.WebApp ? '✅ Есть' : '❌ НЕТ'}
+                </div>
+              </div>
+
+              {telegramUser && (
+                <div className="text-blue-600">
+                  👤 @{telegramUser.username || telegramUser.firstName} (ID:{' '}
+                  {telegramUser.telegramId})
+                </div>
               )}
+
+              {initError && (
+                <div className="font-semibold text-red-600">
+                  ❌ Ошибка: {initError}
+                </div>
+              )}
+
+              <div className="text-xs text-gray-500">
+                💡 Если экран не пропадает больше 10 сек - сообщите разработчику
+              </div>
+
+              {/* 🚨 АВАРИЙНАЯ КНОПКА после 15 секунд */}
+              <div className="mt-2">
+                <button
+                  onClick={() => {
+                    console.warn('🚨 АВАРИЙНЫЙ ВЫХОД ИЗ ИНИЦИАЛИЗАЦИИ!')
+                    setIsInitializing(false)
+                    setInitError(null)
+                  }}
+                  className="w-full rounded bg-red-500/70 px-3 py-2 text-xs text-white hover:bg-red-600/70"
+                >
+                  🚨 Пропустить инициализацию (аварийный выход)
+                </button>
+              </div>
             </div>
           )}
           {isTelegramEnv && telegramUser && (
