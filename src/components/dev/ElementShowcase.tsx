@@ -9,14 +9,19 @@ import {
   GlowingCrystalSVG,
   MysticMushroomSVG,
 } from '../garden/plants'
-import { ElementType, RarityLevel } from '@/types'
+import { ElementType, RarityLevel, SeasonalVariant, MOOD_CONFIG } from '@/types'
 import { Card } from '@/components/ui/Card'
 import {
   ELEMENT_TEMPLATES,
   PREMIUM_ELEMENT_TYPES,
 } from '@/utils/elementGeneration'
 
-// Маппинг элементов к компонентам
+// Проверка dev режима - показывать только в разработке
+if (!import.meta.env.DEV) {
+  throw new Error('ElementShowcase доступен только в режиме разработки')
+}
+
+// Маппинг элементов к компонентам (с заглушками для недостающих)
 const getElementComponent = (elementType: ElementType) => {
   switch (elementType) {
     case ElementType.FLOWER:
@@ -37,43 +42,99 @@ const getElementComponent = (elementType: ElementType) => {
       return MysticMushroomSVG
     case ElementType.STONE:
       return StoneSVG
+    // Заглушки для элементов без собственных компонентов
     case ElementType.GRASS:
-      return FlowerSVG // Заглушка
+      return FlowerSVG // TODO: создать GrassSVG
     case ElementType.WATER:
-      return CrystalSVG // Заглушка (похож на каплю)
+      return CrystalSVG // TODO: создать WaterSVG (похож на каплю)
     case ElementType.DECORATION:
-      return FlowerSVG // Заглушка
+      return FlowerSVG // TODO: создать DecorationSVG
     case ElementType.STARLIGHT_DECORATION:
-      return CrystalSVG // Заглушка (светящийся)
+      return GlowingCrystalSVG // TODO: создать StarlightDecorationSVG
     default:
       return FlowerSVG
   }
 }
 
-// Маппинг настроений к элементам
-const MOOD_MAPPING: Record<ElementType, string[]> = {
-  [ElementType.FLOWER]: ['Радость'],
-  [ElementType.TREE]: ['Спокойствие'],
-  [ElementType.CRYSTAL]: ['Стресс', 'Гнев'],
-  [ElementType.MUSHROOM]: ['Грусть', 'Тревога'],
-  [ElementType.STONE]: ['Стресс', 'Гнев'],
-  [ElementType.GRASS]: ['Грусть'],
-  [ElementType.WATER]: ['Спокойствие'],
-  [ElementType.DECORATION]: ['Радость', 'Тревога'],
-  [ElementType.RAINBOW_FLOWER]: ['Радость'],
-  [ElementType.GLOWING_CRYSTAL]: ['Стресс', 'Гнев'],
-  [ElementType.MYSTIC_MUSHROOM]: ['Грусть', 'Тревога'],
-  [ElementType.AURORA_TREE]: ['Спокойствие'],
-  [ElementType.STARLIGHT_DECORATION]: ['Радость', 'Тревога'],
+// Создание маппинга настроений к элементам из MOOD_CONFIG
+const MOOD_MAPPING: Record<ElementType, string[]> = {} as Record<
+  ElementType,
+  string[]
+>
+
+// Инициализируем пустые массивы для всех типов элементов
+Object.values(ElementType).forEach(elementType => {
+  MOOD_MAPPING[elementType] = []
+})
+
+// Заполняем маппинг на основе MOOD_CONFIG
+Object.entries(MOOD_CONFIG).forEach(([, moodConfig]) => {
+  moodConfig.elementTypes.forEach(elementType => {
+    if (!MOOD_MAPPING[elementType].includes(moodConfig.label)) {
+      MOOD_MAPPING[elementType].push(moodConfig.label)
+    }
+  })
+})
+
+// Создаем расширенный список элементов с сезонными вариациями
+const createAllElements = () => {
+  const elements: Array<{
+    type: ElementType
+    name: string
+    description: string
+    emoji: string
+    baseColor: string
+    rarity: RarityLevel
+    component: React.ComponentType<any>
+    isPremium: boolean
+    moods: string[]
+    season?: SeasonalVariant
+    fullName: string
+  }> = []
+
+  // Добавляем базовые элементы
+  ELEMENT_TEMPLATES.forEach(template => {
+    const baseElement = {
+      ...template,
+      component: getElementComponent(template.type),
+      isPremium: PREMIUM_ELEMENT_TYPES.has(template.type),
+      moods: MOOD_MAPPING[template.type] || ['Универсальный'],
+      fullName: template.name,
+    }
+    elements.push(baseElement)
+
+    // Добавляем сезонные вариации для каждого элемента
+    Object.values(SeasonalVariant).forEach(season => {
+      const seasonalElement = {
+        ...baseElement,
+        season,
+        fullName: `${template.name} (${getSeasonName(season)})`,
+        description: `${template.description} - ${getSeasonName(season)} вариант`,
+      }
+      elements.push(seasonalElement)
+    })
+  })
+
+  return elements
 }
 
-// Преобразуем ELEMENT_TEMPLATES в формат для showcase
-const ALL_ELEMENTS = ELEMENT_TEMPLATES.map(template => ({
-  ...template,
-  component: getElementComponent(template.type),
-  isPremium: PREMIUM_ELEMENT_TYPES.has(template.type),
-  moods: MOOD_MAPPING[template.type] || ['Универсальный'],
-}))
+// Функция для получения названия сезона на русском
+const getSeasonName = (season: SeasonalVariant): string => {
+  switch (season) {
+    case SeasonalVariant.SPRING:
+      return 'Весна'
+    case SeasonalVariant.SUMMER:
+      return 'Лето'
+    case SeasonalVariant.AUTUMN:
+      return 'Осень'
+    case SeasonalVariant.WINTER:
+      return 'Зима'
+    default:
+      return 'Неизвестный сезон'
+  }
+}
+
+const ALL_ELEMENTS = createAllElements()
 
 const RARITY_INFO = {
   [RarityLevel.COMMON]: { color: '#6b7280', label: 'Обычный', chance: '50%' },
@@ -100,16 +161,21 @@ export function ElementShowcase() {
             🌿 Все элементы сада KiraKira
           </h1>
           <p className="text-lg text-gray-600">
-            Полная коллекция из {ALL_ELEMENTS.length} уникальных элементов с
-            системой редкости
+            Полная коллекция из {ALL_ELEMENTS.length} элементов с системой
+            редкости и сезонными вариациями
           </p>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             <span className="rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-700">
-              {ALL_ELEMENTS.filter(el => !el.isPremium).length} базовых
-              элементов
+              {ELEMENT_TEMPLATES.length} базовых шаблонов
+            </span>
+            <span className="rounded-full bg-green-100 px-3 py-1 text-sm text-green-700">
+              {ALL_ELEMENTS.filter(el => el.season).length} сезонных вариаций
             </span>
             <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm text-yellow-700">
               {ALL_ELEMENTS.filter(el => el.isPremium).length} премиум элементов
+            </span>
+            <span className="rounded-full bg-purple-100 px-3 py-1 text-sm text-purple-700">
+              {Object.values(ElementType).length} типов элементов
             </span>
           </div>
         </div>
@@ -162,7 +228,7 @@ export function ElementShowcase() {
 
                   return (
                     <motion.div
-                      key={`${element.type}-${element.name}`}
+                      key={`${element.type}-${element.name}-${element.season || 'base'}`}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
@@ -184,11 +250,16 @@ export function ElementShowcase() {
                         />
                       </div>
                       <h3 className="mb-1 font-medium text-gray-800">
-                        {element.name}
+                        {element.fullName}
                       </h3>
                       <p className="mb-2 text-xs text-gray-600">
                         {element.description}
                       </p>
+                      {element.season && (
+                        <div className="mb-1 inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
+                          🌿 {getSeasonName(element.season)}
+                        </div>
+                      )}
                       <div
                         className="mb-2 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium text-white"
                         style={{ backgroundColor: rarityInfo.color }}
@@ -214,6 +285,41 @@ export function ElementShowcase() {
             </Card>
           )
         })}
+
+        {/* Информация о сезонах */}
+        <Card className="mb-8 p-6">
+          <h2 className="mb-4 text-2xl font-semibold">🌸 Сезонные вариации</h2>
+          <div className="mb-4 text-gray-600">
+            Каждый элемент имеет уникальные сезонные вариации с особыми
+            визуальными эффектами:
+          </div>
+          <div className="grid gap-4 md:grid-cols-4">
+            <div className="rounded-lg bg-green-50 p-4">
+              <h3 className="mb-2 font-semibold text-green-800">🌸 Весна</h3>
+              <div className="text-sm text-green-700">
+                Свежие зеленые оттенки, молодые побеги, пастельные цвета
+              </div>
+            </div>
+            <div className="rounded-lg bg-yellow-50 p-4">
+              <h3 className="mb-2 font-semibold text-yellow-800">☀️ Лето</h3>
+              <div className="text-sm text-yellow-700">
+                Яркие насыщенные цвета, полное цветение, солнечные оттенки
+              </div>
+            </div>
+            <div className="rounded-lg bg-orange-50 p-4">
+              <h3 className="mb-2 font-semibold text-orange-800">🍂 Осень</h3>
+              <div className="text-sm text-orange-700">
+                Золотые и красные тона, увядающие листья, теплые оттенки
+              </div>
+            </div>
+            <div className="rounded-lg bg-blue-50 p-4">
+              <h3 className="mb-2 font-semibold text-blue-800">❄️ Зима</h3>
+              <div className="text-sm text-blue-700">
+                Холодные оттенки, снежные эффекты, кристальная чистота
+              </div>
+            </div>
+          </div>
+        </Card>
 
         {/* Информация о получении */}
         <Card className="p-6">
@@ -295,6 +401,34 @@ export function ElementShowcase() {
                   </div>
                 )
               })}
+            </div>
+
+            {/* Дополнительная статистика */}
+            <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+              <div className="text-center">
+                <div className="text-lg font-bold text-blue-600">
+                  {ELEMENT_TEMPLATES.length}
+                </div>
+                <div className="text-xs text-gray-600">Базовых шаблонов</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-green-600">
+                  {ALL_ELEMENTS.filter(el => el.season).length}
+                </div>
+                <div className="text-xs text-gray-600">Сезонных вариаций</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-yellow-600">
+                  {PREMIUM_ELEMENT_TYPES.size}
+                </div>
+                <div className="text-xs text-gray-600">Премиум типов</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-purple-600">
+                  {Object.values(SeasonalVariant).length}
+                </div>
+                <div className="text-xs text-gray-600">Сезонов</div>
+              </div>
             </div>
           </div>
         </Card>
