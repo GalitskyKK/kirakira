@@ -44,9 +44,33 @@ function App() {
   // Initialize app
   useEffect(() => {
     const initializeApp = async () => {
+      console.log('🚀 НАЧАЛО ИНИЦИАЛИЗАЦИИ KiraKira App')
+      console.log('🔍 TELEGRAM ДИАГНОСТИКА:', {
+        isTelegramEnv,
+        telegramReady,
+        windowTelegram: !!window.Telegram,
+        windowTelegramWebApp: !!window.Telegram?.WebApp,
+        userAgent: navigator.userAgent,
+        currentUser: currentUser
+          ? {
+              id: currentUser.id,
+              telegramId: currentUser.telegramId,
+              isAnonymous: currentUser.isAnonymous,
+            }
+          : null,
+        telegramUser: telegramUser
+          ? {
+              id: telegramUser.telegramId,
+              firstName: telegramUser.firstName,
+              username: telegramUser.username,
+            }
+          : null,
+      })
+
       try {
         // Инициализируем Telegram хранилище если доступно
         if (isTelegramEnv) {
+          console.log('📱 Инициализируем Telegram хранилище...')
           telegramStorage.initialize()
 
           // Ждем готовности Telegram WebApp
@@ -149,12 +173,19 @@ function App() {
         }
 
         updateLastVisit()
+
+        console.log('✅ ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА УСПЕШНО!')
       } catch (error) {
-        console.error('Failed to initialize app:', error)
+        console.error('❌ ОШИБКА ИНИЦИАЛИЗАЦИИ:', error)
+        console.error(
+          '❌ Stack trace:',
+          error instanceof Error ? error.stack : 'No stack'
+        )
         setInitError(
           error instanceof Error ? error.message : 'Initialization failed'
         )
       } finally {
+        console.log('🏁 ФИНАЛИЗАЦИЯ ИНИЦИАЛИЗАЦИИ (setIsInitializing(false))')
         setIsInitializing(false)
       }
     }
@@ -177,6 +208,19 @@ function App() {
 
   // Show loading state during initialization
   if (isInitializing || isLoading) {
+    // 🔍 ОТЛАДКА ЭКРАНА ЗАГРУЗКИ
+    console.log('🔍 ОТОБРАЖАЕТСЯ ЭКРАН ЗАГРУЗКИ:', {
+      isInitializing,
+      isLoading,
+      isTelegramEnv,
+      telegramReady,
+      telegramUser: !!telegramUser,
+      currentUser: !!currentUser,
+      hasCompletedOnboarding,
+      isAuthenticated,
+      initError,
+    })
+
     const bgClass = isTelegramEnv
       ? 'bg-[var(--tg-bg-color,#ffffff)]'
       : 'bg-gradient-to-br from-garden-50 to-green-50'
@@ -201,6 +245,23 @@ function App() {
               ? '🌱 Инициализируем ваш эмоциональный сад...'
               : 'Загружаем ваш сад...'}
           </p>
+
+          {/* 🔍 ДИАГНОСТИЧЕСКАЯ ИНФОРМАЦИЯ (только для отладки) */}
+          {isTelegramEnv && (
+            <div className="mt-4 rounded-lg bg-yellow-100/50 p-2 text-xs">
+              <div>
+                Init: {isInitializing ? '⏳' : '✅'} | Loading:{' '}
+                {isLoading ? '⏳' : '✅'}
+              </div>
+              <div>
+                TG Ready: {telegramReady ? '✅' : '❌'} | User:{' '}
+                {telegramUser ? '✅' : '❌'}
+              </div>
+              {initError && (
+                <div className="text-red-600">Error: {initError}</div>
+              )}
+            </div>
+          )}
           {isTelegramEnv && telegramUser && (
             <div className="mt-4 rounded-lg bg-blue-100/50 p-3">
               <p className="text-sm text-[var(--tg-hint-color,#666666)]">
