@@ -331,23 +331,33 @@ async function addGardenElement(telegramUserId, mood) {
  */
 function validatePayment(amount, currency, payload) {
   try {
-    // Проверяем валюту (должна быть XTR для Telegram Stars)
-    if (currency !== 'XTR') {
+    // Извлекаем featureId из payload (формат: featureId_timestamp)
+    const featureId = payload.split('_')[0]
+
+    // Проверяем payload (должен содержать валидный featureId)
+    const validFeatures = ['rare_elements', 'seasonal_themes', 'premium_bundle']
+    if (!validFeatures.includes(featureId)) {
+      console.error(`Invalid feature ID in payload: ${featureId}`)
+      return false
+    }
+
+    // Проверяем валюту и соответствующие цены
+    if (currency === 'XTR') {
+      // Telegram Stars
+      const validStarsAmounts = [50, 100, 120] // Цены в Stars
+      if (!validStarsAmounts.includes(amount)) {
+        console.error(`Invalid Stars amount: ${amount}`)
+        return false
+      }
+    } else if (currency === 'RUB') {
+      // ЮKassa в рублях (amount в копейках)
+      const validRublesAmounts = [9900, 19900, 24900] // Цены в копейках (99, 199, 249 рублей)
+      if (!validRublesAmounts.includes(amount)) {
+        console.error(`Invalid RUB amount: ${amount} kopecks`)
+        return false
+      }
+    } else {
       console.error(`Invalid currency: ${currency}`)
-      return false
-    }
-
-    // Проверяем сумму (должна соответствовать нашим ценам)
-    const validAmounts = [50, 100, 120] // Цены в Stars
-    if (!validAmounts.includes(amount)) {
-      console.error(`Invalid amount: ${amount}`)
-      return false
-    }
-
-    // Проверяем payload (должен соответствовать нашим премиум функциям)
-    const validPayloads = ['rare_elements', 'seasonal_themes', 'premium_bundle']
-    if (!validPayloads.includes(payload)) {
-      console.error(`Invalid payload: ${payload}`)
       return false
     }
 
@@ -708,27 +718,49 @@ async function handleCallbackQuery(callbackQuery) {
     } else if (data.startsWith('confirm_purchase_')) {
       const itemId = data.replace('confirm_purchase_', '')
 
-      // ✅ РЕАЛЬНАЯ АКТИВАЦИЯ премиум функций через API
-      await sendMessage(
-        message.chat.id,
-        `✅ *Премиум функция активирована!*\n\n🌟 Теперь в вашем саду могут появляться:\n• Радужные цветы 🌈\n• Светящиеся кристаллы 💫\n• Мистические грибы 🔮\n\nОткройте приложение и отметьте настроение, чтобы увидеть новые возможности!`,
-        {
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: '🌱 Открыть сад', web_app: { url: MINI_APP_URL } }],
-              [{ text: '😊 Отметить настроение', callback_data: 'quick_mood' }],
-            ],
-          },
-        }
-      )
+      // Получаем информацию о премиум товаре
+      const premiumItems = {
+        rare_elements: {
+          name: 'Редкие элементы сада',
+          price: 100,
+          description: 'Получите доступ к эксклюзивным растениям и кристаллам',
+        },
+        seasonal_themes: {
+          name: 'Сезонные темы',
+          price: 50,
+          description: 'Коллекция тем для разных времен года',
+        },
+        premium_bundle: {
+          name: 'Премиум комплект',
+          price: 120,
+          description: 'Все премиум функции в одном пакете',
+        },
+      }
 
-      // Активируем премиум функцию через API
-      const result = await activatePremiumFeature(from.id, itemId)
+      const item = premiumItems[itemId]
+      if (!item) {
+        await sendMessage(
+          message.chat.id,
+          '❌ Товар не найден. Попробуйте ещё раз.'
+        )
+        return
+      }
 
-      if (result.success) {
-        console.log(`Premium feature ${itemId} activated for user ${from.id}`)
-      } else {
-        console.error(`Failed to activate premium feature: ${result.error}`)
+      // ✅ СОЗДАЕМ РЕАЛЬНЫЙ ИНВОЙС через Bot API для Telegram Stars
+      try {
+        await createTelegramStarsInvoice(
+          message.chat.id,
+          item.name,
+          item.description,
+          item.price,
+          itemId
+        )
+      } catch (error) {
+        console.error('Error creating invoice:', error)
+        await sendMessage(
+          message.chat.id,
+          '❌ Ошибка при создании счета для оплаты. Попробуйте позже.'
+        )
       }
     }
   } catch (error) {
@@ -838,6 +870,107 @@ _Отмечай настроения каждый день для лучшего
       ],
     },
   })
+}
+
+/**
+ * Активирует премиум функцию через API приложения
+ * @param {number} telegramUserId - ID пользователя в Telegram
+ * @param {string} featureId - ID премиум функции
+ * @returns {Promise<Object>} Результат активации
+ */
+async function activatePremiumFeatureAPI(telegramUserId, featureId) {
+  try {
+    const response = await fetch(`${MINI_APP_URL}/api/premium/activate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        telegramUserId: telegramUserId,
+        featureId: featureId,
+      }),
+    })
+
+    const result = await response.json()
+
+    if (!response.ok) {
+      throw new Error(result.error || `HTTP ${response.status}`)
+    }
+
+    console.log(
+      `✅ Premium feature ${featureId} activated for user ${telegramUserId}`
+    )
+    return { success: true, data: result.data }
+  } catch (error) {
+    console.error(
+      `❌ Failed to activate premium feature ${featureId}:`,
+      error.message
+    )
+    return { success: false, error: error.message }
+  }
+}
+
+/**
+ * Создает реальный инвойс для оплаты Telegram Stars
+ * @param {number} chatId - ID чата
+ * @param {string} title - Название товара
+ * @param {string} description - Описание товара
+ * @param {number} price - Цена в Telegram Stars
+ * @param {string} payload - Идентификатор товара для обработки платежа
+ */
+async function createTelegramStarsInvoice(
+  chatId,
+  title,
+  description,
+  price,
+  payload
+) {
+  try {
+    const invoiceData = {
+      chat_id: chatId,
+      title: title,
+      description: description,
+      payload: payload, // Это важно для идентификации платежа
+      provider_token: '', // Пустая строка для Telegram Stars
+      currency: 'XTR', // Telegram Stars
+      prices: [
+        {
+          label: title,
+          amount: price, // Цена в Telegram Stars (не в копейках!)
+        },
+      ],
+      need_name: false,
+      need_phone_number: false,
+      need_email: false,
+      need_shipping_address: false,
+      send_phone_number_to_provider: false,
+      send_email_to_provider: false,
+      is_flexible: false,
+      photo_url: undefined, // Можно добавить картинку товара
+      photo_size: undefined,
+      photo_width: undefined,
+      photo_height: undefined,
+    }
+
+    const response = await fetch(
+      `https://api.telegram.org/bot${BOT_TOKEN}/sendInvoice`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(invoiceData),
+      }
+    )
+
+    const result = await response.json()
+
+    if (!result.ok) {
+      throw new Error(`Telegram API error: ${result.description}`)
+    }
+
+    console.log(`✅ Invoice created successfully for ${title} (${price} Stars)`)
+    return result
+  } catch (error) {
+    console.error('Error creating Telegram Stars invoice:', error)
+    throw error
+  }
 }
 
 /**
@@ -955,10 +1088,12 @@ async function handleStatsCommand(chatId, userId) {
 async function handlePreCheckoutQuery(preCheckoutQuery) {
   const { id, from, currency, total_amount, invoice_payload } = preCheckoutQuery
 
-  // Дополнительные проверки платежа
   console.log(
     `Pre-checkout: User ${from.id} wants to pay ${total_amount} ${currency} for ${invoice_payload}`
   )
+
+  // Извлекаем featureId из payload для дополнительной валидации
+  const featureId = invoice_payload.split('_')[0]
 
   // Проверяем валидность платежа
   const isValidPayment = validatePayment(
@@ -967,15 +1102,29 @@ async function handlePreCheckoutQuery(preCheckoutQuery) {
     invoice_payload
   )
 
-  if (!isValidPayment) {
-    console.error(`Invalid payment attempt from user ${from.id}`)
-    // В случае невалидного платежа можно отклонить его
-    // Но пока одобряем все для простоты
-  }
-
-  // Одобряем платеж
   const url = `https://api.telegram.org/bot${BOT_TOKEN}/answerPreCheckoutQuery`
 
+  if (!isValidPayment) {
+    console.error(
+      `❌ Invalid payment attempt from user ${from.id} for feature ${featureId}`
+    )
+
+    // Отклоняем невалидный платеж
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pre_checkout_query_id: id,
+        ok: false,
+        error_message: 'Ошибка валидации платежа. Попробуйте еще раз.',
+      }),
+    })
+    return
+  }
+
+  console.log(`✅ Payment validation passed for feature ${featureId}`)
+
+  // Одобряем валидный платеж
   await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -997,19 +1146,19 @@ async function handleSuccessfulPayment(message) {
     `Payment successful: User ${from.id} paid ${total_amount} ${currency} for ${invoice_payload}`
   )
 
-  // Активируем премиум функции в приложении
-  const activationResult = await activatePremiumFeature(
-    from.id,
-    invoice_payload
-  )
+  // Извлекаем featureId из payload (формат: featureId_timestamp)
+  const featureId = invoice_payload.split('_')[0]
+
+  // Активируем премиум функции в приложении через API
+  const activationResult = await activatePremiumFeatureAPI(from.id, featureId)
 
   if (activationResult.success) {
     console.log(
-      `Premium feature ${invoice_payload} activated for user ${from.id} after payment`
+      `Premium feature ${featureId} activated for user ${from.id} after payment (${total_amount} ${currency})`
     )
   } else {
     console.error(
-      `Failed to activate premium after payment: ${activationResult.error}`
+      `Failed to activate premium feature ${featureId} after payment: ${activationResult.error}`
     )
   }
 
