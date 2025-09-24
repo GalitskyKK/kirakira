@@ -6,12 +6,13 @@ import {
   Heart,
   Sparkles,
   Target,
-  Share2,
   Zap,
   Calendar,
 } from 'lucide-react'
 import { useTelegram } from '@/hooks'
 import { Button, Card } from '@/components/ui'
+import { FriendsList } from './FriendsList'
+import { useUserStore } from '@/stores'
 import type { Garden, MoodEntry } from '@/types'
 
 interface Challenge {
@@ -67,20 +68,14 @@ const ACTIVE_CHALLENGES: Challenge[] = [
   },
 ]
 
-const GARDEN_REACTIONS = [
-  { emoji: '🌟', label: 'Вдохновляет!' },
-  { emoji: '💚', label: 'Поддерживаю' },
-  { emoji: '🌈', label: 'Красиво!' },
-  { emoji: '🤗', label: 'Обнимаю' },
-  { emoji: '💪', label: 'Сильно!' },
-  { emoji: '✨', label: 'Волшебно!' },
-]
+// Реакции перенесены в FriendsList компонент
 
 export function TelegramCommunity({
   garden,
   recentMoods,
 }: TelegramCommunityProps) {
   const { webApp, hapticFeedback, showAlert, isTelegramEnv } = useTelegram()
+  const { currentUser } = useUserStore()
   const [activeTab, setActiveTab] = useState<
     'challenges' | 'social' | 'groups'
   >('challenges')
@@ -140,28 +135,7 @@ export function TelegramCommunity({
     webApp.switchInlineQuery('group_garden_create', ['groups'])
   }, [webApp, hapticFeedback, showAlert])
 
-  // Отправить реакцию на чей-то сад
-  const handleSendReaction = useCallback(
-    (reaction: { emoji: string; label: string }) => {
-      if (!webApp) return
-
-      hapticFeedback('light')
-
-      webApp.switchInlineQuery(`react_${reaction.emoji}`, ['users'])
-    },
-    [webApp, hapticFeedback]
-  )
-
-  // Пригласить друзей в приложение
-  const handleInviteFriends = useCallback(() => {
-    if (!webApp) return
-
-    hapticFeedback('light')
-
-    const inviteText = `🌸 Присоединяйся к KiraKira!\n\nСоздай свой эмоциональный сад и отслеживай настроение вместе со мной! 💚\n\n✨ Участвуй в челленджах\n🤝 Поддерживай друзей\n🏆 Достигай целей вместе`
-
-    webApp.switchInlineQuery(inviteText, ['users', 'groups'])
-  }, [webApp, hapticFeedback])
+  // Реакции теперь обрабатываются в FriendsList компоненте
 
   if (!isTelegramEnv) {
     return (
@@ -328,71 +302,8 @@ export function TelegramCommunity({
             exit={{ opacity: 0, y: -20 }}
             className="space-y-4"
           >
-            <div className="mb-4 text-center">
-              <h3 className="text-lg font-semibold">Социальные функции</h3>
-              <p className="text-sm text-gray-600">
-                Поддерживайте друзей и делитесь эмоциями
-              </p>
-            </div>
-
-            {/* Быстрые реакции */}
-            <Card className="p-4">
-              <h4 className="mb-3 font-medium">Отправить реакцию другу</h4>
-              <div className="grid grid-cols-3 gap-2">
-                {GARDEN_REACTIONS.map(reaction => (
-                  <Button
-                    key={reaction.emoji}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleSendReaction(reaction)}
-                    className="flex h-auto flex-col space-y-1 py-3"
-                  >
-                    <span className="text-lg">{reaction.emoji}</span>
-                    <span className="text-xs">{reaction.label}</span>
-                  </Button>
-                ))}
-              </div>
-            </Card>
-
-            {/* Пригласить друзей */}
-            <Card className="p-4">
-              <div className="flex items-center space-x-4">
-                <div className="flex-shrink-0 rounded-lg bg-orange-100 p-3 dark:bg-orange-900/30">
-                  <Share2 className="h-6 w-6 text-orange-600" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h4 className="font-medium">Пригласить друзей</h4>
-                  <p className="text-sm text-gray-600">
-                    Расскажите друзьям о KiraKira и начните путешествие вместе
-                  </p>
-                </div>
-                <Button
-                  onClick={handleInviteFriends}
-                  className="flex-shrink-0 bg-orange-500 hover:bg-orange-600"
-                >
-                  Пригласить
-                </Button>
-              </div>
-            </Card>
-
-            {/* Статистика социальной активности */}
-            <Card className="p-4">
-              <h4 className="mb-3 font-medium">Ваша активность</h4>
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {joinedChallenges.length}
-                  </div>
-                  <div className="text-xs text-gray-600">Челленджей</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-green-600">
-                    {garden?.elements.length || 0}
-                  </div>
-                  <div className="text-xs text-gray-600">Элементов сада</div>
-                </div>
-              </div>
-            </Card>
+            {/* Полная система друзей */}
+            <FriendsList currentUser={currentUser} />
           </motion.div>
         )}
 
