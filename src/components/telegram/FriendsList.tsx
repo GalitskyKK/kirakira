@@ -209,17 +209,16 @@ export function FriendsList({ currentUser }: FriendsListProps) {
     [currentUser?.telegramId, hapticFeedback, showAlert, loadFriendsData]
   )
 
-  // Пригласить конкретного друга
+  // Пригласить друзей через Telegram
   const handleInviteSpecificFriend = useCallback(() => {
     if (!webApp) return
 
     hapticFeedback('light')
-    showAlert('Выберите друга для отправки приглашения!')
 
-    const inviteText = `🌸 Попробуй KiraKira!\n\nЯ уже ${currentUser?.stats.totalDays || 0} дней отслеживаю свое настроение и это помогает! 💚\n\n✨ Создай свой эмоциональный сад\n🤝 Участвуй в челленджах со мной\n📊 Анализируй свои эмоции`
+    const inviteText = `🌸 Попробуй KiraKira!\n\nЯ уже ${currentUser?.stats?.totalDays || 0} дней отслеживаю свое настроение и это помогает! 💚\n\n✨ Создай свой эмоциональный сад\n🤝 Участвуй в челленджах со мной\n📊 Анализируй свои эмоции`
 
     webApp.switchInlineQuery(inviteText, ['users'])
-  }, [webApp, hapticFeedback, showAlert, currentUser])
+  }, [webApp, hapticFeedback, currentUser])
 
   // Отправить сообщение другу
   const handleMessageFriend = useCallback(
@@ -369,7 +368,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                     size="sm"
                     className="bg-blue-500 hover:bg-blue-600"
                   >
-                    Пригласить друзей
+                    📤 Отправить приглашение
                   </Button>
                 </Card>
               ) : (
@@ -807,14 +806,14 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                 <div className="min-w-0 flex-1">
                   <h4 className="font-medium">Отправить приглашение</h4>
                   <p className="text-sm text-gray-600">
-                    Выберите друга и отправьте персональное приглашение
+                    Откроется список контактов Telegram для отправки приглашения
                   </p>
                 </div>
                 <Button
                   onClick={handleInviteSpecificFriend}
                   className="flex-shrink-0 bg-green-500 hover:bg-green-600"
                 >
-                  Пригласить
+                  📤 Отправить
                 </Button>
               </div>
             </Card>
