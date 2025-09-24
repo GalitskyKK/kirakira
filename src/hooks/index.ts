@@ -13,5 +13,8 @@ export {
   useTelegramTheme,
 } from './useTelegram'
 export { useTelegramStorage } from './useTelegramStorage'
+export { useAppInitialization } from './useAppInitialization'
+export { useTelegramSync } from './useTelegramSync'
+export { useStoresSync } from './useStoresSync'
 
 // Additional utility hooks can be added here

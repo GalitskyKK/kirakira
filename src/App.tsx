@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import {
   BrowserRouter as Router,
   Routes,
@@ -7,7 +7,6 @@ import {
 } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useUserStore } from '@/stores'
-import { initializeStores } from '@/stores'
 import { HomePage } from '@/pages/HomePage'
 import { OnboardingPage } from '@/pages/OnboardingPage'
 import { AuthPage } from '@/pages/AuthPage'
@@ -20,8 +19,19 @@ const ShowcasePage = import.meta.env.DEV
   ? lazy(() => import('@/pages/ShowcasePage'))
   : null
 import { TelegramDiagnostic } from '@/components/TelegramDiagnostic'
-import { useTelegram, useTelegramTheme } from '@/hooks'
-import { telegramStorage } from '@/utils/telegramStorage'
+import { useTelegram, useTelegramTheme, useAppInitialization } from '@/hooks'
+import { InitializationStage } from '@/types/initialization'
+
+interface AppInitState {
+  stage: InitializationStage
+  isLoading: boolean
+  error: string | null
+  progress: number
+  initialize: () => void
+  isCompleted: boolean
+  isFailed: boolean
+  canRetry: boolean
+}
 
 function App() {
   const isDevelopment = import.meta.env.DEV
@@ -42,19 +52,10 @@ function App() {
     currentUser,
     hasCompletedOnboarding,
     isAuthenticated,
-    isLoading,
-    loadUser: _loadUser,
-    clearAllUserData,
-    syncFromSupabase,
-    createTelegramUser,
+    isLoading: userStoreLoading,
   } = useUserStore()
 
-  const [isInitializing, setIsInitializing] = useState(true)
-  const [initError, setInitError] = useState<string | null>(null)
   const [showAuth, setShowAuth] = useState(false)
-
-  // Используем ref для предотвращения повторной инициализации
-  const hasInitialized = useRef(false)
 
   // Telegram интеграция
   const {
@@ -65,242 +66,11 @@ function App() {
 
   const { colorScheme } = useTelegramTheme()
 
-  // ✅ ВСЕ ХУКИ ДОЛЖНЫ БЫТЬ ВЫШЕ ЛЮБОГО УСЛОВНОГО ВОЗВРАТА
-  // Initialize app
-  useEffect(() => {
-    // Предотвращаем повторную инициализацию
-    if (hasInitialized.current) {
-      return
-    }
-
-    hasInitialized.current = true
-
-    const initializeApp = async () => {
-      // Получаем актуальные данные в начале функции
-      const currentTelegramUser = telegramUser
-      const currentReady = telegramReady
-      const { currentUser: currentStoreUser } = useUserStore.getState()
-
-      if (isDevelopment) {
-        console.log('🚀 НАЧАЛО ИНИЦИАЛИЗАЦИИ KiraKira App')
-        console.log('🔍 TELEGRAM ДИАГНОСТИКА:', {
-          isTelegramEnv,
-          telegramReady: currentReady,
-          windowTelegram: !!window.Telegram,
-          windowTelegramWebApp: !!window.Telegram?.WebApp,
-          userAgent: navigator.userAgent,
-          currentUser: currentStoreUser
-            ? {
-                id: currentStoreUser.id,
-                telegramId: currentStoreUser.telegramId,
-                isAnonymous: currentStoreUser.isAnonymous,
-              }
-            : null,
-          telegramUser: currentTelegramUser
-            ? {
-                id: currentTelegramUser.telegramId,
-                firstName: currentTelegramUser.firstName,
-                username: currentTelegramUser.username ?? undefined,
-              }
-            : null,
-        })
-      }
-
-      // 🕐 ОБЪЯВЛЯЕМ ТАЙМАУТ В ОБЛАСТИ ВИДИМОСТИ ФУНКЦИИ
-      let initTimeout: NodeJS.Timeout | null = null
-
-      try {
-        // 🕐 КРИТИЧНЫЙ ТАЙМАУТ для Telegram - если инициализация не завершится за 10 сек, принудительно продолжаем
-        initTimeout = setTimeout(() => {
-          if (isDevelopment) {
-            console.warn('⚠️ ТАЙМАУТ ИНИЦИАЛИЗАЦИИ! Принудительно завершаем...')
-          }
-          setIsInitializing(false)
-        }, 10000) // 10 секунд
-
-        // Инициализируем Telegram хранилище если доступно
-        if (isTelegramEnv) {
-          if (isDevelopment) {
-            console.log('📱 Инициализируем Telegram хранилище...')
-          }
-          telegramStorage.initialize()
-
-          // 🚀 УПРОЩЕННАЯ ЛОГИКА: Ждем Telegram готовности максимум 5 секунд
-          if (!telegramReady) {
-            if (isDevelopment) {
-              console.log('⏳ Ждем готовности Telegram WebApp (макс 5 сек)...')
-            }
-
-            await Promise.race([
-              new Promise<void>(resolve => {
-                const checkReady = () => {
-                  if (telegramReady) {
-                    if (isDevelopment) {
-                      console.log('✅ Telegram WebApp готов!')
-                    }
-                    resolve()
-                  } else {
-                    setTimeout(checkReady, 100)
-                  }
-                }
-                checkReady()
-              }),
-              new Promise<void>(resolve => {
-                setTimeout(() => {
-                  if (isDevelopment) {
-                    console.warn(
-                      '⚠️ Таймаут ожидания Telegram WebApp - продолжаем без него'
-                    )
-                  }
-                  resolve()
-                }, 5000) // 5 секунд таймаут
-              }),
-            ])
-          }
-
-          // 🔄 ПРАВИЛЬНАЯ СИНХРОНИЗАЦИЯ С TELEGRAM
-          if (currentTelegramUser && currentReady) {
-            if (isDevelopment) {
-              console.log('🔄 Начинаем синхронизацию Telegram пользователя:', {
-                telegramId: currentTelegramUser.telegramId,
-                firstName: currentTelegramUser.firstName,
-                currentUserTelegramId: currentStoreUser?.telegramId,
-              })
-            }
-
-            // Если это другой пользователь или первый вход - очищаем данные
-            if (
-              !currentStoreUser ||
-              currentStoreUser.telegramId !== currentTelegramUser.telegramId
-            ) {
-              try {
-                if (isDevelopment) {
-                  console.log(
-                    '🗑️ Очищаем старые данные перед синхронизацией...'
-                  )
-                }
-                await clearAllUserData()
-
-                if (isDevelopment) {
-                  console.log('🔄 Синхронизируем данные из Supabase...')
-                }
-                await syncFromSupabase(currentTelegramUser.telegramId)
-
-                // Если нет данных на сервере - создаем нового пользователя
-                const { currentUser: syncedUser } = useUserStore.getState()
-                if (!syncedUser) {
-                  if (isDevelopment) {
-                    console.log('📝 Создаем нового Telegram пользователя...')
-                  }
-                  const userToCreate = {
-                    telegramId: currentTelegramUser.telegramId,
-                    firstName: currentTelegramUser.firstName,
-                    lastName: currentTelegramUser.lastName ?? undefined,
-                    username: currentTelegramUser.username ?? undefined,
-                    photoUrl: currentTelegramUser.photoUrl ?? undefined,
-                    authDate: new Date(),
-                    hash: 'telegram_miniapp',
-                  }
-                  // createTelegramUser возвращает User, не Promise
-                  createTelegramUser(userToCreate)
-                }
-
-                if (isDevelopment) {
-                  console.log('✅ Telegram синхронизация завершена')
-                }
-              } catch (error) {
-                console.error('❌ Ошибка синхронизации Telegram:', error)
-                setInitError(
-                  `Telegram sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-                )
-              }
-            } else {
-              if (isDevelopment) {
-                console.log('✅ Пользователь уже корректно авторизован')
-              }
-
-              // 🔄 ПРИНУДИТЕЛЬНАЯ СИНХРОНИЗАЦИЯ для существующих пользователей
-              try {
-                if (isDevelopment) {
-                  console.log(
-                    '🔄 Принудительная синхронизация данных с сервера...'
-                  )
-                }
-                await syncFromSupabase(currentTelegramUser.telegramId)
-                if (isDevelopment) {
-                  console.log('✅ Принудительная синхронизация завершена')
-                }
-              } catch (syncError) {
-                if (isDevelopment) {
-                  console.warn(
-                    '⚠️ Ошибка принудительной синхронизации:',
-                    syncError
-                  )
-                }
-              }
-            }
-          }
-        }
-
-        await initializeStores()
-
-        // 🔄 ОДНОРАЗОВАЯ СИНХРОНИЗАЦИЯ ДАННЫХ для Telegram пользователей
-        if (currentTelegramUser && currentReady) {
-          try {
-            if (isDevelopment) {
-              console.log(
-                '🔄 Одноразовая синхронизация stores с сервером при входе...'
-              )
-            }
-
-            // Получаем stores и принудительно синхронизируем ОДИН РАЗ
-            const { useMoodStore } = await import('@/stores/moodStore')
-            const { useGardenStore } = await import('@/stores/gardenStore')
-
-            // Принудительно синхронизируем данные (один раз при входе)
-            await useMoodStore.getState().syncMoodHistory(true) // forceSync = true
-            await useGardenStore.getState().syncGarden(true) // forceSync = true
-
-            if (isDevelopment) {
-              console.log('✅ Stores синхронизированы с сервером')
-            }
-          } catch (storesSyncError) {
-            if (isDevelopment) {
-              console.warn('⚠️ Ошибка синхронизации stores:', storesSyncError)
-            }
-          }
-        }
-
-        // updateLastVisit() перенесено в loadUser() после инициализации пользователя
-
-        // 🏁 ОЧИЩАЕМ ТАЙМАУТ при успешной инициализации
-        if (initTimeout !== null) clearTimeout(initTimeout)
-        if (isDevelopment) {
-          console.log('✅ ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА УСПЕШНО!')
-        }
-      } catch (error) {
-        // 🏁 ОЧИЩАЕМ ТАЙМАУТ при ошибке
-        if (initTimeout) clearTimeout(initTimeout)
-        console.error('❌ ОШИБКА ИНИЦИАЛИЗАЦИИ:', error)
-        if (isDevelopment) {
-          console.error(
-            '❌ Stack trace:',
-            error instanceof Error ? error.stack : 'No stack'
-          )
-        }
-        setInitError(
-          error instanceof Error ? error.message : 'Initialization failed'
-        )
-      } finally {
-        if (isDevelopment) {
-          console.log('🏁 ФИНАЛИЗАЦИЯ ИНИЦИАЛИЗАЦИИ (setIsInitializing(false))')
-        }
-        setIsInitializing(false)
-      }
-    }
-
-    void initializeApp()
-  }, []) // Пустой массив зависимостей - инициализация происходит только один раз
+  // ✨ ПРОФЕССИОНАЛЬНАЯ ИНИЦИАЛИЗАЦИЯ
+  const initState = (useAppInitialization as any)({
+    enableTelegram: isTelegramEnv,
+    isDevelopment,
+  }) as AppInitState
 
   // Применяем тему Telegram к корневому элементу
   useEffect(() => {
@@ -315,7 +85,7 @@ function App() {
       currentUser: !!currentUser,
       hasCompletedOnboarding,
       isAuthenticated,
-      isLoading,
+      isLoading: userStoreLoading,
     })
 
     console.log('🔍 TELEGRAM HOOKS LOADED:', {
@@ -324,7 +94,12 @@ function App() {
       telegramReady,
     })
 
-    console.log('🔍 TELEGRAM THEME LOADED:', { colorScheme })
+    console.log('🔍 INITIALIZATION STATE:', {
+      stage: initState.stage,
+      isLoading: initState.isLoading,
+      progress: initState.progress,
+      error: initState.error,
+    })
   }
 
   // 🚨 ПОКАЗАТЬ ДИАГНОСТИКУ ПРИ ПРОБЛЕМАХ В TELEGRAM (после всех хуков)
@@ -342,21 +117,20 @@ function App() {
   }
 
   // Show loading state during initialization
-  if (isInitializing || isLoading) {
-    const isDevelopment = import.meta.env.DEV
-
+  if (initState.isLoading || userStoreLoading) {
     // 🔍 ОТЛАДКА ЭКРАНА ЗАГРУЗКИ (только в dev режиме)
     if (isDevelopment) {
       console.log('🔍 РЕНДЕРИМ ЭКРАН ЗАГРУЗКИ:', {
-        isInitializing,
-        isLoading,
+        initStage: initState.stage,
+        initLoading: initState.isLoading,
+        initProgress: initState.progress,
+        userStoreLoading,
         isTelegramEnv,
         telegramReady,
         telegramUser: !!telegramUser,
         currentUser: !!currentUser,
         hasCompletedOnboarding,
         isAuthenticated,
-        initError,
       })
     }
 
@@ -385,6 +159,22 @@ function App() {
               : 'Загружаем ваш сад...'}
           </p>
 
+          {/* Прогресс бар инициализации */}
+          {initState.progress > 0 && (
+            <div className="mt-4 w-full max-w-xs">
+              <div className="mb-2 flex justify-between text-xs text-[var(--tg-hint-color,#666666)]">
+                <span>Прогресс</span>
+                <span>{initState.progress}%</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-gray-200">
+                <div
+                  className="h-2 rounded-full bg-gradient-to-r from-green-400 to-blue-500 transition-all duration-300"
+                  style={{ width: `${initState.progress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Дружелюбное приветствие для Telegram пользователей в продакшене */}
           {isTelegramEnv && telegramUser && !isDevelopment && (
             <div className="mt-4 rounded-lg bg-blue-100/50 p-3">
@@ -406,9 +196,11 @@ function App() {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  Init: {isInitializing ? '⏳ Инициализация' : '✅ Готов'}
+                  Init: {initState.isLoading ? '⏳ Инициализация' : '✅ Готов'}
                 </div>
-                <div>Loading: {isLoading ? '⏳ Загрузка' : '✅ Загружен'}</div>
+                <div>
+                  Loading: {userStoreLoading ? '⏳ Загрузка' : '✅ Загружен'}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
@@ -435,9 +227,9 @@ function App() {
                 </div>
               )}
 
-              {initError && initError.trim() !== '' && (
+              {initState.error?.trim() && (
                 <div className="font-semibold text-red-600">
-                  ❌ Ошибка: {initError}
+                  ❌ Ошибка: {initState.error}
                 </div>
               )}
 
@@ -450,12 +242,11 @@ function App() {
                 <button
                   onClick={() => {
                     console.warn('🚨 АВАРИЙНЫЙ ВЫХОД ИЗ ИНИЦИАЛИЗАЦИИ!')
-                    setIsInitializing(false)
-                    setInitError(null)
+                    window.location.reload()
                   }}
                   className="w-full rounded bg-red-500/70 px-3 py-2 text-xs text-white hover:bg-red-600/70"
                 >
-                  🚨 Пропустить инициализацию (dev only)
+                  🚨 Перезагрузить приложение (dev only)
                 </button>
               </div>
             </div>
@@ -479,7 +270,8 @@ function App() {
 
   if (isDevelopment) {
     console.log('🔍 ОСНОВНАЯ ЛОГИКА РЕНДЕРИНГА:', {
-      initError: initError ? initError.trim() !== '' : false,
+      initError: Boolean(initState.error?.trim()),
+      initFailed: initState.isFailed,
       hasCompletedOnboarding,
       isAuthenticated,
       isTelegramEnv,
@@ -487,7 +279,7 @@ function App() {
   }
 
   // Show error state if initialization failed
-  if (initError && initError.trim() !== '') {
+  if (initState.isFailed && initState.error?.trim()) {
     if (isDevelopment) {
       console.log('🔍 РЕНДЕРИМ ERROR STATE')
     }
@@ -503,13 +295,23 @@ function App() {
           <h1 className="mb-4 text-2xl font-bold text-gray-900">
             Ошибка инициализации
           </h1>
-          <p className="mb-6 text-gray-600">{initError}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="rounded-lg bg-red-500 px-6 py-3 text-white transition-colors hover:bg-red-600"
-          >
-            Перезагрузить
-          </button>
+          <p className="mb-6 text-gray-600">{initState.error}</p>
+          <div className="space-y-3">
+            {initState.canRetry && (
+              <button
+                onClick={() => initState.initialize()}
+                className="w-full rounded-lg bg-blue-500 px-6 py-3 text-white transition-colors hover:bg-blue-600"
+              >
+                🔄 Попробовать снова
+              </button>
+            )}
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full rounded-lg bg-red-500 px-6 py-3 text-white transition-colors hover:bg-red-600"
+            >
+              ⚡ Перезагрузить страницу
+            </button>
+          </div>
         </motion.div>
       </div>
     )

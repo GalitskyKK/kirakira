@@ -4,6 +4,7 @@ export type * from './mood'
 export type * from './user'
 export type * from './api'
 export type * from './telegram'
+export type * from './initialization'
 
 // Re-export enums and constants (can't use "export type *" for these)
 export {
@@ -17,6 +18,8 @@ export {
 } from './garden'
 
 export { MoodIntensity, MOOD_CONFIG } from './mood'
+
+export { InitializationStage } from './initialization'
 
 // Common utility types
 export type DeepReadonly<T> = {
