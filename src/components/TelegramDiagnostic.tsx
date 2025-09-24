@@ -161,6 +161,17 @@ export function TelegramDiagnostic() {
           >
             🚀 Принудительный запуск приложения
           </button>
+
+          {import.meta.env.DEV && (
+            <button
+              onClick={() => {
+                window.location.href = window.location.origin + '/telegram-test'
+              }}
+              className="w-full rounded-lg bg-blue-500 px-4 py-3 text-white hover:bg-blue-600"
+            >
+              🧪 Telegram Test Suite
+            </button>
+          )}
         </div>
 
         <div className="mt-6 text-center text-xs opacity-70">

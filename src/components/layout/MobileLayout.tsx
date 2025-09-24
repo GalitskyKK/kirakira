@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { MobileTabNavigation } from './MobileTabNavigation'
 import { GardenView } from '@/components/garden'
 import { MoodCheckin, MoodStats } from '@/components/mood'
+import { TelegramCommunity } from '@/components/telegram'
 import { TelegramStatus } from '@/components/ui'
 import { useGardenState, useMoodTracking } from '@/hooks'
 
@@ -21,12 +22,17 @@ const tabVariants = {
   }),
 }
 
-const TABS = ['mood', 'garden', 'stats']
+const TABS = ['mood', 'garden', 'community', 'stats']
 
 export function MobileLayout() {
   const [activeTab, setActiveTab] = useState('mood')
   const { garden, gardenStats } = useGardenState()
-  const { todaysMood, canCheckinToday: _canCheckinToday } = useMoodTracking()
+  const {
+    todaysMood,
+    canCheckinToday: _canCheckinToday,
+    moodHistory,
+  } = useMoodTracking()
+  // Removed currentUser as it's not used in this component
 
   const tabIndex = TABS.indexOf(activeTab)
   const [direction, setDirection] = useState(0)
@@ -92,6 +98,21 @@ export function MobileLayout() {
               </button>
 
               <button
+                onClick={() => setActiveTab('community')}
+                className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left transition-colors hover:bg-gray-50"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-gray-900">Комьюнити</div>
+                    <div className="text-sm text-gray-600">
+                      Челленджи и друзья
+                    </div>
+                  </div>
+                  <div className="text-2xl">👥</div>
+                </div>
+              </button>
+
+              <button
                 onClick={() => setActiveTab('stats')}
                 className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left transition-colors hover:bg-gray-50"
               >
@@ -123,6 +144,16 @@ export function MobileLayout() {
             <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
               <GardenView className="min-h-[400px]" />
             </div>
+          </div>
+        )
+
+      case 'community':
+        return (
+          <div className="p-4">
+            <TelegramCommunity
+              garden={garden}
+              recentMoods={moodHistory.slice(0, 7)}
+            />
           </div>
         )
 

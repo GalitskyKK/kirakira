@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
-import { Leaf, BarChart3, Heart } from 'lucide-react'
+import { Leaf, BarChart3, Heart, Users } from 'lucide-react'
 
 interface Tab {
   id: string
@@ -25,6 +25,11 @@ const TABS: Tab[] = [
     id: 'garden',
     label: 'Сад',
     icon: <Leaf size={20} />,
+  },
+  {
+    id: 'community',
+    label: 'Комьюнити',
+    icon: <Users size={20} />,
   },
   {
     id: 'stats',

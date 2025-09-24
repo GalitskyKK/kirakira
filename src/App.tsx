@@ -14,9 +14,13 @@ import { AuthPage } from '@/pages/AuthPage'
 import { LoadingSpinner } from '@/components/ui'
 import { lazy, Suspense } from 'react'
 
-// Динамический импорт ShowcasePage только в DEV режиме
+// Динамический импорт dev страниц только в DEV режиме
 const ShowcasePage = import.meta.env.DEV
   ? lazy(() => import('@/pages/ShowcasePage'))
+  : null
+
+const TelegramTestPage = import.meta.env.DEV
+  ? lazy(() => import('@/pages/TelegramTestPage'))
   : null
 import { TelegramDiagnostic } from '@/components/TelegramDiagnostic'
 import { useTelegram, useTelegramTheme, useAppInitialization } from '@/hooks'
@@ -367,7 +371,7 @@ function App() {
                 </motion.div>
               }
             />
-            {/* Showcase роут доступен только в DEV режиме */}
+            {/* Dev роуты доступны только в DEV режиме */}
             {import.meta.env.DEV && ShowcasePage && (
               <Route
                 path="/showcase"
@@ -381,6 +385,25 @@ function App() {
                   >
                     <Suspense fallback={<LoadingSpinner />}>
                       <ShowcasePage />
+                    </Suspense>
+                  </motion.div>
+                }
+              />
+            )}
+
+            {import.meta.env.DEV && TelegramTestPage && (
+              <Route
+                path="/telegram-test"
+                element={
+                  <motion.div
+                    key="telegram-test"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <TelegramTestPage />
                     </Suspense>
                   </motion.div>
                 }
