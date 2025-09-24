@@ -551,10 +551,19 @@ export const useUserStore = create<UserStore>()(
 
         // Создаем пользователя на основе данных с сервера
         const serverStats = result.data
+        const serverUser = serverStats.user || {}
         const syncedUser: User = {
           id: `tg_${telegramId}`,
           telegramId: telegramId,
-          registrationDate: new Date(), // Берем из серверных данных если есть
+          firstName: serverUser.firstName,
+          lastName: serverUser.lastName,
+          username: serverUser.username,
+          registrationDate: serverUser.registrationDate
+            ? new Date(serverUser.registrationDate)
+            : new Date(),
+          lastVisitDate: serverUser.lastVisitDate
+            ? new Date(serverUser.lastVisitDate)
+            : new Date(),
           preferences: DEFAULT_PREFERENCES,
           stats: {
             ...createDefaultStats(),

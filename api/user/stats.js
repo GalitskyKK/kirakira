@@ -317,6 +317,9 @@ async function getFromServerStorage(telegramId) {
           user: {
             id: user.user_id,
             telegramId: parseInt(telegramId),
+            firstName: user.first_name,
+            lastName: user.last_name,
+            username: user.username,
             registrationDate: user.registration_date,
             lastVisitDate: user.last_visit_date,
             isAnonymous: user.is_anonymous || false,
