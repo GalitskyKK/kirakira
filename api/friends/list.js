@@ -2,12 +2,18 @@
  * API для получения списка друзей и запросов дружбы
  */
 
-import { createClient } from '@supabase/supabase-js'
+// Функция для инициализации Supabase (аналогично user/stats.js)
+async function getSupabaseClient() {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Supabase environment variables not configured')
+  }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
+  const { createClient } = await import('@supabase/supabase-js')
+  return createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+}
 
 export default async function handler(req, res) {
   // Устанавливаем CORS заголовки
@@ -34,6 +40,8 @@ export default async function handler(req, res) {
       })
     }
 
+    // Инициализируем Supabase клиент
+    const supabase = await getSupabaseClient()
     const result = {}
 
     // Получаем принятых друзей
