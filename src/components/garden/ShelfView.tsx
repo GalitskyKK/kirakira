@@ -435,7 +435,7 @@ export function ShelfView({
                 {/* Elements on this shelf */}
                 <div
                   className={clsx(
-                    'shelf-elements absolute inset-x-0 top-0 flex items-end justify-center',
+                    'shelf-elements absolute inset-x-0 top-0 flex items-end justify-center z-10',
                     isMobile ? 'bottom-4 px-2' : 'bottom-4 px-8'
                   )}
                   style={{
