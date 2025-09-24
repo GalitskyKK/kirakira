@@ -34,12 +34,14 @@ async function updateElementPosition(
         )
 
         // Обновляем позицию элемента в базе данных
+        // ⚠️ ВАЖНО: Перед включением updated_at нужно выполнить миграцию
+        // из файла docs/add_updated_at_to_garden_elements.sql
         const { data, error } = await supabase
           .from('garden_elements')
           .update({
             position_x: positionX,
             position_y: positionY,
-            updated_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(), // 🔄 Включить после миграции
           })
           .eq('telegram_id', telegramUserId)
           .eq('id', elementId)
