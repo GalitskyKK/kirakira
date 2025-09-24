@@ -49,6 +49,7 @@ interface UserActions {
   incrementVisitCount: () => void
   updateLastVisit: () => void
   clearAllUserData: () => Promise<void>
+  clearUserDataOnly: () => Promise<void> // 🆕 Новая функция - только данные пользователя
   syncFromSupabase: (telegramId: number) => Promise<void>
 }
 
@@ -420,7 +421,7 @@ export const useUserStore = create<UserStore>()(
       }
     },
 
-    // 🗑️ ПРИНУДИТЕЛЬНАЯ ОЧИСТКА ВСЕХ ДАННЫХ
+    // 🗑️ ПРИНУДИТЕЛЬНАЯ ОЧИСТКА ВСЕХ ДАННЫХ (включая онбординг)
     clearAllUserData: async () => {
       set({ isLoading: true, error: null })
 
@@ -459,6 +460,66 @@ export const useUserStore = create<UserStore>()(
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to clear data'
+        set({ error: errorMessage, isLoading: false })
+        console.error('❌ Failed to clear user data:', error)
+      }
+    },
+
+    // 🎯 УМНАЯ ОЧИСТКА - только данные пользователя, сохраняет онбординг
+    clearUserDataOnly: async () => {
+      set({ isLoading: true, error: null })
+
+      try {
+        // 1. Сохраняем состояние онбординга ПЕРЕД очисткой
+        const onboardingStatus = isOnboardingCompleted()
+
+        // 2. Очищаем только пользовательские данные в localStorage
+        const { STORAGE_KEYS } = await import('@/utils/storage')
+        const keysToKeep = [STORAGE_KEYS.ONBOARDING] // Сохраняем онбординг
+
+        // Очищаем все ключи кроме тех что нужно сохранить
+        Object.values(STORAGE_KEYS).forEach((key: string) => {
+          if (!keysToKeep.includes(key as any)) {
+            localStorage.removeItem(key)
+          }
+        })
+
+        // 3. Очистить пользовательские данные в Telegram CloudStorage
+        if (telegramStorage.isAvailable) {
+          await telegramStorage.clearUserData() // Используем более селективную очистку
+          console.log('✅ User data cleared from CloudStorage')
+        }
+
+        // 4. Очистить другие stores (сад и настроения)
+        const { clearMoodHistory } = await import('./moodStore').then(m =>
+          m.useMoodStore.getState()
+        )
+        const { clearGarden } = await import('./gardenStore').then(m =>
+          m.useGardenStore.getState()
+        )
+
+        clearMoodHistory()
+        clearGarden()
+        console.log('✅ Mood and Garden stores cleared')
+
+        // 5. Сбросить состояние пользователя НО сохранить онбординг
+        set({
+          currentUser: null,
+          isAuthenticated: false,
+          hasCompletedOnboarding: onboardingStatus, // 🎯 Сохраняем статус онбординга!
+          isLoading: false,
+          error: null,
+        })
+
+        // 6. Восстанавливаем онбординг в localStorage (на случай если был затёрт)
+        if (onboardingStatus) {
+          saveOnboardingCompleted(true)
+        }
+
+        console.log('✅ User data cleared (onboarding preserved)')
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to clear user data'
         set({ error: errorMessage, isLoading: false })
         console.error('❌ Failed to clear user data:', error)
       }

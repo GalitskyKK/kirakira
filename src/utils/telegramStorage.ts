@@ -221,6 +221,18 @@ class TelegramStorageAdapter {
     return true
   }
 
+  // 🎯 Умная очистка - только пользовательские данные, сохраняет онбординг
+  async clearUserData(): Promise<boolean> {
+    if (this.isAvailable) {
+      const keys = ['user', 'garden', 'moodHistory'] // НЕ включаем 'onboarding'
+      const promises = keys.map(key => this.cloudRemove(key))
+      const results = await Promise.all(promises)
+      return results.every(Boolean)
+    }
+
+    return true
+  }
+
   // Синхронизация данных между локальным хранилищем и облаком
   async syncWithCloud(): Promise<{
     success: boolean

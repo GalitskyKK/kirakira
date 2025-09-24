@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { useUserStore } from '@/stores'
 import { useTelegram } from '@/hooks'
 import { telegramStorage } from '@/utils/telegramStorage'
+import { isOnboardingCompleted } from '@/utils/storage'
 import type { TelegramSyncResult } from '@/types/initialization'
 
 /**
@@ -12,6 +13,7 @@ export function useTelegramSync() {
   const {
     currentUser,
     clearAllUserData,
+    clearUserDataOnly,
     syncFromSupabase,
     createTelegramUser,
   } = useUserStore()
@@ -68,8 +70,18 @@ export function useTelegramSync() {
           !currentUser || currentUser.telegramId !== telegramUser.telegramId
 
         if (needsSync) {
-          // Очищаем старые данные и синхронизируем с сервером
-          await clearAllUserData()
+          // Проверяем статус онбординга ПЕРЕД очисткой
+          const hadCompletedOnboarding = isOnboardingCompleted()
+
+          // Используем умную очистку для существующих пользователей
+          if (hadCompletedOnboarding) {
+            // Пользователь уже прошёл онбординг - сохраняем его статус
+            await clearUserDataOnly()
+          } else {
+            // Новый пользователь - можно очистить всё
+            await clearAllUserData()
+          }
+
           await syncFromSupabase(telegramUser.telegramId)
 
           // Если пользователя нет на сервере - создаем
@@ -101,6 +113,7 @@ export function useTelegramSync() {
       telegramReady,
       currentUser,
       clearAllUserData,
+      clearUserDataOnly,
       syncFromSupabase,
       createTelegramUser,
     ])

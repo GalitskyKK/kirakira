@@ -112,8 +112,13 @@ function App() {
 
   // Handle onboarding completion
   const handleOnboardingComplete = () => {
-    // Reload to ensure fresh state
-    window.location.reload()
+    // Обновляем состояние в userStore без reload
+    const { completeOnboarding } = useUserStore.getState()
+    completeOnboarding()
+
+    if (isDevelopment) {
+      console.log('✅ Онбординг завершён без reload')
+    }
   }
 
   // Show loading state during initialization
@@ -227,7 +232,7 @@ function App() {
                 </div>
               )}
 
-              {initState.error?.trim() && (
+              {Boolean(initState.error?.trim()) && (
                 <div className="font-semibold text-red-600">
                   ❌ Ошибка: {initState.error}
                 </div>
@@ -279,7 +284,7 @@ function App() {
   }
 
   // Show error state if initialization failed
-  if (initState.isFailed && initState.error?.trim()) {
+  if (initState.isFailed && Boolean(initState.error?.trim())) {
     if (isDevelopment) {
       console.log('🔍 РЕНДЕРИМ ERROR STATE')
     }
