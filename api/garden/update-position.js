@@ -33,6 +33,13 @@ async function updateElementPosition(
           process.env.SUPABASE_SERVICE_ROLE_KEY
         )
 
+        // 🔧 ИСПРАВЛЕНИЕ: Убираем префикс "element_" из UUID для совместимости с базой данных
+        const cleanElementId = elementId.startsWith('element_')
+          ? elementId.replace('element_', '')
+          : elementId
+
+        console.log(`🔧 Element ID cleaning: ${elementId} -> ${cleanElementId}`)
+
         // Обновляем позицию элемента в базе данных
         // ⚠️ ВАЖНО: Перед включением updated_at нужно выполнить миграцию
         // из файла docs/add_updated_at_to_garden_elements.sql
@@ -44,7 +51,7 @@ async function updateElementPosition(
             updated_at: new Date().toISOString(), // 🔄 Включить после миграции
           })
           .eq('telegram_id', telegramUserId)
-          .eq('id', elementId)
+          .eq('id', cleanElementId)
           .select()
 
         if (error) {
@@ -53,7 +60,7 @@ async function updateElementPosition(
 
         if (!data || data.length === 0) {
           throw new Error(
-            `Element with ID ${elementId} not found for user ${telegramUserId}`
+            `Element with ID ${cleanElementId} (original: ${elementId}) not found for user ${telegramUserId}`
           )
         }
 

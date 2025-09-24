@@ -140,9 +140,10 @@ export const useGardenStore = create<GardenStore>()(
               const serverElements = historyResult.data.gardenElements
 
               // Конвертируем серверные данные в формат приложения
+              // 🔧 ИСПРАВЛЕНИЕ: используем UUID напрямую без префикса для совместимости с базой данных
               const convertedElements = serverElements.map(
                 (serverElement: any) => ({
-                  id: `element_${serverElement.id || Date.now()}`,
+                  id: serverElement.id || `temp_${Date.now()}`, // UUID без префикса
                   type: serverElement.element_type,
                   position: {
                     x: serverElement.position_x,
