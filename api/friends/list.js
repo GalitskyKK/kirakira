@@ -75,7 +75,19 @@ export default async function handler(req, res) {
     if (type === 'all' || type === 'incoming') {
       const { data: incomingRequests, error: incomingError } = await supabase
         .from('friendships')
-        .select('id, requester_telegram_id, created_at')
+        .select(
+          `
+          id,
+          requester_telegram_id,
+          created_at,
+          users!friendships_requester_telegram_id_fkey (
+            telegram_id,
+            first_name,
+            last_name,
+            username
+          )
+        `
+        )
         .eq('addressee_telegram_id', telegramId)
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
@@ -88,17 +100,10 @@ export default async function handler(req, res) {
         })
       }
 
-      // Получаем данные пользователей и статистику для каждого запроса
+      // Получаем статистику для каждого запроса
       const requestsWithStats = await Promise.all(
         incomingRequests.map(async request => {
           const requesterTelegramId = request.requester_telegram_id
-
-          // Получаем данные пользователя
-          const { data: userData } = await supabase
-            .from('users')
-            .select('telegram_id, first_name, last_name, username')
-            .eq('telegram_id', requesterTelegramId)
-            .single()
 
           // Получаем статистику сада
           const { data: gardenStats } = await supabase
@@ -119,9 +124,9 @@ export default async function handler(req, res) {
           return {
             requestId: request.id,
             telegramId: requesterTelegramId,
-            firstName: userData?.first_name || 'Неизвестный',
-            lastName: userData?.last_name || '',
-            username: userData?.username || '',
+            firstName: request.users?.first_name || 'Неизвестный',
+            lastName: request.users?.last_name || '',
+            username: request.users?.username || '',
             gardenElements: gardenStats?.length || 0,
             currentStreak: moodStats?.length || 0,
             requestDate: request.created_at,
@@ -136,7 +141,20 @@ export default async function handler(req, res) {
     if (type === 'all' || type === 'outgoing') {
       const { data: outgoingRequests, error: outgoingError } = await supabase
         .from('friendships')
-        .select('id, addressee_telegram_id, status, created_at')
+        .select(
+          `
+          id,
+          addressee_telegram_id,
+          status,
+          created_at,
+          users!friendships_addressee_telegram_id_fkey (
+            telegram_id,
+            first_name,
+            last_name,
+            username
+          )
+        `
+        )
         .eq('requester_telegram_id', telegramId)
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
@@ -149,28 +167,15 @@ export default async function handler(req, res) {
         })
       }
 
-      // Получаем данные пользователей для каждого запроса
-      const requestsWithUserData = await Promise.all(
-        outgoingRequests.map(async request => {
-          const { data: userData } = await supabase
-            .from('users')
-            .select('telegram_id, first_name, last_name, username')
-            .eq('telegram_id', request.addressee_telegram_id)
-            .single()
-
-          return {
-            requestId: request.id,
-            telegramId: request.addressee_telegram_id,
-            firstName: userData?.first_name || 'Неизвестный',
-            lastName: userData?.last_name || '',
-            username: userData?.username || '',
-            status: request.status,
-            requestDate: request.created_at,
-          }
-        })
-      )
-
-      result.outgoingRequests = requestsWithUserData
+      result.outgoingRequests = outgoingRequests.map(request => ({
+        requestId: request.id,
+        telegramId: request.addressee_telegram_id,
+        firstName: request.users?.first_name || 'Неизвестный',
+        lastName: request.users?.last_name || '',
+        username: request.users?.username || '',
+        status: request.status,
+        requestDate: request.created_at,
+      }))
     }
 
     // Получаем реферальный код пользователя
