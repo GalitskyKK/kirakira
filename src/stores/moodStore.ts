@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import { useUserStore } from './userStore'
+import { useGardenStore } from './gardenStore'
 import type {
   MoodState,
   MoodEntry,
@@ -43,6 +44,22 @@ interface MoodActions {
 }
 
 type MoodStore = MoodState & MoodActions
+
+// 🕰️ Debounce для garden sync - избегаем множественных синхронизаций
+let gardenSyncTimeoutId: number | null = null
+
+const debouncedGardenSync = () => {
+  // Отменяем предыдущий таймаут если есть
+  if (gardenSyncTimeoutId !== null) {
+    clearTimeout(gardenSyncTimeoutId)
+  }
+
+  // Устанавливаем новый таймаут
+  gardenSyncTimeoutId = window.setTimeout(() => {
+    useGardenStore.getState().syncGarden()
+    gardenSyncTimeoutId = null
+  }, 100)
+}
 
 export const useMoodStore = create<MoodStore>()(
   subscribeWithSelector((set, get) => ({
@@ -300,6 +317,9 @@ export const useMoodStore = create<MoodStore>()(
             isLoading: false,
           })
 
+          // 🔄 Синхронизируем garden streak после добавления настроения (debounced)
+          debouncedGardenSync()
+
           return newEntry
         } else {
           throw new Error('Failed to save mood entry locally')
@@ -350,6 +370,9 @@ export const useMoodStore = create<MoodStore>()(
             todaysMood: updatedEntry,
             isLoading: false,
           })
+
+          // 🔄 Синхронизируем garden streak после обновления настроения (debounced)
+          debouncedGardenSync()
 
           return updatedEntry
         } else {

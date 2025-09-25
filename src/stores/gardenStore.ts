@@ -127,6 +127,21 @@ export const useGardenStore = create<GardenStore>()(
         if (result.success && result.data.hasData) {
           console.log('✅ Server has garden data - loading full history')
 
+          // 🔄 ОБНОВЛЯЕМ STREAK В САДУ на основе данных с сервера
+          const currentGarden = get().currentGarden
+          if (currentGarden && result.data.currentStreak !== undefined) {
+            const updatedGarden = {
+              ...currentGarden,
+              streak: result.data.currentStreak || 0,
+              lastVisited: new Date(),
+            }
+            set({ currentGarden: updatedGarden })
+            saveGarden(updatedGarden)
+            console.log(
+              `🔄 Updated garden streak to: ${result.data.currentStreak}`
+            )
+          }
+
           // 🌱 Загружаем полную историю элементов сада с сервера
           const historyResponse = await fetch(
             `/api/garden?action=history&telegramId=${currentUser.telegramId}`
@@ -185,6 +200,19 @@ export const useGardenStore = create<GardenStore>()(
           }
         } else {
           console.log('📝 No server garden data - local state is primary')
+
+          // 🔄 ОБНОВЛЯЕМ STREAK В САДУ - если нет данных на сервере, streak = 0
+          const currentGarden = get().currentGarden
+          if (currentGarden && currentGarden.streak !== 0) {
+            const updatedGarden = {
+              ...currentGarden,
+              streak: 0,
+              lastVisited: new Date(),
+            }
+            set({ currentGarden: updatedGarden })
+            saveGarden(updatedGarden)
+            console.log(`🔄 Reset garden streak to 0 (no server data)`)
+          }
         }
       } catch (error) {
         console.warn('⚠️ Garden sync failed:', error)
