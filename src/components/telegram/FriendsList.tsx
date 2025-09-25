@@ -91,8 +91,7 @@ interface FriendsListProps {
 export function FriendsList({ currentUser }: FriendsListProps) {
   const { webApp, hapticFeedback, showAlert, isTelegramEnv } = useTelegram()
   const { checkPendingInvite, clearPendingInvite } = useDeepLink()
-  const { updateFriendsPhotosWithAlert, isUpdatingFriendsPhotos } =
-    useUserPhotos()
+  const { updateFriendsPhotosWithAlert } = useUserPhotos()
   const [friends, setFriends] = useState<Friend[]>([])
   const [incomingRequests, setIncomingRequests] = useState<FriendRequest[]>([])
   const [outgoingRequests, setOutgoingRequests] = useState<FriendRequest[]>([])
@@ -104,6 +103,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
   const [activeView, setActiveView] = useState<
     'friends' | 'find' | 'invites' | 'requests'
   >('friends')
+  const [hasAutoUpdatedPhotos, setHasAutoUpdatedPhotos] = useState(false)
 
   // Загружаем данные о друзьях
   const loadFriendsData = useCallback(async () => {
@@ -116,10 +116,26 @@ export function FriendsList({ currentUser }: FriendsListProps) {
       const result = (await response.json()) as FriendsListResponse
 
       if (result.success && result.data) {
-        setFriends(result.data.friends ?? [])
+        const friends = result.data.friends ?? []
+        setFriends(friends)
         setIncomingRequests(result.data.incomingRequests ?? [])
         setOutgoingRequests(result.data.outgoingRequests ?? [])
         setReferralCode(result.data.referralCode ?? '')
+
+        // 📸 Автоматически обновляем аватарки друзей без фото (в фоне, один раз за сессию)
+        const friendsWithoutPhotos = friends.filter(friend => !friend.photoUrl)
+        if (friendsWithoutPhotos.length > 0 && !hasAutoUpdatedPhotos) {
+          console.log(
+            `🔄 Auto-updating photos for ${friendsWithoutPhotos.length} friends without avatars...`
+          )
+          setHasAutoUpdatedPhotos(true) // Помечаем что уже обновляли
+
+          // Запускаем в фоне, не ждем результата
+          void updateFriendsPhotosWithAlert().then(() => {
+            // Перезагружаем список друзей после обновления аватарок
+            void loadFriendsData()
+          })
+        }
       } else {
         showAlert(result.error ?? 'Ошибка загрузки данных о друзьях')
       }
@@ -127,7 +143,12 @@ export function FriendsList({ currentUser }: FriendsListProps) {
       console.error('Failed to load friends data:', error)
       showAlert('Ошибка подключения к серверу')
     }
-  }, [currentUser?.telegramId, showAlert])
+  }, [
+    currentUser?.telegramId,
+    showAlert,
+    hasAutoUpdatedPhotos,
+    updateFriendsPhotosWithAlert,
+  ])
 
   // Загружаем данные при монтировании
   useEffect(() => {
@@ -977,30 +998,6 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                   <div className="text-xs text-gray-600">Приглашено</div>
                 </div>
               </div>
-
-              {/* Кнопка обновления аватарок */}
-              <Button
-                onClick={() => {
-                  void updateFriendsPhotosWithAlert()
-                }}
-                disabled={isUpdatingFriendsPhotos || friends.length === 0}
-                size="sm"
-                variant="outline"
-                className="w-full"
-              >
-                {isUpdatingFriendsPhotos ? (
-                  <>
-                    <div className="mr-2 h-3 w-3 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
-                    Обновление аватарок...
-                  </>
-                ) : (
-                  <>📸 Обновить аватарки друзей</>
-                )}
-              </Button>
-
-              <p className="mt-2 text-center text-xs text-gray-500">
-                Загружает актуальные фото профилей из Telegram
-              </p>
             </Card>
           </motion.div>
         )}
