@@ -275,6 +275,147 @@ async function handleUpdatePosition(req, res) {
 }
 
 // ===============================================
+// 👀 ACTION: VIEW-FRIEND-GARDEN - Просмотр сада друга
+// ===============================================
+async function handleViewFriendGarden(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  try {
+    const { viewerTelegramId, friendTelegramId } = req.query
+
+    // Валидация входных данных
+    if (!viewerTelegramId || !friendTelegramId) {
+      return res.status(400).json({
+        success: false,
+        error:
+          'Missing required parameters: viewerTelegramId, friendTelegramId',
+      })
+    }
+
+    // Проверяем что не пытаются посмотреть свой собственный сад
+    if (parseInt(viewerTelegramId) === parseInt(friendTelegramId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot view your own garden through friend view',
+      })
+    }
+
+    console.log(
+      `👀 Friend garden view request: ${viewerTelegramId} wants to view ${friendTelegramId}'s garden`
+    )
+
+    const supabase = await getSupabaseClient()
+
+    // 1. Проверяем что пользователи являются друзьями
+    const { data: friendship, error: friendshipError } = await supabase
+      .from('friendships')
+      .select('status')
+      .or(
+        `and(requester_telegram_id.eq.${viewerTelegramId},addressee_telegram_id.eq.${friendTelegramId}),and(requester_telegram_id.eq.${friendTelegramId},addressee_telegram_id.eq.${viewerTelegramId})`
+      )
+      .eq('status', 'accepted')
+      .single()
+
+    if (friendshipError || !friendship) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied: you are not friends with this user',
+      })
+    }
+
+    // 2. Проверяем настройки приватности владельца сада
+    const { data: ownerSettings, error: settingsError } = await supabase
+      .from('users')
+      .select('first_name, last_name, username, photo_url, share_garden')
+      .eq('telegram_id', friendTelegramId)
+      .single()
+
+    if (settingsError) {
+      return res.status(404).json({
+        success: false,
+        error: 'Friend not found',
+      })
+    }
+
+    // Проверяем разрешение на просмотр сада (по умолчанию true если поле не задано)
+    const canShareGarden = ownerSettings.share_garden !== false
+
+    if (!canShareGarden) {
+      return res.status(403).json({
+        success: false,
+        error: 'This user has disabled garden sharing',
+      })
+    }
+
+    // 3. Получаем элементы сада друга
+    const { data: gardenElements, error: gardenError } = await supabase
+      .from('garden_elements')
+      .select('*')
+      .eq('telegram_id', friendTelegramId)
+      .order('unlock_date', { ascending: true }) // Сортируем по дате создания
+
+    if (gardenError) {
+      console.error('Failed to fetch friend garden elements:', gardenError)
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to fetch garden data',
+      })
+    }
+
+    // 4. Получаем статистику друга
+    const { data: friendStats, error: statsError } = await supabase
+      .from('users')
+      .select('current_streak, total_elements, created_at')
+      .eq('telegram_id', friendTelegramId)
+      .single()
+
+    console.log(
+      `✅ Loaded ${gardenElements.length} garden elements for friend ${friendTelegramId}`
+    )
+
+    // 5. Форматируем ответ с правильными координатами
+    res.status(200).json({
+      success: true,
+      data: {
+        friendInfo: {
+          telegramId: parseInt(friendTelegramId),
+          firstName: ownerSettings.first_name || 'Друг',
+          lastName: ownerSettings.last_name || '',
+          username: ownerSettings.username || '',
+          photoUrl: ownerSettings.photo_url || null,
+          currentStreak: friendStats?.current_streak || 0,
+          totalElements: friendStats?.total_elements || gardenElements.length,
+          gardenCreated: friendStats?.created_at || null,
+        },
+        gardenElements: gardenElements.map(element => ({
+          id: element.id,
+          type: element.element_type,
+          rarity: element.rarity,
+          position: {
+            x: element.position_x,
+            y: element.position_y,
+          },
+          unlockDate: element.unlock_date,
+          moodInfluence: element.mood_influence,
+          createdAt: element.created_at,
+        })),
+        total: gardenElements.length,
+        canEdit: false, // Всегда false для чужого сада
+        viewMode: 'friend',
+      },
+    })
+  } catch (error) {
+    console.error('View friend garden error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    })
+  }
+}
+
+// ===============================================
 // 🎯 ГЛАВНЫЙ ОБРАБОТЧИК - Роутинг по действиям
 // ===============================================
 export default async function handler(req, res) {
@@ -306,10 +447,12 @@ export default async function handler(req, res) {
         return await handleHistory(req, res)
       case 'update-position':
         return await handleUpdatePosition(req, res)
+      case 'view-friend-garden':
+        return await handleViewFriendGarden(req, res)
       default:
         return res.status(400).json({
           success: false,
-          error: `Unknown action: ${action}. Available actions: add-element, history, update-position`,
+          error: `Unknown action: ${action}. Available actions: add-element, history, update-position, view-friend-garden`,
         })
     }
   } catch (error) {

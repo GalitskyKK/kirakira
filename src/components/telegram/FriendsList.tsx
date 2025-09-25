@@ -11,9 +11,11 @@ import {
   XCircle,
   Clock,
   Plus,
+  TreePine,
 } from 'lucide-react'
 import { useTelegram, useDeepLink, useUserPhotos } from '@/hooks'
 import { Button, Card, UserAvatar } from '@/components/ui'
+import { FriendGardenView } from '@/components/garden'
 import type { User } from '@/types'
 
 // API response types
@@ -104,6 +106,11 @@ export function FriendsList({ currentUser }: FriendsListProps) {
     'friends' | 'find' | 'invites' | 'requests'
   >('friends')
   const [hasAutoUpdatedPhotos, setHasAutoUpdatedPhotos] = useState(false)
+
+  // Состояние для просмотра сада друга
+  const [viewingFriendGarden, setViewingFriendGarden] = useState<number | null>(
+    null
+  )
 
   // Загружаем данные о друзьях
   const loadFriendsData = useCallback(async () => {
@@ -306,6 +313,21 @@ export function FriendsList({ currentUser }: FriendsListProps) {
     [webApp, hapticFeedback]
   )
 
+  // Посмотреть сад друга
+  const handleViewFriendGarden = useCallback(
+    (friend: Friend) => {
+      hapticFeedback('light')
+      setViewingFriendGarden(friend.telegramId)
+    },
+    [hapticFeedback]
+  )
+
+  // Вернуться из просмотра сада
+  const handleBackFromGarden = useCallback(() => {
+    hapticFeedback('light')
+    setViewingFriendGarden(null)
+  }, [hapticFeedback])
+
   // Поделиться QR кодом
   const handleShareQR = useCallback(() => {
     if (!webApp || !referralCode) return
@@ -349,6 +371,17 @@ export function FriendsList({ currentUser }: FriendsListProps) {
     showAlert,
     handleSearchByReferralCode,
   ])
+
+  // Если просматриваем сад друга, показываем FriendGardenView
+  if (viewingFriendGarden) {
+    return (
+      <FriendGardenView
+        friendTelegramId={viewingFriendGarden}
+        currentUser={currentUser}
+        onBack={handleBackFromGarden}
+      />
+    )
+  }
 
   if (!isTelegramEnv) {
     return (
@@ -533,6 +566,14 @@ export function FriendsList({ currentUser }: FriendsListProps) {
 
                         {/* Действия */}
                         <div className="flex flex-col space-y-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleViewFriendGarden(friend)}
+                            className="bg-green-50 px-3 hover:bg-green-100"
+                          >
+                            <TreePine className="h-3 w-3" />
+                          </Button>
                           <Button
                             size="sm"
                             variant="outline"
