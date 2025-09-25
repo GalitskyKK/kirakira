@@ -12,7 +12,7 @@ import {
   Clock,
   Plus,
 } from 'lucide-react'
-import { useTelegram } from '@/hooks'
+import { useTelegram, useDeepLink } from '@/hooks'
 import { Button, Card } from '@/components/ui'
 import type { User } from '@/types'
 
@@ -61,6 +61,7 @@ interface FriendsListProps {
 
 export function FriendsList({ currentUser }: FriendsListProps) {
   const { webApp, hapticFeedback, showAlert, isTelegramEnv } = useTelegram()
+  const { checkPendingInvite, clearPendingInvite } = useDeepLink()
   const [friends, setFriends] = useState<Friend[]>([])
   const [incomingRequests, setIncomingRequests] = useState<FriendRequest[]>([])
   const [outgoingRequests, setOutgoingRequests] = useState<FriendRequest[]>([])
@@ -111,34 +112,38 @@ export function FriendsList({ currentUser }: FriendsListProps) {
   )
 
   // Поиск пользователя по реферальному коду
-  const handleSearchByReferralCode = useCallback(async () => {
-    if (!referralSearchQuery.trim() || !currentUser?.telegramId) {
-      showAlert('Введите реферальный код!')
-      return
-    }
-
-    try {
-      setIsSearching(true)
-      const response = await fetch(
-        `/api/friends/search?referralCode=${referralSearchQuery.trim()}&searcherTelegramId=${currentUser.telegramId}`
-      )
-      const result = await response.json()
-
-      if (result.success) {
-        setSearchResult(result.data)
-        hapticFeedback('success')
-      } else {
-        showAlert(result.error || 'Пользователь не найден')
-        setSearchResult(null)
+  const handleSearchByReferralCode = useCallback(
+    async (customQuery?: string) => {
+      const searchQuery = customQuery || referralSearchQuery.trim()
+      if (!searchQuery || !currentUser?.telegramId) {
+        showAlert('Введите реферальный код!')
+        return
       }
-    } catch (error) {
-      console.error('Search error:', error)
-      showAlert('Ошибка поиска')
-      setSearchResult(null)
-    } finally {
-      setIsSearching(false)
-    }
-  }, [referralSearchQuery, currentUser?.telegramId, showAlert, hapticFeedback])
+
+      try {
+        setIsSearching(true)
+        const response = await fetch(
+          `/api/friends/search?referralCode=${searchQuery}&searcherTelegramId=${currentUser.telegramId}`
+        )
+        const result = await response.json()
+
+        if (result.success) {
+          setSearchResult(result.data)
+          hapticFeedback('success')
+        } else {
+          showAlert(result.error || 'Пользователь не найден')
+          setSearchResult(null)
+        }
+      } catch (error) {
+        console.error('Search error:', error)
+        showAlert('Ошибка поиска')
+        setSearchResult(null)
+      } finally {
+        setIsSearching(false)
+      }
+    },
+    [referralSearchQuery, currentUser?.telegramId, showAlert, hapticFeedback]
+  )
 
   // Отправить запрос дружбы
   const handleSendFriendRequest = useCallback(
@@ -260,6 +265,38 @@ export function FriendsList({ currentUser }: FriendsListProps) {
       parse_mode: 'Markdown',
     })
   }, [webApp, hapticFeedback, referralCode])
+
+  // Обрабатываем pending friend invites из deep links
+  useEffect(() => {
+    const pendingInvite = checkPendingInvite()
+    if (pendingInvite) {
+      console.log('🔗 Processing pending friend invite:', pendingInvite)
+
+      // Переключаемся на вкладку поиска
+      setActiveView('find')
+
+      // Автоматически заполняем поле поиска
+      setReferralSearchQuery(pendingInvite)
+
+      // Выполняем поиск
+      setTimeout(() => {
+        handleSearchByReferralCode(pendingInvite)
+      }, 500)
+
+      // Очищаем pending invite после обработки
+      clearPendingInvite()
+
+      // Показываем уведомление пользователю
+      if (showAlert) {
+        showAlert(`🔍 Поиск друга по коду: ${pendingInvite}`)
+      }
+    }
+  }, [
+    checkPendingInvite,
+    clearPendingInvite,
+    showAlert,
+    handleSearchByReferralCode,
+  ])
 
   if (!isTelegramEnv) {
     return (
@@ -669,7 +706,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                     maxLength={8}
                   />
                   <Button
-                    onClick={handleSearchByReferralCode}
+                    onClick={() => handleSearchByReferralCode()}
                     disabled={isSearching || !referralSearchQuery.trim()}
                     className="bg-blue-500 hover:bg-blue-600"
                   >

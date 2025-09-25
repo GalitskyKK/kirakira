@@ -16,5 +16,6 @@ export { useTelegramStorage } from './useTelegramStorage'
 export { useAppInitialization } from './useAppInitialization'
 export { useTelegramSync } from './useTelegramSync'
 export { useStoresSync } from './useStoresSync'
+export { useDeepLink } from './useDeepLink'
 
 // Additional utility hooks can be added here
