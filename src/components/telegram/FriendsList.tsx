@@ -122,15 +122,21 @@ export function FriendsList({ currentUser }: FriendsListProps) {
 
       try {
         setIsSearching(true)
+        console.log('🔍 FRONTEND: Searching for code:', searchQuery)
+
         const response = await fetch(
           `/api/friends/search?referralCode=${searchQuery}&searcherTelegramId=${currentUser.telegramId}`
         )
         const result = await response.json()
 
+        console.log('🔍 FRONTEND: Search result:', result)
+
         if (result.success) {
+          console.log('🔍 FRONTEND: Setting search result:', result.data)
           setSearchResult(result.data)
           hapticFeedback('success')
         } else {
+          console.log('🔍 FRONTEND: Search failed:', result.error)
           showAlert(result.error || 'Пользователь не найден')
           setSearchResult(null)
         }
