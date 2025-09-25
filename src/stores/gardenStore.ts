@@ -122,6 +122,8 @@ export const useGardenStore = create<GardenStore>()(
 
         const result = await response.json()
 
+        console.log('🔍 Garden sync - User stats result:', result)
+
         if (result.success && result.data.hasData) {
           console.log('✅ Server has garden data - loading full history')
 
@@ -130,11 +132,18 @@ export const useGardenStore = create<GardenStore>()(
             `/api/garden?action=history&telegramId=${currentUser.telegramId}`
           )
 
+          console.log(
+            '🔍 Garden history response status:',
+            historyResponse.status
+          )
+
           if (historyResponse.ok) {
             const historyResult = await historyResponse.json()
+            console.log('🔍 Garden history result:', historyResult)
 
             if (
               historyResult.success &&
+              historyResult.data.gardenElements &&
               historyResult.data.gardenElements.length > 0
             ) {
               const serverElements = historyResult.data.gardenElements

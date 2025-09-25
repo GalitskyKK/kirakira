@@ -145,6 +145,8 @@ export const useMoodStore = create<MoodStore>()(
         const result = await response.json()
         console.log(`📡 User stats result:`, result)
 
+        console.log('🔍 Mood sync - User stats result:', result)
+
         if (result.success && result.data.hasData) {
           console.log('✅ Server has mood data - loading full history')
 
@@ -168,6 +170,7 @@ export const useMoodStore = create<MoodStore>()(
 
             if (
               historyResult.success &&
+              historyResult.data.moodHistory &&
               historyResult.data.moodHistory.length > 0
             ) {
               const serverMoods = historyResult.data.moodHistory

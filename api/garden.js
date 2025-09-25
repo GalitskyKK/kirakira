@@ -153,29 +153,13 @@ async function handleHistory(req, res) {
       })
     }
 
-    // Преобразуем данные в формат фронтенда
-    const gardenElements = data.map(element => ({
-      id: `element_${element.id}`,
-      type: element.element_type,
-      rarity: element.rarity,
-      position: {
-        x: element.position_x,
-        y: element.position_y,
-      },
-      moodInfluence: element.mood_influence,
-      unlockDate: element.unlock_date,
-      createdAt: element.created_at,
-    }))
-
-    console.log(
-      `✅ Loaded ${gardenElements.length} garden elements from Supabase`
-    )
+    console.log(`✅ Loaded ${data.length} garden elements from Supabase`)
 
     res.status(200).json({
       success: true,
       data: {
-        elements: gardenElements,
-        total: gardenElements.length,
+        gardenElements: data, // Возвращаем сырые данные как ожидает frontend
+        total: data.length,
         storage: 'supabase',
       },
     })

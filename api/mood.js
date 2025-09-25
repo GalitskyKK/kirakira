@@ -201,25 +201,13 @@ async function handleHistory(req, res) {
       })
     }
 
-    // Преобразуем данные в формат фронтенда
-    const moodHistory = (data || []).map(entry => ({
-      id: entry.id,
-      mood: entry.mood,
-      intensity: entry.intensity,
-      note: entry.note,
-      date: entry.mood_date,
-      createdAt: entry.created_at,
-    }))
-
-    console.log(
-      `✅ Loaded ${moodHistory.length} mood entries for user ${telegramId}`
-    )
+    console.log(`✅ Loaded ${data.length} mood entries for user ${telegramId}`)
 
     res.status(200).json({
       success: true,
       data: {
-        entries: moodHistory,
-        total: moodHistory.length,
+        moodHistory: data, // Возвращаем сырые данные как ожидает frontend
+        total: data.length,
         storage: 'supabase',
       },
     })
