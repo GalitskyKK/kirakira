@@ -26,6 +26,9 @@ const TelegramTestPage = import.meta.env.DEV
 const StreakDebugPage = import.meta.env.DEV
   ? lazy(() => import('@/pages/StreakDebugPage'))
   : null
+
+// Lazy import для страницы профиля друга
+const FriendProfilePage = lazy(() => import('@/pages/FriendProfilePage'))
 import { TelegramDiagnostic } from '@/components/TelegramDiagnostic'
 import { useTelegram, useTelegramTheme, useAppInitialization } from '@/hooks'
 import { InitializationStage } from '@/types/initialization'
@@ -446,6 +449,22 @@ function App() {
                     onSuccess={() => window.location.replace('/')}
                     onError={error => console.error('Auth error:', error)}
                   />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/friend/:friendTelegramId"
+              element={
+                <motion.div
+                  key="friend-profile"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <FriendProfilePage />
+                  </Suspense>
                 </motion.div>
               }
             />

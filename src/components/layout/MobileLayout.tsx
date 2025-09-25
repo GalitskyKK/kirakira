@@ -5,6 +5,7 @@ import { GardenView } from '@/components/garden'
 import { MoodCheckin, MoodStats } from '@/components/mood'
 import { TelegramCommunity } from '@/components/telegram'
 import { TelegramStatus } from '@/components/ui'
+import { ProfilePage } from '@/pages/ProfilePage'
 import { useGardenState, useMoodTracking } from '@/hooks'
 
 const tabVariants = {
@@ -22,7 +23,7 @@ const tabVariants = {
   }),
 }
 
-const TABS = ['mood', 'garden', 'community', 'stats']
+const TABS = ['mood', 'garden', 'community', 'stats', 'profile']
 
 export function MobileLayout() {
   const [activeTab, setActiveTab] = useState('mood')
@@ -172,6 +173,9 @@ export function MobileLayout() {
             <MoodStats />
           </div>
         )
+
+      case 'profile':
+        return <ProfilePage />
 
       default:
         return null

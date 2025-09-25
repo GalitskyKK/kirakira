@@ -1,4 +1,5 @@
 import { useCallback, useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users,
@@ -12,6 +13,7 @@ import {
   Clock,
   Plus,
   TreePine,
+  User as UserIcon,
 } from 'lucide-react'
 import { useTelegram, useDeepLink, useUserPhotos } from '@/hooks'
 import { Button, Card, UserAvatar } from '@/components/ui'
@@ -91,6 +93,7 @@ interface FriendsListProps {
 }
 
 export function FriendsList({ currentUser }: FriendsListProps) {
+  const navigate = useNavigate()
   const { webApp, hapticFeedback, showAlert, isTelegramEnv } = useTelegram()
   const { checkPendingInvite, clearPendingInvite } = useDeepLink()
   const { updateFriendsPhotosWithAlert } = useUserPhotos()
@@ -320,6 +323,15 @@ export function FriendsList({ currentUser }: FriendsListProps) {
       setViewingFriendGarden(friend.telegramId)
     },
     [hapticFeedback]
+  )
+
+  // Посмотреть профиль друга
+  const handleViewFriendProfile = useCallback(
+    (friend: Friend) => {
+      hapticFeedback('light')
+      navigate(`/friend/${friend.telegramId}`)
+    },
+    [hapticFeedback, navigate]
   )
 
   // Вернуться из просмотра сада
@@ -569,8 +581,18 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => handleViewFriendProfile(friend)}
+                            className="bg-blue-50 px-3 hover:bg-blue-100"
+                            title="Просмотр профиля"
+                          >
+                            <UserIcon className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => handleViewFriendGarden(friend)}
                             className="bg-green-50 px-3 hover:bg-green-100"
+                            title="Просмотр сада"
                           >
                             <TreePine className="h-3 w-3" />
                           </Button>
@@ -579,6 +601,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                             variant="outline"
                             onClick={() => handleMessageFriend(friend)}
                             className="px-3"
+                            title="Отправить сообщение"
                           >
                             <MessageCircle className="h-3 w-3" />
                           </Button>
@@ -587,6 +610,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                             variant="outline"
                             onClick={() => handleChallengeFriend(friend)}
                             className="bg-orange-50 px-3 hover:bg-orange-100"
+                            title="Вызвать на челлендж"
                           >
                             <Trophy className="h-3 w-3" />
                           </Button>

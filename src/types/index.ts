@@ -19,6 +19,8 @@ export {
 
 export { MoodIntensity, MOOD_CONFIG } from './mood'
 
+export { AchievementCategory } from './user'
+
 export { InitializationStage } from './initialization'
 
 // Common utility types

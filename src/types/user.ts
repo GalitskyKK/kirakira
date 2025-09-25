@@ -34,6 +34,9 @@ export interface PrivacySettings {
   readonly analytics: boolean
   readonly cloudSync: boolean
   readonly shareGarden: boolean
+  readonly showProfile: boolean
+  readonly shareAchievements: boolean
+  readonly allowFriendRequests: boolean
 }
 
 export interface GardenPreferences {
@@ -61,4 +64,44 @@ export interface UserState {
   readonly isLoading: boolean
   readonly error: string | null
   readonly hasCompletedOnboarding: boolean
+}
+
+// Profile and Achievement Types
+export interface Achievement {
+  readonly id: string
+  readonly name: string
+  readonly description: string
+  readonly emoji: string
+  readonly category: AchievementCategory
+  readonly unlockedAt?: Date
+  readonly isUnlocked: boolean
+  readonly progress?: number
+  readonly maxProgress?: number
+}
+
+export enum AchievementCategory {
+  STREAK = 'streak',
+  GARDEN = 'garden',
+  MOOD = 'mood',
+  SOCIAL = 'social',
+  SPECIAL = 'special',
+}
+
+export interface GardenerLevel {
+  readonly level: number
+  readonly name: string
+  readonly emoji: string
+  readonly minExperience: number
+  readonly maxExperience: number
+  readonly benefits: readonly string[]
+}
+
+export interface ProfileStats {
+  readonly level: GardenerLevel
+  readonly experience: number
+  readonly achievements: readonly Achievement[]
+  readonly totalMoodEntries: number
+  readonly favoriteMood: string
+  readonly daysSinceRegistration: number
+  readonly averageElementsPerDay: number
 }

@@ -70,6 +70,9 @@ const DEFAULT_PREFERENCES: UserPreferences = {
     analytics: false,
     cloudSync: false,
     shareGarden: true,
+    showProfile: true,
+    shareAchievements: true,
+    allowFriendRequests: true,
   },
   garden: {
     autoArrange: false,

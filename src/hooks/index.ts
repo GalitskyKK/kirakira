@@ -18,5 +18,6 @@ export { useTelegramSync } from './useTelegramSync'
 export { useStoresSync } from './useStoresSync'
 export { useDeepLink } from './useDeepLink'
 export { useUserPhotos } from './useUserPhotos'
+export { useProfile } from './useProfile'
 
 // Additional utility hooks can be added here
