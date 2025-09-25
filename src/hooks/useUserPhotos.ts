@@ -41,7 +41,7 @@ export function useUserPhotos() {
       try {
         setIsUpdatingPhoto(true)
 
-        const response = await fetch('/api/user/update-photo', {
+        const response = await fetch('/api/user?action=update-photo', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -92,7 +92,7 @@ export function useUserPhotos() {
       try {
         setIsUpdatingFriendsPhotos(true)
 
-        const response = await fetch('/api/friends/update-photos', {
+        const response = await fetch('/api/friends?action=update-photos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

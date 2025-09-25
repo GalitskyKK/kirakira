@@ -1,217 +1,221 @@
-# 🌸 KiraKira - Emotional Garden
+# 🌸 KiraKira - Эмоциональный Сад
 
-> Transform your daily emotions into a beautiful digital garden. A mindful PWA for emotional wellness and self-reflection.
+> Превратите свои ежедневные эмоции в красивый цифровой сад. Медитативное PWA приложение для эмоционального благополучия и саморефлексии.
 
-[![Demo](https://img.shields.io/badge/🌸_Try_Demo-Live_App-pink?style=for-the-badge)](https://kirakira-theta.vercel.app)
+[![Demo](https://img.shields.io/badge/🌸_Попробовать-Live_App-pink?style=for-the-badge)](https://kirakira-theta.vercel.app)
 [![Telegram](https://img.shields.io/badge/📱_Telegram-Mini_App-blue?style=for-the-badge)](https://t.me/KiraKiraGardenBot)
 
-## ✨ What is KiraKira?
+## ✨ Что такое KiraKira?
 
-KiraKira is a meditative application that helps you **track your emotions** by transforming them into a **beautiful digital garden**. Each mood becomes a unique plant, crystal, or garden element, creating a personalized emotional landscape that grows with you over time.
+KiraKira — это медитативное приложение, которое помогает вам **отслеживать эмоции**, превращая их в **красивый цифровой сад**. Каждое настроение становится уникальным растением, кристаллом или элементом сада, создавая персонализированный эмоциональный ландшафт, который растёт вместе с вами.
 
-### 🎯 Key Features
+### 🎯 Основные возможности
 
-- **🌱 Emotion Tracking** - Daily mood check-ins with intuitive interface
-- **🌸 Visual Transformation** - Watch emotions bloom into beautiful garden elements
-- **📱 Progressive Web App** - Works offline, installs like native app
-- **🤖 Telegram Integration** - Full Mini App experience in Telegram
-- **🎨 Beautiful Animations** - Smooth Framer Motion interactions
-- **🔒 Privacy First** - All data stored locally (with optional cloud sync)
-- **⭐ Premium Features** - Enhanced elements via Telegram Stars
+- **🌱 Отслеживание эмоций** - Ежедневные проверки настроения с интуитивным интерфейсом
+- **🌸 Визуальная трансформация** - Наблюдайте, как эмоции расцветают в элементы сада
+- **📱 Progressive Web App** - Работает офлайн, устанавливается как нативное приложение
+- **🤖 Интеграция с Telegram** - Полноценный Mini App опыт в Telegram
+- **🎨 Красивые анимации** - Плавные интерактивные анимации Framer Motion
+- **🔒 Приватность прежде всего** - Все данные хранятся локально (с опциональной облачной синхронизацией)
+- **⭐ Премиум функции** - Улучшенные элементы через Telegram Stars
 
-## 🚀 Quick Start
+## 🚀 Быстрый старт
 
 ```bash
-# Clone the repository
+# Клонировать репозиторий
 git clone https://github.com/yourusername/kirakira.git
 cd kirakira
 
-# Install dependencies
+# Установить зависимости
 npm install
 
-# Start development server
+# Запустить сервер разработки
 npm run dev
 
-# Build for production
+# Собрать для продакшена
 npm run build
 ```
 
 ## 📱 Telegram Mini App
 
-Experience KiraKira natively in Telegram with enhanced features:
+Испытайте KiraKira нативно в Telegram с расширенными возможностями:
 
-- **Seamless Integration** - No app switching needed
-- **Cloud Synchronization** - Automatic sync across devices
-- **Haptic Feedback** - Native mobile interactions
-- **Share & Invite** - Send garden screenshots to friends
-- **Premium Shop** - Purchase exclusive elements with Telegram Stars
+- **Бесшовная интеграция** - Не нужно переключаться между приложениями
+- **Облачная синхронизация** - Автоматическая синхронизация между устройствами
+- **Тактильная обратная связь** - Нативные мобильные взаимодействия
+- **Делиться и приглашать** - Отправляйте скриншоты сада друзьям
+- **Премиум магазин** - Покупайте эксклюзивные элементы за Telegram Stars
 
-### Setup Telegram Integration
+### Настройка интеграции с Telegram
 
-1. **Create your bot** with [@BotFather](https://t.me/BotFather)
+1. **Создайте своего бота** с помощью [@BotFather](https://t.me/BotFather)
 
-2. **Configure environment** in `.env.local`:
+2. **Настройте окружение** в `.env.local`:
 
    ```env
-   VITE_TELEGRAM_BOT_TOKEN=your_bot_token_here
-   VITE_TELEGRAM_BOT_USERNAME=your_bot_username
+   VITE_TELEGRAM_BOT_TOKEN=ваш_токен_бота
+   VITE_TELEGRAM_BOT_USERNAME=имя_вашего_бота
    VITE_APP_URL=http://localhost:3000
    ```
 
-3. **Setup bot automatically**:
+3. **Автоматическая настройка бота**:
 
    ```bash
    npm run setup-bot
    ```
 
-4. **Configure Mini App URL** in BotFather with your deployment URL
+4. **Настройте URL Mini App** в BotFather с URL вашего развертывания
 
-📖 **Detailed guides**: [Telegram Setup](./docs/TELEGRAM_INTEGRATION.md) | [Vercel Deployment](./docs/VERCEL_SETUP.md) | [Quick Start](./docs/QUICK_START.md)
+📖 **Подробные руководства**: [Настройка Telegram](./docs/TELEGRAM_INTEGRATION.md) | [Развертывание Vercel](./docs/VERCEL_SETUP.md)
 
-## 🌟 How It Works
+## 🌟 Как это работает
 
-1. **🧠 Daily Check-in** - Select your current emotional state from intuitive mood options
-2. **🎨 Element Generation** - Each emotion transforms into a unique garden element based on mood mapping
-3. **🌱 Garden Evolution** - Watch your personal landscape grow and change over time
-4. **📊 Emotional Insights** - Discover patterns in your emotional journey through visual analytics
+1. **🧠 Ежедневная регистрация** - Выберите своё текущее эмоциональное состояние из интуитивных вариантов настроения
+2. **🎨 Генерация элементов** - Каждая эмоция превращается в уникальный элемент сада на основе карты настроений
+3. **🌱 Эволюция сада** - Наблюдайте, как ваш персональный ландшафт растёт и изменяется со временем
+4. **📊 Эмоциональная аналитика** - Откройте закономерности в вашем эмоциональном путешествии через визуальную аналитику
 
-## 🛠 Tech Stack
+## 🛠 Технологический стек
 
-- **Frontend**: React 18 + TypeScript + Vite
-- **Styling**: Tailwind CSS + CSS Modules
-- **Animations**: Framer Motion (60fps smooth animations)
-- **State**: Zustand (lightweight & fast)
-- **PWA**: Workbox + Service Workers
-- **Integration**: Telegram Mini Apps API
-- **Testing**: Vitest + React Testing Library
+- **Frontend**: React 18 + TypeScript + Vite 5
+- **Маршрутизация**: React Router DOM 6
+- **Стилизация**: Tailwind CSS 3 (без CSS Modules)
+- **Анимации**: Framer Motion 10 (плавные анимации 60fps)
+- **Состояние**: Zustand 4 (лёгкий и быстрый)
+- **Серверное состояние**: @tanstack/react-query 5
+- **PWA**: Vite PWA plugin + Workbox + Service Workers
+- **Интеграция**: Telegram Mini Apps API
+- **Иконки**: Lucide React
+- **Тестирование**: Vitest + React Testing Library
 
-## 📂 Architecture
+## 📂 Архитектура
 
 ```
 src/
-├── components/          # React component library
-│   ├── ui/             # Reusable UI primitives
-│   ├── garden/         # Garden visualization components
-│   ├── mood/           # Emotion tracking interface
-│   └── telegram/       # Telegram-specific features
-├── hooks/              # Custom React hooks
-├── stores/             # Zustand state management
-├── utils/              # Pure utility functions
-├── types/              # TypeScript definitions
-└── assets/             # Static resources
+├── components/          # Библиотека React компонентов
+│   ├── ui/             # Переиспользуемые UI примитивы
+│   ├── garden/         # Компоненты визуализации сада
+│   │   └── plants/     # SVG компоненты растений
+│   ├── layout/         # Компоненты макета
+│   ├── mood/           # Интерфейс отслеживания эмоций
+│   ├── auth/           # Компоненты аутентификации
+│   ├── telegram/       # Функции специфичные для Telegram
+│   └── dev/            # Компоненты только для разработки
+├── hooks/              # Пользовательские React хуки
+├── stores/             # Управление состоянием Zustand
+├── utils/              # Чистые служебные функции
+├── types/              # Определения TypeScript
+├── assets/             # Статические ресурсы
+├── pages/              # Компоненты страниц
+└── styles/             # Глобальные стили
 ```
 
-## 🔧 Development Setup
+## 🔧 Настройка разработки
 
-### Prerequisites
+### Требования
 
 - **Node.js** 18+
-- **npm** or **yarn**
-- Optional: **Telegram Bot** for Mini App features
+- **npm** (v8+)
+- Опционально: **Telegram Bot** для функций Mini App
 
-### Available Scripts
+### Доступные скрипты
 
 ```bash
-npm run dev          # Development server with HMR
-npm run build        # Production build + optimization
-npm run preview      # Preview production build locally
-npm run test         # Run unit tests with Vitest
-npm run lint         # ESLint code analysis
-npm run type-check   # TypeScript validation
-npm run setup-bot    # Auto-configure Telegram bot
+npm run dev          # Сервер разработки с HMR
+npm run build        # Сборка для продакшена + оптимизация
+npm run preview      # Предварительный просмотр сборки локально
+npm run test         # Запуск юнит тестов с Vitest
+npm run test:ui      # Визуальный запускальщик тестов
+npm run test:coverage # Отчёты о покрытии
+npm run lint         # Анализ кода ESLint
+npm run lint:fix     # Автоисправление ESLint
+npm run type-check   # Валидация TypeScript
+npm run format       # Форматирование кода Prettier
+npm run setup-bot    # Автоконфигурация Telegram бота
 ```
 
-### Environment Configuration
+### Конфигурация окружения
 
-Create `.env.local` for local development:
+Создайте `.env.local` для локальной разработки:
 
 ```bash
-# Telegram Mini App Integration (optional)
-VITE_TELEGRAM_BOT_TOKEN=your_bot_token_from_botfather
-VITE_TELEGRAM_BOT_USERNAME=your_bot_username
+# Интеграция с Telegram Mini App (опционально)
+VITE_TELEGRAM_BOT_TOKEN=ваш_токен_бота_от_botfather
+VITE_TELEGRAM_BOT_USERNAME=имя_вашего_бота
 VITE_APP_URL=http://localhost:3000
 
-# Optional: Supabase for advanced analytics
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+# Опционально: Supabase для расширенной аналитики
+VITE_SUPABASE_URL=url_вашего_проекта_supabase
+VITE_SUPABASE_ANON_KEY=ваш_anon_ключ_supabase
 ```
 
-> ⚠️ **Security Note**: Never commit tokens to version control. Use environment variables in production.
+> ⚠️ **Замечание по безопасности**: Никогда не коммитьте токены в систему контроля версий. Используйте переменные окружения в продакшене.
 
-## 🎨 Design Philosophy
+## 🎨 Философия дизайна
 
-- **🧘 Mindful UX** - Calming colors, gentle animations, stress-free interactions
-- **♿ Accessibility** - WCAG 2.1 compliant, keyboard navigation, screen reader support
-- **📱 Mobile-First** - Touch-optimized interface, responsive design, PWA capabilities
-- **⚡ Performance** - <3s load time, 60fps animations, optimized bundle size
+- **🧘 Осознанный UX** - Успокаивающие цвета, мягкие анимации, безстрессовые взаимодействия
+- **♿ Доступность** - Поддержка клавиатурной навигации, программ чтения с экрана
+- **📱 Mobile-First** - Оптимизированный для касаний интерфейс, адаптивный дизайн, PWA возможности
+- **⚡ Производительность** - Быстрая загрузка, анимации 60fps, оптимизированный размер сборки
 
-## 🔒 Privacy & Security
+## 🔒 Приватность и безопасность
 
-- **🏠 Local-First** - All emotion data stored locally on user's device
-- **🚫 No Tracking** - Zero analytics, no behavioral monitoring, no ads
-- **🔐 Anonymous** - No personal information required or collected
-- **☁️ Optional Sync** - User chooses whether to enable cloud synchronization
-- **🛡️ Secure** - HTTPS-only, Content Security Policy, secure token handling
+- **🏠 Local-First** - Все эмоциональные данные хранятся локально на устройстве пользователя
+- **🚫 Без отслеживания** - Никакой аналитики, мониторинга поведения или рекламы
+- **🔐 Анонимность** - Никакая личная информация не требуется и не собирается
+- **☁️ Опциональная синхронизация** - Пользователь выбирает, включать ли облачную синхронизацию
+- **🛡️ Безопасность** - Только HTTPS, Content Security Policy, безопасная обработка токенов
 
-## 📊 Performance Metrics
-
-- **Bundle Size**: ~500KB gzipped (optimized with code splitting)
-- **First Paint**: <1.5s on 3G networks
-- **Interactive**: <3s time to interactive
-- **PWA Score**: 100/100 on Lighthouse
-- **Accessibility**: AAA compliant
-
-## 🧪 Testing
+## 🧪 Тестирование
 
 ```bash
-npm run test              # Unit tests with Vitest
-npm run test:coverage     # Coverage reports
-npm run test:ui          # Visual test runner
-npm run e2e              # End-to-end testing
+npm run test              # Юнит тесты с Vitest
+npm run test:coverage     # Отчёты о покрытии
+npm run test:ui          # Визуальный запускальщик тестов
 ```
 
-## 🌐 Deployment
+## 🌐 Развертывание
 
-### Vercel (Recommended)
+### Vercel (Рекомендуется)
 
-1. Connect your GitHub repository
-2. Add environment variables in dashboard
-3. Deploy automatically on push
+1. Подключите свой GitHub репозиторий
+2. Добавьте переменные окружения в панели управления
+3. Автоматическое развертывание при push
 
-### Other Platforms
+### Другие платформы
 
-- **Netlify**: Drag & drop `dist/` folder
+- **Netlify**: Перетащите папку `dist/`
 - **Firebase**: `firebase deploy`
-- **Static Hosting**: Any service supporting SPAs
+- **Статический хостинг**: Любой сервис, поддерживающий SPA
 
-## 🤝 Contributing
+## 🤝 Вклад в проект
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+Мы приветствуем вклад в проект! Для участия:
 
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Follow** coding standards and add tests
-4. **Submit** a pull request with detailed description
+1. **Fork** репозитория
+2. **Создайте** feature ветку (`git checkout -b feature/amazing-feature`)
+3. **Следуйте** стандартам кодирования и добавляйте тесты
+4. **Отправьте** pull request с подробным описанием
 
-## 📄 License
+## 📄 Лицензия
 
-This project is licensed under the **MIT License** - see [LICENSE](LICENSE) for details.
+Этот проект лицензирован под **MIT License**.
 
-## 🙏 Acknowledgments
+## 🙏 Благодарности
 
-- **🎨 Design Inspiration**: Japanese garden aesthetics, mindfulness apps
-- **💻 Technology**: React team, Framer Motion, Tailwind CSS community
-- **🧠 Mental Health**: Therapy community, mindfulness practitioners
-- **🤖 Telegram**: Mini Apps platform and development tools
+- **🎨 Дизайнерское вдохновение**: Эстетика японских садов, приложения для осознанности
+- **💻 Технологии**: Команда React, Framer Motion, сообщество Tailwind CSS
+- **🧠 Ментальное здоровье**: Терапевтическое сообщество, практики осознанности
+- **🤖 Telegram**: Платформа Mini Apps и инструменты разработки
 
 ---
 
 <div align="center">
 
-**🌸 Built with care for mental wellness and emotional awareness**
+**🌸 Создано с заботой о ментальном благополучии и эмоциональной осознанности**
 
-[🌐 Live Demo](https://kirakira-theta.vercel.app) • [📱 Telegram Bot](https://t.me/KiraKiraGardenBot) • [📖 Documentation](./docs/)
+[🌐 Демо](https://kirakira-theta.vercel.app) • [📱 Telegram Бот](https://t.me/KiraKiraGardenBot) • [📖 Документация](./docs/)
 
-_KiraKira - Where emotions bloom into beauty_ ✨
+_KiraKira - Где эмоции расцветают в красоту_ ✨
 
 </div>

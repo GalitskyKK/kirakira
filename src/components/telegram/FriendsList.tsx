@@ -111,7 +111,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
 
     try {
       const response = await fetch(
-        `/api/friends/list?telegramId=${currentUser.telegramId}&type=all`
+        `/api/friends?action=list&telegramId=${currentUser.telegramId}&type=all`
       )
       const result = (await response.json()) as FriendsListResponse
 
@@ -156,7 +156,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
       try {
         setIsSearching(true)
         const response = await fetch(
-          `/api/friends/search?referralCode=${searchQuery}&searcherTelegramId=${currentUser.telegramId}`
+          `/api/friends?action=search&referralCode=${searchQuery}&searcherTelegramId=${currentUser.telegramId}`
         )
         const result = (await response.json()) as SearchResponse
 
@@ -185,7 +185,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
 
       try {
         hapticFeedback('medium')
-        const response = await fetch('/api/friends/send-request', {
+        const response = await fetch('/api/friends?action=send-request', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -220,7 +220,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
 
       try {
         hapticFeedback('medium')
-        const response = await fetch('/api/friends/respond-request', {
+        const response = await fetch('/api/friends?action=respond-request', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -113,7 +113,7 @@ export const useGardenStore = create<GardenStore>()(
 
         // Получаем актуальные данные пользователя с сервера
         const response = await fetch(
-          `/api/user/stats?telegramId=${currentUser.telegramId}`
+          `/api/user?action=stats&telegramId=${currentUser.telegramId}`
         )
 
         if (!response.ok) {
@@ -127,7 +127,7 @@ export const useGardenStore = create<GardenStore>()(
 
           // 🌱 Загружаем полную историю элементов сада с сервера
           const historyResponse = await fetch(
-            `/api/garden/history?telegramId=${currentUser.telegramId}`
+            `/api/garden?action=history&telegramId=${currentUser.telegramId}`
           )
 
           if (historyResponse.ok) {
@@ -301,7 +301,7 @@ export const useGardenStore = create<GardenStore>()(
             const currentUser = userStore.currentUser
 
             if (currentUser?.telegramId) {
-              const response = await fetch('/api/garden/add-element', {
+              const response = await fetch('/api/garden?action=add-element', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -402,15 +402,18 @@ export const useGardenStore = create<GardenStore>()(
 
           if (currentUser?.telegramId) {
             try {
-              const response = await fetch('/api/garden/update-position', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  telegramUserId: currentUser.telegramId,
-                  elementId,
-                  position: newPosition,
-                }),
-              })
+              const response = await fetch(
+                '/api/garden?action=update-position',
+                {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    telegramId: currentUser.telegramId,
+                    elementId,
+                    position: newPosition,
+                  }),
+                }
+              )
 
               if (!response.ok) {
                 console.warn(

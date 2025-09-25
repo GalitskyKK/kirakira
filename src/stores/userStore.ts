@@ -533,7 +533,9 @@ export const useUserStore = create<UserStore>()(
         console.log(`🔄 Syncing user data from Supabase for ${telegramId}`)
 
         // Запрашиваем данные из API
-        const response = await fetch(`/api/user/stats?telegramId=${telegramId}`)
+        const response = await fetch(
+          `/api/user?action=stats&telegramId=${telegramId}`
+        )
 
         if (!response.ok) {
           throw new Error(`Failed to fetch user data: ${response.status}`)

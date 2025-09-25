@@ -129,7 +129,7 @@ export const useMoodStore = create<MoodStore>()(
         // Получаем актуальные данные пользователя с сервера
         console.log(`📡 Fetching user stats for ${currentUser.telegramId}...`)
         const response = await fetch(
-          `/api/user/stats?telegramId=${currentUser.telegramId}`
+          `/api/user?action=stats&telegramId=${currentUser.telegramId}`
         )
 
         console.log(`📡 User stats response:`, {
@@ -153,7 +153,7 @@ export const useMoodStore = create<MoodStore>()(
             `📖 Fetching mood history for ${currentUser.telegramId}...`
           )
           const historyResponse = await fetch(
-            `/api/mood/history?telegramId=${currentUser.telegramId}`
+            `/api/mood?action=history&telegramId=${currentUser.telegramId}`
           )
 
           console.log(`📖 Mood history response:`, {
@@ -262,7 +262,7 @@ export const useMoodStore = create<MoodStore>()(
         if (localSuccess) {
           // 📡 ОТПРАВЛЯЕМ НА СЕРВЕР для синхронизации между устройствами
           try {
-            const response = await fetch('/api/mood/record', {
+            const response = await fetch('/api/mood?action=record', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
