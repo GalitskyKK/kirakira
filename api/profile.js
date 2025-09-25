@@ -296,7 +296,7 @@ export default async function handler(req, res) {
             )
           `
             )
-            .eq('user_id', user.id)
+            .eq('telegram_id', user.telegram_id)
 
         if (achievementsError) {
           console.error('Error fetching achievements:', achievementsError)
@@ -453,7 +453,7 @@ export default async function handler(req, res) {
               )
             `
             )
-            .eq('user_id', friend.id)
+            .eq('telegram_id', friend.telegram_id)
             .eq('is_unlocked', true)
 
           achievements = userAchievements || []
