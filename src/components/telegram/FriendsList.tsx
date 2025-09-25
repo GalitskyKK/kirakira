@@ -122,21 +122,15 @@ export function FriendsList({ currentUser }: FriendsListProps) {
 
       try {
         setIsSearching(true)
-        console.log('🔍 FRONTEND: Searching for code:', searchQuery)
-
         const response = await fetch(
           `/api/friends/search?referralCode=${searchQuery}&searcherTelegramId=${currentUser.telegramId}`
         )
         const result = await response.json()
 
-        console.log('🔍 FRONTEND: Search result:', result)
-
         if (result.success) {
-          console.log('🔍 FRONTEND: Setting search result:', result.data)
           setSearchResult(result.data)
           hapticFeedback('success')
         } else {
-          console.log('🔍 FRONTEND: Search failed:', result.error)
           showAlert(result.error || 'Пользователь не найден')
           setSearchResult(null)
         }
@@ -427,7 +421,9 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                         {/* Аватар */}
                         <div className="relative">
                           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-purple-500 font-semibold text-white">
-                            {friend.firstName.charAt(0)}
+                            {(friend.username || friend.firstName || 'U')
+                              .charAt(0)
+                              .toUpperCase()}
                           </div>
                           {friend.isOnline && (
                             <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-green-500"></div>
@@ -438,11 +434,13 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center space-x-2">
                             <h4 className="truncate font-semibold">
-                              {friend.firstName} {friend.lastName}
+                              {friend.username
+                                ? `@${friend.username}`
+                                : `${friend.firstName} ${friend.lastName || ''}`}
                             </h4>
-                            {friend.username && (
+                            {!friend.username && friend.firstName && (
                               <span className="text-xs text-gray-500">
-                                @{friend.username}
+                                {friend.firstName} {friend.lastName || ''}
                               </span>
                             )}
                           </div>
@@ -540,18 +538,22 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                         <div className="flex items-center space-x-4">
                           {/* Аватар */}
                           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-blue-500 font-semibold text-white">
-                            {request.firstName.charAt(0)}
+                            {(request.username || request.firstName || 'U')
+                              .charAt(0)
+                              .toUpperCase()}
                           </div>
 
                           {/* Информация */}
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center space-x-2">
                               <h4 className="truncate font-semibold">
-                                {request.firstName} {request.lastName}
+                                {request.username
+                                  ? `@${request.username}`
+                                  : `${request.firstName} ${request.lastName || ''}`}
                               </h4>
-                              {request.username && (
+                              {!request.username && request.firstName && (
                                 <span className="text-xs text-gray-500">
-                                  @{request.username}
+                                  {request.firstName} {request.lastName || ''}
                                 </span>
                               )}
                             </div>
@@ -625,16 +627,20 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                       <Card className="bg-gray-50 p-4">
                         <div className="flex items-center space-x-4">
                           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-yellow-500 font-semibold text-white">
-                            {request.firstName.charAt(0)}
+                            {(request.username || request.firstName || 'U')
+                              .charAt(0)
+                              .toUpperCase()}
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center space-x-2">
                               <h4 className="truncate font-semibold">
-                                {request.firstName} {request.lastName}
+                                {request.username
+                                  ? `@${request.username}`
+                                  : `${request.firstName} ${request.lastName || ''}`}
                               </h4>
-                              {request.username && (
+                              {!request.username && request.firstName && (
                                 <span className="text-xs text-gray-500">
-                                  @{request.username}
+                                  {request.firstName} {request.lastName || ''}
                                 </span>
                               )}
                             </div>
@@ -729,19 +735,28 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                   >
                     <div className="flex items-center space-x-4">
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-purple-400 to-pink-500 font-semibold text-white">
-                        {searchResult.user.firstName.charAt(0)}
+                        {(
+                          searchResult.user.username ||
+                          searchResult.user.firstName ||
+                          'U'
+                        )
+                          .charAt(0)
+                          .toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center space-x-2">
                           <h4 className="font-semibold">
-                            {searchResult.user.firstName}{' '}
-                            {searchResult.user.lastName}
+                            {searchResult.user.username
+                              ? `@${searchResult.user.username}`
+                              : searchResult.user.firstName || 'Пользователь'}
                           </h4>
-                          {searchResult.user.username && (
-                            <span className="text-xs text-gray-500">
-                              @{searchResult.user.username}
-                            </span>
-                          )}
+                          {!searchResult.user.username &&
+                            searchResult.user.firstName && (
+                              <span className="text-xs text-gray-500">
+                                {searchResult.user.firstName}{' '}
+                                {searchResult.user.lastName || ''}
+                              </span>
+                            )}
                         </div>
                         <div className="mt-1 flex items-center space-x-4 text-xs text-gray-500">
                           <span className="flex items-center space-x-1">

@@ -62,17 +62,10 @@ export default async function handler(req, res) {
     }
 
     // Ищем пользователя по реферальному коду
-    console.log(
-      '🔍 SEARCH DEBUG: Looking for code:',
-      referralCode.toUpperCase()
-    )
-
     const { data: foundUsers, error: searchError } = await supabase.rpc(
       'find_user_by_referral_code',
       { code: referralCode.toUpperCase() }
     )
-
-    console.log('🔍 SEARCH DEBUG: Raw result:', { foundUsers, searchError })
 
     if (searchError) {
       console.error('Supabase search error:', searchError)
@@ -83,10 +76,6 @@ export default async function handler(req, res) {
     }
 
     if (!foundUsers || foundUsers.length === 0) {
-      console.log(
-        '🔍 SEARCH DEBUG: No users found for code:',
-        referralCode.toUpperCase()
-      )
       return res.status(404).json({
         success: false,
         error: 'Пользователь с таким реферальным кодом не найден',
@@ -94,7 +83,6 @@ export default async function handler(req, res) {
     }
 
     const foundUser = foundUsers[0]
-    console.log('🔍 SEARCH DEBUG: Found user:', foundUser)
 
     // Проверяем существующие отношения дружбы
     const { data: existingFriendship } = await supabase
@@ -111,23 +99,22 @@ export default async function handler(req, res) {
       relationshipStatus = existingFriendship.status
     }
 
-    console.log('🔍 SEARCH DEBUG: Relationship status:', relationshipStatus)
-
     // Формируем ответ
     const result = {
       user: {
         telegramId: foundUser.telegram_id,
-        firstName: foundUser.first_name,
-        lastName: foundUser.last_name,
-        username: foundUser.username,
+        firstName: foundUser.first_name || 'Пользователь',
+        lastName: foundUser.last_name || '',
+        username: foundUser.username || '',
         gardenElements: foundUser.garden_elements,
         currentStreak: foundUser.current_streak,
+        displayName: foundUser.username
+          ? `@${foundUser.username}`
+          : foundUser.first_name || 'Пользователь',
       },
       relationshipStatus,
       canSendRequest: relationshipStatus === 'none',
     }
-
-    console.log('🔍 SEARCH DEBUG: Final result:', result)
 
     res.status(200).json({
       success: true,

@@ -10,7 +10,11 @@
  * @param {Object} element - Элемент сада
  * @returns {Promise<boolean>} Успешность сохранения
  */
-async function saveGardenElement(telegramUserId, element) {
+async function saveGardenElement(
+  telegramUserId,
+  element,
+  telegramUserData = null
+) {
   try {
     console.log(
       `🌱 Saving garden element to Supabase for user ${telegramUserId}:`,
@@ -27,6 +31,27 @@ async function saveGardenElement(telegramUserId, element) {
           process.env.SUPABASE_URL,
           process.env.SUPABASE_SERVICE_ROLE_KEY
         )
+
+        // 🔥 АВТОМАТИЧЕСКИ СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ ЕСЛИ ЕГО НЕТ
+        if (telegramUserData) {
+          console.log(`👤 Ensuring user exists with data:`, telegramUserData)
+
+          const { error: userError } = await supabase.rpc(
+            'ensure_user_exists',
+            {
+              user_telegram_id: telegramUserId,
+              user_first_name: telegramUserData.firstName || null,
+              user_last_name: telegramUserData.lastName || null,
+              user_username: telegramUserData.username || null,
+            }
+          )
+
+          if (userError) {
+            console.warn(`⚠️ User creation warning:`, userError.message)
+          } else {
+            console.log(`✅ User ensured for ${telegramUserId}`)
+          }
+        }
 
         // Подготавливаем запись элемента сада
         const gardenEntry = {
@@ -140,7 +165,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { telegramId, element } = req.body
+    const { telegramId, element, telegramUserData } = req.body
 
     // Валидация входных данных
     if (!telegramId || typeof telegramId !== 'number') {
@@ -169,7 +194,7 @@ export default async function handler(req, res) {
     )
 
     // Сохраняем элемент сада
-    const saved = await saveGardenElement(telegramId, element)
+    const saved = await saveGardenElement(telegramId, element, telegramUserData)
 
     if (!saved) {
       return res.status(500).json({

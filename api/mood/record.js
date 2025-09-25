@@ -18,7 +18,8 @@ async function saveMoodRecord(
   mood,
   date,
   note = null,
-  intensity = 2
+  intensity = 2,
+  telegramUserData = null
 ) {
   try {
     console.log(`🗄️ Recording mood to Supabase for user ${telegramUserId}:`, {
@@ -38,6 +39,27 @@ async function saveMoodRecord(
           process.env.SUPABASE_URL,
           process.env.SUPABASE_SERVICE_ROLE_KEY
         )
+
+        // 🔥 АВТОМАТИЧЕСКИ СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ ЕСЛИ ЕГО НЕТ
+        if (telegramUserData) {
+          console.log(`👤 Ensuring user exists with data:`, telegramUserData)
+
+          const { error: userError } = await supabase.rpc(
+            'ensure_user_exists',
+            {
+              user_telegram_id: telegramUserId,
+              user_first_name: telegramUserData.firstName || null,
+              user_last_name: telegramUserData.lastName || null,
+              user_username: telegramUserData.username || null,
+            }
+          )
+
+          if (userError) {
+            console.warn(`⚠️ User creation warning:`, userError.message)
+          } else {
+            console.log(`✅ User ensured for ${telegramUserId}`)
+          }
+        }
 
         // Подготавливаем запись настроения
         const moodEntry = {
@@ -153,7 +175,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { telegramUserId, mood, date, note, intensity } = req.body
+    const { telegramUserId, mood, date, note, intensity, telegramUserData } =
+      req.body
 
     // Валидация входных данных
     if (!telegramUserId || typeof telegramUserId !== 'number') {
@@ -194,7 +217,8 @@ export default async function handler(req, res) {
       mood,
       recordDate,
       note,
-      intensity
+      intensity,
+      telegramUserData
     )
 
     if (!saved) {
