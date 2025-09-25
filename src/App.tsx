@@ -22,6 +22,10 @@ const ShowcasePage = import.meta.env.DEV
 const TelegramTestPage = import.meta.env.DEV
   ? lazy(() => import('@/pages/TelegramTestPage'))
   : null
+
+const StreakDebugPage = import.meta.env.DEV
+  ? lazy(() => import('@/pages/StreakDebugPage'))
+  : null
 import { TelegramDiagnostic } from '@/components/TelegramDiagnostic'
 import { useTelegram, useTelegramTheme, useAppInitialization } from '@/hooks'
 import { InitializationStage } from '@/types/initialization'
@@ -71,7 +75,7 @@ function App() {
   const { colorScheme } = useTelegramTheme()
 
   // ✨ ПРОФЕССИОНАЛЬНАЯ ИНИЦИАЛИЗАЦИЯ
-  const initState = (useAppInitialization as any)({
+  const initState = useAppInitialization({
     enableTelegram: isTelegramEnv,
     isDevelopment,
   }) as AppInitState
@@ -404,6 +408,25 @@ function App() {
                   >
                     <Suspense fallback={<LoadingSpinner />}>
                       <TelegramTestPage />
+                    </Suspense>
+                  </motion.div>
+                }
+              />
+            )}
+
+            {import.meta.env.DEV && StreakDebugPage && (
+              <Route
+                path="/streak-debug"
+                element={
+                  <motion.div
+                    key="streak-debug"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <StreakDebugPage />
                     </Suspense>
                   </motion.div>
                 }

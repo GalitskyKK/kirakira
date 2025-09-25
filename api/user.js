@@ -127,7 +127,7 @@ function computeStatsFromUserData(userData) {
     const { user, moods = [], garden = {} } = userData
     const gardenElements = garden.elements || []
 
-    // Вычисляем streak настроений
+    // Вычисляем streak настроений - ИСПРАВЛЕННАЯ ЛОГИКА
     let currentStreak = 0
     let longestStreak = 0
     let tempStreak = 0
@@ -137,17 +137,60 @@ function computeStatsFromUserData(userData) {
         (a, b) => new Date(b.mood_date) - new Date(a.mood_date)
       )
 
-      // Проверяем текущий streak
-      const today = new Date()
-      for (let i = 0; i < sortedMoods.length; i++) {
-        const moodDate = new Date(sortedMoods[i].mood_date)
-        const daysDiff = Math.floor((today - moodDate) / (1000 * 60 * 60 * 24))
+      console.log(
+        `🔍 STREAK DEBUG: Анализ ${sortedMoods.length} записей настроений`
+      )
 
-        if (daysDiff === i) {
-          currentStreak++
-        } else {
-          break
+      // Проверяем текущий streak - ИСПРАВЛЕННАЯ ЛОГИКА
+      const today = new Date()
+      today.setUTCHours(0, 0, 0, 0) // Используем UTC для корректного сравнения дат
+
+      // Проверяем есть ли запись за сегодня или вчера для активного стрика
+      const lastMoodDate = new Date(sortedMoods[0].mood_date)
+      lastMoodDate.setUTCHours(0, 0, 0, 0)
+
+      const daysSinceLastMood = Math.floor(
+        (today - lastMoodDate) / (1000 * 60 * 60 * 24)
+      )
+      console.log(
+        `🔍 STREAK DEBUG: Последняя запись ${lastMoodDate.toISOString().split('T')[0]}, дней назад: ${daysSinceLastMood}`
+      )
+
+      // Стрик активен если последняя запись была сегодня или вчера
+      if (daysSinceLastMood <= 1) {
+        currentStreak = 1
+        console.log(`🔍 STREAK DEBUG: Стрик активен, начинаем с 1`)
+
+        // Считаем последовательные дни назад
+        for (let i = 1; i < sortedMoods.length; i++) {
+          const currentMoodDate = new Date(sortedMoods[i - 1].mood_date)
+          const prevMoodDate = new Date(sortedMoods[i].mood_date)
+
+          currentMoodDate.setUTCHours(0, 0, 0, 0)
+          prevMoodDate.setUTCHours(0, 0, 0, 0)
+
+          const daysDiff = Math.floor(
+            (currentMoodDate - prevMoodDate) / (1000 * 60 * 60 * 24)
+          )
+          console.log(
+            `🔍 STREAK DEBUG: Сравниваем ${currentMoodDate.toISOString().split('T')[0]} и ${prevMoodDate.toISOString().split('T')[0]}, разница: ${daysDiff} дней`
+          )
+
+          if (daysDiff === 1) {
+            currentStreak++
+            console.log(`🔍 STREAK DEBUG: Стрик увеличен до ${currentStreak}`)
+          } else {
+            console.log(
+              `🔍 STREAK DEBUG: Стрик прерван, разница ${daysDiff} дней`
+            )
+            break
+          }
         }
+      } else {
+        console.log(
+          `🔍 STREAK DEBUG: Стрик неактивен, последняя запись ${daysSinceLastMood} дней назад`
+        )
+        currentStreak = 0
       }
 
       // Вычисляем самый длинный streak
@@ -155,6 +198,10 @@ function computeStatsFromUserData(userData) {
       for (let i = 1; i < sortedMoods.length; i++) {
         const prevDate = new Date(sortedMoods[i - 1].mood_date)
         const currentDate = new Date(sortedMoods[i].mood_date)
+
+        prevDate.setUTCHours(0, 0, 0, 0)
+        currentDate.setUTCHours(0, 0, 0, 0)
+
         const daysDiff = Math.floor(
           (prevDate - currentDate) / (1000 * 60 * 60 * 24)
         )
@@ -167,6 +214,12 @@ function computeStatsFromUserData(userData) {
         }
       }
       longestStreak = Math.max(longestStreak, tempStreak)
+
+      console.log(
+        `🔍 STREAK DEBUG: Итоговые стрики - текущий: ${currentStreak}, лучший: ${longestStreak}`
+      )
+    } else {
+      console.log(`🔍 STREAK DEBUG: Нет записей настроений`)
     }
 
     // Подсчитываем элементы по редкости
@@ -175,16 +228,25 @@ function computeStatsFromUserData(userData) {
       rarityCount[element.rarity] = (rarityCount[element.rarity] || 0) + 1
     })
 
+    // Исправляем подсчет дней с регистрации - используем UTC
     const registrationDate = user.registration_date
       ? new Date(user.registration_date)
       : new Date()
-    const daysSinceRegistration = Math.floor(
-      (new Date() - registrationDate) / (1000 * 60 * 60 * 24)
+
+    registrationDate.setUTCHours(0, 0, 0, 0)
+    const today = new Date()
+    today.setUTCHours(0, 0, 0, 0)
+
+    const daysSinceRegistration =
+      Math.floor((today - registrationDate) / (1000 * 60 * 60 * 24)) + 1 // +1 потому что день регистрации тоже считается
+
+    console.log(
+      `🔍 DAYS DEBUG: Регистрация ${registrationDate.toISOString().split('T')[0]}, сегодня ${today.toISOString().split('T')[0]}, дней: ${daysSinceRegistration}`
     )
 
     return {
       hasData: true,
-      totalDays: Math.max(daysSinceRegistration, moods.length),
+      totalDays: daysSinceRegistration, // Используем корректный подсчет дней с регистрации
       currentStreak,
       longestStreak,
       totalElements: gardenElements.length,
