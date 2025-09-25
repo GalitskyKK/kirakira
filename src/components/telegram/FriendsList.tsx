@@ -320,9 +320,9 @@ export function FriendsList({ currentUser }: FriendsListProps) {
           transition={{ type: 'spring', stiffness: 200 }}
           className="mb-4"
         >
-          <Users className="mx-auto h-16 w-16 text-blue-500" />
+          {/* <Users className="mx-auto h-16 w-16 text-blue-500" /> */}
         </motion.div>
-        <h2 className="mb-2 text-2xl font-bold">Друзья</h2>
+        <h2 className="text-lg font-semibold">Друзья</h2>
         <p className="text-gray-600">
           Добавляйте друзей и поддерживайте друг друга
         </p>
