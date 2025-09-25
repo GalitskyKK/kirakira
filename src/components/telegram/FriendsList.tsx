@@ -12,15 +12,42 @@ import {
   Clock,
   Plus,
 } from 'lucide-react'
-import { useTelegram, useDeepLink } from '@/hooks'
-import { Button, Card } from '@/components/ui'
+import { useTelegram, useDeepLink, useUserPhotos } from '@/hooks'
+import { Button, Card, UserAvatar } from '@/components/ui'
 import type { User } from '@/types'
+
+// API response types
+interface FriendsListResponse {
+  success: boolean
+  data?: {
+    friends?: Friend[]
+    incomingRequests?: FriendRequest[]
+    outgoingRequests?: FriendRequest[]
+    referralCode?: string
+  }
+  error?: string
+}
+
+interface SearchResponse {
+  success: boolean
+  data?: SearchResult
+  error?: string
+}
+
+interface FriendActionResponse {
+  success: boolean
+  data?: {
+    message: string
+  }
+  error?: string
+}
 
 interface Friend {
   telegramId: number
   firstName: string
   lastName?: string
   username?: string
+  photoUrl?: string
   gardenElements: number
   currentStreak: number
   friendshipDate?: Date
@@ -37,6 +64,7 @@ interface FriendRequest {
   firstName: string
   lastName?: string
   username?: string
+  photoUrl?: string
   gardenElements: number
   currentStreak: number
   requestDate: Date
@@ -48,6 +76,7 @@ interface SearchResult {
     firstName: string
     lastName?: string
     username?: string
+    photoUrl?: string
     gardenElements: number
     currentStreak: number
   }
@@ -62,6 +91,8 @@ interface FriendsListProps {
 export function FriendsList({ currentUser }: FriendsListProps) {
   const { webApp, hapticFeedback, showAlert, isTelegramEnv } = useTelegram()
   const { checkPendingInvite, clearPendingInvite } = useDeepLink()
+  const { updateFriendsPhotosWithAlert, isUpdatingFriendsPhotos } =
+    useUserPhotos()
   const [friends, setFriends] = useState<Friend[]>([])
   const [incomingRequests, setIncomingRequests] = useState<FriendRequest[]>([])
   const [outgoingRequests, setOutgoingRequests] = useState<FriendRequest[]>([])
@@ -76,21 +107,21 @@ export function FriendsList({ currentUser }: FriendsListProps) {
 
   // Загружаем данные о друзьях
   const loadFriendsData = useCallback(async () => {
-    if (!currentUser?.telegramId) return
+    if (!currentUser?.telegramId || currentUser.telegramId === 0) return
 
     try {
       const response = await fetch(
         `/api/friends/list?telegramId=${currentUser.telegramId}&type=all`
       )
-      const result = await response.json()
+      const result = (await response.json()) as FriendsListResponse
 
-      if (result.success) {
-        setFriends(result.data.friends || [])
-        setIncomingRequests(result.data.incomingRequests || [])
-        setOutgoingRequests(result.data.outgoingRequests || [])
-        setReferralCode(result.data.referralCode || '')
+      if (result.success && result.data) {
+        setFriends(result.data.friends ?? [])
+        setIncomingRequests(result.data.incomingRequests ?? [])
+        setOutgoingRequests(result.data.outgoingRequests ?? [])
+        setReferralCode(result.data.referralCode ?? '')
       } else {
-        showAlert('Ошибка загрузки данных о друзьях')
+        showAlert(result.error ?? 'Ошибка загрузки данных о друзьях')
       }
     } catch (error) {
       console.error('Failed to load friends data:', error)
@@ -100,21 +131,23 @@ export function FriendsList({ currentUser }: FriendsListProps) {
 
   // Загружаем данные при монтировании
   useEffect(() => {
-    loadFriendsData()
+    void loadFriendsData()
   }, [loadFriendsData])
 
   // Фильтруем друзей по поиску
   const filteredFriends = friends.filter(
     friend =>
       friend.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      friend.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      friend.username?.toLowerCase().includes(searchQuery.toLowerCase())
+      (friend.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ??
+        false) ||
+      (friend.username?.toLowerCase().includes(searchQuery.toLowerCase()) ??
+        false)
   )
 
   // Поиск пользователя по реферальному коду
   const handleSearchByReferralCode = useCallback(
     async (customQuery?: string) => {
-      const searchQuery = customQuery || referralSearchQuery.trim()
+      const searchQuery = customQuery ?? referralSearchQuery.trim()
       if (!searchQuery || !currentUser?.telegramId) {
         showAlert('Введите реферальный код!')
         return
@@ -125,13 +158,13 @@ export function FriendsList({ currentUser }: FriendsListProps) {
         const response = await fetch(
           `/api/friends/search?referralCode=${searchQuery}&searcherTelegramId=${currentUser.telegramId}`
         )
-        const result = await response.json()
+        const result = (await response.json()) as SearchResponse
 
-        if (result.success) {
+        if (result.success && result.data) {
           setSearchResult(result.data)
           hapticFeedback('success')
         } else {
-          showAlert(result.error || 'Пользователь не найден')
+          showAlert(result.error ?? 'Пользователь не найден')
           setSearchResult(null)
         }
       } catch (error) {
@@ -148,7 +181,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
   // Отправить запрос дружбы
   const handleSendFriendRequest = useCallback(
     async (targetTelegramId: number) => {
-      if (!currentUser?.telegramId) return
+      if (!currentUser?.telegramId || currentUser.telegramId === 0) return
 
       try {
         hapticFeedback('medium')
@@ -161,16 +194,16 @@ export function FriendsList({ currentUser }: FriendsListProps) {
           }),
         })
 
-        const result = await response.json()
+        const result = (await response.json()) as FriendActionResponse
 
-        if (result.success) {
+        if (result.success && result.data) {
           showAlert(result.data.message)
           setSearchResult(null)
           setReferralSearchQuery('')
           // Обновляем данные
           await loadFriendsData()
         } else {
-          showAlert(result.error || 'Ошибка отправки запроса')
+          showAlert(result.error ?? 'Ошибка отправки запроса')
         }
       } catch (error) {
         console.error('Send request error:', error)
@@ -183,7 +216,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
   // Ответить на запрос дружбы
   const handleRespondToRequest = useCallback(
     async (requesterTelegramId: number, action: 'accept' | 'decline') => {
-      if (!currentUser?.telegramId) return
+      if (!currentUser?.telegramId || currentUser.telegramId === 0) return
 
       try {
         hapticFeedback('medium')
@@ -197,14 +230,14 @@ export function FriendsList({ currentUser }: FriendsListProps) {
           }),
         })
 
-        const result = await response.json()
+        const result = (await response.json()) as FriendActionResponse
 
-        if (result.success) {
+        if (result.success && result.data) {
           showAlert(result.data.message)
           // Обновляем данные
           await loadFriendsData()
         } else {
-          showAlert(result.error || 'Ошибка обработки запроса')
+          showAlert(result.error ?? 'Ошибка обработки запроса')
         }
       } catch (error) {
         console.error('Respond to request error:', error)
@@ -220,7 +253,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
 
     hapticFeedback('light')
 
-    const inviteText = `🌸 Попробуй KiraKira!\n\nЯ уже ${currentUser?.stats?.totalDays || 0} дней отслеживаю свое настроение и это помогает! 💚\n\n✨ Создай свой эмоциональный сад\n🤝 Участвуй в челленджах со мной\n📊 Анализируй свои эмоции`
+    const inviteText = `🌸 Попробуй KiraKira!\n\nЯ уже ${currentUser?.stats?.totalDays ?? 0} дней отслеживаю свое настроение и это помогает! 💚\n\n✨ Создай свой эмоциональный сад\n🤝 Участвуй в челленджах со мной\n📊 Анализируй свои эмоции`
 
     webApp.switchInlineQuery(inviteText, ['users'])
   }, [webApp, hapticFeedback, currentUser])
@@ -280,16 +313,14 @@ export function FriendsList({ currentUser }: FriendsListProps) {
 
       // Выполняем поиск
       setTimeout(() => {
-        handleSearchByReferralCode(pendingInvite)
+        void handleSearchByReferralCode(pendingInvite)
       }, 500)
 
       // Очищаем pending invite после обработки
       clearPendingInvite()
 
       // Показываем уведомление пользователю
-      if (showAlert) {
-        showAlert(`🔍 Поиск друга по коду: ${pendingInvite}`)
-      }
+      showAlert?.(`🔍 Поиск друга по коду: ${pendingInvite}`)
     }
   }, [
     checkPendingInvite,
@@ -350,7 +381,11 @@ export function FriendsList({ currentUser }: FriendsListProps) {
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveView(tab.id as any)}
+              onClick={() =>
+                setActiveView(
+                  tab.id as 'friends' | 'find' | 'invites' | 'requests'
+                )
+              }
               className={`relative flex flex-1 items-center justify-center space-x-1 rounded-md px-2 py-2 text-sm font-medium transition-colors ${
                 activeView === tab.id
                   ? 'bg-white text-blue-600 shadow-sm dark:bg-gray-700 dark:text-blue-400'
@@ -419,30 +454,28 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                     <Card className="p-4">
                       <div className="flex items-center space-x-4">
                         {/* Аватар */}
-                        <div className="relative">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-purple-500 font-semibold text-white">
-                            {(friend.username || friend.firstName || 'U')
-                              .charAt(0)
-                              .toUpperCase()}
-                          </div>
-                          {friend.isOnline && (
-                            <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white bg-green-500"></div>
-                          )}
-                        </div>
+                        <UserAvatar
+                          photoUrl={friend.photoUrl}
+                          name={`${friend.firstName} ${friend.lastName ?? ''}`.trim()}
+                          username={friend.username}
+                          size="md"
+                          isOnline={friend.isOnline}
+                        />
 
                         {/* Информация о друге */}
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center space-x-2">
                             <h4 className="truncate font-semibold">
-                              {friend.username
+                              {(friend.username ?? '').length > 0
                                 ? `@${friend.username}`
-                                : `${friend.firstName} ${friend.lastName || ''}`}
+                                : `${friend.firstName} ${friend.lastName ?? ''}`}
                             </h4>
-                            {!friend.username && friend.firstName && (
-                              <span className="text-xs text-gray-500">
-                                {friend.firstName} {friend.lastName || ''}
-                              </span>
-                            )}
+                            {!(friend.username ?? '').length &&
+                              (friend.firstName ?? '').length > 0 && (
+                                <span className="text-xs text-gray-500">
+                                  {friend.firstName} {friend.lastName ?? ''}
+                                </span>
+                              )}
                           </div>
 
                           <div className="mt-1 flex items-center space-x-4 text-xs text-gray-500">
@@ -537,25 +570,27 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                       <Card className="p-4">
                         <div className="flex items-center space-x-4">
                           {/* Аватар */}
-                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-blue-500 font-semibold text-white">
-                            {(request.username || request.firstName || 'U')
-                              .charAt(0)
-                              .toUpperCase()}
-                          </div>
+                          <UserAvatar
+                            photoUrl={request.photoUrl}
+                            name={`${request.firstName} ${request.lastName ?? ''}`.trim()}
+                            username={request.username}
+                            size="md"
+                          />
 
                           {/* Информация */}
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center space-x-2">
                               <h4 className="truncate font-semibold">
-                                {request.username
+                                {(request.username ?? '').length > 0
                                   ? `@${request.username}`
-                                  : `${request.firstName} ${request.lastName || ''}`}
+                                  : `${request.firstName} ${request.lastName ?? ''}`}
                               </h4>
-                              {!request.username && request.firstName && (
-                                <span className="text-xs text-gray-500">
-                                  {request.firstName} {request.lastName || ''}
-                                </span>
-                              )}
+                              {!(request.username ?? '').length &&
+                                (request.firstName ?? '').length > 0 && (
+                                  <span className="text-xs text-gray-500">
+                                    {request.firstName} {request.lastName ?? ''}
+                                  </span>
+                                )}
                             </div>
                             <div className="mt-1 flex items-center space-x-4 text-xs text-gray-500">
                               <span className="flex items-center space-x-1">
@@ -578,12 +613,12 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                           <div className="flex space-x-2">
                             <Button
                               size="sm"
-                              onClick={() =>
-                                handleRespondToRequest(
+                              onClick={() => {
+                                void handleRespondToRequest(
                                   request.telegramId,
                                   'accept'
                                 )
-                              }
+                              }}
                               className="bg-green-500 hover:bg-green-600"
                             >
                               <CheckCircle className="h-3 w-3" />
@@ -591,12 +626,12 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() =>
-                                handleRespondToRequest(
+                              onClick={() => {
+                                void handleRespondToRequest(
                                   request.telegramId,
                                   'decline'
                                 )
-                              }
+                              }}
                               className="border-red-200 text-red-600 hover:bg-red-50"
                             >
                               <XCircle className="h-3 w-3" />
@@ -626,23 +661,25 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                     >
                       <Card className="bg-gray-50 p-4">
                         <div className="flex items-center space-x-4">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-yellow-500 font-semibold text-white">
-                            {(request.username || request.firstName || 'U')
-                              .charAt(0)
-                              .toUpperCase()}
-                          </div>
+                          <UserAvatar
+                            photoUrl={request.photoUrl}
+                            name={`${request.firstName} ${request.lastName ?? ''}`.trim()}
+                            username={request.username}
+                            size="md"
+                          />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center space-x-2">
                               <h4 className="truncate font-semibold">
-                                {request.username
+                                {(request.username ?? '').length > 0
                                   ? `@${request.username}`
-                                  : `${request.firstName} ${request.lastName || ''}`}
+                                  : `${request.firstName} ${request.lastName ?? ''}`}
                               </h4>
-                              {!request.username && request.firstName && (
-                                <span className="text-xs text-gray-500">
-                                  {request.firstName} {request.lastName || ''}
-                                </span>
-                              )}
+                              {!(request.username ?? '').length &&
+                                (request.firstName ?? '').length > 0 && (
+                                  <span className="text-xs text-gray-500">
+                                    {request.firstName} {request.lastName ?? ''}
+                                  </span>
+                                )}
                             </div>
                             <div className="mt-1 text-xs text-gray-500">
                               Запрос отправлен{' '}
@@ -718,7 +755,9 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                     maxLength={8}
                   />
                   <Button
-                    onClick={() => handleSearchByReferralCode()}
+                    onClick={() => {
+                      void handleSearchByReferralCode()
+                    }}
                     disabled={isSearching || !referralSearchQuery.trim()}
                     className="bg-blue-500 hover:bg-blue-600"
                   >
@@ -734,27 +773,24 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                     className="border-t pt-4"
                   >
                     <div className="flex items-center space-x-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-purple-400 to-pink-500 font-semibold text-white">
-                        {(
-                          searchResult.user.username ||
-                          searchResult.user.firstName ||
-                          'U'
-                        )
-                          .charAt(0)
-                          .toUpperCase()}
-                      </div>
+                      <UserAvatar
+                        photoUrl={searchResult.user.photoUrl}
+                        name={`${searchResult.user.firstName} ${searchResult.user.lastName ?? ''}`.trim()}
+                        username={searchResult.user.username}
+                        size="md"
+                      />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center space-x-2">
                           <h4 className="font-semibold">
-                            {searchResult.user.username
+                            {(searchResult.user.username ?? '').length > 0
                               ? `@${searchResult.user.username}`
-                              : searchResult.user.firstName || 'Пользователь'}
+                              : (searchResult.user.firstName ?? 'Пользователь')}
                           </h4>
-                          {!searchResult.user.username &&
-                            searchResult.user.firstName && (
+                          {!(searchResult.user.username ?? '').length &&
+                            (searchResult.user.firstName ?? '').length > 0 && (
                               <span className="text-xs text-gray-500">
                                 {searchResult.user.firstName}{' '}
-                                {searchResult.user.lastName || ''}
+                                {searchResult.user.lastName ?? ''}
                               </span>
                             )}
                         </div>
@@ -773,11 +809,11 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                         {searchResult.canSendRequest ? (
                           <Button
                             size="sm"
-                            onClick={() =>
-                              handleSendFriendRequest(
+                            onClick={() => {
+                              void handleSendFriendRequest(
                                 searchResult.user.telegramId
                               )
-                            }
+                            }}
                             className="bg-green-500 hover:bg-green-600"
                           >
                             <Plus className="mr-1 h-3 w-3" />
@@ -817,7 +853,13 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                   </p>
                 </div>
                 <Button
-                  onClick={referralCode ? handleShareQR : loadFriendsData}
+                  onClick={
+                    referralCode
+                      ? handleShareQR
+                      : () => {
+                          void loadFriendsData()
+                        }
+                  }
                   variant="outline"
                   className="flex-shrink-0"
                   disabled={!referralCode}
@@ -904,7 +946,9 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                     </div>
                   </div>
                   <Button
-                    onClick={loadFriendsData}
+                    onClick={() => {
+                      void loadFriendsData()
+                    }}
                     size="sm"
                     variant="outline"
                     className="w-full"
@@ -921,7 +965,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
             {/* Статистика приглашений */}
             <Card className="p-4">
               <h4 className="mb-3 font-medium">Статистика приглашений</h4>
-              <div className="grid grid-cols-2 gap-4 text-center">
+              <div className="mb-4 grid grid-cols-2 gap-4 text-center">
                 <div>
                   <div className="text-2xl font-bold text-blue-600">
                     {friends.length}
@@ -933,6 +977,30 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                   <div className="text-xs text-gray-600">Приглашено</div>
                 </div>
               </div>
+
+              {/* Кнопка обновления аватарок */}
+              <Button
+                onClick={() => {
+                  void updateFriendsPhotosWithAlert()
+                }}
+                disabled={isUpdatingFriendsPhotos || friends.length === 0}
+                size="sm"
+                variant="outline"
+                className="w-full"
+              >
+                {isUpdatingFriendsPhotos ? (
+                  <>
+                    <div className="mr-2 h-3 w-3 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+                    Обновление аватарок...
+                  </>
+                ) : (
+                  <>📸 Обновить аватарки друзей</>
+                )}
+              </Button>
+
+              <p className="mt-2 text-center text-xs text-gray-500">
+                Загружает актуальные фото профилей из Telegram
+              </p>
             </Card>
           </motion.div>
         )}

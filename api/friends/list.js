@@ -64,6 +64,7 @@ export default async function handler(req, res) {
         firstName: friend.friend_first_name,
         lastName: friend.friend_last_name,
         username: friend.friend_username,
+        photoUrl: friend.friend_photo_url,
         gardenElements: friend.friend_garden_elements,
         currentStreak: friend.friend_current_streak,
         friendshipDate: friend.friendship_date,
@@ -84,7 +85,8 @@ export default async function handler(req, res) {
             telegram_id,
             first_name,
             last_name,
-            username
+            username,
+            photo_url
           )
         `
         )
@@ -127,6 +129,7 @@ export default async function handler(req, res) {
             firstName: request.users?.first_name || 'Неизвестный',
             lastName: request.users?.last_name || '',
             username: request.users?.username || '',
+            photoUrl: request.users?.photo_url || null,
             gardenElements: gardenStats?.length || 0,
             currentStreak: moodStats?.length || 0,
             requestDate: request.created_at,
@@ -151,7 +154,8 @@ export default async function handler(req, res) {
             telegram_id,
             first_name,
             last_name,
-            username
+            username,
+            photo_url
           )
         `
         )
@@ -173,6 +177,7 @@ export default async function handler(req, res) {
         firstName: request.users?.first_name || 'Неизвестный',
         lastName: request.users?.last_name || '',
         username: request.users?.username || '',
+        photoUrl: request.users?.photo_url || null,
         status: request.status,
         requestDate: request.created_at,
       }))

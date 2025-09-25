@@ -10,3 +10,4 @@ export {
   GardenSkeleton,
 } from './LoadingSpinner'
 export { TelegramStatus } from './TelegramStatus'
+export { UserAvatar, UserAvatarGroup } from './UserAvatar'
