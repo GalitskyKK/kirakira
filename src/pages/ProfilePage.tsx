@@ -1,8 +1,9 @@
-// import { useState } from 'react'
+import { useState } from 'react'
 // import { useUserStore } from '@/stores'
 // import { useProfile } from '@/hooks/useProfile'
 
-// ЭКСТРЕМАЛЬНО ПРОСТАЯ ВЕРСИЯ - без всех хуков!
+// ЭКСТРЕМАЛЬНО ПРОСТАЯ ВЕРСИЯ (ПРОЙДЕН ✅) - без всех хуков!
+/*
 function UltraSimpleProfilePage() {
   console.log('🔥 ULTRA SIMPLE ProfilePage START')
 
@@ -59,37 +60,51 @@ function UltraSimpleProfilePage() {
     </div>
   )
 }
+*/
 
-// ТЕСТ 2: Добавим хуки по одному (для следующего этапа)
-/*
-function TestHooksProfilePage() {
-  console.log('🔥 TESTING HOOKS ProfilePage START')
-  
+// ТЕСТ 2: Добавим хуки по одному - useState
+function TestUseStateProfilePage() {
+  console.log('🔥 TESTING useState ProfilePage START')
+
   try {
     // Тестируем useState
     const [renderTime] = useState(() => new Date().toLocaleTimeString())
     console.log('✅ useState works')
-    
+
     return (
       <div style={{ padding: '20px', background: '#ffaa00' }}>
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0,
-          background: '#ffaa00', color: '#000000', padding: '15px',
-          fontSize: '16px', zIndex: 9999, textAlign: 'center', fontWeight: 'bold'
-        }}>
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            background: '#ffaa00',
+            color: '#000000',
+            padding: '15px',
+            fontSize: '16px',
+            zIndex: 9999,
+            textAlign: 'center',
+            fontWeight: 'bold',
+          }}
+        >
           ✅ ProfilePage + useState РАБОТАЕТ!
         </div>
-        
+
         <div style={{ marginTop: '60px' }}>
           <h1>🎉 useState РАБОТАЕТ!</h1>
           <p>Время рендера: {renderTime}</p>
           <p>Проблема НЕ в useState</p>
-          
-          <div style={{
-            marginTop: '20px', padding: '15px', 
-            background: '#ffffff', border: '2px solid #00aa00'
-          }}>
-            <h3>🔍 РЕЗУЛЬТАТ ТЕСТА</h3>
+
+          <div
+            style={{
+              marginTop: '20px',
+              padding: '15px',
+              background: '#ffffff',
+              border: '2px solid #00aa00',
+            }}
+          >
+            <h3>🔍 РЕЗУЛЬТАТ ТЕСТА useState</h3>
             <p>✅ Компонент рендерится</p>
             <p>✅ useState работает</p>
             <p>❌ Проблема в useUserStore или useProfile</p>
@@ -106,11 +121,10 @@ function TestHooksProfilePage() {
     )
   }
 }
-*/
 
 export function ProfilePage() {
   console.log('🔥 ProfilePage ENTRY POINT')
 
-  // ТЕСТ 1: Вообще без хуков React
-  return <UltraSimpleProfilePage />
+  // ТЕСТ 2: Проверяем useState хук
+  return <TestUseStateProfilePage />
 }
