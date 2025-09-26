@@ -1,126 +1,116 @@
-import { useState } from 'react'
-import { useUserStore } from '@/stores'
-import { useProfile } from '@/hooks/useProfile'
+// import { useState } from 'react'
+// import { useUserStore } from '@/stores'
+// import { useProfile } from '@/hooks/useProfile'
 
-// МАКСИМАЛЬНО ПРОСТАЯ ВЕРСИЯ для диагностики
-function SimpleProfilePage() {
-  console.log('🔥 SIMPLE ProfilePage rendering started')
+// ЭКСТРЕМАЛЬНО ПРОСТАЯ ВЕРСИЯ - без всех хуков!
+function UltraSimpleProfilePage() {
+  console.log('🔥 ULTRA SIMPLE ProfilePage START')
 
-  try {
-    const [renderTime] = useState(() => new Date().toLocaleTimeString())
-    const [debugInfo, setDebugInfo] = useState('Starting...')
+  // ТЕСТ 1: Простейший рендер
+  return (
+    <div
+      style={{
+        padding: '20px',
+        background: '#00ff00',
+        color: '#000000',
+        fontSize: '18px',
+        fontWeight: 'bold',
+      }}
+    >
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          background: '#00ff00',
+          color: '#000000',
+          padding: '15px',
+          fontSize: '16px',
+          zIndex: 9999,
+          textAlign: 'center',
+          fontWeight: 'bold',
+        }}
+      >
+        ✅ ULTRA SIMPLE ProfilePage РЕНДЕРИТСЯ!
+      </div>
 
-    // ПРОСТЕЙШИЕ ХУКИ
-    let currentUser, userLoading, profileLoading, profileError
+      <div style={{ marginTop: '60px' }}>
+        <h1>🎉 КОМПОНЕНТ ЗАГРУЖАЕТСЯ!</h1>
+        <p>Время: {new Date().toLocaleTimeString()}</p>
+        <p>Если вы видите это - компонент работает!</p>
+        <p>Проблема была в хуках React.</p>
 
-    try {
-      const userStore = useUserStore()
-      currentUser = userStore.currentUser
-      userLoading = userStore.isLoading
-      setDebugInfo(prev => prev + ' | UserStore: OK')
-    } catch (error) {
-      setDebugInfo(prev => prev + ' | UserStore: ERROR - ' + String(error))
-      return (
-        <div style={{ padding: '20px', background: 'red', color: 'white' }}>
-          UserStore Error: {String(error)}
-        </div>
-      )
-    }
-
-    try {
-      const profileHook = useProfile()
-      profileLoading = profileHook.isLoading
-      profileError = profileHook.error
-      setDebugInfo(prev => prev + ' | useProfile: OK')
-    } catch (error) {
-      setDebugInfo(prev => prev + ' | useProfile: ERROR - ' + String(error))
-      return (
-        <div style={{ padding: '20px', background: 'red', color: 'white' }}>
-          useProfile Error: {String(error)}
-        </div>
-      )
-    }
-
-    console.log('🔥 All hooks loaded successfully')
-
-    return (
-      <div style={{ padding: '20px' }}>
-        {/* КРАСНЫЙ БАННЕР */}
         <div
           style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            background: '#ff0000',
-            color: 'white',
-            padding: '10px',
-            fontSize: '14px',
-            zIndex: 9999,
-            textAlign: 'center',
+            marginTop: '20px',
+            padding: '15px',
+            background: '#ffff00',
+            border: '2px solid #ff0000',
           }}
         >
-          🔥 SIMPLE ProfilePage LOADED at {renderTime}
+          <h3>🔍 ТЕСТ ДИАГНОСТИКА</h3>
+          <p>✅ ProfilePage компонент вызывается</p>
+          <p>✅ Роутинг работает</p>
+          <p>✅ Рендер функционирует</p>
+          <p>❌ Проблема в React хуках (useState, useUserStore, useProfile)</p>
         </div>
+      </div>
+    </div>
+  )
+}
 
+// ТЕСТ 2: Добавим хуки по одному (для следующего этапа)
+/*
+function TestHooksProfilePage() {
+  console.log('🔥 TESTING HOOKS ProfilePage START')
+  
+  try {
+    // Тестируем useState
+    const [renderTime] = useState(() => new Date().toLocaleTimeString())
+    console.log('✅ useState works')
+    
+    return (
+      <div style={{ padding: '20px', background: '#ffaa00' }}>
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0,
+          background: '#ffaa00', color: '#000000', padding: '15px',
+          fontSize: '16px', zIndex: 9999, textAlign: 'center', fontWeight: 'bold'
+        }}>
+          ✅ ProfilePage + useState РАБОТАЕТ!
+        </div>
+        
         <div style={{ marginTop: '60px' }}>
-          <div
-            style={{
-              background: '#ffffcc',
-              border: '2px solid #ffaa00',
-              padding: '15px',
-              borderRadius: '8px',
-              fontSize: '12px',
-            }}
-          >
-            <h3>🔍 SIMPLE Debug Info</h3>
-            <div>Render Time: {renderTime}</div>
-            <div>User Loading: {userLoading ? 'YES' : 'NO'}</div>
-            <div>Profile Loading: {profileLoading ? 'YES' : 'NO'}</div>
-            <div>Profile Error: {profileError || 'NONE'}</div>
-            <div>Current User: {currentUser ? 'EXISTS' : 'MISSING'}</div>
-            <div>User ID: {currentUser?.telegramId || 'N/A'}</div>
-            <div>Debug: {debugInfo}</div>
-          </div>
-
-          <div
-            style={{
-              marginTop: '20px',
-              padding: '20px',
-              background: '#eeeeff',
-              borderRadius: '8px',
-            }}
-          >
-            <h2>✅ ProfilePage компонент рендерится!</h2>
-            <p>Хуки загружены без ошибок.</p>
-            {currentUser && (
-              <div>
-                <p>👤 User: {currentUser.firstName || 'No name'}</p>
-                <p>🆔 ID: {currentUser.telegramId}</p>
-              </div>
-            )}
+          <h1>🎉 useState РАБОТАЕТ!</h1>
+          <p>Время рендера: {renderTime}</p>
+          <p>Проблема НЕ в useState</p>
+          
+          <div style={{
+            marginTop: '20px', padding: '15px', 
+            background: '#ffffff', border: '2px solid #00aa00'
+          }}>
+            <h3>🔍 РЕЗУЛЬТАТ ТЕСТА</h3>
+            <p>✅ Компонент рендерится</p>
+            <p>✅ useState работает</p>
+            <p>❌ Проблема в useUserStore или useProfile</p>
           </div>
         </div>
       </div>
     )
   } catch (error) {
-    console.error('💥 ProfilePage crashed completely:', error)
+    console.error('❌ useState crashed:', error)
     return (
-      <div
-        style={{
-          padding: '20px',
-          background: '#ff0000',
-          color: 'white',
-          fontSize: '16px',
-          fontWeight: 'bold',
-        }}
-      >
-        💥 CRITICAL ERROR: {String(error)}
+      <div style={{ padding: '20px', background: 'red', color: 'white' }}>
+        ❌ useState ERROR: {String(error)}
       </div>
     )
   }
 }
+*/
 
 export function ProfilePage() {
-  return <SimpleProfilePage />
+  console.log('🔥 ProfilePage ENTRY POINT')
+
+  // ТЕСТ 1: Вообще без хуков React
+  return <UltraSimpleProfilePage />
 }
