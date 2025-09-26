@@ -56,6 +56,7 @@ async function ensureUser(telegramId, userData = {}) {
       .from('users')
       .insert({
         telegram_id: telegramId,
+        user_id: `tg_${telegramId}`, // ИСПРАВЛЕНО: добавлено обязательное поле user_id
         first_name: userData.first_name || '',
         last_name: userData.last_name || '',
         username: userData.username || '',
@@ -258,19 +259,17 @@ export default async function handler(req, res) {
         const { data, error } = await supabase
           .from('users')
           .update({ privacy_settings: privacySettings })
-          .eq('id', user.id)
+          .eq('telegram_id', user.telegram_id)
           .select()
           .single()
 
         if (error) {
           console.error('❌ Privacy update error:', error)
-          return res
-            .status(500)
-            .json({
-              success: false,
-              error: 'Database error',
-              details: error.message,
-            })
+          return res.status(500).json({
+            success: false,
+            error: 'Database error',
+            details: error.message,
+          })
         }
 
         console.log('✅ Privacy updated successfully')
@@ -290,12 +289,10 @@ export default async function handler(req, res) {
 
         const { telegramId, friendTelegramId } = req.query
         if (!telegramId || !friendTelegramId) {
-          return res
-            .status(400)
-            .json({
-              success: false,
-              error: 'Missing telegramId or friendTelegramId',
-            })
+          return res.status(400).json({
+            success: false,
+            error: 'Missing telegramId or friendTelegramId',
+          })
         }
 
         console.log('👥 Getting friend profile:', {
@@ -321,12 +318,10 @@ export default async function handler(req, res) {
             '❌ Friendship check failed:',
             friendshipError?.message || 'No friendship found'
           )
-          return res
-            .status(403)
-            .json({
-              success: false,
-              error: 'Not friends or friendship not found',
-            })
+          return res.status(403).json({
+            success: false,
+            error: 'Not friends or friendship not found',
+          })
         }
 
         console.log('✅ Friendship confirmed:', friendship.id)

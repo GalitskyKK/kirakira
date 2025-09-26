@@ -61,6 +61,7 @@ async function ensureUser(telegramId, userData = {}) {
     .from('users')
     .insert({
       telegram_id: telegramId,
+      user_id: `tg_${telegramId}`, // ИСПРАВЛЕНО: добавлено обязательное поле user_id
       first_name: userData.first_name || '',
       last_name: userData.last_name || '',
       username: userData.username || '',
@@ -333,7 +334,7 @@ export default async function handler(req, res) {
         const { data, error } = await supabase
           .from('users')
           .update({ privacy_settings: privacySettings })
-          .eq('id', user.id)
+          .eq('telegram_id', user.telegram_id)
           .select()
           .single()
 
