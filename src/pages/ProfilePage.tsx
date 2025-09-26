@@ -7,7 +7,7 @@ import { ProfileStats } from '@/components/profile/ProfileStats'
 import { ProfileAchievements } from '@/components/profile/ProfileAchievements'
 import { ProfilePrivacySettings } from '@/components/profile/ProfilePrivacySettings'
 import { LoadingSpinner } from '@/components/ui'
-import type { ProfileData } from '@/types'
+import type { ProfileData, MoodType, MoodEntry } from '@/types'
 
 // Temporary components for server data
 function ProfileStatsServer({ stats }: any) {
@@ -186,7 +186,7 @@ function ProfileDebug({
   return (
     <div className="mb-4 rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-xs">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="font-bold text-yellow-900">🔍 Debug Info</h3>
+        <h3 className="font-bold text-yellow-900">🔍 Profile Debug Info</h3>
         <button
           onClick={onRetry}
           className="rounded bg-yellow-200 px-2 py-1 text-xs text-yellow-900 hover:bg-yellow-300"
@@ -195,6 +195,7 @@ function ProfileDebug({
         </button>
       </div>
       <div className="space-y-1 text-yellow-800">
+        <div>Component Rendered: ✅ (you can see this!)</div>
         <div>userLoading: {userLoading ? '✅' : '❌'}</div>
         <div>profileLoading: {profileLoading ? '✅' : '❌'}</div>
         <div>profileError: {profileError || '❌'}</div>
@@ -202,6 +203,14 @@ function ProfileDebug({
         <div>telegramId: {currentUser?.telegramId || 'missing'}</div>
         <div>profileData: {profileData ? '✅' : '❌'}</div>
         <div>apiResponse: {apiResponse ? '✅' : '❌'}</div>
+        {currentUser && (
+          <details className="mt-2">
+            <summary className="cursor-pointer">Current User Info</summary>
+            <pre className="mt-1 max-h-40 overflow-auto rounded bg-yellow-100 p-2 text-xs">
+              {JSON.stringify(currentUser, null, 2)}
+            </pre>
+          </details>
+        )}
         {apiResponse && (
           <details className="mt-2">
             <summary className="cursor-pointer">API Response</summary>
@@ -252,51 +261,22 @@ export function ProfilePage() {
     loadProfileData()
   }, [currentUser?.telegramId, loadProfileData])
 
-  // Calculate profile stats
-  const moodStats = getMoodStats()
-  const totalElements = getElementsCount()
+  // Calculate profile stats - with safe fallbacks
+  const moodStats = getMoodStats
+    ? getMoodStats()
+    : {
+        totalEntries: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        mostFrequentMood: null as MoodType | null,
+        averageIntensity: 0,
+        moodDistribution: {} as Record<MoodType, number>,
+        weeklyTrend: [] as readonly MoodEntry[],
+        monthlyTrend: [] as readonly MoodEntry[],
+      }
+  const totalElements = getElementsCount ? getElementsCount() : 0
 
-  if (userLoading || profileLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
-    )
-  }
-
-  if (profileError) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="text-center">
-          <div className="mb-4 text-6xl">🌸</div>
-          <h2 className="mb-2 text-xl font-bold text-gray-900">
-            Упс! Что-то пошло не так
-          </h2>
-          <p className="text-gray-600">
-            Не переживайте, мы быстро это исправим
-          </p>
-          <p className="mt-2 text-sm text-gray-500">{profileError}</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!currentUser) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="text-center">
-          <div className="mb-4 text-6xl">😔</div>
-          <h2 className="mb-2 text-xl font-bold text-gray-900">
-            Пользователь не найден
-          </h2>
-          <p className="text-gray-600">
-            Пожалуйста, авторизуйтесь для просмотра профиля
-          </p>
-        </div>
-      </div>
-    )
-  }
-
+  // ALWAYS render debug first - don't block it with conditions
   return (
     <motion.div
       className="space-y-6 p-4 pb-8"
@@ -305,7 +285,7 @@ export function ProfilePage() {
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Debug Info - only shows in development */}
+      {/* Debug Info - ALWAYS VISIBLE */}
       <ProfileDebug
         currentUser={currentUser}
         userLoading={userLoading}
@@ -316,88 +296,135 @@ export function ProfilePage() {
         onRetry={loadProfileData}
       />
 
-      {/* Profile Header */}
-      <ProfileHeader user={currentUser} />
-
-      {/* Profile Stats */}
-      {profileData?.stats ? (
-        <ProfileStatsServer stats={profileData.stats} />
-      ) : (
-        <ProfileStats
-          user={currentUser}
-          garden={currentGarden}
-          moodStats={moodStats}
-          totalElements={totalElements}
-        />
-      )}
-
-      {/* Achievements */}
-      {profileData?.achievements ? (
-        <ProfileAchievementsServer achievements={profileData.achievements} />
-      ) : (
-        <ProfileAchievements
-          user={currentUser}
-          moodStats={moodStats}
-          totalElements={totalElements}
-        />
-      )}
-
-      {/* Privacy Settings */}
-      <ProfilePrivacySettings user={currentUser} />
-
-      {/* Additional Info */}
-      <motion.div
-        className="rounded-2xl border border-gray-200 bg-white p-6"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-      >
-        <h3 className="mb-4 text-lg font-semibold text-gray-900">
-          📝 Дополнительная информация
-        </h3>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-600">Дата регистрации</span>
-            <span className="font-medium text-gray-900">
-              {currentUser.registrationDate.toLocaleDateString('ru-RU')}
-            </span>
-          </div>
-
-          {currentUser.lastVisitDate && (
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Последний визит</span>
-              <span className="font-medium text-gray-900">
-                {currentUser.lastVisitDate.toLocaleDateString('ru-RU')}
-              </span>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between">
-            <span className="text-gray-600">Тип аккаунта</span>
-            <span className="font-medium text-gray-900">
-              {currentUser.isAnonymous ? (
-                <span className="rounded-full bg-gray-100 px-3 py-1 text-sm">
-                  👤 Анонимный
-                </span>
-              ) : (
-                <span className="rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-600">
-                  🔗 Telegram
-                </span>
-              )}
-            </span>
-          </div>
-
-          {moodStats.totalEntries > 0 && (
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Всего записей настроения</span>
-              <span className="font-medium text-gray-900">
-                {moodStats.totalEntries}
-              </span>
-            </div>
-          )}
+      {/* Show loading if needed */}
+      {(userLoading || profileLoading) && (
+        <div className="flex min-h-[30vh] items-center justify-center">
+          <LoadingSpinner size="lg" />
         </div>
-      </motion.div>
+      )}
+
+      {/* Show profile error if exists */}
+      {profileError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+          <div className="text-center">
+            <div className="mb-4 text-6xl">🌸</div>
+            <h2 className="mb-2 text-xl font-bold text-red-900">
+              Упс! Что-то пошло не так
+            </h2>
+            <p className="text-red-700">
+              Не переживайте, мы быстро это исправим
+            </p>
+            <p className="mt-2 text-sm text-red-600">{profileError}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Show no user message if needed */}
+      {!currentUser && !userLoading && (
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
+          <div className="text-center">
+            <div className="mb-4 text-6xl">😔</div>
+            <h2 className="mb-2 text-xl font-bold text-gray-900">
+              Пользователь не найден
+            </h2>
+            <p className="text-gray-600">
+              Пожалуйста, авторизуйтесь для просмотра профиля
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Only show main content if we have a user and no errors */}
+      {currentUser && !profileError && !userLoading && !profileLoading && (
+        <>
+          {/* Profile Header */}
+          <ProfileHeader user={currentUser} />
+
+          {/* Profile Stats */}
+          {profileData?.stats ? (
+            <ProfileStatsServer stats={profileData.stats} />
+          ) : (
+            <ProfileStats
+              user={currentUser}
+              garden={currentGarden}
+              moodStats={moodStats}
+              totalElements={totalElements}
+            />
+          )}
+
+          {/* Achievements */}
+          {profileData?.achievements ? (
+            <ProfileAchievementsServer
+              achievements={profileData.achievements}
+            />
+          ) : (
+            <ProfileAchievements
+              user={currentUser}
+              moodStats={moodStats}
+              totalElements={totalElements}
+            />
+          )}
+
+          {/* Privacy Settings */}
+          <ProfilePrivacySettings user={currentUser} />
+
+          {/* Additional Info */}
+          <motion.div
+            className="rounded-2xl border border-gray-200 bg-white p-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <h3 className="mb-4 text-lg font-semibold text-gray-900">
+              📝 Дополнительная информация
+            </h3>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">Дата регистрации</span>
+                <span className="font-medium text-gray-900">
+                  {currentUser.registrationDate.toLocaleDateString('ru-RU')}
+                </span>
+              </div>
+
+              {currentUser.lastVisitDate && (
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Последний визит</span>
+                  <span className="font-medium text-gray-900">
+                    {currentUser.lastVisitDate.toLocaleDateString('ru-RU')}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">Тип аккаунта</span>
+                <span className="font-medium text-gray-900">
+                  {currentUser.isAnonymous ? (
+                    <span className="rounded-full bg-gray-100 px-3 py-1 text-sm">
+                      👤 Анонимный
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-600">
+                      🔗 Telegram
+                    </span>
+                  )}
+                </span>
+              </div>
+
+              {moodStats.totalEntries > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">
+                    Всего записей настроения
+                  </span>
+                  <span className="font-medium text-gray-900">
+                    {moodStats.totalEntries}
+                  </span>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </>
+      )}
     </motion.div>
   )
 }

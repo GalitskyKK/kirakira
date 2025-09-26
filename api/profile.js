@@ -430,6 +430,9 @@ export default async function handler(req, res) {
             .json({ success: false, error: 'Profile is private' })
         }
 
+        // Обновляем достижения друга (чтобы они были актуальными)
+        await checkAndUpdateAchievements(friend.telegram_id)
+
         // Получаем публичную статистику
         const stats = await calculateUserStats(friend)
 
