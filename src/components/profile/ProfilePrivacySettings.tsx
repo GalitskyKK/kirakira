@@ -23,12 +23,15 @@ function ToggleSwitch({
     <button
       onClick={() => !disabled && onChange(!enabled)}
       disabled={disabled}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-garden-500 focus:ring-offset-2 ${
         enabled ? 'bg-garden-500' : 'bg-gray-300'
       } ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+      type="button"
+      role="switch"
+      aria-checked={enabled}
     >
       <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-all duration-200 ease-in-out ${
           enabled ? 'translate-x-6' : 'translate-x-1'
         }`}
       />
@@ -57,27 +60,33 @@ function PrivacySetting({
 }: PrivacySettingProps) {
   return (
     <motion.div
-      className="flex items-center justify-between"
+      className="flex items-start justify-between gap-4 py-1"
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay, duration: 0.3 }}
     >
-      <div className="flex items-start space-x-3">
-        <div className="text-xl">{emoji}</div>
-        <div className="flex-1">
+      <div className="flex min-w-0 flex-1 items-start space-x-3">
+        <div className="mt-0.5 flex-shrink-0 text-xl">{emoji}</div>
+        <div className="min-w-0 flex-1">
           <div
-            className={`font-medium ${disabled ? 'text-gray-400' : 'text-gray-900'}`}
+            className={`font-medium leading-tight ${disabled ? 'text-gray-400' : 'text-gray-900'}`}
           >
             {title}
           </div>
           <div
-            className={`text-sm ${disabled ? 'text-gray-300' : 'text-gray-600'}`}
+            className={`mt-0.5 text-sm leading-tight ${disabled ? 'text-gray-300' : 'text-gray-600'}`}
           >
             {description}
           </div>
         </div>
       </div>
-      <ToggleSwitch enabled={enabled} onChange={onChange} disabled={disabled} />
+      <div className="mt-1 flex-shrink-0">
+        <ToggleSwitch
+          enabled={enabled}
+          onChange={onChange}
+          disabled={disabled}
+        />
+      </div>
     </motion.div>
   )
 }

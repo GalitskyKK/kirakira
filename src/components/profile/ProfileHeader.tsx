@@ -62,78 +62,93 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="flex items-start space-x-4">
-        {/* Avatar */}
-        <div className="flex-shrink-0">
-          <UserAvatar
-            photoUrl={user.photoUrl}
-            name={displayName}
-            username={user.username}
-            size="xl"
-            className="shadow-lg ring-4 ring-white"
-          />
-        </div>
+      {/* Mobile-first responsive layout */}
+      <div className="space-y-4">
+        {/* Top row: Avatar, Name/Username, Actions */}
+        <div className="flex items-start justify-between">
+          <div className="flex min-w-0 flex-1 items-start space-x-3">
+            {/* Avatar */}
+            <div className="flex-shrink-0">
+              <UserAvatar
+                photoUrl={user.photoUrl}
+                name={displayName}
+                username={user.username}
+                size="lg"
+                className="shadow-lg ring-4 ring-white"
+              />
+            </div>
 
-        {/* User Info */}
-        <div className="flex-1 space-y-2">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{displayName}</h1>
-            {username && <p className="text-lg text-garden-600">{username}</p>}
+            {/* Name & Username */}
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-xl font-bold text-gray-900 sm:text-2xl">
+                {displayName}
+              </h1>
+              {username && (
+                <p className="truncate text-base text-garden-600 sm:text-lg">
+                  {username}
+                </p>
+              )}
+            </div>
           </div>
 
-          {/* Level Badge with real data */}
-          <div className="space-y-2">
-            <div className="inline-flex items-center rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 px-4 py-2 text-sm font-medium text-white shadow-sm">
-              <span className="mr-2">{levelInfo.currentLevel.emoji}</span>
-              <span>{levelInfo.currentLevel.name}</span>
-              <span className="ml-2 rounded-full bg-white/20 px-2 py-0.5 text-xs">
+          {/* Actions - Desktop only, стекаются в колонку на мобилке */}
+          <div className="ml-2 flex flex-shrink-0 flex-col space-y-1">
+            <button className="whitespace-nowrap rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50">
+              ⚙️ Настройки
+            </button>
+            <button className="whitespace-nowrap rounded-lg bg-garden-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-garden-600">
+              📤 Поделиться
+            </button>
+          </div>
+        </div>
+
+        {/* Bottom row: Level, Progress, Stats */}
+        <div className="space-y-3">
+          {/* Level Badge */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 px-3 py-1.5 text-sm font-medium text-white shadow-sm">
+              <span className="mr-1.5">{levelInfo.currentLevel.emoji}</span>
+              <span className="hidden sm:inline">
+                {levelInfo.currentLevel.name}
+              </span>
+              <span className="sm:hidden">Садовник</span>
+              <span className="ml-1.5 rounded-full bg-white/20 px-2 py-0.5 text-xs">
                 Ур. {levelInfo.currentLevel.level}
               </span>
             </div>
 
-            {/* Level Progress Bar */}
-            {levelInfo.nextLevel && (
-              <div className="w-full">
-                <div className="mb-1 flex justify-between text-xs text-gray-600">
-                  <span>Опыт: {experience}</span>
-                  <span>
-                    До Ур.{levelInfo.nextLevel.level}:{' '}
-                    {levelInfo.experienceToNext}
-                  </span>
-                </div>
-                <div className="h-2 w-full rounded-full bg-gray-200">
-                  <div
-                    className="h-2 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 transition-all duration-500"
-                    style={{ width: `${levelInfo.progress}%` }}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Quick Stats */}
-          <div className="flex items-center space-x-4 text-sm text-gray-600">
-            <div className="flex items-center space-x-1">
+            {/* Quick Stats */}
+            <div className="flex items-center text-sm text-gray-600">
               <span>🗓️</span>
-              <span>
+              <span className="ml-1">
                 {daysSinceRegistration === 0
-                  ? 'Сегодня присоединился'
+                  ? 'Сегодня'
                   : daysSinceRegistration === 1
-                    ? '1 день с нами'
-                    : `${daysSinceRegistration} дней с нами`}
+                    ? '1 день'
+                    : `${daysSinceRegistration} дней`}
               </span>
             </div>
           </div>
-        </div>
 
-        {/* Actions */}
-        <div className="flex flex-col space-y-2">
-          <button className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50">
-            ⚙️ Настройки
-          </button>
-          <button className="rounded-lg bg-garden-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-garden-600">
-            📤 Поделиться
-          </button>
+          {/* Level Progress Bar */}
+          {levelInfo.nextLevel && (
+            <div className="w-full">
+              <div className="mb-1 flex justify-between text-xs text-gray-600">
+                <span>Опыт: {experience}</span>
+                <span className="hidden sm:inline">
+                  До Ур.{levelInfo.nextLevel.level}:{' '}
+                  {levelInfo.experienceToNext}
+                </span>
+                <span className="sm:hidden">+{levelInfo.experienceToNext}</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-gray-200">
+                <div
+                  className="h-2 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 transition-all duration-500"
+                  style={{ width: `${levelInfo.progress}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>

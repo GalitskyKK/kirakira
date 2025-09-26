@@ -28,10 +28,6 @@ const StreakDebugPage = import.meta.env.DEV
   ? lazy(() => import('@/pages/StreakDebugPage'))
   : null
 
-const ProfileDebugPage = import.meta.env.DEV
-  ? lazy(() => import('@/pages/ProfileDebugPage'))
-  : null
-
 // Lazy import для страницы профиля друга
 const FriendProfilePage = lazy(() => import('@/pages/FriendProfilePage'))
 import { TelegramDiagnostic } from '@/components/TelegramDiagnostic'
@@ -441,24 +437,6 @@ function App() {
               />
             )}
 
-            {import.meta.env.DEV && ProfileDebugPage && (
-              <Route
-                path="/profile-debug"
-                element={
-                  <motion.div
-                    key="profile-debug"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <ProfileDebugPage />
-                    </Suspense>
-                  </motion.div>
-                }
-              />
-            )}
             <Route
               path="/auth"
               element={

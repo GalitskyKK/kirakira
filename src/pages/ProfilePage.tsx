@@ -35,9 +35,7 @@ interface ProfileData {
 }
 
 export function ProfilePage() {
-  console.log('🔥 ПРОСТОЙ ProfilePage начинает рендеринг')
-
-  // ✅ Все хуки работают (проверено тестами)
+  // Основные хуки приложения
   const { currentUser, isLoading: userLoading } = useUserStore()
   const { currentGarden, getElementsCount } = useGardenStore()
   const { getMoodStats } = useMoodStore()
@@ -55,15 +53,12 @@ export function ProfilePage() {
   useEffect(() => {
     const loadData = async () => {
       if (currentUser?.telegramId && loadProfile) {
-        console.log('🔄 Загружаем данные профиля...')
         setLoadingProfile(true)
         try {
           const data = await loadProfile()
           if (data) {
-            console.log('📡 RAW API Response:', data)
             setProfileData(data as ProfileData)
           }
-          console.log('✅ Данные профиля загружены:', !!data)
         } catch (error) {
           console.error('❌ Ошибка загрузки профиля:', error)
         } finally {
@@ -116,8 +111,6 @@ export function ProfilePage() {
       </div>
     )
   }
-
-  console.log('🎉 Рендерим основной контент ProfilePage')
 
   // Готовим данные для компонентов с защитой от undefined
   const moodStats = getMoodStats
@@ -188,15 +181,6 @@ export function ProfilePage() {
       garden: currentUser?.preferences?.garden ?? {},
     },
   }
-
-  console.log('🔍 Рендерим с данными:', {
-    hasApiData: Boolean(apiUser),
-    hasLocalUser: Boolean(currentUser),
-    userFirstName: renderUser.firstName,
-    userPhoto: renderUser.photoUrl,
-    userStats: renderUser.stats,
-    totalElements,
-  })
 
   return (
     <motion.div
