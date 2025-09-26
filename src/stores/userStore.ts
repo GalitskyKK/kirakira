@@ -537,16 +537,16 @@ export const useUserStore = create<UserStore>()(
       }
     },
 
-    // 🔄 СИНХРОНИЗАЦИЯ ИЗ SUPABASE
+    // 🔄 СИНХРОНИЗАЦИЯ ИЗ SUPABASE (ИСПРАВЛЕНО)
     syncFromSupabase: async (telegramId: number) => {
       set({ isLoading: true, error: null })
 
       try {
         console.log(`🔄 Syncing user data from Supabase for ${telegramId}`)
 
-        // Запрашиваем данные из API
+        // Запрашиваем данные из правильного API
         const response = await fetch(
-          `/api/user?action=stats&telegramId=${telegramId}`
+          `/api/profile?action=get_profile&telegramId=${telegramId}`
         )
 
         if (!response.ok) {
@@ -555,7 +555,7 @@ export const useUserStore = create<UserStore>()(
 
         const result = await response.json()
 
-        if (!result.success || !result.data.hasData) {
+        if (!result.success || !result.data.user) {
           console.log(
             `📝 No server data for user ${telegramId} - keeping current state`
           )
@@ -563,32 +563,48 @@ export const useUserStore = create<UserStore>()(
           return
         }
 
-        // Создаем пользователя на основе данных с сервера
-        const serverStats = result.data
-        const serverUser = serverStats.user || {}
+        // Создаем пользователя на основе данных с сервера (ИСПРАВЛЕННЫЙ ФОРМАТ)
+        const serverUser = result.data.user
+        const serverStats = result.data.stats || {}
+
         const syncedUser: User = {
           id: `tg_${telegramId}`,
           telegramId: telegramId,
-          firstName: serverUser.firstName,
-          lastName: serverUser.lastName,
+          firstName: serverUser.first_name,
+          lastName: serverUser.last_name,
           username: serverUser.username,
-          registrationDate: serverUser.registrationDate
-            ? new Date(serverUser.registrationDate)
+          photoUrl: serverUser.photo_url,
+          registrationDate: serverUser.registration_date
+            ? new Date(serverUser.registration_date)
             : new Date(),
-          lastVisitDate: serverUser.lastVisitDate
-            ? new Date(serverUser.lastVisitDate)
+          lastVisitDate: serverUser.last_visit_date
+            ? new Date(serverUser.last_visit_date)
             : new Date(),
-          preferences: DEFAULT_PREFERENCES,
+          preferences: {
+            ...DEFAULT_PREFERENCES,
+            // Мержим настройки приватности из БД
+            privacy: {
+              ...DEFAULT_PREFERENCES.privacy,
+              ...(serverUser.privacy_settings || {}),
+            },
+          },
           stats: {
             ...createDefaultStats(),
-            totalDays: serverStats.totalDays || 0,
-            currentStreak: serverStats.currentStreak || 0,
-            longestStreak: serverStats.longestStreak || 0,
-            totalElements: serverStats.totalElements || 0,
-            rareElementsFound: serverStats.rareElementsFound || 0,
-            gardensShared: serverStats.gardensShared || 0,
+            totalDays: serverStats.totalDays || serverUser.total_days || 0,
+            currentStreak:
+              serverStats.currentStreak || serverUser.current_streak || 0,
+            longestStreak:
+              serverStats.longestStreak || serverUser.longest_streak || 0,
+            totalElements:
+              serverStats.totalElements || serverUser.total_elements || 0,
+            rareElementsFound:
+              serverStats.rareElementsFound ||
+              serverUser.rare_elements_found ||
+              0,
+            gardensShared:
+              serverStats.gardensShared || serverUser.gardens_shared || 0,
           },
-          // 🔥 ИСПРАВЛЕНИЕ: Синхронизируем РЕАЛЬНЫЕ данные из БД
+          // 🔥 ОСНОВНОЕ ИСПРАВЛЕНИЕ: Используем РЕАЛЬНЫЕ данные experience и level из БД
           experience: serverUser.experience || 0,
           level: serverUser.level || 1,
           isAnonymous: false,
@@ -604,7 +620,10 @@ export const useUserStore = create<UserStore>()(
             isLoading: false,
           })
 
-          console.log(`✅ User data synced from Supabase for ${telegramId}`)
+          console.log(`✅ User data synced from Supabase for ${telegramId}:`, {
+            experience: syncedUser.experience,
+            level: syncedUser.level,
+          })
         } else {
           throw new Error('Failed to save synced user')
         }

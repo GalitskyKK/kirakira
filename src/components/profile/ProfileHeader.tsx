@@ -14,7 +14,6 @@ interface ProfileHeaderProps {
 export function ProfileHeader({ user }: ProfileHeaderProps) {
   const displayName = user.firstName ?? user.username ?? 'Пользователь'
   const username = user.username != null ? `@${user.username}` : null
-
   // Hooks for calculating level
   const { moodStats } = useMoodTracking()
   const { getElementsCount } = useGardenState()
@@ -140,6 +139,14 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
             <button className="whitespace-nowrap rounded-lg bg-garden-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-garden-600">
               📤 Поделиться
             </button>
+            {/* Индикатор синхронизации */}
+            {user.telegramId != null && (
+              <div className="text-xs text-gray-500">
+                {user.experience != null && user.level != null
+                  ? `💾 Данные из БД`
+                  : `📱 Локальные данные`}
+              </div>
+            )}
           </div>
         </div>
 
