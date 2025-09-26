@@ -10,6 +10,7 @@ import { useUserStore } from '@/stores'
 import { HomePage } from '@/pages/HomePage'
 import { OnboardingPage } from '@/pages/OnboardingPage'
 import { AuthPage } from '@/pages/AuthPage'
+import { ProfilePage } from '@/pages/ProfilePage'
 // ShowcasePage импортируется условно только в DEV режиме
 import { LoadingSpinner } from '@/components/ui'
 import { lazy, Suspense } from 'react'
@@ -472,6 +473,20 @@ function App() {
                     onSuccess={() => window.location.replace('/')}
                     onError={error => console.error('Auth error:', error)}
                   />
+                </motion.div>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <motion.div
+                  key="profile"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ProfilePage />
                 </motion.div>
               }
             />
