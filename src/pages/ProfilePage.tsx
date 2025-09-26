@@ -128,16 +128,32 @@ function ProfileDebug({
         <div>userLoading: {userLoading ? '✅' : '❌'}</div>
         <div>profileLoading: {profileLoading ? '✅' : '❌'}</div>
         <div>profileError: {profileError || '❌'}</div>
-        <div>currentUser: {currentUser ? '✅' : '❌'}</div>
+        <div>currentUser: {currentUser ? '✅ (LOCAL)' : '❌'}</div>
         <div>telegramId: {currentUser?.telegramId || 'missing'}</div>
-        <div>profileData: {profileData ? '✅' : '❌'}</div>
+        <div>profileData: {profileData ? '✅ (SERVER)' : '❌'}</div>
         <div>apiResponse: {apiResponse ? '✅' : '❌'}</div>
+        <div>📊 Data Source: {profileData?.user ? 'SERVER' : 'LOCAL'}</div>
+        <div>🔑 Server User ID: {profileData?.user?.telegram_id || 'N/A'}</div>
+        <div>👤 Server Username: {profileData?.user?.username || 'N/A'}</div>
+        <div>
+          📅 Server RegDate: {profileData?.user?.registration_date || 'N/A'}
+        </div>
 
         {currentUser && (
           <details className="mt-2">
-            <summary className="cursor-pointer">Current User Info</summary>
+            <summary className="cursor-pointer">
+              Current User Info (LOCAL)
+            </summary>
             <pre className="mt-1 max-h-40 overflow-auto rounded bg-yellow-100 p-2 text-xs">
               {JSON.stringify(currentUser, null, 2)}
+            </pre>
+          </details>
+        )}
+        {apiResponse && (
+          <details className="mt-2">
+            <summary className="cursor-pointer">API Response (SERVER)</summary>
+            <pre className="mt-1 max-h-40 overflow-auto rounded bg-yellow-100 p-2 text-xs">
+              {JSON.stringify(apiResponse, null, 2)}
             </pre>
           </details>
         )}
@@ -296,7 +312,7 @@ export function ProfilePage() {
         {/* Main Content */}
         {currentUser && !profileError && !userLoading && !profileLoading && (
           <>
-            <ProfileHeader user={currentUser} />
+            <ProfileHeader user={profileData?.user || currentUser} />
 
             {profileData?.stats ? (
               <ProfileStatsServer stats={profileData.stats} />
@@ -321,7 +337,7 @@ export function ProfilePage() {
               />
             )}
 
-            <ProfilePrivacySettings user={currentUser} />
+            <ProfilePrivacySettings user={profileData?.user || currentUser} />
           </>
         )}
       </motion.div>
