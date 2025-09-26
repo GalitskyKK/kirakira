@@ -87,15 +87,24 @@ export function ProfilePrivacySettings({ user }: ProfilePrivacySettingsProps) {
   const { updatePrivacySettings } = useProfile()
   const [isUpdating, setIsUpdating] = useState(false)
 
+  // Защита от undefined - создаем fallback значения для preferences.privacy
+  const safePrivacy = user?.preferences?.privacy || {
+    showProfile: true,
+    shareGarden: true,
+    shareAchievements: true,
+    allowFriendRequests: true,
+    cloudSync: false,
+  }
+
   const handlePrivacyChange = async (
-    key: keyof typeof user.preferences.privacy,
+    key: keyof typeof safePrivacy,
     value: boolean
   ) => {
     setIsUpdating(true)
     try {
       // Update locally first
       const newPrivacySettings = {
-        ...user.preferences.privacy,
+        ...safePrivacy,
         [key]: value,
       }
 
@@ -129,7 +138,7 @@ export function ProfilePrivacySettings({ user }: ProfilePrivacySettingsProps) {
             emoji="👁️"
             title="Показывать профиль"
             description="Другие пользователи могут видеть ваш профиль"
-            enabled={user.preferences.privacy.showProfile}
+            enabled={safePrivacy.showProfile}
             onChange={enabled => handlePrivacyChange('showProfile', enabled)}
             disabled={isUpdating}
             delay={0.1}
@@ -139,7 +148,7 @@ export function ProfilePrivacySettings({ user }: ProfilePrivacySettingsProps) {
             emoji="🌱"
             title="Поделиться садом"
             description="Разрешить просмотр вашего сада другим пользователям"
-            enabled={user.preferences.privacy.shareGarden}
+            enabled={safePrivacy.shareGarden}
             onChange={enabled => handlePrivacyChange('shareGarden', enabled)}
             disabled={isUpdating}
             delay={0.15}
@@ -149,7 +158,7 @@ export function ProfilePrivacySettings({ user }: ProfilePrivacySettingsProps) {
             emoji="🏆"
             title="Показывать достижения"
             description="Делиться вашими достижениями с друзьями"
-            enabled={user.preferences.privacy.shareAchievements}
+            enabled={safePrivacy.shareAchievements}
             onChange={enabled =>
               handlePrivacyChange('shareAchievements', enabled)
             }
@@ -161,7 +170,7 @@ export function ProfilePrivacySettings({ user }: ProfilePrivacySettingsProps) {
             emoji="👥"
             title="Запросы в друзья"
             description="Разрешить другим отправлять запросы в друзья"
-            enabled={user.preferences.privacy.allowFriendRequests}
+            enabled={safePrivacy.allowFriendRequests}
             onChange={enabled =>
               handlePrivacyChange('allowFriendRequests', enabled)
             }
@@ -174,7 +183,7 @@ export function ProfilePrivacySettings({ user }: ProfilePrivacySettingsProps) {
               emoji="☁️"
               title="Синхронизация с облаком"
               description="Сохранять данные в облаке для синхронизации между устройствами"
-              enabled={user.preferences.privacy.cloudSync}
+              enabled={safePrivacy.cloudSync}
               onChange={enabled => handlePrivacyChange('cloudSync', enabled)}
               disabled={isUpdating}
               delay={0.3}

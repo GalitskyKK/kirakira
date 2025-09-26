@@ -81,8 +81,27 @@ export function ProfileAchievements({
   moodStats,
   totalElements,
 }: ProfileAchievementsProps) {
+  // Защита от undefined - создаем fallback значения для moodStats
+  const safeMoodStats = moodStats || {
+    totalEntries: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    mostFrequentMood: null,
+    averageIntensity: 0,
+    moodDistribution: {
+      joy: 0,
+      calm: 0,
+      stress: 0,
+      sadness: 0,
+      anger: 0,
+      anxiety: 0,
+    },
+    weeklyTrend: [],
+    monthlyTrend: [],
+  }
+
   // Use the new achievements system
-  const achievements = calculateAchievements(user, moodStats, totalElements)
+  const achievements = calculateAchievements(user, safeMoodStats, totalElements)
   const unlockedCount = achievements.filter(a => a.isUnlocked).length
 
   return (

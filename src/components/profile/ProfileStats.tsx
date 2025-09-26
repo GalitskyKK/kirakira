@@ -63,15 +63,42 @@ export function ProfileStats({
   moodStats,
   totalElements,
 }: ProfileStatsProps) {
-  const currentStreak = user.stats.currentStreak
-  const longestStreak = user.stats.longestStreak
-  const totalDays = user.stats.totalDays
-  const rareElements = user.stats.rareElementsFound
+  // Защита от undefined - создаем fallback значения
+  const safeMoodStats = moodStats || {
+    totalEntries: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    mostFrequentMood: null,
+    averageIntensity: 0,
+    moodDistribution: {
+      joy: 0,
+      calm: 0,
+      stress: 0,
+      sadness: 0,
+      anger: 0,
+      anxiety: 0,
+    },
+    weeklyTrend: [],
+    monthlyTrend: [],
+  }
+
+  const safeUserStats = user?.stats || {
+    currentStreak: 0,
+    longestStreak: 0,
+    totalDays: 0,
+    rareElementsFound: 0,
+    gardensShared: 0,
+  }
+
+  const currentStreak = safeUserStats.currentStreak
+  const longestStreak = safeUserStats.longestStreak
+  const totalDays = safeUserStats.totalDays
+  const rareElements = safeUserStats.rareElementsFound
 
   // Calculate level progress for the progress bar
   const experience = calculateExperienceFromStats(
     user,
-    moodStats,
+    safeMoodStats,
     totalElements
   )
   const levelInfo = calculateLevelProgress(experience)
@@ -137,7 +164,7 @@ export function ProfileStats({
         <StatCard
           emoji="💭"
           label="Настроений"
-          value={moodStats.totalEntries}
+          value={safeMoodStats.totalEntries}
           color="blue"
           delay={0.35}
         />
@@ -145,7 +172,7 @@ export function ProfileStats({
         <StatCard
           emoji="📤"
           label="Поделился"
-          value={user.stats.gardensShared}
+          value={safeUserStats.gardensShared}
           color="green"
           delay={0.4}
         />

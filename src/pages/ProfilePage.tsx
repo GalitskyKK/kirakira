@@ -7,6 +7,13 @@ import { ProfileStats } from '@/components/profile/ProfileStats'
 import { ProfileAchievements } from '@/components/profile/ProfileAchievements'
 import { ProfilePrivacySettings } from '@/components/profile/ProfilePrivacySettings'
 import { LoadingSpinner } from '@/components/ui'
+import type { User } from '@/types'
+
+interface ProfileData {
+  user: Partial<User>
+  stats?: any
+  achievements?: any[]
+}
 
 export function ProfilePage() {
   console.log('🔥 ПРОСТОЙ ProfilePage начинает рендеринг')
@@ -22,7 +29,7 @@ export function ProfilePage() {
   } = useProfile()
 
   // Состояние для данных профиля
-  const [profileData, setProfileData] = useState<any>(null)
+  const [_profileData, setProfileData] = useState<ProfileData | null>(null)
   const [loadingProfile, setLoadingProfile] = useState(false)
 
   // Загружаем профиль при монтировании
@@ -33,7 +40,9 @@ export function ProfilePage() {
         setLoadingProfile(true)
         try {
           const data = await loadProfile()
-          setProfileData(data)
+          if (data) {
+            setProfileData(data as ProfileData)
+          }
           console.log('✅ Данные профиля загружены:', !!data)
         } catch (error) {
           console.error('❌ Ошибка загрузки профиля:', error)
@@ -43,7 +52,7 @@ export function ProfilePage() {
       }
     }
 
-    loadData()
+    void loadData()
   }, [currentUser?.telegramId, loadProfile])
 
   // Показываем спиннер во время загрузки
@@ -82,7 +91,7 @@ export function ProfilePage() {
             Упс! Что-то пошло не так
           </h2>
           <p className="text-red-700">Не переживайте, мы быстро это исправим</p>
-          <p className="mt-2 text-sm text-red-600">{profileError}</p>
+          <p className="mt-2 text-sm text-red-600">{String(profileError)}</p>
         </div>
       </div>
     )
@@ -90,7 +99,7 @@ export function ProfilePage() {
 
   console.log('🎉 Рендерим основной контент ProfilePage')
 
-  // Готовим данные для компонентов
+  // Готовим данные для компонентов с защитой от undefined
   const moodStats = getMoodStats
     ? getMoodStats()
     : {
@@ -113,6 +122,39 @@ export function ProfilePage() {
 
   const totalElements = getElementsCount ? getElementsCount() : 0
 
+  // Создаем безопасные данные для рендеринга
+  const renderUser = currentUser || {
+    id: '',
+    telegramId: 0,
+    firstName: 'Пользователь',
+    lastName: '',
+    username: '',
+    photoUrl: '',
+    registrationDate: new Date(),
+    stats: {
+      currentStreak: 0,
+      longestStreak: 0,
+      totalDays: 0,
+      rareElementsFound: 0,
+      gardensShared: 0,
+    },
+    preferences: {
+      privacy: {
+        showProfile: true,
+        shareGarden: true,
+        shareAchievements: true,
+        allowFriendRequests: true,
+        cloudSync: false,
+      },
+    },
+  }
+
+  console.log('🔍 Рендерим с безопасными данными:', {
+    hasUser: Boolean(renderUser),
+    hasMoodStats: Boolean(moodStats),
+    totalElements,
+  })
+
   return (
     <motion.div
       className="space-y-6 p-4 pb-8"
@@ -122,11 +164,11 @@ export function ProfilePage() {
       transition={{ duration: 0.3 }}
     >
       {/* Заголовок профиля */}
-      <ProfileHeader user={profileData?.user || currentUser} />
+      <ProfileHeader user={renderUser} />
 
       {/* Статистика */}
       <ProfileStats
-        user={profileData?.user || currentUser}
+        user={renderUser}
         garden={currentGarden}
         moodStats={moodStats}
         totalElements={totalElements}
@@ -134,13 +176,13 @@ export function ProfilePage() {
 
       {/* Достижения */}
       <ProfileAchievements
-        user={profileData?.user || currentUser}
+        user={renderUser}
         moodStats={moodStats}
         totalElements={totalElements}
       />
 
       {/* Настройки приватности */}
-      <ProfilePrivacySettings user={profileData?.user || currentUser} />
+      <ProfilePrivacySettings user={renderUser} />
     </motion.div>
   )
 }

@@ -19,18 +19,40 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
   const { moodStats } = useMoodTracking()
   const { getElementsCount } = useGardenState()
 
+  // Защита от undefined - создаем fallback значения для moodStats
+  const safeMoodStats = moodStats || {
+    totalEntries: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    mostFrequentMood: null,
+    averageIntensity: 0,
+    moodDistribution: {
+      joy: 0,
+      calm: 0,
+      stress: 0,
+      sadness: 0,
+      anger: 0,
+      anxiety: 0,
+    },
+    weeklyTrend: [],
+    monthlyTrend: [],
+  }
+
   // Calculate user level and experience
-  const totalElements = getElementsCount()
+  const totalElements = getElementsCount ? getElementsCount() : 0
   const experience = calculateExperienceFromStats(
     user,
-    moodStats,
+    safeMoodStats,
     totalElements
   )
   const levelInfo = calculateLevelProgress(experience)
 
   // Calculate days since registration
+  const registrationDate = user?.registrationDate
+    ? new Date(user.registrationDate)
+    : new Date()
   const daysSinceRegistration = Math.floor(
-    (Date.now() - user.registrationDate.getTime()) / (1000 * 60 * 60 * 24)
+    (Date.now() - registrationDate.getTime()) / (1000 * 60 * 60 * 24)
   )
 
   return (
