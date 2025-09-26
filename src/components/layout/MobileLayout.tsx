@@ -175,6 +175,8 @@ export function MobileLayout() {
         )
 
       case 'profile':
+        console.log('🎯 MobileLayout rendering ProfilePage via tab!')
+        alert('🎯 ПРОФИЛЬ ЗАПУСКАЕТСЯ ЧЕРЕЗ ТАБ!')
         return <ProfilePage />
 
       default:

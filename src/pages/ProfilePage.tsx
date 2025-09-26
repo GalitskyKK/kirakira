@@ -247,8 +247,20 @@ function ProfileDebug({
 }
 
 export function ProfilePage() {
-  // БАЗОВАЯ ДИАГНОСТИКА - покажется в любом случае
+  // ЭКСТРЕМАЛЬНАЯ ДИАГНОСТИКА - должна показаться в любом случае
   console.log('🔥 ProfilePage component is rendering!')
+
+  // АГРЕССИВНАЯ ДИАГНОСТИКА - alert покажется точно
+  const [alertShown, setAlertShown] = useState(false)
+
+  useEffect(() => {
+    if (!alertShown) {
+      alert(
+        '🔥 ProfilePage ЗАГРУЖЕН! Время: ' + new Date().toLocaleTimeString()
+      )
+      setAlertShown(true)
+    }
+  }, [alertShown])
 
   // EXTREME DEBUG: Show this first to prove component renders
   const [renderTime] = useState(() => new Date().toLocaleTimeString())
