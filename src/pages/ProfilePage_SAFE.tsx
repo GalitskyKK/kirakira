@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useUserStore, useGardenStore, useMoodStore } from '@/stores'
 import { useProfile } from '@/hooks/useProfile'

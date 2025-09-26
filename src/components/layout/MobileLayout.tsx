@@ -175,9 +175,21 @@ export function MobileLayout() {
         )
 
       case 'profile':
-        console.log('🎯 MobileLayout rendering ProfilePage via tab!')
-        alert('🎯 ПРОФИЛЬ ЗАПУСКАЕТСЯ ЧЕРЕЗ ТАБ!')
-        return <ProfilePage />
+        try {
+          return <ProfilePage />
+        } catch (error) {
+          console.error('❌ ProfilePage crashed:', error)
+          return (
+            <div className="p-4">
+              <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+                <h2 className="font-bold text-red-900">ProfilePage Error</h2>
+                <p className="text-red-700">
+                  {error instanceof Error ? error.message : String(error)}
+                </p>
+              </div>
+            </div>
+          )
+        }
 
       default:
         return null
