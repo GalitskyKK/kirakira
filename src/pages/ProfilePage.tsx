@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useUserStore, useGardenStore, useMoodStore } from '@/stores'
 import { useProfile } from '@/hooks/useProfile'
@@ -170,35 +170,87 @@ function ProfileAchievementsServer({ achievements }: any) {
   )
 }
 
+// DEBUG component to show state in UI (always visible for Telegram debugging)
+function ProfileDebug({
+  currentUser,
+  userLoading,
+  profileLoading,
+  profileError,
+  profileData,
+  apiResponse,
+  onRetry,
+}: any) {
+  // Show debug for now to diagnose Telegram issues
+  // if (process.env.NODE_ENV !== 'development') return null
+
+  return (
+    <div className="mb-4 rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-xs">
+      <div className="mb-2 flex items-center justify-between">
+        <h3 className="font-bold text-yellow-900">🔍 Debug Info</h3>
+        <button
+          onClick={onRetry}
+          className="rounded bg-yellow-200 px-2 py-1 text-xs text-yellow-900 hover:bg-yellow-300"
+        >
+          🔄 Retry
+        </button>
+      </div>
+      <div className="space-y-1 text-yellow-800">
+        <div>userLoading: {userLoading ? '✅' : '❌'}</div>
+        <div>profileLoading: {profileLoading ? '✅' : '❌'}</div>
+        <div>profileError: {profileError || '❌'}</div>
+        <div>currentUser: {currentUser ? '✅' : '❌'}</div>
+        <div>telegramId: {currentUser?.telegramId || 'missing'}</div>
+        <div>profileData: {profileData ? '✅' : '❌'}</div>
+        <div>apiResponse: {apiResponse ? '✅' : '❌'}</div>
+        {apiResponse && (
+          <details className="mt-2">
+            <summary className="cursor-pointer">API Response</summary>
+            <pre className="mt-1 max-h-40 overflow-auto rounded bg-yellow-100 p-2 text-xs">
+              {JSON.stringify(apiResponse, null, 2)}
+            </pre>
+          </details>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export function ProfilePage() {
   const { currentUser, isLoading: userLoading } = useUserStore()
   const { currentGarden, getElementsCount } = useGardenStore()
   const { getMoodStats } = useMoodStore()
-  const {
-    isLoading: profileLoading,
-    error: profileError,
-    loadProfile,
-  } = useProfile()
+  const { isLoading: profileLoading, error: profileError } = useProfile()
 
   const [profileData, setProfileData] = useState<ProfileData | null>(null)
+  const [apiResponse, setApiResponse] = useState<any>(null)
+
+  // Load profile data function
+  const loadProfileData = useCallback(async () => {
+    if (currentUser?.telegramId) {
+      try {
+        // Make direct API call to capture response
+        const response = await fetch(
+          `/api/profile?action=get_profile&telegramId=${currentUser.telegramId}`
+        )
+        const result = await response.json()
+        setApiResponse(result) // Store for debugging
+
+        if (result.success && result.data) {
+          setProfileData(result.data)
+        }
+      } catch (error) {
+        setApiResponse({
+          error: error instanceof Error ? error.message : String(error),
+        })
+        console.error('Failed to load profile:', error)
+      }
+    }
+  }, [currentUser?.telegramId])
 
   // Load profile data when component mounts
   useEffect(() => {
-    const loadProfileData = async () => {
-      if (currentUser?.telegramId) {
-        try {
-          const data = await loadProfile()
-          if (data) {
-            setProfileData(data)
-          }
-        } catch (error) {
-          console.error('Failed to load profile:', error)
-        }
-      }
-    }
-
     loadProfileData()
-  }, [currentUser?.telegramId, loadProfile])
+  }, [currentUser?.telegramId, loadProfileData])
 
   // Calculate profile stats
   const moodStats = getMoodStats()
@@ -253,6 +305,17 @@ export function ProfilePage() {
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
     >
+      {/* Debug Info - only shows in development */}
+      <ProfileDebug
+        currentUser={currentUser}
+        userLoading={userLoading}
+        profileLoading={profileLoading}
+        profileError={profileError}
+        profileData={profileData}
+        apiResponse={apiResponse}
+        onRetry={loadProfileData}
+      />
+
       {/* Profile Header */}
       <ProfileHeader user={currentUser} />
 
