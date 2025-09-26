@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useUserStore } from '@/stores'
-// import { useProfile } from '@/hooks/useProfile'
+import { useProfile } from '@/hooks/useProfile'
 
 // ЭКСТРЕМАЛЬНО ПРОСТАЯ ВЕРСИЯ (ПРОЙДЕН ✅) - без всех хуков!
 /*
@@ -124,16 +124,17 @@ function TestUseStateProfilePage() {
 }
 */
 
-// ТЕСТ 3: Добавим useUserStore к useState
+// ТЕСТ 3: useUserStore (ПРОЙДЕН ✅) - добавили useUserStore к useState
+/*
 function TestUserStoreProfilePage() {
   console.log('🔥 TESTING useUserStore ProfilePage START')
-
+  
   try {
     // Тестируем useState + useUserStore
     const [renderTime] = useState(() => new Date().toLocaleTimeString())
     const { currentUser, isLoading } = useUserStore()
     console.log('✅ useState + useUserStore works')
-
+    
     return (
       <div style={{ padding: '20px', background: '#aa00ff' }}>
         <div
@@ -153,13 +154,13 @@ function TestUserStoreProfilePage() {
         >
           ✅ ProfilePage + useUserStore РАБОТАЕТ!
         </div>
-
+        
         <div style={{ marginTop: '60px' }}>
           <h1>🎉 useUserStore РАБОТАЕТ!</h1>
           <p>Время рендера: {renderTime}</p>
           <p>User: {currentUser ? 'EXISTS' : 'MISSING'}</p>
           <p>Loading: {isLoading ? 'YES' : 'NO'}</p>
-
+          
           <div
             style={{
               marginTop: '20px',
@@ -186,10 +187,113 @@ function TestUserStoreProfilePage() {
     )
   }
 }
+*/
+
+// ТЕСТ 4: Добавим useProfile к useState + useUserStore
+function TestUseProfilePage() {
+  console.log('🔥 TESTING useProfile ProfilePage START')
+
+  try {
+    // Тестируем useState + useUserStore + useProfile
+    console.log('📍 Step 1: Testing useState...')
+    const [renderTime] = useState(() => new Date().toLocaleTimeString())
+    console.log('✅ Step 1: useState works')
+
+    console.log('📍 Step 2: Testing useUserStore...')
+    const { currentUser, isLoading } = useUserStore()
+    console.log('✅ Step 2: useUserStore works', {
+      currentUser: !!currentUser,
+      isLoading,
+    })
+
+    console.log('📍 Step 3: Testing useProfile...')
+    const profileResult = useProfile()
+    console.log(
+      '✅ Step 3: useProfile called, result keys:',
+      Object.keys(profileResult)
+    )
+
+    const {
+      isLoading: profileLoading,
+      error: profileError,
+      loadProfile,
+    } = profileResult
+    console.log('✅ Step 4: useProfile destructured', {
+      profileLoading,
+      profileError,
+      hasLoadProfile: typeof loadProfile === 'function',
+    })
+
+    console.log('🎉 ALL HOOKS WORK! useState + useUserStore + useProfile')
+
+    return (
+      <div style={{ padding: '20px', background: '#00aaff' }}>
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            background: '#00aaff',
+            color: '#ffffff',
+            padding: '15px',
+            fontSize: '16px',
+            zIndex: 9999,
+            textAlign: 'center',
+            fontWeight: 'bold',
+          }}
+        >
+          ✅ ProfilePage + useProfile РАБОТАЕТ!
+        </div>
+
+        <div style={{ marginTop: '60px' }}>
+          <h1>🎉 ВСЕ ХУКИ РАБОТАЮТ!</h1>
+          <p>Время рендера: {renderTime}</p>
+          <p>User: {currentUser ? 'EXISTS' : 'MISSING'}</p>
+          <p>User Loading: {isLoading ? 'YES' : 'NO'}</p>
+          <p>Profile Loading: {profileLoading ? 'YES' : 'NO'}</p>
+          <p>Profile Error: {profileError || 'NONE'}</p>
+          <p>
+            LoadProfile Function:{' '}
+            {typeof loadProfile === 'function' ? 'EXISTS' : 'MISSING'}
+          </p>
+
+          <div
+            style={{
+              marginTop: '20px',
+              padding: '15px',
+              background: '#ffffff',
+              border: '2px solid #00aaff',
+            }}
+          >
+            <h3>🔍 РЕЗУЛЬТАТ ФИНАЛЬНОГО ТЕСТА</h3>
+            <p>✅ Компонент рендерится</p>
+            <p>✅ useState работает</p>
+            <p>✅ useUserStore работает</p>
+            <p>✅ useProfile работает</p>
+            <p>❌ Проблема была в сложной логике ProfilePage</p>
+          </div>
+        </div>
+      </div>
+    )
+  } catch (error) {
+    console.error('❌ useProfile crashed:', error)
+    if (error instanceof Error) {
+      console.error('❌ Stack trace:', error.stack)
+    }
+    return (
+      <div style={{ padding: '20px', background: 'red', color: 'white' }}>
+        <h1>❌ useProfile ERROR!</h1>
+        <p>Error: {String(error)}</p>
+        <p>Check console for details</p>
+      </div>
+    )
+  }
+}
 
 export function ProfilePage() {
   console.log('🔥 ProfilePage ENTRY POINT')
 
-  // ТЕСТ 3: Проверяем useState + useUserStore хуки
-  return <TestUserStoreProfilePage />
+  // ТЕСТ 4: Проверяем useState + useUserStore + useProfile хуки
+  return <TestUseProfilePage />
 }
