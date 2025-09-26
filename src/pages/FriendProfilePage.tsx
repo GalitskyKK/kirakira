@@ -27,32 +27,32 @@ interface FriendProfileData {
 }
 
 // Debug component for friend profile
-function FriendProfileDebug({
-  profileData,
-  error,
-  isLoading,
-  friendTelegramId,
-}: any) {
-  return (
-    <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-xs">
-      <h3 className="mb-2 font-bold text-blue-900">🔍 Friend Debug Info</h3>
-      <div className="space-y-1 text-blue-800">
-        <div>friendTelegramId: {friendTelegramId}</div>
-        <div>isLoading: {isLoading ? '✅' : '❌'}</div>
-        <div>error: {error || '❌'}</div>
-        <div>profileData: {profileData ? '✅' : '❌'}</div>
-        {profileData && (
-          <details className="mt-2">
-            <summary className="cursor-pointer">Profile Data</summary>
-            <pre className="mt-1 overflow-auto rounded bg-blue-100 p-2 text-xs">
-              {JSON.stringify(profileData, null, 2)}
-            </pre>
-          </details>
-        )}
-      </div>
-    </div>
-  )
-}
+// function FriendProfileDebug({
+//   profileData,
+//   error,
+//   isLoading,
+//   friendTelegramId,
+// }: any) {
+//   return (
+//     <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-xs">
+//       <h3 className="mb-2 font-bold text-blue-900">🔍 Friend Debug Info</h3>
+//       <div className="space-y-1 text-blue-800">
+//         <div>friendTelegramId: {friendTelegramId}</div>
+//         <div>isLoading: {isLoading ? '✅' : '❌'}</div>
+//         <div>error: {error || '❌'}</div>
+//         <div>profileData: {profileData ? '✅' : '❌'}</div>
+//         {profileData && (
+//           <details className="mt-2">
+//             <summary className="cursor-pointer">Profile Data</summary>
+//             <pre className="mt-1 overflow-auto rounded bg-blue-100 p-2 text-xs">
+//               {JSON.stringify(profileData, null, 2)}
+//             </pre>
+//           </details>
+//         )}
+//       </div>
+//     </div>
+//   )
+// }
 
 export default function FriendProfilePage() {
   const { friendTelegramId } = useParams<{ friendTelegramId: string }>()

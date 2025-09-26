@@ -74,10 +74,23 @@ async function handleRecord(req, res) {
     if (telegramUserData) {
       console.log(`👤 Ensuring user exists with data:`, telegramUserData)
 
-      const { error: userError } = await supabase.rpc('ensure_user_exists', {
-        user_telegram_id: telegramUserId,
-        user_data: telegramUserData,
-      })
+      const { error: userError } = await supabase.from('users').upsert(
+        {
+          telegram_id: telegramUserId,
+          user_id: telegramUserData.userId || `user_${telegramUserId}`,
+          username: telegramUserData.username || null,
+          first_name: telegramUserData.firstName || null,
+          last_name: telegramUserData.lastName || null,
+          language_code: telegramUserData.languageCode || 'ru',
+          photo_url: telegramUserData.photoUrl || null,
+          registration_date: new Date().toISOString(),
+          last_visit_date: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: 'telegram_id',
+        }
+      )
 
       if (userError) {
         console.error('Auto user creation error:', userError)
@@ -117,11 +130,14 @@ async function handleRecord(req, res) {
 
     console.log(`✅ Mood recorded to Supabase for user ${telegramUserId}`)
 
-    // Обновляем счетчики streak пользователя
-    const { error: streakError } = await supabase.rpc(
-      'update_user_mood_streak',
-      { user_telegram_id: telegramUserId }
-    )
+    // Обновляем счетчики streak пользователя напрямую
+    const { error: streakError } = await supabase
+      .from('users')
+      .update({
+        last_visit_date: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('telegram_id', telegramUserId)
 
     if (streakError) {
       console.warn('Failed to update user mood streak:', streakError)

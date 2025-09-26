@@ -46,10 +46,23 @@ async function handleAddElement(req, res) {
     if (telegramUserData) {
       console.log(`👤 Ensuring user exists with data:`, telegramUserData)
 
-      const { error: userError } = await supabase.rpc('ensure_user_exists', {
-        telegram_id: telegramId,
-        user_data: telegramUserData,
-      })
+      const { error: userError } = await supabase.from('users').upsert(
+        {
+          telegram_id: telegramId,
+          user_id: telegramUserData.userId || `user_${telegramId}`,
+          username: telegramUserData.username || null,
+          first_name: telegramUserData.firstName || null,
+          last_name: telegramUserData.lastName || null,
+          language_code: telegramUserData.languageCode || 'ru',
+          photo_url: telegramUserData.photoUrl || null,
+          registration_date: new Date().toISOString(),
+          last_visit_date: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: 'telegram_id',
+        }
+      )
 
       if (userError) {
         console.error('Auto user creation error:', userError)
@@ -84,11 +97,14 @@ async function handleAddElement(req, res) {
 
     console.log(`✅ Garden element saved to Supabase:`, data)
 
-    // Обновляем счетчик элементов пользователя
-    const { error: updateError } = await supabase.rpc(
-      'increment_user_total_elements',
-      { user_telegram_id: telegramId }
-    )
+    // Обновляем счетчик элементов пользователя напрямую
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        total_elements: supabase.sql`total_elements + 1`,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('telegram_id', telegramId)
 
     if (updateError) {
       console.warn('Failed to update user elements counter:', updateError)

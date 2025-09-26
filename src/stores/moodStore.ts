@@ -291,6 +291,14 @@ export const useMoodStore = create<MoodStore>()(
                 intensity,
                 note,
                 date: newEntry.date.toISOString(),
+                telegramUserData: {
+                  userId: currentUser.id,
+                  firstName: currentUser.firstName,
+                  lastName: currentUser.lastName,
+                  username: currentUser.username,
+                  languageCode: currentUser.preferences.language || 'ru',
+                  photoUrl: currentUser.photoUrl,
+                },
               }),
             })
 

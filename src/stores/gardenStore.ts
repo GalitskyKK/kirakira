@@ -347,8 +347,16 @@ export const useGardenStore = create<GardenStore>()(
                     type: newElement.type,
                     position: newElement.position,
                     unlockDate: newElement.unlockDate.toISOString(),
-                    mood: mood,
+                    moodInfluence: mood,
                     rarity: newElement.rarity,
+                  },
+                  telegramUserData: {
+                    userId: currentUser.id,
+                    firstName: currentUser.firstName,
+                    lastName: currentUser.lastName,
+                    username: currentUser.username,
+                    languageCode: currentUser.preferences.language || 'ru',
+                    photoUrl: currentUser.photoUrl,
                   },
                 }),
               })

@@ -494,16 +494,25 @@ export const useUserStore = create<UserStore>()(
         }
 
         // 4. Очистить другие stores (сад и настроения)
-        const { clearMoodHistory } = await import('./moodStore').then(m =>
-          m.useMoodStore.getState()
-        )
-        const { clearGarden } = await import('./gardenStore').then(m =>
-          m.useGardenStore.getState()
-        )
+        try {
+          const moodStoreModule = await import('./moodStore')
+          const gardenStoreModule = await import('./gardenStore')
 
-        clearMoodHistory()
-        clearGarden()
-        console.log('✅ Mood and Garden stores cleared')
+          if (moodStoreModule?.useMoodStore?.getState) {
+            const { clearMoodHistory } = moodStoreModule.useMoodStore.getState()
+            clearMoodHistory()
+          }
+
+          if (gardenStoreModule?.useGardenStore?.getState) {
+            const { clearGarden } = gardenStoreModule.useGardenStore.getState()
+            clearGarden()
+          }
+
+          console.log('✅ Mood and Garden stores cleared')
+        } catch (storeError) {
+          console.warn('⚠️ Failed to clear stores:', storeError)
+          // Не критично, продолжаем
+        }
 
         // 5. Сбросить состояние пользователя НО сохранить онбординг
         set({
