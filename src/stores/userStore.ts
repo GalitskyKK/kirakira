@@ -588,6 +588,9 @@ export const useUserStore = create<UserStore>()(
             rareElementsFound: serverStats.rareElementsFound || 0,
             gardensShared: serverStats.gardensShared || 0,
           },
+          // 🔥 ИСПРАВЛЕНИЕ: Синхронизируем РЕАЛЬНЫЕ данные из БД
+          experience: serverUser.experience || 0,
+          level: serverUser.level || 1,
           isAnonymous: false,
         }
 

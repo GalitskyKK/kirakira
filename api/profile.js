@@ -388,6 +388,76 @@ export default async function handler(req, res) {
         })
       }
 
+      case 'recalculate_experience': {
+        if (req.method !== 'POST') {
+          return res
+            .status(405)
+            .json({ success: false, error: 'Method not allowed' })
+        }
+
+        const { telegramId } = req.body
+        if (!telegramId) {
+          return res
+            .status(400)
+            .json({ success: false, error: 'Missing telegramId' })
+        }
+
+        const user = await ensureUser(parseInt(telegramId))
+
+        // Получаем статистику пользователя
+        const stats = await calculateUserStats(user)
+        if (!stats) {
+          return res
+            .status(500)
+            .json({ success: false, error: 'Failed to calculate stats' })
+        }
+
+        // Рассчитываем опыт на основе текущих данных
+        // Простая формула: 10 опыта за запись настроения + 15 за элемент сада + бонус за стрики
+        const experienceFromMoods = stats.totalMoodEntries * 10
+        const experienceFromElements = stats.totalElements * 15
+        const experienceFromStreaks = Math.floor(stats.longestStreak / 7) * 50
+        const totalCalculatedExperience =
+          experienceFromMoods + experienceFromElements + experienceFromStreaks
+
+        // Обновляем опыт в БД через RPC
+        const { data, error } = await supabase.rpc('add_user_experience', {
+          p_telegram_id: parseInt(telegramId),
+          p_experience_points:
+            totalCalculatedExperience - (stats.experience || 0), // Разница
+        })
+
+        if (error) {
+          console.error('Error recalculating experience:', error)
+          return res
+            .status(500)
+            .json({ success: false, error: 'Failed to update experience' })
+        }
+
+        // Проверяем новые достижения после обновления опыта
+        const achievementUpdates = await checkAndUpdateAchievements(
+          user.telegram_id
+        )
+
+        return res.status(200).json({
+          success: true,
+          data: {
+            oldExperience: stats.experience || 0,
+            newExperience: data[0]?.new_experience || totalCalculatedExperience,
+            oldLevel: stats.level || 1,
+            newLevel: data[0]?.new_level || 1,
+            levelUp: data[0]?.level_up || false,
+            calculation: {
+              fromMoods: experienceFromMoods,
+              fromElements: experienceFromElements,
+              fromStreaks: experienceFromStreaks,
+              total: totalCalculatedExperience,
+            },
+            newAchievements: achievementUpdates.filter(a => a.newly_unlocked),
+          },
+        })
+      }
+
       case 'get_friend_profile': {
         if (req.method !== 'GET') {
           return res

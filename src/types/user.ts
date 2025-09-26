@@ -11,6 +11,9 @@ export interface User {
   readonly preferences: UserPreferences
   readonly stats: UserStats
   readonly isAnonymous: boolean
+  // 🔥 ИСПРАВЛЕНИЕ: Добавляем поля experience и level для синхронизации с БД
+  readonly experience?: number
+  readonly level?: number
 }
 
 export interface UserPreferences {

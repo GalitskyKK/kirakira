@@ -329,6 +329,16 @@ async function handleStats(req, res) {
     if (userDataParsed) {
       console.log(`✅ Found real data for user ${telegramId}`)
       stats = computeStatsFromUserData(userDataParsed)
+      // 🔥 ИСПРАВЛЕНИЕ: Добавляем данные пользователя в ответ для синхронизации
+      stats.user = {
+        firstName: userDataParsed.user.first_name,
+        lastName: userDataParsed.user.last_name,
+        username: userDataParsed.user.username,
+        registrationDate: userDataParsed.user.registration_date,
+        lastVisitDate: userDataParsed.user.last_visit_date,
+        experience: userDataParsed.user.experience || 0,
+        level: userDataParsed.user.level || 1,
+      }
     } else {
       console.log(
         `📝 No data found for user ${telegramId} - returning new user stats`

@@ -12,15 +12,15 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ user }: ProfileHeaderProps) {
-  const displayName = user.firstName || user.username || 'Пользователь'
-  const username = user.username ? `@${user.username}` : null
+  const displayName = user.firstName ?? user.username ?? 'Пользователь'
+  const username = user.username != null ? `@${user.username}` : null
 
   // Hooks for calculating level
   const { moodStats } = useMoodTracking()
   const { getElementsCount } = useGardenState()
 
   // Защита от undefined - создаем fallback значения для moodStats
-  const safeMoodStats = moodStats || {
+  const safeMoodStats = moodStats ?? {
     totalEntries: 0,
     currentStreak: 0,
     longestStreak: 0,
@@ -38,19 +38,60 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
     monthlyTrend: [],
   }
 
-  // Calculate user level and experience
-  const totalElements = getElementsCount ? getElementsCount() : 0
-  const experience = calculateExperienceFromStats(
-    user,
-    safeMoodStats,
-    totalElements
-  )
-  const levelInfo = calculateLevelProgress(experience)
+  // 🔥 ИСПРАВЛЕНИЕ: Используем РЕАЛЬНЫЕ данные из БД вместо локальных расчетов
+  const totalElements = getElementsCount?.() ?? 0
+
+  // Используем опыт и уровень из БД если доступны, иначе рассчитываем локально
+  const hasDbData = user.experience !== undefined && user.level !== undefined
+
+  let experience: number = 0
+  if (hasDbData && typeof user.experience === 'number') {
+    experience = user.experience as number
+  } else {
+    experience = calculateExperienceFromStats(
+      user,
+      safeMoodStats,
+      totalElements
+    )
+  }
+
+  const levelInfo =
+    hasDbData && typeof user.level === 'number'
+      ? (() => {
+          // Если есть данные в БД, используем их
+          const userLevel = user.level as number
+          const currentLevel = {
+            level: userLevel,
+            name:
+              userLevel === 1
+                ? 'Новичок'
+                : userLevel === 2
+                  ? 'Любитель'
+                  : userLevel === 3
+                    ? 'Садовник'
+                    : 'Эксперт',
+            emoji:
+              userLevel === 1
+                ? '🌱'
+                : userLevel === 2
+                  ? '🌿'
+                  : userLevel === 3
+                    ? '🌻'
+                    : '🌳',
+            minExperience: 0,
+            maxExperience: 999,
+          }
+          return {
+            currentLevel,
+            nextLevel: null,
+            progress: 100, // Показываем завершенный прогресс для БД уровня
+            experienceToNext: 0,
+          }
+        })()
+      : calculateLevelProgress(experience)
 
   // Calculate days since registration
-  const registrationDate = user?.registrationDate
-    ? new Date(user.registrationDate)
-    : new Date()
+  const registrationDate = new Date(user.registrationDate)
   const daysSinceRegistration = Math.floor(
     (Date.now() - registrationDate.getTime()) / (1000 * 60 * 60 * 24)
   )
@@ -83,7 +124,7 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
               <h1 className="truncate text-xl font-bold text-gray-900 sm:text-2xl">
                 {displayName}
               </h1>
-              {username && (
+              {username !== null && (
                 <p className="truncate text-base text-garden-600 sm:text-lg">
                   {username}
                 </p>
