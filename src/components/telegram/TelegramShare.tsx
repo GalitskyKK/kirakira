@@ -78,6 +78,32 @@ export function TelegramShare({
         text: `🌸 Посмотрите на мой эмоциональный сад в KiraKira!\n\n${description}\n\n🔗 Начните свое путешествие: https://t.me/KiraKiraGardenBot?startapp`,
         parse_mode: 'Markdown',
       })
+
+      // 🏆 НАЧИСЛЯЕМ ОПЫТ ЗА ШЕРИНГ САДА (text version)
+      // Получаем текущего пользователя
+      const { useUserStore } = await import('@/stores/userStore')
+      const currentUser = useUserStore.getState().currentUser
+
+      if (currentUser?.telegramId) {
+        try {
+          const response = await fetch('/api/profile?action=add_experience', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              telegramId: currentUser.telegramId,
+              experiencePoints: 25, // EXPERIENCE_REWARDS.SHARE_GARDEN
+              reason: 'share_garden: text description shared',
+            }),
+          })
+
+          if (response.ok) {
+            console.log('🏆 Added XP for sharing garden text')
+            showAlert('🏆 +25 XP за шеринг сада!')
+          }
+        } catch (error) {
+          console.warn('⚠️ Failed to add XP for garden text share:', error)
+        }
+      }
     } catch {
       showAlert('Ошибка при отправке сообщения')
     }

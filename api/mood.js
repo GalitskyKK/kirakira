@@ -144,6 +144,44 @@ async function handleRecord(req, res) {
       // Не критично, продолжаем
     }
 
+    // 🏆 НАЧИСЛЯЕМ ОПЫТ ЗА ЗАПИСЬ НАСТРОЕНИЯ
+    try {
+      // Проверяем первая ли это запись за день
+      const today = formattedDate
+      const { data: todayEntries } = await supabase
+        .from('mood_entries')
+        .select('id')
+        .eq('telegram_id', telegramUserId)
+        .eq('mood_date', today)
+
+      const isFirstToday = !todayEntries || todayEntries.length <= 1
+
+      // Базовый опыт за запись настроения
+      const addMoodResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/profile?action=add_experience`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            telegramId: telegramUserId,
+            experiencePoints: isFirstToday ? 20 : 10, // FIRST_MOOD_OF_DAY : DAILY_MOOD
+            reason: isFirstToday
+              ? `first_mood_today: ${mood}`
+              : `mood_entry: ${mood}`,
+          }),
+        }
+      )
+
+      if (addMoodResponse.ok) {
+        console.log(
+          `🏆 Added XP for mood entry: ${mood} (${isFirstToday ? 'first today' : 'additional'})`
+        )
+      }
+    } catch (xpError) {
+      console.warn('⚠️ Failed to add XP for mood entry:', xpError)
+      // Не критично, продолжаем
+    }
+
     res.status(200).json({
       success: true,
       data: {

@@ -169,15 +169,41 @@ export function useTelegram() {
   )
 
   const shareGarden = useCallback(
-    (gardenImageUrl: string, description: string) => {
+    async (gardenImageUrl: string, description: string) => {
       if (webApp) {
         webApp.shareMessage({
           text: `🌸 Посмотрите на мой эмоциональный сад в KiraKira!\n\n${description}\n\n${gardenImageUrl}`,
           parse_mode: 'Markdown',
         })
+
+        // 🏆 НАЧИСЛЯЕМ ОПЫТ ЗА ШЕРИНГ САДА
+        if (user?.telegramId) {
+          try {
+            const response = await fetch('/api/profile?action=add_experience', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                telegramId: user.telegramId,
+                experiencePoints: 25, // EXPERIENCE_REWARDS.SHARE_GARDEN
+                reason: 'share_garden: garden screenshot shared',
+              }),
+            })
+
+            if (response.ok) {
+              console.log('🏆 Added XP for sharing garden')
+
+              // Показываем уведомление о получении XP
+              if (showAlert) {
+                showAlert('🏆 +25 XP за шеринг сада!')
+              }
+            }
+          } catch (error) {
+            console.warn('⚠️ Failed to add XP for garden share:', error)
+          }
+        }
       }
     },
-    [webApp]
+    [webApp, user?.telegramId, showAlert]
   )
 
   // Закрытие приложения

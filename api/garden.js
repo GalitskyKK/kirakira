@@ -110,6 +110,53 @@ async function handleAddElement(req, res) {
       // Не критично, продолжаем
     }
 
+    // 🏆 НАЧИСЛЯЕМ ОПЫТ ЗА НОВОЕ РАСТЕНИЕ
+    try {
+      // Базовый опыт за растение
+      const addPlantResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/profile?action=add_experience`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            telegramId,
+            experiencePoints: 15, // EXPERIENCE_REWARDS.NEW_PLANT
+            reason: `garden_element: ${element.type} (${element.rarity})`,
+          }),
+        }
+      )
+
+      // Дополнительный опыт за редкие элементы
+      const rareTypes = ['rare', 'epic', 'legendary']
+      if (rareTypes.includes(element.rarity?.toLowerCase())) {
+        const addRareResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/profile?action=add_experience`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              telegramId,
+              experiencePoints: 50, // EXPERIENCE_REWARDS.RARE_PLANT
+              reason: `rare_element: ${element.type} (${element.rarity})`,
+            }),
+          }
+        )
+
+        if (addRareResponse.ok) {
+          console.log(
+            `🏆 Added rare element bonus XP for ${element.rarity} ${element.type}`
+          )
+        }
+      }
+
+      if (addPlantResponse.ok) {
+        console.log(`🏆 Added XP for new garden element: ${element.type}`)
+      }
+    } catch (xpError) {
+      console.warn('⚠️ Failed to add XP for garden element:', xpError)
+      // Не критично, продолжаем
+    }
+
     res.status(200).json({
       success: true,
       data: {
