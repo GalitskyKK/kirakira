@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useUserStore, useGardenStore, useMoodStore } from '@/stores'
 import { useProfile } from '@/hooks/useProfile'
@@ -178,6 +178,8 @@ function ProfileDebug({
   profileError,
   profileData,
   apiResponse,
+  hookErrors,
+  renderTime,
   onRetry,
 }: any) {
   // Show debug for now to diagnose Telegram issues
@@ -195,7 +197,11 @@ function ProfileDebug({
         </button>
       </div>
       <div className="space-y-1 text-yellow-800">
-        <div>Component Rendered: ✅ (you can see this!)</div>
+        <div>Component Rendered: ✅ at {renderTime || 'unknown time'}</div>
+        <div>
+          hookErrors:{' '}
+          {hookErrors?.length ? `❌ ${hookErrors.length} errors` : '✅'}
+        </div>
         <div>userLoading: {userLoading ? '✅' : '❌'}</div>
         <div>profileLoading: {profileLoading ? '✅' : '❌'}</div>
         <div>profileError: {profileError || '❌'}</div>
@@ -203,6 +209,22 @@ function ProfileDebug({
         <div>telegramId: {currentUser?.telegramId || 'missing'}</div>
         <div>profileData: {profileData ? '✅' : '❌'}</div>
         <div>apiResponse: {apiResponse ? '✅' : '❌'}</div>
+
+        {hookErrors && hookErrors.length > 0 && (
+          <details className="mt-2">
+            <summary className="cursor-pointer text-red-600">
+              ❌ Hook Errors ({hookErrors.length})
+            </summary>
+            <div className="mt-1 rounded bg-red-100 p-2 text-xs">
+              {hookErrors.map((error: string, index: number) => (
+                <div key={index} className="text-red-800">
+                  {error}
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
+
         {currentUser && (
           <details className="mt-2">
             <summary className="cursor-pointer">Current User Info</summary>
@@ -225,13 +247,79 @@ function ProfileDebug({
 }
 
 export function ProfilePage() {
-  const { currentUser, isLoading: userLoading } = useUserStore()
-  const { currentGarden, getElementsCount } = useGardenStore()
-  const { getMoodStats } = useMoodStore()
-  const { isLoading: profileLoading, error: profileError } = useProfile()
+  // EXTREME DEBUG: Show this first to prove component renders
+  const [renderTime] = useState(() => new Date().toLocaleTimeString())
 
   const [profileData, setProfileData] = useState<ProfileData | null>(null)
   const [apiResponse, setApiResponse] = useState<any>(null)
+  const hookErrorsRef = useRef<string[]>([])
+
+  // Сбрасываем ошибки при каждом рендере
+  hookErrorsRef.current = []
+
+  // Безопасно получаем данные из хуков с обработкой ошибок
+  let currentUser,
+    userLoading,
+    currentGarden,
+    getElementsCount,
+    getMoodStats,
+    profileLoading,
+    profileError
+
+  try {
+    const userStoreResult = useUserStore()
+    currentUser = userStoreResult.currentUser
+    userLoading = userStoreResult.isLoading
+  } catch (error) {
+    hookErrorsRef.current.push(
+      `useUserStore: ${error instanceof Error ? error.message : String(error)}`
+    )
+    currentUser = null
+    userLoading = false
+  }
+
+  try {
+    const gardenStoreResult = useGardenStore()
+    currentGarden = gardenStoreResult.currentGarden
+    getElementsCount = gardenStoreResult.getElementsCount
+  } catch (error) {
+    hookErrorsRef.current.push(
+      `useGardenStore: ${error instanceof Error ? error.message : String(error)}`
+    )
+    currentGarden = null
+    getElementsCount = () => 0
+  }
+
+  try {
+    const moodStoreResult = useMoodStore()
+    getMoodStats = moodStoreResult.getMoodStats
+  } catch (error) {
+    hookErrorsRef.current.push(
+      `useMoodStore: ${error instanceof Error ? error.message : String(error)}`
+    )
+    getMoodStats = () => ({
+      totalEntries: 0,
+      currentStreak: 0,
+      longestStreak: 0,
+      mostFrequentMood: null,
+      averageIntensity: 0,
+      moodDistribution: {} as Record<MoodType, number>,
+      weeklyTrend: [] as readonly MoodEntry[],
+      monthlyTrend: [] as readonly MoodEntry[],
+    })
+  }
+
+  try {
+    const profileResult = useProfile()
+    profileLoading = profileResult.isLoading
+    profileError = profileResult.error
+  } catch (error) {
+    hookErrorsRef.current.push(
+      `useProfile: ${error instanceof Error ? error.message : String(error)}`
+    )
+    profileLoading = false
+    profileError = null
+  }
 
   // Load profile data function
   const loadProfileData = useCallback(async () => {
@@ -293,6 +381,8 @@ export function ProfilePage() {
         profileError={profileError}
         profileData={profileData}
         apiResponse={apiResponse}
+        hookErrors={hookErrorsRef.current}
+        renderTime={renderTime}
         onRetry={loadProfileData}
       />
 
