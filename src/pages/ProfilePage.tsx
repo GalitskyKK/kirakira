@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useUserStore, useGardenStore, useMoodStore } from '@/stores'
 import { useProfile } from '@/hooks/useProfile'
@@ -108,14 +108,15 @@ function ProfileDebug({
   profileLoading,
   profileError,
   profileData,
-  apiResponse,
   renderTime,
   onRetry,
 }: any) {
   return (
     <div className="mb-4 rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-xs">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="font-bold text-yellow-900">🔍 SAFE Profile Debug</h3>
+        <h3 className="font-bold text-yellow-900">
+          🔍 SIMPLE Profile Debug (useProfile)
+        </h3>
         <button
           onClick={onRetry}
           className="rounded bg-yellow-200 px-2 py-1 text-xs text-yellow-900 hover:bg-yellow-300"
@@ -131,12 +132,22 @@ function ProfileDebug({
         <div>currentUser: {currentUser ? '✅ (LOCAL)' : '❌'}</div>
         <div>telegramId: {currentUser?.telegramId || 'missing'}</div>
         <div>profileData: {profileData ? '✅ (SERVER)' : '❌'}</div>
-        <div>apiResponse: {apiResponse ? '✅' : '❌'}</div>
         <div>📊 Data Source: {profileData?.user ? 'SERVER' : 'LOCAL'}</div>
         <div>🔑 Server User ID: {profileData?.user?.telegram_id || 'N/A'}</div>
         <div>👤 Server Username: {profileData?.user?.username || 'N/A'}</div>
         <div>
           📅 Server RegDate: {profileData?.user?.registration_date || 'N/A'}
+        </div>
+        <div>
+          ⚠️ Profile Data Type: {profileData ? typeof profileData : 'null'}
+        </div>
+        <div>
+          ⚠️ User Data Type:{' '}
+          {profileData?.user ? typeof profileData.user : 'null'}
+        </div>
+        <div>
+          ⚠️ User Fields:{' '}
+          {profileData?.user ? Object.keys(profileData.user).length : 0}
         </div>
 
         {currentUser && (
@@ -149,11 +160,11 @@ function ProfileDebug({
             </pre>
           </details>
         )}
-        {apiResponse && (
+        {profileData && (
           <details className="mt-2">
-            <summary className="cursor-pointer">API Response (SERVER)</summary>
+            <summary className="cursor-pointer">Profile Data (SERVER)</summary>
             <pre className="mt-1 max-h-40 overflow-auto rounded bg-yellow-100 p-2 text-xs">
-              {JSON.stringify(apiResponse, null, 2)}
+              {JSON.stringify(profileData, null, 2)}
             </pre>
           </details>
         )}
@@ -165,11 +176,15 @@ function ProfileDebug({
 export function ProfilePage() {
   console.log('🔥 SAFE ProfilePage rendering started')
 
-  // ПРАВИЛЬНЫЕ ХУКИ - без try-catch!
+  // ПРАВИЛЬНЫЕ ХУКИ - используем тот же подход что и FriendProfilePage
   const { currentUser, isLoading: userLoading } = useUserStore()
   const { currentGarden, getElementsCount } = useGardenStore()
   const { getMoodStats } = useMoodStore()
-  const { isLoading: profileLoading, error: profileError } = useProfile()
+  const {
+    loadProfile,
+    isLoading: profileLoading,
+    error: profileError,
+  } = useProfile()
 
   console.log(
     '🔥 Hooks loaded. currentUser:',
@@ -181,37 +196,26 @@ export function ProfilePage() {
   // БЕЗОПАСНОЕ СОСТОЯНИЕ
   const [renderTime] = useState(() => new Date().toLocaleTimeString())
   const [profileData, setProfileData] = useState<ProfileData | null>(null)
-  const [apiResponse, setApiResponse] = useState<any>(null)
 
-  // Load profile data function
-  const loadProfileData = useCallback(async () => {
-    if (currentUser?.telegramId) {
-      try {
-        console.log('🔥 Loading profile data for:', currentUser.telegramId)
-        const response = await fetch(
-          `/api/profile?action=get_profile&telegramId=${currentUser.telegramId}`
-        )
-        const result = await response.json()
-        setApiResponse(result)
+  // Load profile data using the same hook as FriendProfilePage
+  useEffect(() => {
+    if (!currentUser?.telegramId) return
 
-        if (result.success && result.data) {
-          setProfileData(result.data)
-          console.log('🔥 Profile data loaded successfully')
-        }
-      } catch (error) {
-        console.error('❌ Failed to load profile:', error)
-        setApiResponse({
-          error: error instanceof Error ? error.message : String(error),
-        })
+    const loadData = async () => {
+      console.log(
+        '🔥 Loading profile data using useProfile hook for:',
+        currentUser.telegramId
+      )
+      const data = await loadProfile(currentUser.telegramId)
+      console.log('🔥 Profile data received:', data)
+      if (data) {
+        setProfileData(data)
+        console.log('🔥 Profile data set successfully')
       }
     }
-  }, [currentUser?.telegramId])
 
-  // Load profile data when component mounts
-  useEffect(() => {
-    console.log('🔥 useEffect triggered, loading profile data')
-    loadProfileData()
-  }, [loadProfileData])
+    void loadData()
+  }, [currentUser?.telegramId, loadProfile])
 
   // Безопасные статистики
   const moodStats = getMoodStats
@@ -266,9 +270,8 @@ export function ProfilePage() {
           profileLoading={profileLoading}
           profileError={profileError}
           profileData={profileData}
-          apiResponse={apiResponse}
           renderTime={renderTime}
-          onRetry={loadProfileData}
+          onRetry={() => window.location.reload()}
         />
 
         {/* Loading */}
@@ -309,7 +312,7 @@ export function ProfilePage() {
           </div>
         )}
 
-        {/* Main Content */}
+        {/* Main Content - простая логика как в FriendProfilePage */}
         {currentUser && !profileError && !userLoading && !profileLoading && (
           <>
             <ProfileHeader user={profileData?.user || currentUser} />
