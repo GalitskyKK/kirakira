@@ -23,8 +23,14 @@ export interface ApiEndpoints {
 }
 
 export interface AuthEndpoints {
-  readonly signIn: (email: string, password: string) => Promise<ApiResponse<User>>
-  readonly signUp: (email: string, password: string) => Promise<ApiResponse<User>>
+  readonly signIn: (
+    email: string,
+    password: string
+  ) => Promise<ApiResponse<User>>
+  readonly signUp: (
+    email: string,
+    password: string
+  ) => Promise<ApiResponse<User>>
   readonly signOut: () => Promise<ApiResponse<void>>
   readonly getCurrentUser: () => Promise<ApiResponse<User | null>>
 }
@@ -32,14 +38,23 @@ export interface AuthEndpoints {
 export interface GardenEndpoints {
   readonly getGarden: (userId: string) => Promise<ApiResponse<Garden>>
   readonly updateGarden: (garden: Garden) => Promise<ApiResponse<Garden>>
-  readonly addElement: (element: GardenElement) => Promise<ApiResponse<GardenElement>>
+  readonly addElement: (
+    element: GardenElement
+  ) => Promise<ApiResponse<GardenElement>>
   readonly shareGarden: (gardenId: string) => Promise<ApiResponse<string>>
 }
 
 export interface MoodEndpoints {
-  readonly getMoodHistory: (userId: string, limit?: number) => Promise<ApiResponse<readonly MoodEntry[]>>
-  readonly addMoodEntry: (entry: Omit<MoodEntry, 'id' | 'createdAt'>) => Promise<ApiResponse<MoodEntry>>
-  readonly getTodaysMood: (userId: string) => Promise<ApiResponse<MoodEntry | null>>
+  readonly getMoodHistory: (
+    userId: string,
+    limit?: number
+  ) => Promise<ApiResponse<readonly MoodEntry[]>>
+  readonly addMoodEntry: (
+    entry: Omit<MoodEntry, 'id' | 'createdAt'>
+  ) => Promise<ApiResponse<MoodEntry>>
+  readonly getTodaysMood: (
+    userId: string
+  ) => Promise<ApiResponse<MoodEntry | null>>
 }
 
 export interface UserEndpoints {
@@ -69,4 +84,12 @@ export interface ShareGardenResponse {
   readonly shareUrl: string
   readonly expiresAt: Date
   readonly viewCount: number
+}
+
+// Profile API types
+export interface ProfileData {
+  readonly user: any
+  readonly stats: any
+  readonly achievements: any[]
+  readonly newlyUnlocked?: any[]
 }

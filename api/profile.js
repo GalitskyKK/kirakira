@@ -301,7 +301,6 @@ export default async function handler(req, res) {
 
         if (achievementsError) {
           console.error('Error fetching achievements:', achievementsError)
-          // Возвращаем пустой массив вместо падения API
         }
 
         return res.status(200).json({
