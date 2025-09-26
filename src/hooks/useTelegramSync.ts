@@ -82,6 +82,10 @@ export function useTelegramSync() {
             await clearAllUserData()
           }
 
+          console.log(
+            '🔄 Вызываем syncFromSupabase для нового пользователя (clear):',
+            telegramUser.telegramId
+          )
           await syncFromSupabase(telegramUser.telegramId)
 
           // Если пользователя нет на сервере - создаем
@@ -99,6 +103,10 @@ export function useTelegramSync() {
           }
         } else {
           // Принудительная синхронизация для существующих пользователей
+          console.log(
+            '🔄 Вызываем syncFromSupabase для существующего пользователя:',
+            telegramUser.telegramId
+          )
           await syncFromSupabase(telegramUser.telegramId)
         }
 

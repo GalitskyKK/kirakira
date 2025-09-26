@@ -6,6 +6,8 @@ import {
   calculateExperienceFromStats,
 } from '@/utils/achievements'
 import { useMoodTracking, useGardenState } from '@/hooks'
+import { useUserStore } from '@/stores/userStore'
+import { useState } from 'react'
 
 interface ProfileHeaderProps {
   readonly user: User
@@ -14,9 +16,29 @@ interface ProfileHeaderProps {
 export function ProfileHeader({ user }: ProfileHeaderProps) {
   const displayName = user.firstName ?? user.username ?? 'Пользователь'
   const username = user.username != null ? `@${user.username}` : null
+  const [isSyncing, setIsSyncing] = useState(false)
+
   // Hooks for calculating level
   const { moodStats } = useMoodTracking()
   const { getElementsCount } = useGardenState()
+  const { syncFromSupabase } = useUserStore()
+
+  // Принудительная синхронизация с БД
+  const handleSyncWithDB = async () => {
+    if (user.telegramId == null || isSyncing) return
+
+    setIsSyncing(true)
+    try {
+      await syncFromSupabase(user.telegramId)
+      console.log('✅ Данные синхронизированы с БД')
+      // Принудительно перезагружаем страницу для отображения новых данных
+      window.location.reload()
+    } catch (error) {
+      console.error('❌ Ошибка синхронизации:', error)
+    } finally {
+      setIsSyncing(false)
+    }
+  }
 
   // Защита от undefined - создаем fallback значения для moodStats
   const safeMoodStats = moodStats ?? {
@@ -39,6 +61,16 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
 
   // 🔥 ИСПРАВЛЕНИЕ: Используем РЕАЛЬНЫЕ данные из БД вместо локальных расчетов
   const totalElements = getElementsCount?.() ?? 0
+
+  // 🔍 ОТЛАДКА: Выводим информацию о данных пользователя
+  console.log('🔍 ProfileHeader - User data:', {
+    telegramId: user.telegramId,
+    experience: user.experience,
+    level: user.level,
+    hasExperience: user.experience !== undefined,
+    hasLevel: user.level !== undefined,
+    fullUser: user,
+  })
 
   // Используем опыт и уровень из БД если доступны, иначе рассчитываем локально
   const hasDbData = user.experience !== undefined && user.level !== undefined
@@ -139,13 +171,22 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
             <button className="whitespace-nowrap rounded-lg bg-garden-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-garden-600">
               📤 Поделиться
             </button>
-            {/* Индикатор синхронизации */}
+            {/* Кнопка синхронизации и индикатор */}
             {user.telegramId != null && (
-              <div className="text-xs text-gray-500">
-                {user.experience != null && user.level != null
-                  ? `💾 Данные из БД`
-                  : `📱 Локальные данные`}
-              </div>
+              <>
+                <button
+                  onClick={() => void handleSyncWithDB()}
+                  disabled={isSyncing}
+                  className="whitespace-nowrap rounded-lg bg-blue-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-blue-600 disabled:opacity-50"
+                >
+                  {isSyncing ? '🔄 Синхронизация...' : '🔄 Обновить из БД'}
+                </button>
+                <div className="text-xs text-gray-500">
+                  {user.experience != null && user.level != null
+                    ? `💾 БД: Ур.${user.level} (${user.experience}XP)`
+                    : `📱 Локальные данные`}
+                </div>
+              </>
             )}
           </div>
         </div>

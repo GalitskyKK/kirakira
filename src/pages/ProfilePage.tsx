@@ -22,6 +22,9 @@ interface ProfileData {
     total_days?: number
     rare_elements_found?: number
     gardens_shared?: number
+    // 🔥 ИСПРАВЛЕНИЕ: Добавляем поля experience и level
+    experience?: number
+    level?: number
     privacy_settings?: {
       showProfile?: boolean
       shareGarden?: boolean
@@ -30,8 +33,30 @@ interface ProfileData {
       cloudSync?: boolean
     }
   }
-  stats?: any
-  achievements?: any[]
+  stats?: {
+    totalMoodEntries?: number
+    currentStreak?: number
+    longestStreak?: number
+    totalElements?: number
+    rareElementsFound?: number
+    totalDays?: number
+    gardensShared?: number
+    experience?: number
+    level?: number
+  }
+  achievements?: Array<{
+    achievement_id: string
+    is_unlocked: boolean
+    progress: number
+    unlocked_at: string | null
+    achievements: {
+      name: string
+      emoji: string
+      rarity: string
+      category: string
+      description: string
+    }
+  }>
 }
 
 export function ProfilePage() {
@@ -149,6 +174,10 @@ export function ProfilePage() {
       ? new Date(apiUser.registration_date)
       : (currentUser?.registrationDate ?? new Date()),
     isAnonymous: currentUser?.isAnonymous ?? false,
+
+    // 🔥 ИСПРАВЛЕНИЕ: Добавляем поля experience и level из API или currentUser (с fallback значениями)
+    experience: (apiUser?.experience ?? currentUser?.experience ?? 0) as number,
+    level: (apiUser?.level ?? currentUser?.level ?? 1) as number,
 
     // Статистика из API или fallback
     stats: {

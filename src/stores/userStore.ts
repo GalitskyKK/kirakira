@@ -114,6 +114,14 @@ export const useUserStore = create<UserStore>()(
         let storedUser = loadUser()
         const onboardingCompleted = isOnboardingCompleted()
 
+        console.log('🔍 loadUser - Loaded from localStorage:', {
+          hasUser: !!storedUser,
+          userExperience: storedUser?.experience,
+          userLevel: storedUser?.level,
+          isAnonymous: storedUser?.isAnonymous,
+          telegramId: storedUser?.telegramId,
+        })
+
         // 🔥 РЕАЛЬНАЯ СИНХРОНИЗАЦИЯ - загружаем из CloudStorage если доступно
         if (telegramStorage.isAvailable && !storedUser) {
           try {
@@ -128,6 +136,12 @@ export const useUserStore = create<UserStore>()(
         }
 
         if (storedUser) {
+          console.log('🔍 loadUser - Setting user to store:', {
+            experience: storedUser.experience,
+            level: storedUser.level,
+            telegramId: storedUser.telegramId,
+          })
+
           set({
             currentUser: storedUser,
             isAuthenticated: !storedUser.isAnonymous,
@@ -549,11 +563,21 @@ export const useUserStore = create<UserStore>()(
           `/api/profile?action=get_profile&telegramId=${telegramId}`
         )
 
+        console.log('🔍 API Response status:', response.status, response.ok)
+
         if (!response.ok) {
           throw new Error(`Failed to fetch user data: ${response.status}`)
         }
 
         const result = await response.json()
+
+        console.log('🔍 API Response data:', {
+          success: result.success,
+          hasUser: !!result.data?.user,
+          userExperience: result.data?.user?.experience,
+          userLevel: result.data?.user?.level,
+          fullResult: result,
+        })
 
         if (!result.success || !result.data.user) {
           console.log(
@@ -623,6 +647,8 @@ export const useUserStore = create<UserStore>()(
           console.log(`✅ User data synced from Supabase for ${telegramId}:`, {
             experience: syncedUser.experience,
             level: syncedUser.level,
+            savedSuccessfully: success,
+            storeState: get().currentUser,
           })
         } else {
           throw new Error('Failed to save synced user')
