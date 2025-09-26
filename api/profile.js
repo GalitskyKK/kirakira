@@ -141,12 +141,13 @@ async function calculateUserStats(user) {
       }
 
       // Вычисляем самый длинный стрик
-      let streakStart = null
-      for (let i = 0; i < sortedDates.length; i++) {
+      tempStreak = 1
+      for (let i = 1; i < sortedDates.length; i++) {
         const currentDate = new Date(sortedDates[i])
-        const prevDate = i > 0 ? new Date(sortedDates[i - 1]) : null
+        const prevDate = new Date(sortedDates[i - 1])
 
-        if (!prevDate || prevDate - currentDate === 24 * 60 * 60 * 1000) {
+        // Проверяем, что даты идут подряд (разница 1 день)
+        if (Math.abs(prevDate - currentDate) === 24 * 60 * 60 * 1000) {
           tempStreak++
         } else {
           longestStreak = Math.max(longestStreak, tempStreak)
@@ -287,7 +288,7 @@ export default async function handler(req, res) {
             is_unlocked,
             progress,
             unlocked_at,
-            achievements (
+            achievements!inner (
               name,
               description,
               emoji,
@@ -300,6 +301,7 @@ export default async function handler(req, res) {
 
         if (achievementsError) {
           console.error('Error fetching achievements:', achievementsError)
+          // Возвращаем пустой массив вместо падения API
         }
 
         return res.status(200).json({
@@ -406,10 +408,7 @@ export default async function handler(req, res) {
           .from('friendships')
           .select('*')
           .or(
-            `requester_telegram_id.eq.${telegramId},accepter_telegram_id.eq.${telegramId}`
-          )
-          .or(
-            `requester_telegram_id.eq.${friendTelegramId},accepter_telegram_id.eq.${friendTelegramId}`
+            `and(requester_telegram_id.eq.${telegramId},addressee_telegram_id.eq.${friendTelegramId}),and(requester_telegram_id.eq.${friendTelegramId},addressee_telegram_id.eq.${telegramId})`
           )
           .eq('status', 'accepted')
           .single()
@@ -438,23 +437,31 @@ export default async function handler(req, res) {
         // Достижения (если разрешены)
         let achievements = []
         if (privacySettings.shareAchievements) {
-          const { data: userAchievements } = await supabase
-            .from('user_achievements')
-            .select(
-              `
+          const { data: userAchievements, error: friendAchievementsError } =
+            await supabase
+              .from('user_achievements')
+              .select(
+                `
               achievement_id,
               is_unlocked,
               unlocked_at,
-              achievements (
+              achievements!inner (
                 name,
                 description,
                 emoji,
                 category
               )
             `
+              )
+              .eq('telegram_id', friend.telegram_id)
+              .eq('is_unlocked', true)
+
+          if (friendAchievementsError) {
+            console.error(
+              'Error fetching friend achievements:',
+              friendAchievementsError
             )
-            .eq('telegram_id', friend.telegram_id)
-            .eq('is_unlocked', true)
+          }
 
           achievements = userAchievements || []
         }
@@ -488,11 +495,13 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     console.error('Profile API Error:', error)
+    console.error('Stack trace:', error.stack)
     return res.status(500).json({
       success: false,
       error: 'Internal server error',
       details:
         process.env.NODE_ENV === 'development' ? error.message : undefined,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     })
   }
 }
