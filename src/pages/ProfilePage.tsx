@@ -1,299 +1,146 @@
-import { useState } from 'react'
-import { useUserStore } from '@/stores'
+import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
+import { useUserStore, useGardenStore, useMoodStore } from '@/stores'
 import { useProfile } from '@/hooks/useProfile'
-
-// ЭКСТРЕМАЛЬНО ПРОСТАЯ ВЕРСИЯ (ПРОЙДЕН ✅) - без всех хуков!
-/*
-function UltraSimpleProfilePage() {
-  console.log('🔥 ULTRA SIMPLE ProfilePage START')
-
-  // ТЕСТ 1: Простейший рендер
-  return (
-    <div
-      style={{
-        padding: '20px',
-        background: '#00ff00',
-        color: '#000000',
-        fontSize: '18px',
-        fontWeight: 'bold',
-      }}
-    >
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          background: '#00ff00',
-          color: '#000000',
-          padding: '15px',
-          fontSize: '16px',
-          zIndex: 9999,
-          textAlign: 'center',
-          fontWeight: 'bold',
-        }}
-      >
-        ✅ ULTRA SIMPLE ProfilePage РЕНДЕРИТСЯ!
-      </div>
-
-      <div style={{ marginTop: '60px' }}>
-        <h1>🎉 КОМПОНЕНТ ЗАГРУЖАЕТСЯ!</h1>
-        <p>Время: {new Date().toLocaleTimeString()}</p>
-        <p>Если вы видите это - компонент работает!</p>
-        <p>Проблема была в хуках React.</p>
-
-        <div
-          style={{
-            marginTop: '20px',
-            padding: '15px',
-            background: '#ffff00',
-            border: '2px solid #ff0000',
-          }}
-        >
-          <h3>🔍 ТЕСТ ДИАГНОСТИКА</h3>
-          <p>✅ ProfilePage компонент вызывается</p>
-          <p>✅ Роутинг работает</p>
-          <p>✅ Рендер функционирует</p>
-          <p>❌ Проблема в React хуках (useState, useUserStore, useProfile)</p>
-        </div>
-      </div>
-    </div>
-  )
-}
-*/
-
-// ТЕСТ 2: useState (ПРОЙДЕН ✅) - добавим хуки по одному
-/*
-function TestUseStateProfilePage() {
-  console.log('🔥 TESTING useState ProfilePage START')
-
-  try {
-    // Тестируем useState
-    const [renderTime] = useState(() => new Date().toLocaleTimeString())
-    console.log('✅ useState works')
-
-    return (
-      <div style={{ padding: '20px', background: '#ffaa00' }}>
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            background: '#ffaa00',
-            color: '#000000',
-            padding: '15px',
-            fontSize: '16px',
-            zIndex: 9999,
-            textAlign: 'center',
-            fontWeight: 'bold',
-          }}
-        >
-          ✅ ProfilePage + useState РАБОТАЕТ!
-        </div>
-
-        <div style={{ marginTop: '60px' }}>
-          <h1>🎉 useState РАБОТАЕТ!</h1>
-          <p>Время рендера: {renderTime}</p>
-          <p>Проблема НЕ в useState</p>
-
-          <div
-            style={{
-              marginTop: '20px',
-              padding: '15px',
-              background: '#ffffff',
-              border: '2px solid #00aa00',
-            }}
-          >
-            <h3>🔍 РЕЗУЛЬТАТ ТЕСТА useState</h3>
-            <p>✅ Компонент рендерится</p>
-            <p>✅ useState работает</p>
-            <p>❌ Проблема в useUserStore или useProfile</p>
-          </div>
-        </div>
-      </div>
-    )
-  } catch (error) {
-    console.error('❌ useState crashed:', error)
-    return (
-      <div style={{ padding: '20px', background: 'red', color: 'white' }}>
-        ❌ useState ERROR: {String(error)}
-      </div>
-    )
-  }
-}
-*/
-
-// ТЕСТ 3: useUserStore (ПРОЙДЕН ✅) - добавили useUserStore к useState
-/*
-function TestUserStoreProfilePage() {
-  console.log('🔥 TESTING useUserStore ProfilePage START')
-  
-  try {
-    // Тестируем useState + useUserStore
-    const [renderTime] = useState(() => new Date().toLocaleTimeString())
-    const { currentUser, isLoading } = useUserStore()
-    console.log('✅ useState + useUserStore works')
-    
-    return (
-      <div style={{ padding: '20px', background: '#aa00ff' }}>
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            background: '#aa00ff',
-            color: '#ffffff',
-            padding: '15px',
-            fontSize: '16px',
-            zIndex: 9999,
-            textAlign: 'center',
-            fontWeight: 'bold',
-          }}
-        >
-          ✅ ProfilePage + useUserStore РАБОТАЕТ!
-        </div>
-        
-        <div style={{ marginTop: '60px' }}>
-          <h1>🎉 useUserStore РАБОТАЕТ!</h1>
-          <p>Время рендера: {renderTime}</p>
-          <p>User: {currentUser ? 'EXISTS' : 'MISSING'}</p>
-          <p>Loading: {isLoading ? 'YES' : 'NO'}</p>
-          
-          <div
-            style={{
-              marginTop: '20px',
-              padding: '15px',
-              background: '#ffffff',
-              border: '2px solid #aa00ff',
-            }}
-          >
-            <h3>🔍 РЕЗУЛЬТАТ ТЕСТА useUserStore</h3>
-            <p>✅ Компонент рендерится</p>
-            <p>✅ useState работает</p>
-            <p>✅ useUserStore работает</p>
-            <p>❌ Проблема только в useProfile</p>
-          </div>
-        </div>
-      </div>
-    )
-  } catch (error) {
-    console.error('❌ useUserStore crashed:', error)
-    return (
-      <div style={{ padding: '20px', background: 'red', color: 'white' }}>
-        ❌ useUserStore ERROR: {String(error)}
-      </div>
-    )
-  }
-}
-*/
-
-// ТЕСТ 4: Добавим useProfile к useState + useUserStore
-function TestUseProfilePage() {
-  console.log('🔥 TESTING useProfile ProfilePage START')
-
-  try {
-    // Тестируем useState + useUserStore + useProfile
-    console.log('📍 Step 1: Testing useState...')
-    const [renderTime] = useState(() => new Date().toLocaleTimeString())
-    console.log('✅ Step 1: useState works')
-
-    console.log('📍 Step 2: Testing useUserStore...')
-    const { currentUser, isLoading } = useUserStore()
-    console.log('✅ Step 2: useUserStore works', {
-      currentUser: !!currentUser,
-      isLoading,
-    })
-
-    console.log('📍 Step 3: Testing useProfile...')
-    const profileResult = useProfile()
-    console.log(
-      '✅ Step 3: useProfile called, result keys:',
-      Object.keys(profileResult)
-    )
-
-    const {
-      isLoading: profileLoading,
-      error: profileError,
-      loadProfile,
-    } = profileResult
-    console.log('✅ Step 4: useProfile destructured', {
-      profileLoading,
-      profileError,
-      hasLoadProfile: typeof loadProfile === 'function',
-    })
-
-    console.log('🎉 ALL HOOKS WORK! useState + useUserStore + useProfile')
-
-    return (
-      <div style={{ padding: '20px', background: '#00aaff' }}>
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            background: '#00aaff',
-            color: '#ffffff',
-            padding: '15px',
-            fontSize: '16px',
-            zIndex: 9999,
-            textAlign: 'center',
-            fontWeight: 'bold',
-          }}
-        >
-          ✅ ProfilePage + useProfile РАБОТАЕТ!
-        </div>
-
-        <div style={{ marginTop: '60px' }}>
-          <h1>🎉 ВСЕ ХУКИ РАБОТАЮТ!</h1>
-          <p>Время рендера: {renderTime}</p>
-          <p>User: {currentUser ? 'EXISTS' : 'MISSING'}</p>
-          <p>User Loading: {isLoading ? 'YES' : 'NO'}</p>
-          <p>Profile Loading: {profileLoading ? 'YES' : 'NO'}</p>
-          <p>Profile Error: {profileError || 'NONE'}</p>
-          <p>
-            LoadProfile Function:{' '}
-            {typeof loadProfile === 'function' ? 'EXISTS' : 'MISSING'}
-          </p>
-
-          <div
-            style={{
-              marginTop: '20px',
-              padding: '15px',
-              background: '#ffffff',
-              border: '2px solid #00aaff',
-            }}
-          >
-            <h3>🔍 РЕЗУЛЬТАТ ФИНАЛЬНОГО ТЕСТА</h3>
-            <p>✅ Компонент рендерится</p>
-            <p>✅ useState работает</p>
-            <p>✅ useUserStore работает</p>
-            <p>✅ useProfile работает</p>
-            <p>❌ Проблема была в сложной логике ProfilePage</p>
-          </div>
-        </div>
-      </div>
-    )
-  } catch (error) {
-    console.error('❌ useProfile crashed:', error)
-    if (error instanceof Error) {
-      console.error('❌ Stack trace:', error.stack)
-    }
-    return (
-      <div style={{ padding: '20px', background: 'red', color: 'white' }}>
-        <h1>❌ useProfile ERROR!</h1>
-        <p>Error: {String(error)}</p>
-        <p>Check console for details</p>
-      </div>
-    )
-  }
-}
+import { ProfileHeader } from '@/components/profile/ProfileHeader'
+import { ProfileStats } from '@/components/profile/ProfileStats'
+import { ProfileAchievements } from '@/components/profile/ProfileAchievements'
+import { ProfilePrivacySettings } from '@/components/profile/ProfilePrivacySettings'
+import { LoadingSpinner } from '@/components/ui'
 
 export function ProfilePage() {
-  console.log('🔥 ProfilePage ENTRY POINT')
+  console.log('🔥 ПРОСТОЙ ProfilePage начинает рендеринг')
 
-  // ТЕСТ 4: Проверяем useState + useUserStore + useProfile хуки
-  return <TestUseProfilePage />
+  // ✅ Все хуки работают (проверено тестами)
+  const { currentUser, isLoading: userLoading } = useUserStore()
+  const { currentGarden, getElementsCount } = useGardenStore()
+  const { getMoodStats } = useMoodStore()
+  const {
+    isLoading: profileLoading,
+    error: profileError,
+    loadProfile,
+  } = useProfile()
+
+  // Состояние для данных профиля
+  const [profileData, setProfileData] = useState<any>(null)
+  const [loadingProfile, setLoadingProfile] = useState(false)
+
+  // Загружаем профиль при монтировании
+  useEffect(() => {
+    const loadData = async () => {
+      if (currentUser?.telegramId && loadProfile) {
+        console.log('🔄 Загружаем данные профиля...')
+        setLoadingProfile(true)
+        try {
+          const data = await loadProfile()
+          setProfileData(data)
+          console.log('✅ Данные профиля загружены:', !!data)
+        } catch (error) {
+          console.error('❌ Ошибка загрузки профиля:', error)
+        } finally {
+          setLoadingProfile(false)
+        }
+      }
+    }
+
+    loadData()
+  }, [currentUser?.telegramId, loadProfile])
+
+  // Показываем спиннер во время загрузки
+  if (userLoading || profileLoading || loadingProfile) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
+  // Показываем ошибку если нет пользователя
+  if (!currentUser) {
+    return (
+      <div className="p-6">
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-6 text-center">
+          <div className="mb-4 text-6xl">😔</div>
+          <h2 className="mb-2 text-xl font-bold text-gray-900">
+            Пользователь не найден
+          </h2>
+          <p className="text-gray-600">
+            Пожалуйста, авторизуйтесь для просмотра профиля
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // Показываем ошибку если есть проблемы с загрузкой
+  if (profileError) {
+    return (
+      <div className="p-6">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
+          <div className="mb-4 text-6xl">🌸</div>
+          <h2 className="mb-2 text-xl font-bold text-red-900">
+            Упс! Что-то пошло не так
+          </h2>
+          <p className="text-red-700">Не переживайте, мы быстро это исправим</p>
+          <p className="mt-2 text-sm text-red-600">{profileError}</p>
+        </div>
+      </div>
+    )
+  }
+
+  console.log('🎉 Рендерим основной контент ProfilePage')
+
+  // Готовим данные для компонентов
+  const moodStats = getMoodStats
+    ? getMoodStats()
+    : {
+        totalEntries: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        mostFrequentMood: null,
+        averageIntensity: 0,
+        moodDistribution: {
+          joy: 0,
+          calm: 0,
+          stress: 0,
+          sadness: 0,
+          anger: 0,
+          anxiety: 0,
+        },
+        weeklyTrend: [],
+        monthlyTrend: [],
+      }
+
+  const totalElements = getElementsCount ? getElementsCount() : 0
+
+  return (
+    <motion.div
+      className="space-y-6 p-4 pb-8"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+    >
+      {/* Заголовок профиля */}
+      <ProfileHeader user={profileData?.user || currentUser} />
+
+      {/* Статистика */}
+      <ProfileStats
+        user={profileData?.user || currentUser}
+        garden={currentGarden}
+        moodStats={moodStats}
+        totalElements={totalElements}
+      />
+
+      {/* Достижения */}
+      <ProfileAchievements
+        user={profileData?.user || currentUser}
+        moodStats={moodStats}
+        totalElements={totalElements}
+      />
+
+      {/* Настройки приватности */}
+      <ProfilePrivacySettings user={profileData?.user || currentUser} />
+    </motion.div>
+  )
 }
