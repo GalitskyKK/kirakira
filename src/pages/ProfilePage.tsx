@@ -1,5 +1,5 @@
 import { useState } from 'react'
-// import { useUserStore } from '@/stores'
+import { useUserStore } from '@/stores'
 // import { useProfile } from '@/hooks/useProfile'
 
 // ЭКСТРЕМАЛЬНО ПРОСТАЯ ВЕРСИЯ (ПРОЙДЕН ✅) - без всех хуков!
@@ -62,7 +62,8 @@ function UltraSimpleProfilePage() {
 }
 */
 
-// ТЕСТ 2: Добавим хуки по одному - useState
+// ТЕСТ 2: useState (ПРОЙДЕН ✅) - добавим хуки по одному
+/*
 function TestUseStateProfilePage() {
   console.log('🔥 TESTING useState ProfilePage START')
 
@@ -121,10 +122,74 @@ function TestUseStateProfilePage() {
     )
   }
 }
+*/
+
+// ТЕСТ 3: Добавим useUserStore к useState
+function TestUserStoreProfilePage() {
+  console.log('🔥 TESTING useUserStore ProfilePage START')
+
+  try {
+    // Тестируем useState + useUserStore
+    const [renderTime] = useState(() => new Date().toLocaleTimeString())
+    const { currentUser, isLoading } = useUserStore()
+    console.log('✅ useState + useUserStore works')
+
+    return (
+      <div style={{ padding: '20px', background: '#aa00ff' }}>
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            background: '#aa00ff',
+            color: '#ffffff',
+            padding: '15px',
+            fontSize: '16px',
+            zIndex: 9999,
+            textAlign: 'center',
+            fontWeight: 'bold',
+          }}
+        >
+          ✅ ProfilePage + useUserStore РАБОТАЕТ!
+        </div>
+
+        <div style={{ marginTop: '60px' }}>
+          <h1>🎉 useUserStore РАБОТАЕТ!</h1>
+          <p>Время рендера: {renderTime}</p>
+          <p>User: {currentUser ? 'EXISTS' : 'MISSING'}</p>
+          <p>Loading: {isLoading ? 'YES' : 'NO'}</p>
+
+          <div
+            style={{
+              marginTop: '20px',
+              padding: '15px',
+              background: '#ffffff',
+              border: '2px solid #aa00ff',
+            }}
+          >
+            <h3>🔍 РЕЗУЛЬТАТ ТЕСТА useUserStore</h3>
+            <p>✅ Компонент рендерится</p>
+            <p>✅ useState работает</p>
+            <p>✅ useUserStore работает</p>
+            <p>❌ Проблема только в useProfile</p>
+          </div>
+        </div>
+      </div>
+    )
+  } catch (error) {
+    console.error('❌ useUserStore crashed:', error)
+    return (
+      <div style={{ padding: '20px', background: 'red', color: 'white' }}>
+        ❌ useUserStore ERROR: {String(error)}
+      </div>
+    )
+  }
+}
 
 export function ProfilePage() {
   console.log('🔥 ProfilePage ENTRY POINT')
 
-  // ТЕСТ 2: Проверяем useState хук
-  return <TestUseStateProfilePage />
+  // ТЕСТ 3: Проверяем useState + useUserStore хуки
+  return <TestUserStoreProfilePage />
 }
