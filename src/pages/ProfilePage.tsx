@@ -7,10 +7,29 @@ import { ProfileStats } from '@/components/profile/ProfileStats'
 import { ProfileAchievements } from '@/components/profile/ProfileAchievements'
 import { ProfilePrivacySettings } from '@/components/profile/ProfilePrivacySettings'
 import { LoadingSpinner } from '@/components/ui'
-import type { User } from '@/types'
 
 interface ProfileData {
-  user: Partial<User>
+  user: {
+    user_id?: string
+    telegram_id?: number
+    username?: string
+    first_name?: string
+    last_name?: string
+    photo_url?: string
+    registration_date?: string
+    current_streak?: number
+    longest_streak?: number
+    total_days?: number
+    rare_elements_found?: number
+    gardens_shared?: number
+    privacy_settings?: {
+      showProfile?: boolean
+      shareGarden?: boolean
+      shareAchievements?: boolean
+      allowFriendRequests?: boolean
+      cloudSync?: boolean
+    }
+  }
   stats?: any
   achievements?: any[]
 }
@@ -41,6 +60,7 @@ export function ProfilePage() {
         try {
           const data = await loadProfile()
           if (data) {
+            console.log('📡 RAW API Response:', data)
             setProfileData(data as ProfileData)
           }
           console.log('✅ Данные профиля загружены:', !!data)
@@ -122,36 +142,59 @@ export function ProfilePage() {
 
   const totalElements = getElementsCount ? getElementsCount() : 0
 
-  // Создаем безопасные данные для рендеринга
-  const renderUser = currentUser || {
-    id: '',
-    telegramId: 0,
-    firstName: 'Пользователь',
-    lastName: '',
-    username: '',
-    photoUrl: '',
-    registrationDate: new Date(),
+  // Создаем объединенные данные пользователя из API и локального стора
+  const apiUser = _profileData?.user
+  const renderUser = {
+    // Базовые поля - приоритет данным из API
+    id: apiUser?.user_id ?? currentUser?.id ?? '',
+    telegramId: apiUser?.telegram_id ?? currentUser?.telegramId ?? 0,
+    firstName: apiUser?.first_name ?? currentUser?.firstName ?? 'Пользователь',
+    lastName: apiUser?.last_name ?? currentUser?.lastName ?? '',
+    username: apiUser?.username ?? currentUser?.username ?? '',
+    photoUrl: apiUser?.photo_url ?? currentUser?.photoUrl ?? '',
+    registrationDate: apiUser?.registration_date
+      ? new Date(apiUser.registration_date)
+      : (currentUser?.registrationDate ?? new Date()),
+    isAnonymous: currentUser?.isAnonymous ?? false,
+
+    // Статистика из API или fallback
     stats: {
-      currentStreak: 0,
-      longestStreak: 0,
-      totalDays: 0,
-      rareElementsFound: 0,
-      gardensShared: 0,
+      currentStreak: apiUser?.current_streak ?? 0,
+      longestStreak: apiUser?.longest_streak ?? 0,
+      totalDays: apiUser?.total_days ?? 0,
+      rareElementsFound: apiUser?.rare_elements_found ?? 0,
+      gardensShared: apiUser?.gardens_shared ?? 0,
+      totalElements: totalElements,
+      firstVisit: currentUser?.stats?.firstVisit ?? new Date(),
+      lastVisit: currentUser?.stats?.lastVisit ?? new Date(),
     },
+
+    // Настройки из API или fallback
     preferences: {
       privacy: {
-        showProfile: true,
-        shareGarden: true,
-        shareAchievements: true,
-        allowFriendRequests: true,
-        cloudSync: false,
+        showProfile: apiUser?.privacy_settings?.showProfile ?? true,
+        shareGarden: apiUser?.privacy_settings?.shareGarden ?? true,
+        shareAchievements: apiUser?.privacy_settings?.shareAchievements ?? true,
+        allowFriendRequests:
+          apiUser?.privacy_settings?.allowFriendRequests ?? true,
+        cloudSync: apiUser?.privacy_settings?.cloudSync ?? false,
+        dataCollection:
+          currentUser?.preferences?.privacy?.dataCollection ?? false,
+        analytics: currentUser?.preferences?.privacy?.analytics ?? false,
       },
+      theme: currentUser?.preferences?.theme ?? 'auto',
+      language: currentUser?.preferences?.language ?? 'ru',
+      notifications: currentUser?.preferences?.notifications ?? true,
+      garden: currentUser?.preferences?.garden ?? {},
     },
   }
 
-  console.log('🔍 Рендерим с безопасными данными:', {
-    hasUser: Boolean(renderUser),
-    hasMoodStats: Boolean(moodStats),
+  console.log('🔍 Рендерим с данными:', {
+    hasApiData: Boolean(apiUser),
+    hasLocalUser: Boolean(currentUser),
+    userFirstName: renderUser.firstName,
+    userPhoto: renderUser.photoUrl,
+    userStats: renderUser.stats,
     totalElements,
   })
 
