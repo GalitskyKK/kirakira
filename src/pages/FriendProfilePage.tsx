@@ -69,6 +69,16 @@ export default function FriendProfilePage() {
     const loadData = async () => {
       const data = await loadFriendProfile(parseInt(friendTelegramId))
       if (data) {
+        // 🔍 ОТЛАДКА: Логируем полученные данные друга
+        console.log('🔍 Friend Profile Data Received:', {
+          friendTelegramId,
+          hasUser: !!data.user,
+          hasStats: !!data.stats,
+          registrationDate: data.user?.registration_date,
+          statsData: data.stats,
+          userData: data.user,
+        })
+
         setProfileData(data as FriendProfileData)
       }
     }
@@ -128,10 +138,22 @@ export default function FriendProfilePage() {
   const currentLevel =
     GARDENER_LEVELS.find(l => l.level === user.level) || GARDENER_LEVELS[0]!
 
-  const daysSinceRegistration = Math.floor(
+  // 🔍 ОТЛАДКА: Сравниваем два способа подсчета дней
+  const daysSinceRegistrationLocal = Math.floor(
     (Date.now() - new Date(user.registration_date).getTime()) /
       (1000 * 60 * 60 * 24)
   )
+
+  const daysSinceRegistrationFromStats = stats?.totalDays || 0
+
+  console.log('🔍 Friend Days Comparison:', {
+    localCalculation: daysSinceRegistrationLocal,
+    statsCalculation: daysSinceRegistrationFromStats,
+    registrationDate: user.registration_date,
+    usingForDisplay: daysSinceRegistrationLocal,
+  })
+
+  const daysSinceRegistration = daysSinceRegistrationLocal
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-garden-50 to-green-50">
@@ -229,20 +251,32 @@ export default function FriendProfilePage() {
               <StatCard
                 emoji="🔥"
                 label="Лучший стрик"
-                value={stats.longestStreak}
+                value={stats.longestStreak || 0}
               />
               <StatCard
                 emoji="🌱"
                 label="Растений"
-                value={stats.totalElements}
+                value={stats.totalElements || 0}
               />
-              <StatCard emoji="📅" label="Всего дней" value={stats.totalDays} />
+              <StatCard
+                emoji="📅"
+                label="Всего дней"
+                value={stats.totalDays || 0}
+              />
               <StatCard
                 emoji="⭐"
                 label="Редких элементов"
-                value={stats.rareElementsFound}
+                value={stats.rareElementsFound || 0}
               />
             </div>
+
+            {/* 🔍 ОТЛАДКА: Показываем сырые данные статистики в DEV режиме */}
+            {import.meta.env.DEV && (
+              <div className="mt-4 rounded-lg bg-yellow-50 p-3 text-xs text-yellow-800">
+                <strong>DEBUG - Raw Stats:</strong>
+                <pre>{JSON.stringify(stats, null, 2)}</pre>
+              </div>
+            )}
           </motion.div>
         ) : (
           <motion.div

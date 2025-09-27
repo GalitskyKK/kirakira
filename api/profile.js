@@ -507,6 +507,18 @@ export default async function handler(req, res) {
         // Получаем публичную статистику
         const stats = await calculateUserStats(friend)
 
+        // 🔍 ОТЛАДКА: Логируем данные друга для диагностики
+        console.log('🔍 Friend Profile Debug:', {
+          friendTelegramId,
+          friendId: friend.id,
+          registrationDate: friend.registration_date,
+          daysSinceReg: stats?.totalDays,
+          longestStreak: stats?.longestStreak,
+          totalElements: stats?.totalElements,
+          privacy: privacySettings,
+          fullStats: stats,
+        })
+
         // Достижения (если разрешены)
         let achievements = []
         if (privacySettings.shareAchievements) {
