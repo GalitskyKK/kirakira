@@ -83,7 +83,7 @@ async function handleRecord(req, res) {
           last_name: telegramUserData.lastName || null,
           language_code: telegramUserData.languageCode || 'ru',
           photo_url: telegramUserData.photoUrl || null,
-          registration_date: new Date().toISOString(),
+          // registration_date будет равна created_at (автоматически в БД)
           last_visit_date: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },

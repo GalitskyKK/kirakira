@@ -55,7 +55,7 @@ async function handleAddElement(req, res) {
           last_name: telegramUserData.lastName || null,
           language_code: telegramUserData.languageCode || 'ru',
           photo_url: telegramUserData.photoUrl || null,
-          registration_date: new Date().toISOString(),
+          // registration_date будет равна created_at (автоматически в БД)
           last_visit_date: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
@@ -97,17 +97,16 @@ async function handleAddElement(req, res) {
 
     console.log(`✅ Garden element saved to Supabase:`, data)
 
-    // Атомарно обновляем счетчик элементов пользователя
-    const { error: updateError } = await supabase.rpc(
-      'increment_user_elements',
-      {
-        user_telegram_id: telegramId,
-      }
-    )
+    // 🔥 ИСПРАВЛЕНИЕ: Обновляем ВСЮ статистику пользователя (дни, стрики, элементы)
+    const { error: updateError } = await supabase.rpc('update_user_stats', {
+      target_telegram_id: telegramId,
+    })
 
     if (updateError) {
-      console.warn('Failed to update user elements counter:', updateError)
+      console.warn('Failed to update user stats:', updateError)
       // Не критично, продолжаем
+    } else {
+      console.log('✅ User stats updated after adding garden element')
     }
 
     // 🏆 НАЧИСЛЯЕМ ОПЫТ ЗА НОВОЕ РАСТЕНИЕ

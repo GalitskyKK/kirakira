@@ -66,7 +66,7 @@ async function ensureUser(telegramId, userData = {}) {
       last_name: userData.last_name || '',
       username: userData.username || '',
       photo_url: userData.photo_url || '',
-      registration_date: new Date().toISOString(),
+      // registration_date будет равна created_at (автоматически в БД)
       experience: 0,
       level: 1,
     })
@@ -166,24 +166,46 @@ async function calculateUserStats(user) {
       : 0
 
     // Дни с регистрации
-    const daysSinceRegistration = userStats?.registration_date
+    const registrationDate = user.registration_date || user.created_at
+    const daysSinceRegistration = registrationDate
       ? Math.floor(
-          (Date.now() - new Date(userStats.registration_date).getTime()) /
+          (Date.now() - new Date(registrationDate).getTime()) /
             (1000 * 60 * 60 * 24)
         )
       : 0
 
-    return {
+    // 🔥 ИСПРАВЛЕНИЕ: Используем данные ИЗ БД, а не пересчитываем каждый раз
+    const finalStats = {
       totalMoodEntries: moodEntries?.length || 0,
-      currentStreak,
-      longestStreak,
-      totalElements: gardenElements?.length || 0,
-      rareElementsFound: rareElementsCount,
-      totalDays: daysSinceRegistration,
+      currentStreak: userStats?.current_streak || currentStreak, // Приоритет БД
+      longestStreak: userStats?.longest_streak || longestStreak, // Приоритет БД
+      totalElements: userStats?.total_elements || gardenElements?.length || 0, // Приоритет БД
+      rareElementsFound: userStats?.rare_elements_found || rareElementsCount, // Приоритет БД
+      totalDays: userStats?.total_days || daysSinceRegistration, // Приоритет БД
       gardensShared: userStats?.gardens_shared || 0,
       experience: userStats?.experience || 0,
       level: userStats?.level || 1,
     }
+
+    // 🔍 ОТЛАДКА: Показываем откуда берутся данные
+    console.log('📊 Stats Sources:', {
+      telegramId: user.telegram_id,
+      dbStats: {
+        total_days: userStats?.total_days,
+        current_streak: userStats?.current_streak,
+        longest_streak: userStats?.longest_streak,
+        total_elements: userStats?.total_elements,
+      },
+      calculatedStats: {
+        daysSinceRegistration,
+        currentStreak,
+        longestStreak,
+        totalElements: gardenElements?.length,
+      },
+      finalStats,
+    })
+
+    return finalStats
   } catch (error) {
     console.error('Error calculating user stats:', error)
     return null
@@ -307,7 +329,10 @@ export default async function handler(req, res) {
         return res.status(200).json({
           success: true,
           data: {
-            user,
+            user: {
+              ...user,
+              registration_date: user.registration_date || user.created_at, // Используем created_at как fallback
+            },
             stats,
             achievements: userAchievements || [],
             newlyUnlocked: achievementUpdates.filter(a => a.newly_unlocked),
@@ -562,7 +587,7 @@ export default async function handler(req, res) {
               username: friend.username,
               photo_url: friend.photo_url,
               level: friend.level,
-              registration_date: friend.registration_date,
+              registration_date: friend.registration_date || friend.created_at,
             },
             stats: privacySettings.shareGarden ? stats : null,
             achievements: privacySettings.shareAchievements ? achievements : [],
@@ -573,6 +598,89 @@ export default async function handler(req, res) {
             },
           },
         })
+      }
+
+      case 'update_user_stats': {
+        if (req.method !== 'POST') {
+          return res
+            .status(405)
+            .json({ success: false, error: 'Method not allowed' })
+        }
+
+        const { telegramId } = req.body
+        if (!telegramId) {
+          return res
+            .status(400)
+            .json({ success: false, error: 'Missing telegramId' })
+        }
+
+        try {
+          // Вызываем функцию пересчета статистики в БД
+          const { data, error } = await supabase.rpc('update_user_stats', {
+            target_telegram_id: parseInt(telegramId),
+          })
+
+          if (error) {
+            console.error('Error updating user stats:', error)
+            return res.status(500).json({
+              success: false,
+              error: 'Failed to update user stats',
+              details: error.message,
+            })
+          }
+
+          return res.status(200).json({
+            success: true,
+            data: {
+              message: 'User stats updated successfully',
+              stats: data,
+            },
+          })
+        } catch (err) {
+          console.error('Stats update error:', err)
+          return res.status(500).json({
+            success: false,
+            error: 'Failed to update user stats',
+            details: err.message,
+          })
+        }
+      }
+
+      case 'update_all_user_stats': {
+        if (req.method !== 'POST') {
+          return res
+            .status(405)
+            .json({ success: false, error: 'Method not allowed' })
+        }
+
+        try {
+          // Вызываем функцию массового пересчета статистики
+          const { data, error } = await supabase.rpc('update_all_user_stats')
+
+          if (error) {
+            console.error('Error updating all user stats:', error)
+            return res.status(500).json({
+              success: false,
+              error: 'Failed to update all user stats',
+              details: error.message,
+            })
+          }
+
+          return res.status(200).json({
+            success: true,
+            data: {
+              message: 'All user stats updated successfully',
+              results: data,
+            },
+          })
+        } catch (err) {
+          console.error('Bulk stats update error:', err)
+          return res.status(500).json({
+            success: false,
+            error: 'Failed to update all user stats',
+            details: err.message,
+          })
+        }
       }
 
       default:
