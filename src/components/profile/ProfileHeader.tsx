@@ -6,9 +6,6 @@ import {
   calculateExperienceFromStats,
 } from '@/utils/achievements'
 import { useMoodTracking, useGardenState } from '@/hooks'
-import { useUserStore } from '@/stores/userStore'
-import { useState } from 'react'
-
 interface ProfileHeaderProps {
   readonly user: User
 }
@@ -16,29 +13,10 @@ interface ProfileHeaderProps {
 export function ProfileHeader({ user }: ProfileHeaderProps) {
   const displayName = user.firstName ?? user.username ?? 'Пользователь'
   const username = user.username != null ? `@${user.username}` : null
-  const [isSyncing, setIsSyncing] = useState(false)
 
   // Hooks for calculating level
   const { moodStats } = useMoodTracking()
   const { getElementsCount } = useGardenState()
-  const { syncFromSupabase } = useUserStore()
-
-  // Принудительная синхронизация с БД
-  const handleSyncWithDB = async () => {
-    if (user.telegramId == null || isSyncing) return
-
-    setIsSyncing(true)
-    try {
-      await syncFromSupabase(user.telegramId)
-      console.log('✅ Данные синхронизированы с БД')
-      // Принудительно перезагружаем страницу для отображения новых данных
-      window.location.reload()
-    } catch (error) {
-      console.error('❌ Ошибка синхронизации:', error)
-    } finally {
-      setIsSyncing(false)
-    }
-  }
 
   // Защита от undefined - создаем fallback значения для moodStats
   const safeMoodStats = moodStats ?? {
@@ -59,67 +37,15 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
     monthlyTrend: [],
   }
 
-  // 🔥 ИСПРАВЛЕНИЕ: Используем РЕАЛЬНЫЕ данные из БД вместо локальных расчетов
   const totalElements = getElementsCount?.() ?? 0
 
-  // 🔍 ОТЛАДКА: Выводим информацию о данных пользователя
-  console.log('🔍 ProfileHeader - User data:', {
-    telegramId: user.telegramId,
-    experience: user.experience,
-    level: user.level,
-    hasExperience: user.experience !== undefined,
-    hasLevel: user.level !== undefined,
-    fullUser: user,
-  })
+  // Используем опыт из пользователя если доступен, иначе рассчитываем
+  const experience =
+    user.experience ??
+    calculateExperienceFromStats(user, safeMoodStats, totalElements)
 
-  // Используем опыт и уровень из БД если доступны, иначе рассчитываем локально
-  const hasDbData = user.experience !== undefined && user.level !== undefined
-
-  let experience: number = 0
-  if (hasDbData && typeof user.experience === 'number') {
-    experience = user.experience as number
-  } else {
-    experience = calculateExperienceFromStats(
-      user,
-      safeMoodStats,
-      totalElements
-    )
-  }
-
-  const levelInfo =
-    hasDbData && typeof user.level === 'number'
-      ? (() => {
-          // Если есть данные в БД, используем их
-          const userLevel = user.level as number
-          const currentLevel = {
-            level: userLevel,
-            name:
-              userLevel === 1
-                ? 'Новичок'
-                : userLevel === 2
-                  ? 'Любитель'
-                  : userLevel === 3
-                    ? 'Садовник'
-                    : 'Эксперт',
-            emoji:
-              userLevel === 1
-                ? '🌱'
-                : userLevel === 2
-                  ? '🌿'
-                  : userLevel === 3
-                    ? '🌻'
-                    : '🌳',
-            minExperience: 0,
-            maxExperience: 999,
-          }
-          return {
-            currentLevel,
-            nextLevel: null,
-            progress: 100, // Показываем завершенный прогресс для БД уровня
-            experienceToNext: 0,
-          }
-        })()
-      : calculateLevelProgress(experience)
+  // Рассчитываем информацию об уровне
+  const levelInfo = calculateLevelProgress(experience)
 
   // Calculate days since registration
   const registrationDate = new Date(user.registrationDate)
@@ -171,23 +97,6 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
             <button className="whitespace-nowrap rounded-lg bg-garden-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-garden-600">
               📤 Поделиться
             </button>
-            {/* Кнопка синхронизации и индикатор */}
-            {user.telegramId != null && (
-              <>
-                <button
-                  onClick={() => void handleSyncWithDB()}
-                  disabled={isSyncing}
-                  className="whitespace-nowrap rounded-lg bg-blue-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-blue-600 disabled:opacity-50"
-                >
-                  {isSyncing ? '🔄 Синхронизация...' : '🔄 Обновить из БД'}
-                </button>
-                <div className="text-xs text-gray-500">
-                  {user.experience != null && user.level != null
-                    ? `💾 БД: Ур.${user.level} (${user.experience}XP)`
-                    : `📱 Локальные данные`}
-                </div>
-              </>
-            )}
           </div>
         </div>
 
