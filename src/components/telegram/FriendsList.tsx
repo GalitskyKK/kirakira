@@ -452,16 +452,18 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                   tab.id as 'friends' | 'find' | 'invites' | 'requests'
                 )
               }
-              className={`relative flex flex-1 items-center justify-center space-x-1 rounded-md px-2 py-2 text-sm font-medium transition-colors ${
+              className={`relative flex flex-1 items-center justify-center space-x-1 rounded-md px-1 py-2 text-xs font-medium transition-colors sm:px-2 sm:text-sm ${
                 activeView === tab.id
                   ? 'bg-white text-blue-600 shadow-sm dark:bg-gray-700 dark:text-blue-400'
-                  : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                  : 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100'
               }`}
             >
-              <Icon className="h-4 w-4" />
-              <span className="hidden sm:inline">{tab.label}</span>
+              <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="xs:inline hidden truncate sm:inline">
+                {tab.label}
+              </span>
               {tab.count !== undefined && tab.count > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white sm:h-5 sm:w-5">
                   {tab.count > 9 ? '9+' : tab.count}
                 </span>
               )}
@@ -517,102 +519,117 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <Card className="p-4">
-                      <div className="flex items-center space-x-4">
-                        {/* Аватар */}
-                        <UserAvatar
-                          photoUrl={friend.photoUrl}
-                          name={`${friend.firstName} ${friend.lastName ?? ''}`.trim()}
-                          username={friend.username}
-                          size="md"
-                          isOnline={friend.isOnline}
-                        />
+                    <Card className="p-3">
+                      <div className="space-y-3">
+                        {/* Верхняя часть: аватар и информация */}
+                        <div className="flex items-center space-x-3">
+                          {/* Аватар */}
+                          <UserAvatar
+                            photoUrl={friend.photoUrl}
+                            name={`${friend.firstName} ${friend.lastName ?? ''}`.trim()}
+                            username={friend.username}
+                            size="md"
+                            isOnline={friend.isOnline}
+                          />
 
-                        {/* Информация о друге */}
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center space-x-2">
-                            <h4 className="truncate font-semibold">
-                              {(friend.username ?? '').length > 0
-                                ? `@${friend.username}`
-                                : `${friend.firstName} ${friend.lastName ?? ''}`}
-                            </h4>
-                            {!(friend.username ?? '').length &&
-                              (friend.firstName ?? '').length > 0 && (
-                                <span className="text-xs text-gray-500">
-                                  {friend.firstName} {friend.lastName ?? ''}
-                                </span>
-                              )}
+                          {/* Информация о друге */}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center space-x-2">
+                              <h4 className="truncate font-semibold text-gray-900">
+                                {(friend.username ?? '').length > 0
+                                  ? `@${friend.username}`
+                                  : `${friend.firstName} ${friend.lastName ?? ''}`}
+                              </h4>
+                              {!(friend.username ?? '').length &&
+                                (friend.firstName ?? '').length > 0 && (
+                                  <span className="text-xs text-gray-500">
+                                    {friend.firstName} {friend.lastName ?? ''}
+                                  </span>
+                                )}
+                            </div>
+
+                            <div className="mt-1 flex items-center space-x-3 text-xs text-gray-500">
+                              <span className="flex items-center space-x-1">
+                                <span>🌱</span>
+                                <span>{friend.gardenElements}</span>
+                              </span>
+                              <span className="flex items-center space-x-1">
+                                <span>🔥</span>
+                                <span>{friend.currentStreak}</span>
+                              </span>
+                              <span className="truncate">
+                                {friend.isOnline ? 'онлайн' : 'был недавно'}
+                              </span>
+                            </div>
                           </div>
-
-                          <div className="mt-1 flex items-center space-x-4 text-xs text-gray-500">
-                            <span className="flex items-center space-x-1">
-                              <span>🌱</span>
-                              <span>{friend.gardenElements}</span>
-                            </span>
-                            <span className="flex items-center space-x-1">
-                              <span>🔥</span>
-                              <span>{friend.currentStreak}</span>
-                            </span>
-                            <span>
-                              {friend.isOnline ? 'онлайн' : 'был недавно'}
-                            </span>
-                          </div>
-
-                          {/* Общие челленджи */}
-                          {friend.joinedChallenges &&
-                            friend.joinedChallenges.length > 0 && (
-                              <div className="mt-2 flex flex-wrap gap-1">
-                                {friend.joinedChallenges
-                                  .slice(0, 2)
-                                  .map((challengeId: string) => (
-                                    <span
-                                      key={challengeId}
-                                      className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-700"
-                                    >
-                                      🎯 Челлендж
-                                    </span>
-                                  ))}
-                              </div>
-                            )}
                         </div>
 
-                        {/* Действия */}
-                        <div className="flex flex-col space-y-2">
+                        {/* Общие челленджи (если есть) */}
+                        {friend.joinedChallenges &&
+                          friend.joinedChallenges.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {friend.joinedChallenges
+                                .slice(0, 2)
+                                .map((challengeId: string) => (
+                                  <span
+                                    key={challengeId}
+                                    className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-700"
+                                  >
+                                    🎯 Челлендж
+                                  </span>
+                                ))}
+                            </div>
+                          )}
+
+                        {/* Действия внизу */}
+                        <div className="flex justify-between space-x-1 border-t border-gray-100 pt-2 sm:space-x-2">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleViewFriendProfile(friend)}
-                            className="bg-blue-50 px-3 hover:bg-blue-100"
+                            className="min-w-0 flex-1 bg-blue-50 text-blue-700 hover:bg-blue-100"
                             title="Просмотр профиля"
                           >
                             <UserIcon className="h-3 w-3" />
+                            <span className="ml-1 hidden truncate text-xs sm:inline">
+                              Профиль
+                            </span>
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleViewFriendGarden(friend)}
-                            className="bg-green-50 px-3 hover:bg-green-100"
+                            className="min-w-0 flex-1 bg-green-50 text-green-700 hover:bg-green-100"
                             title="Просмотр сада"
                           >
                             <TreePine className="h-3 w-3" />
+                            <span className="ml-1 hidden truncate text-xs sm:inline">
+                              Сад
+                            </span>
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleMessageFriend(friend)}
-                            className="px-3"
+                            className="min-w-0 flex-1 hover:bg-gray-100"
                             title="Отправить сообщение"
                           >
                             <MessageCircle className="h-3 w-3" />
+                            <span className="ml-1 hidden truncate text-xs sm:inline">
+                              Сообщ.
+                            </span>
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleChallengeFriend(friend)}
-                            className="bg-orange-50 px-3 hover:bg-orange-100"
+                            className="min-w-0 flex-1 bg-orange-50 text-orange-700 hover:bg-orange-100"
                             title="Вызвать на челлендж"
                           >
                             <Trophy className="h-3 w-3" />
+                            <span className="ml-1 hidden truncate text-xs sm:inline">
+                              Челл.
+                            </span>
                           </Button>
                         </div>
                       </div>

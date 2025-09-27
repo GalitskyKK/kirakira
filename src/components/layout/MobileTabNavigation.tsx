@@ -19,27 +19,27 @@ const TABS: Tab[] = [
   {
     id: 'mood',
     label: 'Настроение',
-    icon: <Heart size={20} />,
+    icon: <Heart className="h-5 w-5" />,
   },
   {
     id: 'garden',
     label: 'Сад',
-    icon: <Leaf size={20} />,
+    icon: <Leaf className="h-5 w-5" />,
   },
   {
     id: 'community',
     label: 'Комьюнити',
-    icon: <Users size={20} />,
+    icon: <Users className="h-5 w-5" />,
   },
   {
     id: 'stats',
     label: 'Статистика',
-    icon: <BarChart3 size={20} />,
+    icon: <BarChart3 className="h-5 w-5" />,
   },
   {
     id: 'profile',
     label: 'Профиль',
-    icon: <User size={20} />,
+    icon: <User className="h-5 w-5" />,
   },
 ]
 
@@ -52,6 +52,7 @@ export function MobileTabNavigation({
     <div
       className={clsx(
         'border-t border-gray-200 bg-white shadow-2xl',
+        'dark:border-gray-700 dark:bg-gray-900',
         'fixed bottom-0 left-0 right-0 z-[9999]',
         'safe-area-inset-bottom backdrop-blur-md', // For iPhone safe area
         className
@@ -73,11 +74,11 @@ export function MobileTabNavigation({
               key={tab.id}
               className={clsx(
                 'flex flex-1 flex-col items-center justify-center',
-                'relative min-h-[60px] px-1 py-2',
+                'relative min-h-[56px] px-1 py-2 sm:min-h-[60px]',
                 'transition-colors duration-200',
                 isActive
-                  ? 'text-garden-600'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'text-garden-600 dark:text-garden-400'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
               )}
               onClick={() => onTabChange(tab.id)}
               whileTap={{ scale: 0.95 }}
@@ -118,11 +119,23 @@ export function MobileTabNavigation({
               {/* Label */}
               <span
                 className={clsx(
-                  'text-xs font-medium leading-tight',
+                  'max-w-full truncate text-xs font-medium leading-tight',
                   isActive && 'font-semibold'
                 )}
               >
-                {tab.label}
+                {tab.id === 'community' ? (
+                  <span>
+                    <span className="xs:inline hidden">Комьюнити</span>
+                    <span className="xs:hidden">Друзья</span>
+                  </span>
+                ) : tab.id === 'stats' ? (
+                  <span>
+                    <span className="xs:inline hidden">Статистика</span>
+                    <span className="xs:hidden">Стат-ка</span>
+                  </span>
+                ) : (
+                  tab.label
+                )}
               </span>
 
               {/* Count badge */}

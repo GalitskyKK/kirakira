@@ -133,7 +133,7 @@ export function MobileLayout() {
 
       case 'garden':
         return (
-          <div className="p-4">
+          <div>
             <div className="mb-4">
               <h2 className="mb-1 text-xl font-bold text-gray-900">Мой сад</h2>
               <p className="text-sm text-gray-600">
@@ -150,7 +150,7 @@ export function MobileLayout() {
 
       case 'community':
         return (
-          <div className="p-4">
+          <div>
             <TelegramCommunity
               garden={garden}
               recentMoods={moodHistory.slice(0, 7)}
@@ -160,7 +160,7 @@ export function MobileLayout() {
 
       case 'stats':
         return (
-          <div className="p-4">
+          <div>
             <div className="mb-4">
               <h2 className="mb-1 text-xl font-bold text-gray-900">
                 Статистика
@@ -180,7 +180,7 @@ export function MobileLayout() {
         } catch (error) {
           console.error('❌ ProfilePage crashed:', error)
           return (
-            <div className="p-4">
+            <div>
               <div className="rounded-xl border border-red-200 bg-red-50 p-6">
                 <h2 className="font-bold text-red-900">ProfilePage Error</h2>
                 <p className="text-red-700">
@@ -197,9 +197,9 @@ export function MobileLayout() {
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-garden-50 to-green-50 pb-24">
+    <div className="relative min-h-screen bg-gradient-to-br from-garden-50 to-green-50 pb-20 sm:pb-24 dark:from-gray-900 dark:to-gray-800">
       {/* Telegram Status - Always visible */}
-      <div className="p-4 pb-0">
+      <div className="p-3 pb-0 sm:p-4">
         <TelegramStatus />
       </div>
 
@@ -218,7 +218,7 @@ export function MobileLayout() {
               stiffness: 300,
               damping: 30,
             }}
-            className="w-full"
+            className="w-full px-3 sm:px-4"
           >
             {renderTabContent()}
           </motion.div>

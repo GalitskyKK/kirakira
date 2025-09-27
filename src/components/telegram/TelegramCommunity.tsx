@@ -179,14 +179,14 @@ export function TelegramCommunity({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex flex-1 items-center justify-center space-x-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              className={`flex flex-1 items-center justify-center space-x-1 rounded-md px-2 py-2 text-xs font-medium transition-colors sm:space-x-2 sm:px-3 sm:text-sm ${
                 activeTab === tab.id
                   ? 'bg-white text-blue-600 shadow-sm dark:bg-gray-700 dark:text-blue-400'
-                  : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                  : 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100'
               }`}
             >
-              <Icon className="h-4 w-4" />
-              <span>{tab.label}</span>
+              <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="xs:inline hidden sm:inline">{tab.label}</span>
             </button>
           )
         })}
@@ -216,74 +216,88 @@ export function TelegramCommunity({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className="p-4">
-                  <div className="flex items-start space-x-4">
-                    <div className="text-3xl">{challenge.emoji}</div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center space-x-2">
-                        <h4 className="font-semibold">{challenge.title}</h4>
-                        <span
-                          className={`rounded-full px-2 py-1 text-xs ${
-                            challenge.type === 'competitive'
-                              ? 'bg-red-100 text-red-700'
-                              : challenge.type === 'group'
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'bg-green-100 text-green-700'
-                          }`}
-                        >
-                          {challenge.type === 'competitive'
-                            ? 'Соревнование'
-                            : challenge.type === 'group'
-                              ? 'Групповой'
-                              : 'Личный'}
-                        </span>
+                <Card className="p-3 sm:p-4">
+                  <div className="space-y-3">
+                    {/* Верхняя часть: иконка, заголовок и тип */}
+                    <div className="flex items-start space-x-3">
+                      <div className="text-2xl sm:text-3xl">
+                        {challenge.emoji}
                       </div>
-                      <p className="mt-1 text-sm text-gray-600">
-                        {challenge.description}
-                      </p>
-                      <div className="mt-2 flex items-center space-x-4 text-xs text-gray-500">
-                        <span className="flex items-center space-x-1">
-                          <Users className="h-3 w-3" />
-                          <span>{challenge.participants} участников</span>
-                        </span>
-                        <span className="flex items-center space-x-1">
-                          <Calendar className="h-3 w-3" />
-                          <span>{challenge.duration} дней</span>
-                        </span>
-                        {challenge.reward && (
-                          <span className="flex items-center space-x-1">
-                            <Trophy className="h-3 w-3" />
-                            <span>{challenge.reward}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center space-x-2">
+                          <h4 className="truncate text-sm font-semibold sm:text-base">
+                            {challenge.title}
+                          </h4>
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-1 text-xs ${
+                              challenge.type === 'competitive'
+                                ? 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400'
+                                : challenge.type === 'group'
+                                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                                  : 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+                            }`}
+                          >
+                            {challenge.type === 'competitive'
+                              ? 'Соревн.'
+                              : challenge.type === 'group'
+                                ? 'Группа'
+                                : 'Личный'}
                           </span>
-                        )}
+                        </div>
                       </div>
                     </div>
-                    <div className="flex flex-col space-y-2">
+
+                    {/* Описание */}
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {challenge.description}
+                    </p>
+
+                    {/* Статистика */}
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                      <span className="flex items-center space-x-1">
+                        <Users className="h-3 w-3" />
+                        <span>{challenge.participants}</span>
+                      </span>
+                      <span className="flex items-center space-x-1">
+                        <Calendar className="h-3 w-3" />
+                        <span>{challenge.duration} дн.</span>
+                      </span>
+                      {challenge.reward && (
+                        <span className="flex items-center space-x-1">
+                          <Trophy className="h-3 w-3" />
+                          <span className="truncate">{challenge.reward}</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Кнопки действий */}
+                    <div className="flex justify-end space-x-2 border-t border-gray-100 pt-2 dark:border-gray-700">
                       {joinedChallenges.includes(challenge.id) ? (
                         <>
                           <Button
                             size="sm"
                             variant="outline"
-                            className="bg-green-50 text-green-700 hover:bg-green-100"
+                            className="bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/40"
                             disabled
                           >
-                            Участвую ✓
+                            <span className="text-xs">Участвую ✓</span>
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleShareProgress(challenge)}
+                            className="dark:border-gray-600 dark:hover:bg-gray-700"
                           >
-                            Поделиться
+                            <span className="text-xs">Поделиться</span>
                           </Button>
                         </>
                       ) : (
                         <Button
                           size="sm"
                           onClick={() => handleJoinChallenge(challenge)}
-                          className="bg-blue-500 hover:bg-blue-600"
+                          className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
                         >
-                          Участвовать
+                          <span className="text-xs">Участвовать</span>
                         </Button>
                       )}
                     </div>

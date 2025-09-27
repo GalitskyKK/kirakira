@@ -166,7 +166,7 @@ async function calculateUserStats(user) {
       : 0
 
     // Дни с регистрации
-    const registrationDate = user.registration_date || user.created_at
+    const registrationDate =  user.created_at || user.registration_date
     const daysSinceRegistration = registrationDate
       ? Math.floor(
           (Date.now() - new Date(registrationDate).getTime()) /
