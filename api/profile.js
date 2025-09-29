@@ -213,14 +213,18 @@ async function calculateUserStats(user) {
         )
       : 0
 
-    // 🔥 ИСПРАВЛЕНИЕ: Используем данные ИЗ БД, а не пересчитываем каждый раз
+    // 🔥 ИСПРАВЛЕНИЕ: Умный приоритет - БД над расчетными, но расчетные дни важнее устаревших в БД
     const finalStats = {
       totalMoodEntries: moodEntries?.length || 0,
       currentStreak: userStats?.current_streak || currentStreak, // Приоритет БД
       longestStreak: userStats?.longest_streak || longestStreak, // Приоритет БД
       totalElements: userStats?.total_elements || gardenElements?.length || 0, // Приоритет БД
       rareElementsFound: userStats?.rare_elements_found || rareElementsCount, // Приоритет БД
-      totalDays: userStats?.total_days || daysSinceRegistration, // Приоритет БД
+      // 🎯 ИСПРАВЛЕНИЕ total_days: расчетное значение важнее устаревшего в БД
+      totalDays: Math.max(
+        userStats?.total_days || 0,
+        daysSinceRegistration + 1
+      ), // +1 потому что день регистрации тоже считается
       gardensShared: userStats?.gardens_shared || 0,
       experience: userStats?.experience || 0,
       level: userStats?.level || 1,
@@ -229,6 +233,9 @@ async function calculateUserStats(user) {
     // 🔍 ОТЛАДКА: Показываем откуда берутся данные
     console.log('📊 Stats Sources:', {
       telegramId: user.telegram_id,
+      registrationDate: registrationDate
+        ? new Date(registrationDate).toISOString().split('T')[0]
+        : 'unknown',
       dbStats: {
         total_days: userStats?.total_days,
         current_streak: userStats?.current_streak,
@@ -237,11 +244,13 @@ async function calculateUserStats(user) {
       },
       calculatedStats: {
         daysSinceRegistration,
+        daysSinceRegistrationPlus1: daysSinceRegistration + 1,
         currentStreak,
         longestStreak,
         totalElements: gardenElements?.length,
       },
       finalStats,
+      totalDaysLogic: `Math.max(${userStats?.total_days || 0}, ${daysSinceRegistration + 1}) = ${Math.max(userStats?.total_days || 0, daysSinceRegistration + 1)}`,
     })
 
     return finalStats

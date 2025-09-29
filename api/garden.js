@@ -113,7 +113,7 @@ async function handleAddElement(req, res) {
     try {
       // Базовый опыт за растение
       const addPlantResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/profile?action=add_experience`,
+        `${process.env.VITE_APP_URL || 'https://kirakira-theta.vercel.app'}/api/profile?action=add_experience`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -129,7 +129,7 @@ async function handleAddElement(req, res) {
       const rareTypes = ['rare', 'epic', 'legendary']
       if (rareTypes.includes(element.rarity?.toLowerCase())) {
         const addRareResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/profile?action=add_experience`,
+          `${process.env.VITE_APP_URL || 'https://kirakira-theta.vercel.app'}/api/profile?action=add_experience`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

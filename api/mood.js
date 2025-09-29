@@ -158,7 +158,7 @@ async function handleRecord(req, res) {
 
       // Базовый опыт за запись настроения
       const addMoodResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/profile?action=add_experience`,
+        `${process.env.VITE_APP_URL || 'https://kirakira-theta.vercel.app'}/api/profile?action=add_experience`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
