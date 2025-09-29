@@ -70,25 +70,37 @@ async function handleList(req, res) {
         })
       }
 
-      // Используем fallback данные
-      const formattedChallenges = (fallbackChallenges || []).map(challenge => ({
-        id: challenge.id,
-        title: challenge.title,
-        description: challenge.description,
-        emoji: challenge.emoji,
-        category: challenge.category,
-        type: challenge.type,
-        status: challenge.status,
-        startDate: new Date(challenge.start_date).toISOString(),
-        endDate: new Date(challenge.end_date).toISOString(),
-        maxParticipants: challenge.max_participants,
-        requirements: challenge.requirements,
-        rewards: challenge.rewards,
-        createdBy: challenge.created_by || null,
-        createdAt: new Date(challenge.created_at).toISOString(),
-        updatedAt: new Date(challenge.updated_at).toISOString(),
-        participant_count: 0,
-      }))
+      // Получаем количество участников для каждого челленджа
+      const challengesWithCounts = await Promise.all(
+        (fallbackChallenges || []).map(async challenge => {
+          const { count } = await supabase
+            .from('challenge_participants')
+            .select('*', { count: 'exact', head: true })
+            .eq('challenge_id', challenge.id)
+            .in('status', ['joined', 'active', 'completed'])
+
+          return {
+            id: challenge.id,
+            title: challenge.title,
+            description: challenge.description,
+            emoji: challenge.emoji,
+            category: challenge.category,
+            type: challenge.type,
+            status: challenge.status,
+            startDate: new Date(challenge.start_date).toISOString(),
+            endDate: new Date(challenge.end_date).toISOString(),
+            maxParticipants: challenge.max_participants,
+            requirements: challenge.requirements,
+            rewards: challenge.rewards,
+            createdBy: challenge.created_by || null,
+            createdAt: new Date(challenge.created_at).toISOString(),
+            updatedAt: new Date(challenge.updated_at).toISOString(),
+            participant_count: count || 0,
+          }
+        })
+      )
+
+      const formattedChallenges = challengesWithCounts
 
       console.log('✅ Using fallback challenges:', formattedChallenges.length)
 
@@ -141,9 +153,10 @@ async function handleList(req, res) {
       maxParticipants: challenge.max_participants,
       requirements: challenge.requirements,
       rewards: challenge.rewards,
-      participantCount: parseInt(challenge.participant_count),
-      createdAt: challenge.start_date,
-      updatedAt: challenge.start_date,
+      createdBy: null, // SQL функция не возвращает created_by
+      participant_count: parseInt(challenge.participant_count) || 0,
+      createdAt: new Date(challenge.start_date).toISOString(),
+      updatedAt: new Date(challenge.start_date).toISOString(),
     }))
 
     const formattedParticipations = participations.map(p => ({
