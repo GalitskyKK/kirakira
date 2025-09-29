@@ -278,6 +278,13 @@ async function handleDetails(req, res) {
       })
     }
 
+    // Получаем количество участников
+    const { count: participantCount } = await supabase
+      .from('challenge_participants')
+      .select('*', { count: 'exact', head: true })
+      .eq('challenge_id', challengeId)
+      .in('status', ['joined', 'active', 'completed'])
+
     // Рассчитываем прогресс пользователя
     const progress = participation
       ? calculateChallengeProgress(challenge, participation)
@@ -300,6 +307,7 @@ async function handleDetails(req, res) {
       createdBy: challenge.created_by || null,
       createdAt: new Date(challenge.created_at).toISOString(),
       updatedAt: new Date(challenge.updated_at).toISOString(),
+      participant_count: participantCount || 0,
     }
 
     const formattedParticipation = participation
