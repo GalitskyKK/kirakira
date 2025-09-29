@@ -70,22 +70,49 @@ function getDefaultStats() {
 async function checkTodayMoodExists(telegramUserId) {
   try {
     const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+    const apiUrl = `${MINI_APP_URL}/api/mood?action=history&telegramId=${telegramUserId}&limit=50`
 
-    const response = await fetch(
-      `${MINI_APP_URL}/api/mood?action=get_moods&telegramId=${telegramUserId}&date=${today}`
-    )
+    console.log(`🔍 Checking mood for user ${telegramUserId} on ${today}`)
+    console.log(`🔗 API URL: ${apiUrl}`)
+
+    // Используем правильный API endpoint с action=history
+    const response = await fetch(apiUrl)
+
+    console.log(`📡 API Response status: ${response.status}`)
 
     if (!response.ok) {
-      console.warn(`Mood API request failed: ${response.status}`)
+      console.warn(`❌ Mood API request failed: ${response.status}`)
       return false
     }
 
     const result = await response.json()
+    console.log(
+      `📦 API Response data: ${JSON.stringify({
+        success: result.success,
+        dataLength: result.data?.length || 0,
+        hasData: !!result.data,
+      })}`
+    )
 
-    // Если есть данные за сегодня, значит настроение уже отмечено
-    return !!(result.success && result.data && result.data.length > 0)
+    if (!result.success || !result.data) {
+      console.log(`❌ No valid data in API response`)
+      return false
+    }
+
+    // Проверяем есть ли запись за сегодня
+    const todayEntry = result.data.find(entry => {
+      const entryDate = new Date(entry.mood_date).toISOString().split('T')[0]
+      console.log(`📅 Comparing entry date ${entryDate} with today ${today}`)
+      return entryDate === today
+    })
+
+    console.log(
+      `🎯 Mood check result: ${todayEntry ? 'FOUND' : 'NOT FOUND'} for user ${telegramUserId} on ${today}`
+    )
+
+    return !!todayEntry
   } catch (error) {
-    console.error('Error checking today mood:', error)
+    console.error('❌ Error checking today mood:', error)
     return false // В случае ошибки разрешаем отмечать
   }
 }
@@ -394,7 +421,13 @@ function validatePayment(amount, currency, payload) {
 const BOT_TOKEN =
   process.env.TELEGRAM_BOT_TOKEN || process.env.VITE_TELEGRAM_BOT_TOKEN
 const MINI_APP_URL =
-  process.env.VITE_APP_URL || 'https://kirakira-theta.vercel.app'
+  process.env.VITE_APP_URL || process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : 'https://kirakira-theta.vercel.app'
+
+console.log(
+  `🔧 Bot config: BOT_TOKEN=${BOT_TOKEN ? 'SET' : 'MISSING'}, MINI_APP_URL=${MINI_APP_URL}`
+)
 
 // В Vercel Functions переменные могут быть доступны с префиксом VITE_
 if (!BOT_TOKEN) {
@@ -527,7 +560,11 @@ async function handleCommand(message) {
 
     case 'mood': {
       // Проверяем, отметил ли пользователь уже настроение сегодня
+      console.log(
+        `🎯 Processing /mood command for user ${from.id} (${from.first_name})`
+      )
       const hasTodayMood = await checkTodayMoodExists(from.id)
+      console.log(`🎯 Mood check result: hasTodayMood = ${hasTodayMood}`)
 
       if (hasTodayMood) {
         await sendMessage(
