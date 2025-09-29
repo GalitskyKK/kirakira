@@ -242,7 +242,7 @@ export function ChallengeDetails({
                 Участников:
               </span>
               <span className="font-medium text-gray-900 dark:text-gray-100">
-                {currentLeaderboard.length}
+                {currentChallenge.participant_count || 0}
               </span>
             </div>
 

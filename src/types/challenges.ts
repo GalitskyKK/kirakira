@@ -31,6 +31,7 @@ export interface Challenge {
   readonly createdBy: number | null // telegram_id создателя (null для системных)
   readonly createdAt: Date
   readonly updatedAt: Date
+  readonly participant_count?: number // количество участников из API
 }
 
 export interface ChallengeRequirements {
