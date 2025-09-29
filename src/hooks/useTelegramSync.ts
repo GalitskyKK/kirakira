@@ -86,7 +86,17 @@ export function useTelegramSync() {
             '🔄 Вызываем syncFromSupabase для нового пользователя (clear):',
             telegramUser.telegramId
           )
-          await syncFromSupabase(telegramUser.telegramId)
+
+          // Передаем данные пользователя для создания в БД
+          const telegramUserData = {
+            first_name: telegramUser.firstName,
+            last_name: telegramUser.lastName,
+            username: telegramUser.username,
+            photo_url: telegramUser.photoUrl,
+            language_code: telegramUser.languageCode,
+          }
+
+          await syncFromSupabase(telegramUser.telegramId, telegramUserData)
 
           // Если пользователя нет на сервере - создаем
           const { currentUser: syncedUser } = useUserStore.getState()
@@ -107,7 +117,17 @@ export function useTelegramSync() {
             '🔄 Вызываем syncFromSupabase для существующего пользователя:',
             telegramUser.telegramId
           )
-          await syncFromSupabase(telegramUser.telegramId)
+
+          // Передаем обновленные данные пользователя
+          const telegramUserData = {
+            first_name: telegramUser.firstName,
+            last_name: telegramUser.lastName,
+            username: telegramUser.username,
+            photo_url: telegramUser.photoUrl,
+            language_code: telegramUser.languageCode,
+          }
+
+          await syncFromSupabase(telegramUser.telegramId, telegramUserData)
         }
 
         return { success: true, mode: 'telegram', user: telegramUser }

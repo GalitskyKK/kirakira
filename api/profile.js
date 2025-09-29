@@ -53,19 +53,57 @@ async function ensureUser(telegramId, userData = {}) {
   }
 
   if (existingUser) {
+    // Если есть новые данные пользователя - обновляем
+    if (userData && Object.keys(userData).length > 0) {
+      const updates = {}
+
+      // Обновляем только непустые поля
+      if (userData.first_name) updates.first_name = userData.first_name
+      if (userData.last_name) updates.last_name = userData.last_name
+      if (userData.username) updates.username = userData.username
+      if (userData.photo_url) updates.photo_url = userData.photo_url
+      if (userData.language_code) updates.language_code = userData.language_code
+
+      // Если есть что обновить
+      if (Object.keys(updates).length > 0) {
+        console.log(`📝 Updating user ${telegramId} with:`, updates)
+
+        const { data: updatedUser, error: updateError } = await supabase
+          .from('users')
+          .update({
+            ...updates,
+            updated_at: new Date().toISOString(), // Обновляем timestamp
+          })
+          .eq('telegram_id', telegramId)
+          .select()
+          .single()
+
+        if (updateError) {
+          console.error('Failed to update user:', updateError)
+          return existingUser // Возвращаем старые данные в случае ошибки
+        }
+
+        console.log(`✅ User ${telegramId} updated successfully`)
+        return updatedUser
+      }
+    }
+
     return existingUser
   }
 
   // Создаем нового пользователя
+  console.log(`🆕 Creating new user ${telegramId} with data:`, userData)
+
   const { data: newUser, error: createError } = await supabase
     .from('users')
     .insert({
       telegram_id: telegramId,
       user_id: `tg_${telegramId}`, // ИСПРАВЛЕНО: добавлено обязательное поле user_id
-      first_name: userData.first_name || '',
-      last_name: userData.last_name || '',
-      username: userData.username || '',
-      photo_url: userData.photo_url || '',
+      first_name: userData.first_name || null,
+      last_name: userData.last_name || null,
+      username: userData.username || null,
+      photo_url: userData.photo_url || null,
+      language_code: userData.language_code || 'ru',
       // registration_date будет равна created_at (автоматически в БД)
       experience: 0,
       level: 1,
@@ -166,7 +204,7 @@ async function calculateUserStats(user) {
       : 0
 
     // Дни с регистрации
-    const registrationDate =  user.created_at || user.registration_date
+    const registrationDate = user.created_at || user.registration_date
     const daysSinceRegistration = registrationDate
       ? Math.floor(
           (Date.now() - new Date(registrationDate).getTime()) /
@@ -277,21 +315,30 @@ export default async function handler(req, res) {
 
     switch (action) {
       case 'get_profile': {
-        if (req.method !== 'GET') {
+        if (req.method !== 'GET' && req.method !== 'POST') {
           return res
             .status(405)
             .json({ success: false, error: 'Method not allowed' })
         }
 
-        const { telegramId } = req.query
+        let telegramId, userData
+
+        if (req.method === 'GET') {
+          telegramId = req.query.telegramId
+        } else {
+          // POST метод позволяет передать userData при создании
+          telegramId = req.body.telegramId
+          userData = req.body.userData
+        }
+
         if (!telegramId) {
           return res
             .status(400)
             .json({ success: false, error: 'Missing telegramId' })
         }
 
-        // Получаем пользователя
-        const user = await ensureUser(parseInt(telegramId))
+        // Получаем или создаем пользователя с данными Telegram
+        const user = await ensureUser(parseInt(telegramId), userData)
 
         // Вычисляем статистику
         const stats = await calculateUserStats(user)

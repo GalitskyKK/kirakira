@@ -50,7 +50,7 @@ interface UserActions {
   updateLastVisit: () => void
   clearAllUserData: () => Promise<void>
   clearUserDataOnly: () => Promise<void> // 🆕 Новая функция - только данные пользователя
-  syncFromSupabase: (telegramId: number) => Promise<void>
+  syncFromSupabase: (telegramId: number, userData?: any) => Promise<void>
 }
 
 type UserStore = UserState & UserActions
@@ -552,16 +552,26 @@ export const useUserStore = create<UserStore>()(
     },
 
     // 🔄 СИНХРОНИЗАЦИЯ ИЗ SUPABASE (ИСПРАВЛЕНО)
-    syncFromSupabase: async (telegramId: number) => {
+    syncFromSupabase: async (telegramId: number, userData?: any) => {
       set({ isLoading: true, error: null })
 
       try {
         console.log(`🔄 Syncing user data from Supabase for ${telegramId}`)
 
-        // Запрашиваем данные из правильного API
-        const response = await fetch(
-          `/api/profile?action=get_profile&telegramId=${telegramId}`
-        )
+        // Используем POST если есть userData, иначе GET
+        let response: Response
+        if (userData) {
+          console.log('📤 Sending user data to API:', userData)
+          response = await fetch(`/api/profile?action=get_profile`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ telegramId, userData }),
+          })
+        } else {
+          response = await fetch(
+            `/api/profile?action=get_profile&telegramId=${telegramId}`
+          )
+        }
 
         console.log('🔍 API Response status:', response.status, response.ok)
 
