@@ -44,10 +44,23 @@ async function handleList(req, res) {
       'get_active_challenges'
     )
 
-    console.log('📦 Challenges response:', { challenges, challengesError })
+    console.log('📦 Challenges response:', {
+      challengesCount: challenges?.length || 0,
+      challengesError,
+      challengesData: challenges,
+    })
 
-    if (challengesError) {
-      console.error('❌ Challenges fetch error:', challengesError)
+    if (challenges && challenges.length > 0) {
+      console.log('✅ SQL function works! Challenges with participant counts:')
+      challenges.forEach(challenge => {
+        console.log(
+          `   ${challenge.title}: ${challenge.participant_count} participants`
+        )
+      })
+    }
+
+    if (challengesError || !challenges || challenges.length === 0) {
+      console.error('❌ Challenges fetch error or no data:', challengesError)
 
       // Fallback: пробуем прямой запрос к таблице
       console.log('🔄 Trying direct table query as fallback...')
@@ -113,6 +126,15 @@ async function handleList(req, res) {
       })
     }
 
+    // ✅ SQL функция работает - используем результаты
+    console.log('🎉 Using SQL function results - no fallback needed!')
+    console.log('📊 Challenges from SQL function:')
+    challenges.forEach(challenge => {
+      console.log(
+        `   ${challenge.title}: ${challenge.participant_count} participants`
+      )
+    })
+
     // Получаем участие пользователя в челленджах
     const { data: participations, error: participationsError } = await supabase
       .from('challenge_participants')
@@ -172,6 +194,15 @@ async function handleList(req, res) {
         ? new Date(p.completed_at).toISOString()
         : undefined,
     }))
+
+    console.log('📤 Sending response with:')
+    console.log(`   Challenges: ${formattedChallenges.length}`)
+    console.log(`   Participations: ${formattedParticipations.length}`)
+    formattedChallenges.forEach(challenge => {
+      console.log(
+        `   📊 ${challenge.title}: ${challenge.participant_count} participants`
+      )
+    })
 
     res.status(200).json({
       success: true,
