@@ -125,7 +125,7 @@ export function GardenStats({ garden }: GardenStatsProps) {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="mb-3 text-lg font-semibold text-gray-900">
+        <h3 className="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">
           Статистика сада
         </h3>
       </div>
@@ -134,19 +134,25 @@ export function GardenStats({ garden }: GardenStatsProps) {
       <Card padding="sm">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Всего растений</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Всего растений
+            </span>
             <span className="font-semibold text-garden-600">{stats.total}</span>
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Возраст сада</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Возраст сада
+            </span>
             <span className="text-sm font-medium">
               {stats.gardenAge ?? 'Новый сад'}
             </span>
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Серия дней</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Серия дней
+            </span>
             <span className="font-semibold text-orange-600">
               {garden.streak}
             </span>
@@ -157,7 +163,9 @@ export function GardenStats({ garden }: GardenStatsProps) {
       {/* Types Distribution */}
       {Object.keys(stats.byType).length > 0 && (
         <Card padding="sm">
-          <h4 className="mb-3 text-sm font-semibold text-gray-900">По типам</h4>
+          <h4 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
+            По типам
+          </h4>
           <div className="space-y-2">
             {Object.entries(stats.byType).map(([type, count]) => (
               <motion.div
@@ -169,11 +177,13 @@ export function GardenStats({ garden }: GardenStatsProps) {
               >
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">{typeEmojis[type] ?? '🌿'}</span>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
                     {typeLabels[type] ?? type}
                   </span>
                 </div>
-                <span className="text-sm font-medium">{count}</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {count}
+                </span>
               </motion.div>
             ))}
           </div>
@@ -183,7 +193,7 @@ export function GardenStats({ garden }: GardenStatsProps) {
       {/* Rarity Distribution */}
       {Object.keys(stats.byRarity).length > 0 && (
         <Card padding="sm">
-          <h4 className="mb-3 text-sm font-semibold text-gray-900">
+          <h4 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
             По редкости
           </h4>
           <div className="space-y-2">
@@ -200,7 +210,9 @@ export function GardenStats({ garden }: GardenStatsProps) {
                 >
                   {rarityLabels[rarity] ?? rarity}
                 </span>
-                <span className="text-sm font-medium">{count}</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {count}
+                </span>
               </motion.div>
             ))}
           </div>
@@ -210,7 +222,7 @@ export function GardenStats({ garden }: GardenStatsProps) {
       {/* Mood Distribution */}
       {Object.keys(stats.byMood).length > 0 && (
         <Card padding="sm">
-          <h4 className="mb-3 text-sm font-semibold text-gray-900">
+          <h4 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
             По настроению
           </h4>
           <div className="space-y-2">
@@ -222,10 +234,12 @@ export function GardenStats({ garden }: GardenStatsProps) {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: Math.random() * 0.3 }}
               >
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
                   {moodLabels[mood] ?? mood}
                 </span>
-                <span className="text-sm font-medium">{count}</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {count}
+                </span>
               </motion.div>
             ))}
           </div>
@@ -235,14 +249,16 @@ export function GardenStats({ garden }: GardenStatsProps) {
       {/* Recent Elements */}
       {stats.newestElement && (
         <Card padding="sm">
-          <h4 className="mb-3 text-sm font-semibold text-gray-900">
+          <h4 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
             Последнее растение
           </h4>
           <div className="flex items-center space-x-3">
             <div className="text-2xl">{stats.newestElement.emoji}</div>
             <div className="flex-1">
-              <p className="text-sm font-medium">{stats.newestElement.name}</p>
-              <p className="text-xs text-gray-600">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                {stats.newestElement.name}
+              </p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
                 {formatDistanceToNow(stats.newestElement.unlockDate, {
                   locale: ru,
                   addSuffix: true,

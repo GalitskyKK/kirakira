@@ -88,14 +88,16 @@ export default function FriendProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-garden-50 to-green-50">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-garden-50 to-green-50 dark:from-gray-900 dark:to-gray-800">
         <motion.div
           className="text-center"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
         >
           <LoadingSpinner size="lg" />
-          <p className="mt-4 text-gray-600">Загружаем профиль...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">
+            Загружаем профиль...
+          </p>
         </motion.div>
       </div>
     )
@@ -103,17 +105,17 @@ export default function FriendProfilePage() {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-red-50 to-orange-50">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/30 dark:to-orange-900/30">
         <motion.div
           className="mx-auto max-w-md p-8 text-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="mb-4 text-6xl">🔒</div>
-          <h1 className="mb-4 text-2xl font-bold text-gray-900">
+          <h1 className="mb-4 text-2xl font-bold text-gray-900 dark:text-gray-100">
             Профиль недоступен
           </h1>
-          <p className="mb-6 text-gray-600">{error}</p>
+          <p className="mb-6 text-gray-600 dark:text-gray-400">{error}</p>
           <button
             onClick={() => navigate(-1)}
             className="inline-flex items-center rounded-lg bg-garden-500 px-6 py-3 text-white transition-colors hover:bg-garden-600"
@@ -156,18 +158,20 @@ export default function FriendProfilePage() {
   const daysSinceRegistration = daysSinceRegistrationLocal
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-garden-50 to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-garden-50 to-green-50 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-gray-200 bg-white/80 backdrop-blur-md">
+      <div className="sticky top-0 z-10 border-b border-gray-200 bg-white/80 backdrop-blur-md dark:border-gray-700 dark:bg-gray-900/80">
         <div className="flex items-center justify-between p-4">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center text-gray-600 hover:text-gray-900"
+            className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
           >
             <ArrowLeft className="mr-2 h-5 w-5" />
             Назад
           </button>
-          <h1 className="font-semibold text-gray-900">Профиль друга</h1>
+          <h1 className="font-semibold text-gray-900 dark:text-gray-100">
+            Профиль друга
+          </h1>
           <div className="w-16" /> {/* Spacer */}
         </div>
       </div>
@@ -183,7 +187,7 @@ export default function FriendProfilePage() {
 
         {/* Profile Header */}
         <motion.div
-          className="rounded-2xl border border-gray-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6"
+          className="rounded-2xl border border-gray-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 dark:border-gray-700 dark:from-blue-900/30 dark:to-indigo-900/30"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
@@ -195,17 +199,19 @@ export default function FriendProfilePage() {
                 name={displayName}
                 username={user.username}
                 size="xl"
-                className="shadow-lg ring-4 ring-white"
+                className="shadow-lg ring-4 ring-white dark:ring-gray-800"
               />
             </div>
 
             <div className="flex-1 space-y-2">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {displayName}
                 </h1>
                 {username && (
-                  <p className="text-lg text-blue-600">{username}</p>
+                  <p className="text-lg text-blue-600 dark:text-blue-400">
+                    {username}
+                  </p>
                 )}
               </div>
 
@@ -219,7 +225,7 @@ export default function FriendProfilePage() {
               </div>
 
               {/* Quick Stats */}
-              <div className="flex items-center space-x-4 text-sm text-gray-600">
+              <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
                 <div className="flex items-center space-x-1">
                   <span>🗓️</span>
                   <span>
@@ -243,7 +249,7 @@ export default function FriendProfilePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               📊 Статистика
             </h2>
 
@@ -280,14 +286,16 @@ export default function FriendProfilePage() {
           </motion.div>
         ) : (
           <motion.div
-            className="rounded-2xl border border-gray-200 bg-gray-50 p-6 text-center"
+            className="rounded-2xl border border-gray-200 bg-gray-50 p-6 text-center dark:border-gray-700 dark:bg-gray-800"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
             <Lock className="mx-auto mb-3 h-8 w-8 text-gray-400" />
-            <h3 className="mb-1 font-medium text-gray-600">Приватный сад</h3>
-            <p className="text-sm text-gray-500">
+            <h3 className="mb-1 font-medium text-gray-600 dark:text-gray-400">
+              Приватный сад
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Пользователь скрыл статистику своего сада
             </p>
           </motion.div>
@@ -302,10 +310,10 @@ export default function FriendProfilePage() {
             transition={{ delay: 0.3 }}
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 🏆 Достижения
               </h2>
-              <div className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-600">
+              <div className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-600 dark:bg-blue-900/50 dark:text-blue-400">
                 {achievements.length}
               </div>
             </div>
@@ -322,16 +330,16 @@ export default function FriendProfilePage() {
           </motion.div>
         ) : (
           <motion.div
-            className="rounded-2xl border border-gray-200 bg-gray-50 p-6 text-center"
+            className="rounded-2xl border border-gray-200 bg-gray-50 p-6 text-center dark:border-gray-700 dark:bg-gray-800"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
             <Users className="mx-auto mb-3 h-8 w-8 text-gray-400" />
-            <h3 className="mb-1 font-medium text-gray-600">
+            <h3 className="mb-1 font-medium text-gray-600 dark:text-gray-400">
               Приватные достижения
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Пользователь скрыл свои достижения
             </p>
           </motion.div>
@@ -339,18 +347,18 @@ export default function FriendProfilePage() {
 
         {/* Privacy Info */}
         <motion.div
-          className="rounded-xl border border-blue-200 bg-blue-50 p-4"
+          className="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/30"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
           <div className="flex items-start space-x-3">
-            <Eye className="mt-0.5 h-5 w-5 text-blue-500" />
+            <Eye className="mt-0.5 h-5 w-5 text-blue-500 dark:text-blue-400" />
             <div className="flex-1">
-              <div className="text-sm font-medium text-blue-800">
+              <div className="text-sm font-medium text-blue-800 dark:text-blue-200">
                 Настройки приватности
               </div>
-              <div className="mt-1 text-xs text-blue-600">
+              <div className="mt-1 text-xs text-blue-600 dark:text-blue-300">
                 Этот пользователь разрешил просмотр{' '}
                 {privacy.shareGarden && privacy.shareAchievements
                   ? 'профиля, статистики и достижений'
@@ -377,11 +385,15 @@ interface StatCardProps {
 
 function StatCard({ emoji, label, value }: StatCardProps) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
       <div className="text-center">
         <div className="mb-2 text-3xl">{emoji}</div>
-        <div className="text-2xl font-bold text-gray-900">{value}</div>
-        <div className="text-sm font-medium text-gray-600">{label}</div>
+        <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          {value}
+        </div>
+        <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
+          {label}
+        </div>
       </div>
     </div>
   )
@@ -395,21 +407,21 @@ interface AchievementBadgeProps {
 function AchievementBadge({ achievement, delay }: AchievementBadgeProps) {
   return (
     <motion.div
-      className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-4"
+      className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 dark:border-blue-700 dark:from-blue-900/30 dark:to-indigo-900/30"
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay, duration: 0.3 }}
     >
       <div className="text-center">
         <div className="mb-2 text-3xl">{achievement.achievements.emoji}</div>
-        <div className="text-sm font-medium text-gray-900">
+        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
           {achievement.achievements.name}
         </div>
-        <div className="mt-1 text-xs text-gray-600">
+        <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
           {achievement.achievements.description}
         </div>
         {achievement.unlocked_at && (
-          <div className="mt-2 text-xs text-blue-500">
+          <div className="mt-2 text-xs text-blue-500 dark:text-blue-400">
             {new Date(achievement.unlocked_at).toLocaleDateString('ru-RU')}
           </div>
         )}

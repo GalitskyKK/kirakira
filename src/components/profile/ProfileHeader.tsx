@@ -55,7 +55,7 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
 
   return (
     <motion.div
-      className="rounded-2xl border border-gray-200 bg-gradient-to-br from-garden-50 to-green-50 p-6"
+      className="rounded-2xl border border-gray-200 bg-gradient-to-br from-garden-50 to-green-50 p-6 dark:border-gray-700 dark:from-garden-900/30 dark:to-green-900/30"
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
@@ -91,7 +91,7 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
 
           {/* Actions - Desktop only, стекаются в колонку на мобилке */}
           <div className="ml-2 flex flex-shrink-0 flex-col space-y-1">
-            <button className="whitespace-nowrap rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50">
+            <button className="whitespace-nowrap rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
               ⚙️ Настройки
             </button>
             <button className="whitespace-nowrap rounded-lg bg-garden-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-garden-600">
@@ -110,7 +110,7 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
                 {levelInfo.currentLevel.name}
               </span>
               <span className="sm:hidden">Садовник</span>
-              <span className="ml-1.5 rounded-full bg-white/20 px-2 py-0.5 text-xs">
+              <span className="ml-1.5 rounded-full bg-white/20 px-2 py-0.5 text-xs dark:bg-black/20">
                 Ур. {levelInfo.currentLevel.level}
               </span>
             </div>
