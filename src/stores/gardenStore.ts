@@ -113,7 +113,7 @@ export const useGardenStore = create<GardenStore>()(
 
         // Получаем актуальные данные пользователя с сервера
         const response = await fetch(
-          `/api/user?action=stats&telegramId=${currentUser.telegramId}`
+          `/api/profile?action=get_profile&telegramId=${currentUser.telegramId}`
         )
 
         if (!response.ok) {
@@ -122,23 +122,25 @@ export const useGardenStore = create<GardenStore>()(
 
         const result = await response.json()
 
-        console.log('🔍 Garden sync - User stats result:', result)
+        console.log('🔍 Garden sync - User profile result:', result)
 
-        if (result.success && result.data.hasData) {
+        // Проверяем наличие пользователя и его данных (приоритет БД над локальными данными)
+        if (result.success && result.data.user && result.data.stats) {
           console.log('✅ Server has garden data - loading full history')
 
-          // 🔄 ОБНОВЛЯЕМ STREAK В САДУ на основе данных с сервера
+          // 🔄 ОБНОВЛЯЕМ STREAK В САДУ на основе данных с сервера (приоритет БД)
           const currentGarden = get().currentGarden
-          if (currentGarden && result.data.currentStreak !== undefined) {
+          const serverStreak = result.data.stats.currentStreak
+          if (currentGarden && serverStreak !== undefined) {
             const updatedGarden = {
               ...currentGarden,
-              streak: result.data.currentStreak || 0,
+              streak: serverStreak || 0,
               lastVisited: new Date(),
             }
             set({ currentGarden: updatedGarden })
             saveGarden(updatedGarden)
             console.log(
-              `🔄 Updated garden streak to: ${result.data.currentStreak}`
+              `🔄 Updated garden streak to: ${serverStreak} (from server)`
             )
           }
 

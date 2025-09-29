@@ -53,42 +53,43 @@ async function ensureUser(telegramId, userData = {}) {
   }
 
   if (existingUser) {
-    // Если есть новые данные пользователя - обновляем
-    if (userData && Object.keys(userData).length > 0) {
-      const updates = {}
+    const updates = {}
 
+    // ВСЕГДА обновляем last_visit_date при любом обращении к API
+    updates.last_visit_date = new Date().toISOString()
+    updates.updated_at = new Date().toISOString()
+
+    // Если есть новые данные пользователя - добавляем их к обновлениям
+    if (userData && Object.keys(userData).length > 0) {
       // Обновляем только непустые поля
       if (userData.first_name) updates.first_name = userData.first_name
       if (userData.last_name) updates.last_name = userData.last_name
       if (userData.username) updates.username = userData.username
       if (userData.photo_url) updates.photo_url = userData.photo_url
       if (userData.language_code) updates.language_code = userData.language_code
-
-      // Если есть что обновить
-      if (Object.keys(updates).length > 0) {
-        console.log(`📝 Updating user ${telegramId} with:`, updates)
-
-        const { data: updatedUser, error: updateError } = await supabase
-          .from('users')
-          .update({
-            ...updates,
-            updated_at: new Date().toISOString(), // Обновляем timestamp
-          })
-          .eq('telegram_id', telegramId)
-          .select()
-          .single()
-
-        if (updateError) {
-          console.error('Failed to update user:', updateError)
-          return existingUser // Возвращаем старые данные в случае ошибки
-        }
-
-        console.log(`✅ User ${telegramId} updated successfully`)
-        return updatedUser
-      }
     }
 
-    return existingUser
+    console.log(
+      `📝 Updating user ${telegramId} (including last_visit_date):`,
+      updates
+    )
+
+    const { data: updatedUser, error: updateError } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('telegram_id', telegramId)
+      .select()
+      .single()
+
+    if (updateError) {
+      console.error('Failed to update user:', updateError)
+      return existingUser // Возвращаем старые данные в случае ошибки
+    }
+
+    console.log(
+      `✅ User ${telegramId} updated successfully with last_visit_date`
+    )
+    return updatedUser
   }
 
   // Создаем нового пользователя

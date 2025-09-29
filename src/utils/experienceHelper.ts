@@ -23,6 +23,7 @@ interface AddExperienceOptions {
 
 /**
  * Отправляет запрос на начисление опыта пользователю
+ * ОБНОВЛЕНО: Использует централизованную функцию из userStore для синхронизации
  */
 export async function addExperience({
   telegramId,
@@ -35,7 +36,20 @@ export async function addExperience({
   error?: string
 }> {
   try {
-    console.log(`🏆 Adding ${points} XP to user ${telegramId} for ${reason}`)
+    // Импортируем userStore динамически для избежания циклических зависимостей
+    const { useUserStore } = await import('@/stores/userStore')
+    const { addExperienceAndSync, currentUser } = useUserStore.getState()
+
+    // Проверяем, что пользователь соответствует
+    if (currentUser?.telegramId === telegramId) {
+      console.log(`🏆 Using centralized experience sync for user ${telegramId}`)
+      return await addExperienceAndSync(points, `${reason}: ${details}`.trim())
+    }
+
+    // Fallback для других пользователей (например, в dev режиме)
+    console.log(
+      `🏆 Adding ${points} XP to user ${telegramId} for ${reason} (fallback)`
+    )
 
     const response = await fetch('/api/profile?action=add_experience', {
       method: 'POST',

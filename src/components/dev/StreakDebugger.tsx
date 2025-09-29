@@ -73,7 +73,7 @@ export function StreakDebugger() {
             `🔍 Fetching backend stats for telegramId: ${telegramIdToUse}`
           )
           const response = await fetch(
-            `/api/user?action=stats&telegramId=${telegramIdToUse}`
+            `/api/profile?action=get_profile&telegramId=${telegramIdToUse}`
           )
 
           console.log(
@@ -88,12 +88,12 @@ export function StreakDebugger() {
               const result = JSON.parse(responseText)
               serverData = result.data
 
-              if (result.success && result.data) {
+              if (result.success && result.data && result.data.stats) {
                 backendInfo = {
-                  current: result.data.currentStreak || 0,
-                  longest: result.data.longestStreak || 0,
-                  algorithm: 'computeStatsFromUserData (user.js)',
-                  source: 'API /user stats',
+                  current: result.data.stats.currentStreak || 0,
+                  longest: result.data.stats.longestStreak || 0,
+                  algorithm: 'calculateUserStats (profile.js)',
+                  source: 'API /profile get_profile',
                 }
                 console.log(`✅ Backend stats parsed:`, backendInfo)
               } else {

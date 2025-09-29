@@ -144,12 +144,12 @@ export const useMoodStore = create<MoodStore>()(
         set({ lastSyncTime: now })
 
         // Получаем актуальные данные пользователя с сервера
-        console.log(`📡 Fetching user stats for ${currentUser.telegramId}...`)
+        console.log(`📡 Fetching user profile for ${currentUser.telegramId}...`)
         const response = await fetch(
-          `/api/user?action=stats&telegramId=${currentUser.telegramId}`
+          `/api/profile?action=get_profile&telegramId=${currentUser.telegramId}`
         )
 
-        console.log(`📡 User stats response:`, {
+        console.log(`📡 User profile response:`, {
           status: response.status,
           ok: response.ok,
           url: response.url,
@@ -160,11 +160,12 @@ export const useMoodStore = create<MoodStore>()(
         }
 
         const result = await response.json()
-        console.log(`📡 User stats result:`, result)
+        console.log(`📡 User profile result:`, result)
 
-        console.log('🔍 Mood sync - User stats result:', result)
+        console.log('🔍 Mood sync - User profile result:', result)
 
-        if (result.success && result.data.hasData) {
+        // Проверяем наличие пользователя и его данных (приоритет БД над локальными данными)
+        if (result.success && result.data.user && result.data.stats) {
           console.log('✅ Server has mood data - loading full history')
 
           // 📖 Загружаем полную историю настроений с сервера

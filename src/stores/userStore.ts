@@ -51,6 +51,10 @@ interface UserActions {
   clearAllUserData: () => Promise<void>
   clearUserDataOnly: () => Promise<void> // 🆕 Новая функция - только данные пользователя
   syncFromSupabase: (telegramId: number, userData?: any) => Promise<void>
+  addExperienceAndSync: (
+    experiencePoints: number,
+    reason: string
+  ) => Promise<{ success: boolean; data?: any; error?: string }> // 🆕 Синхронизация опыта
 }
 
 type UserStore = UserState & UserActions
@@ -624,23 +628,48 @@ export const useUserStore = create<UserStore>()(
           },
           stats: {
             ...createDefaultStats(),
-            totalDays: serverStats.totalDays || serverUser.total_days || 0,
+            // 🔥 ПРИОРИТЕТ БД: Используем статистику из БД (serverStats приоритетнее serverUser)
+            totalDays:
+              serverStats.totalDays !== undefined
+                ? serverStats.totalDays
+                : serverUser.total_days !== undefined
+                  ? serverUser.total_days
+                  : 0,
             currentStreak:
-              serverStats.currentStreak || serverUser.current_streak || 0,
+              serverStats.currentStreak !== undefined
+                ? serverStats.currentStreak
+                : serverUser.current_streak !== undefined
+                  ? serverUser.current_streak
+                  : 0,
             longestStreak:
-              serverStats.longestStreak || serverUser.longest_streak || 0,
+              serverStats.longestStreak !== undefined
+                ? serverStats.longestStreak
+                : serverUser.longest_streak !== undefined
+                  ? serverUser.longest_streak
+                  : 0,
             totalElements:
-              serverStats.totalElements || serverUser.total_elements || 0,
+              serverStats.totalElements !== undefined
+                ? serverStats.totalElements
+                : serverUser.total_elements !== undefined
+                  ? serverUser.total_elements
+                  : 0,
             rareElementsFound:
-              serverStats.rareElementsFound ||
-              serverUser.rare_elements_found ||
-              0,
+              serverStats.rareElementsFound !== undefined
+                ? serverStats.rareElementsFound
+                : serverUser.rare_elements_found !== undefined
+                  ? serverUser.rare_elements_found
+                  : 0,
             gardensShared:
-              serverStats.gardensShared || serverUser.gardens_shared || 0,
+              serverStats.gardensShared !== undefined
+                ? serverStats.gardensShared
+                : serverUser.gardens_shared !== undefined
+                  ? serverUser.gardens_shared
+                  : 0,
           },
-          // 🔥 ОСНОВНОЕ ИСПРАВЛЕНИЕ: Используем РЕАЛЬНЫЕ данные experience и level из БД
-          experience: serverUser.experience || 0,
-          level: serverUser.level || 1,
+          // 🔥 ПРИОРИТЕТ БД: Используем данные из БД, fallback только если undefined/null
+          experience:
+            serverUser.experience !== undefined ? serverUser.experience : 0,
+          level: serverUser.level !== undefined ? serverUser.level : 1,
           isAnonymous: false,
         }
 
@@ -670,6 +699,69 @@ export const useUserStore = create<UserStore>()(
             : 'Failed to sync from Supabase'
         set({ error: errorMessage, isLoading: false })
         console.error('❌ Supabase sync failed:', error)
+      }
+    },
+
+    // 🏆 ДОБАВЛЕНИЕ ОПЫТА С СИНХРОНИЗАЦИЕЙ ЛОКАЛЬНОГО STORE
+    addExperienceAndSync: async (experiencePoints: number, reason: string) => {
+      const { currentUser } = get()
+
+      if (!currentUser?.telegramId) {
+        return { success: false, error: 'No user logged in' }
+      }
+
+      try {
+        console.log(
+          `🏆 Adding ${experiencePoints} XP to user ${currentUser.telegramId} for ${reason}`
+        )
+
+        // Отправляем запрос на сервер
+        const response = await fetch('/api/profile?action=add_experience', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            telegramId: currentUser.telegramId,
+            experiencePoints,
+            reason,
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error(`Failed to add experience: ${response.status}`)
+        }
+
+        const result = await response.json()
+
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to add experience')
+        }
+
+        // 🔄 СИНХРОНИЗИРУЕМ ЛОКАЛЬНЫЕ ДАННЫЕ С СЕРВЕРОМ
+        if (result.data?.experience !== undefined) {
+          const updatedUser = {
+            ...currentUser,
+            experience:
+              result.data.experience.new_experience || result.data.experience,
+            level: result.data.experience.new_level || currentUser.level,
+          }
+
+          // Обновляем локальный store
+          set({ currentUser: updatedUser })
+
+          // Сохраняем в localStorage
+          saveUser(updatedUser)
+
+          console.log(
+            `✅ Local user data updated: XP=${updatedUser.experience}, Level=${updatedUser.level}`
+          )
+        }
+
+        return { success: true, data: result.data }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to add experience'
+        console.error('❌ Experience add failed:', error)
+        return { success: false, error: errorMessage }
       }
     },
   }))

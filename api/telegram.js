@@ -20,7 +20,7 @@ async function getUserStats(telegramUserId) {
   try {
     // Запрашиваем реальную статистику из API
     const response = await fetch(
-      `${MINI_APP_URL}/api/user/stats?telegramId=${telegramUserId}`
+      `${MINI_APP_URL}/api/profile?action=get_profile&telegramId=${telegramUserId}`
     )
 
     if (!response.ok) {
@@ -30,8 +30,12 @@ async function getUserStats(telegramUserId) {
 
     const result = await response.json()
 
-    if (result.success && result.data) {
-      return result.data // hasData уже вычислен в API
+    if (result.success && result.data && result.data.stats) {
+      // Возвращаем статистику в ожидаемом формате для бота
+      return {
+        ...result.data.stats,
+        hasData: !!(result.data.user && result.data.stats.totalDays > 0),
+      }
     }
 
     return getDefaultStats()
