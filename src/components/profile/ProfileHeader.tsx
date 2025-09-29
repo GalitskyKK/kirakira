@@ -8,9 +8,22 @@ import {
 import { useMoodTracking, useGardenState } from '@/hooks'
 interface ProfileHeaderProps {
   readonly user: User
+  readonly stats?:
+    | {
+        totalDays?: number
+        currentStreak?: number
+        longestStreak?: number
+        totalElements?: number
+        rareElementsFound?: number
+        gardensShared?: number
+        experience?: number
+        level?: number
+        totalMoodEntries?: number
+      }
+    | undefined
 }
 
-export function ProfileHeader({ user }: ProfileHeaderProps) {
+export function ProfileHeader({ user, stats }: ProfileHeaderProps) {
   const displayName = user.firstName ?? user.username ?? 'Пользователь'
   const username = user.username != null ? `@${user.username}` : null
 
@@ -47,11 +60,23 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
   // Рассчитываем информацию об уровне
   const levelInfo = calculateLevelProgress(experience)
 
-  // Calculate days since registration
-  const registrationDate = new Date(user.registrationDate)
-  const daysSinceRegistration = Math.floor(
-    (Date.now() - registrationDate.getTime()) / (1000 * 60 * 60 * 24)
-  )
+  // 🔥 ИСПРАВЛЕНИЕ: Используем данные с сервера для подсчета дней
+  // Приоритет: серверные данные > локальный расчет > fallback
+  const daysSinceRegistration = (() => {
+    // Если есть статистика с сервера - используем её
+    if (stats?.totalDays != null && stats.totalDays > 0) {
+      return stats.totalDays
+    }
+
+    // Fallback: локальный расчет
+    const registrationDate = new Date(user.registrationDate)
+    const calculated = Math.floor(
+      (Date.now() - registrationDate.getTime()) / (1000 * 60 * 60 * 24)
+    )
+
+    // +1 потому что день регистрации тоже считается
+    return Math.max(1, calculated + 1)
+  })()
 
   return (
     <motion.div

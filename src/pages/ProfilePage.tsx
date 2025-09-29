@@ -224,7 +224,7 @@ export function ProfilePage() {
       transition={{ duration: 0.3 }}
     >
       {/* Заголовок профиля */}
-      <ProfileHeader user={renderUser} />
+      <ProfileHeader user={renderUser} stats={_profileData?.stats} />
 
       {/* Статистика */}
       <ProfileStats
