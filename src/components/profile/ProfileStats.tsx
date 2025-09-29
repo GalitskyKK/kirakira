@@ -30,12 +30,15 @@ function StatCard({
   delay = 0,
 }: StatCardProps) {
   const colorClasses = {
-    gray: 'from-gray-50 to-gray-100 text-gray-600',
-    green: 'from-garden-50 to-green-100 text-garden-600',
-    blue: 'from-blue-50 to-blue-100 text-blue-600',
-    orange: 'from-orange-50 to-orange-100 text-orange-600',
-    purple: 'from-purple-50 to-purple-100 text-purple-600',
-    pink: 'from-pink-50 to-pink-100 text-pink-600',
+    gray: 'from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-700/50 text-gray-600 dark:text-gray-400',
+    green:
+      'from-garden-50 to-green-100 dark:from-garden-900/30 dark:to-green-900/30 text-garden-600 dark:text-garden-400',
+    blue: 'from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 text-blue-600 dark:text-blue-400',
+    orange:
+      'from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 text-orange-600 dark:text-orange-400',
+    purple:
+      'from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 text-purple-600 dark:text-purple-400',
+    pink: 'from-pink-50 to-pink-100 dark:from-pink-900/30 dark:to-pink-800/30 text-pink-600 dark:text-pink-400',
   }
 
   return (
@@ -47,10 +50,14 @@ function StatCard({
     >
       <div className="text-center">
         <div className="mb-2 text-3xl">{emoji}</div>
-        <div className="text-2xl font-bold text-gray-900">{value}</div>
+        <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          {value}
+        </div>
         <div className="text-sm font-medium">{label}</div>
         {subtitle && (
-          <div className="mt-1 text-xs text-gray-500">{subtitle}</div>
+          <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            {subtitle}
+          </div>
         )}
       </div>
     </motion.div>
@@ -110,7 +117,9 @@ export function ProfileStats({
       animate={{ opacity: 1 }}
       transition={{ delay: 0.2 }}
     >
-      <h2 className="text-lg font-semibold text-gray-900">📊 Статистика</h2>
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        📊 Статистика
+      </h2>
 
       {/* Main Stats Grid */}
       <div className="grid grid-cols-2 gap-3">
@@ -180,30 +189,30 @@ export function ProfileStats({
 
       {/* Progress to next level (real data) */}
       <motion.div
-        className="rounded-xl border border-gray-200 bg-white p-4"
+        className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.45 }}
       >
         <div className="mb-3 flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             🎯 Прогресс до следующего уровня
           </span>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-gray-500 dark:text-gray-400">
             {levelInfo.nextLevel
               ? `${levelInfo.progress.toFixed(1)}%`
               : 'Макс. уровень!'}
           </span>
         </div>
 
-        <div className="mb-2 h-3 w-full rounded-full bg-gray-200">
+        <div className="mb-2 h-3 w-full rounded-full bg-gray-200 dark:bg-gray-700">
           <div
             className="h-3 rounded-full bg-gradient-to-r from-garden-400 to-green-500 transition-all duration-500"
             style={{ width: `${levelInfo.progress}%` }}
           />
         </div>
 
-        <div className="flex justify-between text-xs text-gray-500">
+        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
           <span className="flex items-center">
             <span className="mr-1">{levelInfo.currentLevel.emoji}</span>
             {levelInfo.currentLevel.name}
@@ -219,7 +228,7 @@ export function ProfileStats({
         </div>
 
         {levelInfo.nextLevel && (
-          <div className="mt-2 text-center text-xs text-gray-400">
+          <div className="mt-2 text-center text-xs text-gray-400 dark:text-gray-500">
             Ещё {levelInfo.experienceToNext} опыта до повышения
           </div>
         )}

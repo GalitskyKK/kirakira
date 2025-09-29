@@ -31,8 +31,8 @@ function AchievementBadge({
     <motion.div
       className={`rounded-xl border p-4 transition-all ${
         isUnlocked
-          ? 'border-garden-200 bg-gradient-to-br from-garden-50 to-green-50'
-          : 'border-gray-200 bg-gray-50'
+          ? 'border-garden-200 bg-gradient-to-br from-garden-50 to-green-50 dark:border-garden-700 dark:from-garden-900/30 dark:to-green-900/30'
+          : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800'
       }`}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -45,12 +45,12 @@ function AchievementBadge({
           {emoji}
         </div>
         <div
-          className={`text-sm font-medium ${isUnlocked ? 'text-gray-900' : 'text-gray-500'}`}
+          className={`text-sm font-medium ${isUnlocked ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'}`}
         >
           {name}
         </div>
         <div
-          className={`mt-1 text-xs ${isUnlocked ? 'text-gray-600' : 'text-gray-400'}`}
+          className={`mt-1 text-xs ${isUnlocked ? 'text-gray-600 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'}`}
         >
           {description}
         </div>
@@ -58,7 +58,7 @@ function AchievementBadge({
         {/* Progress bar for incomplete achievements */}
         {!isUnlocked && maxProgress > 1 && (
           <div className="mt-2">
-            <div className="mb-1 h-1 w-full rounded-full bg-gray-200">
+            <div className="mb-1 h-1 w-full rounded-full bg-gray-200 dark:bg-gray-700">
               <div
                 className="h-1 rounded-full bg-gradient-to-r from-garden-400 to-green-500"
                 style={{
@@ -66,7 +66,7 @@ function AchievementBadge({
                 }}
               />
             </div>
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-gray-400 dark:text-gray-500">
               {progress}/{maxProgress}
             </div>
           </div>
@@ -112,8 +112,10 @@ export function ProfileAchievements({
       transition={{ delay: 0.3 }}
     >
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">🏆 Достижения</h2>
-        <div className="rounded-full bg-garden-100 px-3 py-1 text-sm font-medium text-garden-600">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          🏆 Достижения
+        </h2>
+        <div className="rounded-full bg-garden-100 px-3 py-1 text-sm font-medium text-garden-600 dark:bg-garden-900/50 dark:text-garden-400">
           {unlockedCount}/{achievements.length}
         </div>
       </div>
@@ -136,22 +138,22 @@ export function ProfileAchievements({
 
       {/* Progress Summary */}
       <motion.div
-        className="rounded-xl border border-gray-200 bg-white p-4"
+        className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
       >
         <div className="text-center">
-          <div className="mb-2 text-2xl font-bold text-gray-900">
+          <div className="mb-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
             {unlockedCount === achievements.length ? '🎉' : '🎯'}
           </div>
-          <div className="text-sm font-medium text-gray-700">
+          <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
             {unlockedCount === achievements.length
               ? 'Все достижения разблокированы!'
               : `Ещё ${achievements.length - unlockedCount} достижений ждут вас`}
           </div>
           {unlockedCount < achievements.length && (
-            <div className="mt-2 text-xs text-gray-500">
+            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
               Продолжайте ухаживать за садом и отмечать настроение
             </div>
           )}

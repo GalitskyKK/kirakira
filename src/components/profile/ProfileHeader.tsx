@@ -116,7 +116,7 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
             </div>
 
             {/* Quick Stats */}
-            <div className="flex items-center text-sm text-gray-600">
+            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
               <span>🗓️</span>
               <span className="ml-1">
                 {daysSinceRegistration === 0
@@ -131,7 +131,7 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
           {/* Level Progress Bar */}
           {levelInfo.nextLevel && (
             <div className="w-full">
-              <div className="mb-1 flex justify-between text-xs text-gray-600">
+              <div className="mb-1 flex justify-between text-xs text-gray-600 dark:text-gray-400">
                 <span>Опыт: {experience}</span>
                 <span className="hidden sm:inline">
                   До Ур.{levelInfo.nextLevel.level}:{' '}
@@ -139,7 +139,7 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
                 </span>
                 <span className="sm:hidden">+{levelInfo.experienceToNext}</span>
               </div>
-              <div className="h-2 w-full rounded-full bg-gray-200">
+              <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
                 <div
                   className="h-2 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 transition-all duration-500"
                   style={{ width: `${levelInfo.progress}%` }}

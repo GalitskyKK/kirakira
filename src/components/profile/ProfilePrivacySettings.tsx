@@ -24,7 +24,7 @@ function ToggleSwitch({
       onClick={() => !disabled && onChange(!enabled)}
       disabled={disabled}
       className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-garden-500 focus:ring-offset-2 ${
-        enabled ? 'bg-garden-500' : 'bg-gray-300'
+        enabled ? 'bg-garden-500' : 'bg-gray-300 dark:bg-gray-600'
       } ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
       type="button"
       role="switch"
@@ -69,12 +69,12 @@ function PrivacySetting({
         <div className="mt-0.5 flex-shrink-0 text-xl">{emoji}</div>
         <div className="min-w-0 flex-1">
           <div
-            className={`font-medium leading-tight ${disabled ? 'text-gray-400' : 'text-gray-900'}`}
+            className={`font-medium leading-tight ${disabled ? 'text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-gray-100'}`}
           >
             {title}
           </div>
           <div
-            className={`mt-0.5 text-sm leading-tight ${disabled ? 'text-gray-300' : 'text-gray-600'}`}
+            className={`mt-0.5 text-sm leading-tight ${disabled ? 'text-gray-300 dark:text-gray-600' : 'text-gray-600 dark:text-gray-400'}`}
           >
             {description}
           </div>
@@ -139,9 +139,11 @@ export function ProfilePrivacySettings({ user }: ProfilePrivacySettingsProps) {
       animate={{ opacity: 1 }}
       transition={{ delay: 0.4 }}
     >
-      <h2 className="text-lg font-semibold text-gray-900">🔒 Приватность</h2>
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        🔒 Приватность
+      </h2>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-6">
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
         <div className="space-y-6">
           <PrivacySetting
             emoji="👁️"
@@ -187,7 +189,7 @@ export function ProfilePrivacySettings({ user }: ProfilePrivacySettingsProps) {
             delay={0.25}
           />
 
-          <div className="border-t border-gray-100 pt-4">
+          <div className="border-t border-gray-100 pt-4 dark:border-gray-700">
             <PrivacySetting
               emoji="☁️"
               title="Синхронизация с облаком"
@@ -203,18 +205,18 @@ export function ProfilePrivacySettings({ user }: ProfilePrivacySettingsProps) {
 
       {/* Additional Privacy Info */}
       <motion.div
-        className="rounded-xl border border-blue-200 bg-blue-50 p-4"
+        className="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/30"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
       >
         <div className="flex items-start space-x-3">
-          <div className="text-blue-500">ℹ️</div>
+          <div className="text-blue-500 dark:text-blue-400">ℹ️</div>
           <div className="flex-1">
-            <div className="text-sm font-medium text-blue-800">
+            <div className="text-sm font-medium text-blue-800 dark:text-blue-200">
               О ваших данных
             </div>
-            <div className="mt-1 text-xs text-blue-600">
+            <div className="mt-1 text-xs text-blue-600 dark:text-blue-300">
               Мы заботимся о вашей приватности. Данные о настроениях хранятся
               локально на вашем устройстве. Облачная синхронизация используется
               только при вашем согласии.

@@ -459,7 +459,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
               }`}
             >
               <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="xs:inline hidden truncate sm:inline">
+              <span className="hidden truncate xs:inline sm:inline">
                 {tab.label}
               </span>
               {tab.count !== undefined && tab.count > 0 && (
@@ -490,7 +490,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                 placeholder="Поиск среди друзей..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
               />
             </div>
 
@@ -535,7 +535,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                           {/* Информация о друге */}
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center space-x-2">
-                              <h4 className="truncate font-semibold text-gray-900">
+                              <h4 className="truncate font-semibold text-gray-900 dark:text-gray-100">
                                 {(friend.username ?? '').length > 0
                                   ? `@${friend.username}`
                                   : `${friend.firstName} ${friend.lastName ?? ''}`}
@@ -854,7 +854,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                     onChange={e =>
                       setReferralSearchQuery(e.target.value.toUpperCase())
                     }
-                    className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                     maxLength={8}
                   />
                   <Button

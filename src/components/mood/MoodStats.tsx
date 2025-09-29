@@ -52,10 +52,10 @@ export function MoodStats({ className }: MoodStatsProps) {
       <Card className={className} padding="lg">
         <div className="text-center">
           <div className="mb-3 text-4xl">📊</div>
-          <h3 className="mb-2 text-lg font-semibold text-gray-900">
+          <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
             Статистика настроения
           </h3>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             Начните отмечать настроение, чтобы увидеть статистику
           </p>
         </div>
@@ -70,28 +70,38 @@ export function MoodStats({ className }: MoodStatsProps) {
         <div className="grid grid-cols-2 gap-4">
           <Card padding="sm">
             <div className="flex items-center space-x-3">
-              <div className="rounded-lg bg-blue-100 p-2">
-                <Calendar size={16} className="text-blue-600" />
+              <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/50">
+                <Calendar
+                  size={16}
+                  className="text-blue-600 dark:text-blue-400"
+                />
               </div>
               <div>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {moodStats.totalEntries}
                 </p>
-                <p className="text-xs text-gray-600">Записей</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Записей
+                </p>
               </div>
             </div>
           </Card>
 
           <Card padding="sm">
             <div className="flex items-center space-x-3">
-              <div className="rounded-lg bg-orange-100 p-2">
-                <Target size={16} className="text-orange-600" />
+              <div className="rounded-lg bg-orange-100 p-2 dark:bg-orange-900/50">
+                <Target
+                  size={16}
+                  className="text-orange-600 dark:text-orange-400"
+                />
               </div>
               <div>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {streakCount}
                 </p>
-                <p className="text-xs text-gray-600">Дней подряд</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Дней подряд
+                </p>
               </div>
             </div>
           </Card>
@@ -101,14 +111,17 @@ export function MoodStats({ className }: MoodStatsProps) {
         <Card padding="sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="rounded-lg bg-green-100 p-2">
-                <Award size={16} className="text-green-600" />
+              <div className="rounded-lg bg-green-100 p-2 dark:bg-green-900/50">
+                <Award
+                  size={16}
+                  className="text-green-600 dark:text-green-400"
+                />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   Текущая серия
                 </p>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
                   {moodStats.currentStreak} из {moodStats.longestStreak} дней
                 </p>
               </div>
@@ -124,7 +137,7 @@ export function MoodStats({ className }: MoodStatsProps) {
         {/* Recent Trend */}
         {chartData.length > 0 && (
           <Card padding="sm">
-            <h4 className="mb-3 text-sm font-semibold text-gray-900">
+            <h4 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
               Последние дни
             </h4>
             <div className="flex items-end justify-between space-x-1">
@@ -149,7 +162,9 @@ export function MoodStats({ className }: MoodStatsProps) {
                       backgroundColor: data.color,
                     }}
                   />
-                  <span className="text-xs text-gray-500">{data.date}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {data.date}
+                  </span>
                 </motion.div>
               ))}
             </div>
@@ -159,7 +174,7 @@ export function MoodStats({ className }: MoodStatsProps) {
         {/* Top Moods */}
         {topMoods.length > 0 && (
           <Card padding="sm">
-            <h4 className="mb-3 text-sm font-semibold text-gray-900">
+            <h4 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
               Частые настроения
             </h4>
             <div className="space-y-2">
@@ -173,12 +188,12 @@ export function MoodStats({ className }: MoodStatsProps) {
                 >
                   <div className="flex items-center space-x-2">
                     <span className="text-lg">{config.emoji}</span>
-                    <span className="text-sm text-gray-700">
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
                       {config.label}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <div className="h-2 w-16 overflow-hidden rounded-full bg-gray-200">
+                    <div className="h-2 w-16 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                       <motion.div
                         className="h-full rounded-full"
                         style={{ backgroundColor: config.color }}
@@ -187,7 +202,7 @@ export function MoodStats({ className }: MoodStatsProps) {
                         transition={{ delay: index * 0.1 + 0.3, duration: 0.5 }}
                       />
                     </div>
-                    <span className="w-8 text-right text-xs text-gray-600">
+                    <span className="w-8 text-right text-xs text-gray-600 dark:text-gray-400">
                       {percentage}%
                     </span>
                   </div>
@@ -201,25 +216,28 @@ export function MoodStats({ className }: MoodStatsProps) {
         {moodRecommendation.mood && (
           <Card padding="sm" variant="glass">
             <div className="flex items-start space-x-3">
-              <div className="rounded-lg bg-purple-100 p-2">
-                <TrendingUp size={16} className="text-purple-600" />
+              <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/50">
+                <TrendingUp
+                  size={16}
+                  className="text-purple-600 dark:text-purple-400"
+                />
               </div>
               <div className="flex-1">
-                <p className="mb-1 text-sm font-medium text-gray-900">
+                <p className="mb-1 text-sm font-medium text-gray-900 dark:text-gray-100">
                   Паттерн настроения
                 </p>
                 <div className="mb-2 flex items-center space-x-2">
                   <span className="text-lg">
                     {MOOD_CONFIG[moodRecommendation.mood].emoji}
                   </span>
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
                     {MOOD_CONFIG[moodRecommendation.mood].label}
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
                     ({moodRecommendation.confidence}%)
                   </span>
                 </div>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
                   {moodRecommendation.reason}
                 </p>
               </div>
@@ -231,10 +249,12 @@ export function MoodStats({ className }: MoodStatsProps) {
         <Card padding="sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 Средняя интенсивность
               </p>
-              <p className="text-xs text-gray-600">За все время</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                За все время
+              </p>
             </div>
             <div className="flex items-center space-x-1">
               {Array.from({ length: 3 }, (_, i) => (
@@ -244,11 +264,11 @@ export function MoodStats({ className }: MoodStatsProps) {
                     'h-2 w-2 rounded-full',
                     i < Math.round(moodStats.averageIntensity)
                       ? 'bg-garden-500'
-                      : 'bg-gray-300'
+                      : 'bg-gray-300 dark:bg-gray-600'
                   )}
                 />
               ))}
-              <span className="ml-2 text-sm font-semibold text-gray-900">
+              <span className="ml-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
                 {moodStats.averageIntensity.toFixed(1)}
               </span>
             </div>
