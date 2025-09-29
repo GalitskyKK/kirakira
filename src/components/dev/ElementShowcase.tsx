@@ -88,7 +88,7 @@ const createAllElements = () => {
     emoji: string
     baseColor: string
     rarity: RarityLevel
-    component: React.ComponentType<any>
+    component: React.ComponentType<Record<string, unknown>>
     isPremium: boolean
     moods: string[]
     season?: SeasonalVariant

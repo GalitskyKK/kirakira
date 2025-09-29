@@ -9,6 +9,11 @@ import type {
   MoodIntensity,
   MoodStats,
 } from '@/types'
+import type {
+  StandardApiResponse,
+  ProfileApiGetProfileResponse,
+  DatabaseMoodEntry,
+} from '@/types/api'
 import { calculateMoodStats } from '@/utils/moodMapping'
 import { isTimeForCheckin } from '@/utils/dateHelpers'
 import { saveMoodHistory, loadMoodHistory } from '@/utils/storage'
@@ -159,13 +164,14 @@ export const useMoodStore = create<MoodStore>()(
           throw new Error(`Failed to fetch user data: ${response.status}`)
         }
 
-        const result = await response.json()
+        const result =
+          (await response.json()) as StandardApiResponse<ProfileApiGetProfileResponse>
         console.log(`📡 User profile result:`, result)
 
         console.log('🔍 Mood sync - User profile result:', result)
 
         // Проверяем наличие пользователя и его данных (приоритет БД над локальными данными)
-        if (result.success && result.data.user && result.data.stats) {
+        if (result.success && result.data?.user && result.data?.stats) {
           console.log('✅ Server has mood data - loading full history')
 
           // 📖 Загружаем полную историю настроений с сервера
@@ -194,22 +200,24 @@ export const useMoodStore = create<MoodStore>()(
               const serverMoods = historyResult.data.moodHistory
 
               // Конвертируем серверные данные в формат приложения
-              const convertedMoods = serverMoods.map((serverMood: any) => ({
-                id: `mood_${serverMood.id || Date.now()}`,
-                userId: currentUser.id,
-                date: new Date(serverMood.mood_date || serverMood.created_at),
-                mood: serverMood.mood,
-                intensity: serverMood.intensity || 2, // Из БД или по умолчанию
-                note: serverMood.note || undefined,
-                createdAt: new Date(serverMood.created_at),
-              }))
+              const convertedMoods = serverMoods.map(
+                (serverMood: DatabaseMoodEntry) => ({
+                  id: `mood_${serverMood.id || Date.now()}`,
+                  userId: currentUser.id,
+                  date: new Date(serverMood.mood_date || serverMood.created_at),
+                  mood: serverMood.mood,
+                  intensity: serverMood.intensity || 2, // Из БД или по умолчанию
+                  note: serverMood.note || undefined,
+                  createdAt: new Date(serverMood.created_at),
+                })
+              )
 
               // Обновляем локальное состояние
               const today = new Date()
               today.setHours(0, 0, 0, 0)
 
               const todaysMood =
-                convertedMoods.find((entry: any) => {
+                convertedMoods.find((entry: MoodEntry) => {
                   const entryDate = new Date(entry.date)
                   entryDate.setHours(0, 0, 0, 0)
                   return entryDate.getTime() === today.getTime()

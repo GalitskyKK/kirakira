@@ -185,7 +185,7 @@ export function TelegramShare({
         'shareToStory' in webApp &&
         typeof webApp.shareToStory === 'function'
       ) {
-        ;(webApp as any).shareToStory(lastSharedImage)
+        (webApp as any).shareToStory(lastSharedImage)
       } else {
         showAlert('Stories не поддерживаются в данной версии Telegram')
       }

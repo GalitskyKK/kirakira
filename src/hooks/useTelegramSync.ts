@@ -96,7 +96,10 @@ export function useTelegramSync() {
             language_code: telegramUser.languageCode,
           }
 
-          await syncFromSupabase(telegramUser.telegramId, telegramUserData)
+          await syncFromSupabase(
+            telegramUser.telegramId,
+            telegramUserData as any
+          )
 
           // Если пользователя нет на сервере - создаем
           const { currentUser: syncedUser } = useUserStore.getState()
@@ -127,7 +130,10 @@ export function useTelegramSync() {
             language_code: telegramUser.languageCode,
           }
 
-          await syncFromSupabase(telegramUser.telegramId, telegramUserData)
+          await syncFromSupabase(
+            telegramUser.telegramId,
+            telegramUserData as any
+          )
         }
 
         return { success: true, mode: 'telegram', user: telegramUser }

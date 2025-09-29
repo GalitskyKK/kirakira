@@ -4,6 +4,7 @@
  */
 
 import { EXPERIENCE_REWARDS } from './achievements'
+import type { StandardApiResponse } from '@/types/api'
 
 type ExperienceReason =
   | 'mood_entry'
@@ -25,16 +26,22 @@ interface AddExperienceOptions {
  * Отправляет запрос на начисление опыта пользователю
  * ОБНОВЛЕНО: Использует централизованную функцию из userStore для синхронизации
  */
+interface ExperienceResult {
+  readonly success: boolean
+  readonly data?: {
+    readonly experience: number
+    readonly level: number
+    readonly leveledUp?: boolean
+  }
+  readonly error?: string
+}
+
 export async function addExperience({
   telegramId,
   points,
   reason,
   details = '',
-}: AddExperienceOptions): Promise<{
-  success: boolean
-  data?: any
-  error?: string
-}> {
+}: AddExperienceOptions): Promise<ExperienceResult> {
   try {
     // Импортируем userStore динамически для избежания циклических зависимостей
     const { useUserStore } = await import('@/stores/userStore')
@@ -66,14 +73,18 @@ export async function addExperience({
       return { success: false, error: `HTTP ${response.status}` }
     }
 
-    const result = await response.json()
+    const result = (await response.json()) as StandardApiResponse<{
+      experience: number
+      level: number
+      leveledUp?: boolean
+    }>
 
-    if (result.success) {
+    if (result.success && result.data) {
       console.log(`✅ Added ${points} XP for ${reason}:`, result.data)
       return { success: true, data: result.data }
     } else {
       console.warn(`❌ Experience API error:`, result.error)
-      return { success: false, error: result.error }
+      return { success: false, error: result.error ?? 'Unknown API error' }
     }
   } catch (error) {
     console.error('❌ Experience helper error:', error)
@@ -156,7 +167,7 @@ export function checkRareElementBonus(
   telegramId: number,
   elementType: string,
   rarity: string
-): Promise<{ success: boolean; data?: any; error?: string }> {
+): Promise<ExperienceResult> {
   const rareTypes = ['rare', 'epic', 'legendary']
 
   if (rareTypes.includes(rarity.toLowerCase())) {

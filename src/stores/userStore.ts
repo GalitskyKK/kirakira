@@ -9,6 +9,12 @@ import type {
   // PrivacySettings,
   // GardenPreferences,
 } from '@/types'
+import type {
+  DatabaseUser,
+  StandardApiResponse,
+  ProfileApiGetProfileResponse,
+  ProfileApiAddExperienceResponse,
+} from '@/types/api'
 import {
   saveUser,
   loadUser,
@@ -50,11 +56,18 @@ interface UserActions {
   updateLastVisit: () => void
   clearAllUserData: () => Promise<void>
   clearUserDataOnly: () => Promise<void> // 🆕 Новая функция - только данные пользователя
-  syncFromSupabase: (telegramId: number, userData?: any) => Promise<void>
+  syncFromSupabase: (
+    telegramId: number,
+    userData?: Partial<DatabaseUser>
+  ) => Promise<void>
   addExperienceAndSync: (
     experiencePoints: number,
     reason: string
-  ) => Promise<{ success: boolean; data?: any; error?: string }> // 🆕 Синхронизация опыта
+  ) => Promise<{
+    success: boolean
+    data?: { experience: number; level: number; leveledUp?: boolean }
+    error?: string
+  }> // 🆕 Синхронизация опыта
 }
 
 type UserStore = UserState & UserActions
@@ -263,7 +276,7 @@ export const useUserStore = create<UserStore>()(
             telegramStorage
               .saveUser(newUser)
               .then(() => console.log('✅ User synced to CloudStorage'))
-              .catch((err: any) =>
+              .catch((err: unknown) =>
                 console.warn('⚠️ CloudStorage sync failed:', err)
               )
           }
@@ -556,7 +569,10 @@ export const useUserStore = create<UserStore>()(
     },
 
     // 🔄 СИНХРОНИЗАЦИЯ ИЗ SUPABASE (ИСПРАВЛЕНО)
-    syncFromSupabase: async (telegramId: number, userData?: any) => {
+    syncFromSupabase: async (
+      telegramId: number,
+      userData?: Partial<DatabaseUser>
+    ) => {
       set({ isLoading: true, error: null })
 
       try {
@@ -583,7 +599,8 @@ export const useUserStore = create<UserStore>()(
           throw new Error(`Failed to fetch user data: ${response.status}`)
         }
 
-        const result = await response.json()
+        const result =
+          (await response.json()) as StandardApiResponse<ProfileApiGetProfileResponse>
 
         console.log('🔍 API Response data:', {
           success: result.success,
@@ -593,7 +610,7 @@ export const useUserStore = create<UserStore>()(
           fullResult: result,
         })
 
-        if (!result.success || !result.data.user) {
+        if (!result.success || !result.data?.user) {
           console.log(
             `📝 No server data for user ${telegramId} - keeping current state`
           )
@@ -605,7 +622,7 @@ export const useUserStore = create<UserStore>()(
         const serverUser = result.data.user
         const serverStats = result.data.stats || {}
 
-        const syncedUser: User = {
+        const syncedUser = {
           id: `tg_${telegramId}`,
           telegramId: telegramId,
           firstName: serverUser.first_name,
@@ -674,11 +691,11 @@ export const useUserStore = create<UserStore>()(
         }
 
         // Сохраняем локально
-        const success = saveUser(syncedUser)
+        const success = saveUser(syncedUser as User)
 
         if (success) {
           set({
-            currentUser: syncedUser,
+            currentUser: syncedUser as User,
             isAuthenticated: true,
             isLoading: false,
           })
@@ -730,19 +747,19 @@ export const useUserStore = create<UserStore>()(
           throw new Error(`Failed to add experience: ${response.status}`)
         }
 
-        const result = await response.json()
+        const result =
+          (await response.json()) as StandardApiResponse<ProfileApiAddExperienceResponse>
 
         if (!result.success) {
-          throw new Error(result.error || 'Failed to add experience')
+          throw new Error(result.error ?? 'Failed to add experience')
         }
 
         // 🔄 СИНХРОНИЗИРУЕМ ЛОКАЛЬНЫЕ ДАННЫЕ С СЕРВЕРОМ
         if (result.data?.experience !== undefined) {
           const updatedUser = {
             ...currentUser,
-            experience:
-              result.data.experience.new_experience || result.data.experience,
-            level: result.data.experience.new_level || currentUser.level,
+            experience: result.data.experience,
+            level: result.data.level ?? currentUser.level,
           }
 
           // Обновляем локальный store
@@ -756,7 +773,10 @@ export const useUserStore = create<UserStore>()(
           )
         }
 
-        return { success: true, data: result.data }
+        return {
+          success: true,
+          data: result.data ?? { experience: 0, level: 1 },
+        }
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to add experience'

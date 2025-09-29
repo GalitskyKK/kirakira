@@ -52,7 +52,7 @@ export function useAppInitialization(
   )
 
   const logIfDev = useCallback(
-    (message: string, data?: any) => {
+    (message: string, data?: unknown) => {
       if (finalConfig.isDevelopment) {
         console.log(message, data || '')
       }

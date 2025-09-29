@@ -5,24 +5,20 @@ import { ArrowLeft, Lock, Eye, Users } from 'lucide-react'
 import { LoadingSpinner, UserAvatar } from '@/components/ui'
 import { useProfile } from '@/hooks/useProfile'
 import { GARDENER_LEVELS } from '@/utils/achievements'
+import type {
+  DatabaseUser,
+  DatabaseUserStats,
+  DatabaseAchievement,
+} from '@/types/api'
 
 interface FriendProfileData {
-  user: {
-    id: number
-    telegram_id: number
-    first_name: string
-    last_name?: string
-    username?: string
-    photo_url?: string
-    level: number
-    registration_date: string
-  }
-  stats: any
-  achievements: any[]
-  privacy: {
-    showProfile: boolean
-    shareGarden: boolean
-    shareAchievements: boolean
+  readonly user: DatabaseUser
+  readonly stats: DatabaseUserStats
+  readonly achievements: readonly DatabaseAchievement[]
+  readonly privacy: {
+    readonly showProfile: boolean
+    readonly shareGarden: boolean
+    readonly shareAchievements: boolean
   }
 }
 
@@ -400,7 +396,7 @@ function StatCard({ emoji, label, value }: StatCardProps) {
 }
 
 interface AchievementBadgeProps {
-  achievement: any
+  achievement: DatabaseAchievement
   delay: number
 }
 
@@ -413,12 +409,12 @@ function AchievementBadge({ achievement, delay }: AchievementBadgeProps) {
       transition={{ delay, duration: 0.3 }}
     >
       <div className="text-center">
-        <div className="mb-2 text-3xl">{achievement.achievements.emoji}</div>
+        <div className="mb-2 text-3xl">🏆</div>
         <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-          {achievement.achievements.name}
+          {achievement.achievement_id}
         </div>
         <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-          {achievement.achievements.description}
+          Achievement earned!
         </div>
         {achievement.unlocked_at && (
           <div className="mt-2 text-xs text-blue-500 dark:text-blue-400">

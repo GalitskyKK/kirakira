@@ -47,7 +47,9 @@ export function TelegramLoginWidget({
     // Функция обратного вызова для Telegram
     const callbackName = `telegramCallback_${Math.random().toString(36).substr(2, 9)}`
 
-    ;(window as any)[callbackName] = (user: TelegramLoginData) => {
+    ;(window as unknown as Record<string, (user: TelegramLoginData) => void>)[
+      callbackName
+    ] = (user: TelegramLoginData) => {
       console.log('Telegram login successful:', user)
       onAuth(user)
     }
@@ -85,8 +87,12 @@ export function TelegramLoginWidget({
 
     // Cleanup функция
     return () => {
-      if ((window as any)[callbackName]) {
-        delete (window as any)[callbackName]
+      const windowWithCallback = window as unknown as Record<
+        string,
+        (user: TelegramLoginData) => void
+      >
+      if (windowWithCallback[callbackName]) {
+        delete windowWithCallback[callbackName]
       }
     }
   }, [botName, onAuth, onError, buttonSize, cornerRadius, requestAccess, lang])

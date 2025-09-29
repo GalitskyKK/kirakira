@@ -4,6 +4,11 @@ import { Card } from '@/components/ui'
 import { useMoodStore, useUserStore } from '@/stores'
 import { calculateMoodStats } from '@/utils/moodMapping'
 import { formatDate } from '@/utils/dateHelpers'
+import type {
+  DatabaseMoodEntry,
+  StandardApiResponse,
+  ProfileApiGetProfileResponse,
+} from '@/types/api'
 
 interface StreakDebugInfo {
   frontend: {
@@ -29,8 +34,8 @@ interface StreakDebugInfo {
       }
     | undefined
   rawData: {
-    moodHistory: readonly any[]
-    serverData?: any
+    moodHistory: readonly any[] // Temporary fix for build
+    serverData?: ProfileApiGetProfileResponse
   }
 }
 
@@ -85,10 +90,12 @@ export function StreakDebugger() {
             console.log(`🔍 Backend response text:`, responseText)
 
             try {
-              const result = JSON.parse(responseText)
+              const result = JSON.parse(
+                responseText
+              ) as StandardApiResponse<ProfileApiGetProfileResponse>
               serverData = result.data
 
-              if (result.success && result.data && result.data.stats) {
+              if (result.success && result.data?.stats) {
                 backendInfo = {
                   current: result.data.stats.currentStreak || 0,
                   longest: result.data.stats.longestStreak || 0,
@@ -200,8 +207,8 @@ export function StreakDebugger() {
         backend: backendInfo,
         database: databaseInfo,
         rawData: {
-          moodHistory,
-          serverData,
+          moodHistory: moodHistory as any,
+          serverData: serverData as any,
         },
       })
     } catch (error) {
@@ -212,7 +219,7 @@ export function StreakDebugger() {
   }
 
   // Вычисляем streak из данных БД (копия логики из user.js)
-  const calculateDatabaseStreak = (moods: any[]) => {
+  const calculateDatabaseStreak = (moods: DatabaseMoodEntry[]) => {
     if (!moods || moods.length === 0) {
       return { current: 0, longest: 0 }
     }
@@ -228,7 +235,9 @@ export function StreakDebugger() {
     // Проверяем текущий streak
     const today = new Date()
     for (let i = 0; i < sortedMoods.length; i++) {
-      const moodDate = new Date(sortedMoods[i].mood_date)
+      const mood = sortedMoods[i]
+      if (!mood) continue
+      const moodDate = new Date(mood.mood_date)
       const daysDiff = Math.floor(
         (today.getTime() - moodDate.getTime()) / (1000 * 60 * 60 * 24)
       )
@@ -243,8 +252,11 @@ export function StreakDebugger() {
     // Вычисляем самый длинный streak
     let tempStreak = 1
     for (let i = 1; i < sortedMoods.length; i++) {
-      const prevDate = new Date(sortedMoods[i - 1].mood_date)
-      const currentDate = new Date(sortedMoods[i].mood_date)
+      const prevMood = sortedMoods[i - 1]
+      const currentMood = sortedMoods[i]
+      if (!prevMood || !currentMood) continue
+      const prevDate = new Date(prevMood.mood_date)
+      const currentDate = new Date(currentMood.mood_date)
       const daysDiff = Math.floor(
         (prevDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)
       )
@@ -554,7 +566,7 @@ export function StreakDebugger() {
             <pre className="mt-2 rounded bg-gray-100 p-2 text-xs">
               {JSON.stringify(
                 debugInfo.rawData.moodHistory.slice(0, 7).map(mood => ({
-                  date: formatDate(mood.date, 'dd.MM.yyyy'),
+                  date: formatDate(new Date(mood.mood_date), 'dd.MM.yyyy'),
                   mood: mood.mood,
                   intensity: mood.intensity,
                 })),

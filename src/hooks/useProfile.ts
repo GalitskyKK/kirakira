@@ -1,16 +1,17 @@
 import { useState, useCallback } from 'react'
 import { useUserStore } from '@/stores'
-
-interface ProfileData {
-  user: any
-  stats: any
-  achievements: any[]
-  newlyUnlocked?: any[]
-}
+import type {
+  ProfileData,
+  StandardApiResponse,
+  ProfileApiGetProfileResponse,
+  ProfileApiUpdatePrivacyResponse,
+  ProfileApiAddExperienceResponse,
+  DatabaseAchievement,
+} from '@/types/api'
 
 interface ExperienceResult {
-  experience: any
-  newAchievements: any[]
+  experience: number
+  newAchievements: readonly DatabaseAchievement[]
   reason: string
 }
 
@@ -41,13 +42,14 @@ export function useProfile() {
           throw new Error(`Failed to load profile: ${response.status}`)
         }
 
-        const result = await response.json()
+        const result =
+          (await response.json()) as StandardApiResponse<ProfileApiGetProfileResponse>
 
         if (!result.success) {
-          throw new Error(result.error || 'Failed to load profile')
+          throw new Error(result.error ?? 'Failed to load profile')
         }
 
-        return result.data
+        return result.data ?? null
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to load profile'
@@ -65,7 +67,7 @@ export function useProfile() {
    * Обновляет настройки приватности
    */
   const updatePrivacySettings = useCallback(
-    async (privacySettings: any): Promise<boolean> => {
+    async (privacySettings: Record<string, boolean>): Promise<boolean> => {
       if (!currentUser?.telegramId) {
         setError('No user logged in')
         return false
@@ -88,10 +90,11 @@ export function useProfile() {
           throw new Error(`Failed to update privacy: ${response.status}`)
         }
 
-        const result = await response.json()
+        const result =
+          (await response.json()) as StandardApiResponse<ProfileApiUpdatePrivacyResponse>
 
         if (!result.success) {
-          throw new Error(result.error || 'Failed to update privacy settings')
+          throw new Error(result.error ?? 'Failed to update privacy settings')
         }
 
         return true
@@ -139,13 +142,20 @@ export function useProfile() {
           throw new Error(`Failed to add experience: ${response.status}`)
         }
 
-        const result = await response.json()
+        const result =
+          (await response.json()) as StandardApiResponse<ProfileApiAddExperienceResponse>
 
         if (!result.success) {
-          throw new Error(result.error || 'Failed to add experience')
+          throw new Error(result.error ?? 'Failed to add experience')
         }
 
         return result.data
+          ? {
+              experience: result.data.experience,
+              newAchievements: [],
+              reason: 'experience_added',
+            }
+          : null
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to add experience'
@@ -184,13 +194,14 @@ export function useProfile() {
           throw new Error(`Failed to load friend profile: ${response.status}`)
         }
 
-        const result = await response.json()
+        const result =
+          (await response.json()) as StandardApiResponse<ProfileApiGetProfileResponse>
 
         if (!result.success) {
-          throw new Error(result.error || 'Failed to load friend profile')
+          throw new Error(result.error ?? 'Failed to load friend profile')
         }
 
-        return result.data
+        return result.data ?? null
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to load friend profile'
