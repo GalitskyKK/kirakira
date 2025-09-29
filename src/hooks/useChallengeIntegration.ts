@@ -3,7 +3,7 @@
  * Автоматически обновляет прогресс челленджей при изменении данных
  */
 
-import { useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useGardenStore } from '@/stores'
 import { useMoodStore } from '@/stores'
 import { useChallengeStore } from '@/stores/challengeStore'
@@ -23,39 +23,50 @@ export function useChallengeIntegration() {
     useChallengeStore()
   const { currentUser } = useUserStore()
 
-  // Отслеживаем предыдущие значения для определения изменений
-  const previousValues = useRef<Record<string, number>>({})
+  // Функция для подсчета метрик с момента присоединения к челленджу
+  const calculateChallengeMetrics = useCallback(
+    (challengeStartDate: Date): Record<ChallengeMetric, number> => {
+      const startTime = challengeStartDate.getTime()
 
-  // Функция для подсчета текущих значений метрик
-  const calculateCurrentMetrics = useCallback((): Record<
-    ChallengeMetric,
-    number
-  > => {
-    return {
-      // Элементы сада
-      garden_elements_count: currentGarden?.elements.length || 0,
+      return {
+        // Элементы сада, добавленные после начала челленджа
+        garden_elements_count:
+          currentGarden?.elements.filter(
+            el => el.unlockDate.getTime() >= startTime
+          ).length || 0,
 
-      // Редкие элементы
-      rare_elements_count:
-        currentGarden?.elements.filter(el =>
-          ['rare', 'epic', 'legendary'].includes(el.rarity)
-        ).length || 0,
+        // Редкие элементы, добавленные после начала челленджа
+        rare_elements_count:
+          currentGarden?.elements.filter(
+            el =>
+              el.unlockDate.getTime() >= startTime &&
+              ['rare', 'epic', 'legendary'].includes(el.rarity)
+          ).length || 0,
 
-      // Разнообразие сада (количество уникальных типов)
-      garden_diversity: new Set(
-        currentGarden?.elements.map(el => el.type) || []
-      ).size,
+        // Разнообразие сада (уникальные типы после начала челленджа)
+        garden_diversity: new Set(
+          currentGarden?.elements
+            .filter(el => el.unlockDate.getTime() >= startTime)
+            .map(el => el.type) || []
+        ).size,
 
-      // Записи настроения
-      mood_entries_count: moodHistory.length,
+        // Записи настроения после начала челленджа
+        mood_entries_count: moodHistory.filter(
+          mood => mood.date.getTime() >= startTime
+        ).length,
 
-      // Стрик дней (берем из пользователя)
-      streak_days: currentUser?.stats.currentStreak || 0,
+        // Стрик дней (считаем с момента присоединения)
+        streak_days: Math.max(
+          0,
+          Math.floor((Date.now() - startTime) / (1000 * 60 * 60 * 24))
+        ),
 
-      // Взаимодействия с друзьями (пока заглушка)
-      friend_interactions: 0,
-    }
-  }, [currentGarden, moodHistory, currentUser])
+        // Взаимодействия с друзьями (пока заглушка)
+        friend_interactions: 0,
+      }
+    },
+    [currentGarden, moodHistory]
+  )
 
   // Функция для определения какие челленджи нужно обновить
   const getActiveParticipations = useCallback(() => {
@@ -69,7 +80,6 @@ export function useChallengeIntegration() {
   const updateChallengeProgress = useCallback(async () => {
     if (!currentUser?.telegramId) return
 
-    const currentMetrics = calculateCurrentMetrics()
     const activeParticipations = getActiveParticipations()
     const updates: ChallengeProgressUpdate[] = []
 
@@ -81,25 +91,36 @@ export function useChallengeIntegration() {
         .challenges.find(c => c.id === participation.challengeId)
       if (!challenge) continue
 
+      // Используем дату присоединения как точку отсчета
+      const startDate = new Date(
+        Math.max(
+          participation.joinedAt.getTime(),
+          challenge.startDate.getTime()
+        )
+      )
+
+      // Считаем метрики с момента присоединения/начала челленджа
+      const challengeMetrics = calculateChallengeMetrics(startDate)
       const metric = challenge.requirements.metric
-      const currentValue = currentMetrics[metric]
-      const previousValue =
-        previousValues.current[`${participation.challengeId}_${metric}`] || 0
+      const currentValue = challengeMetrics[metric]
+      const targetValue = challenge.requirements.targetValue
+
+      // Ограничиваем прогресс целевым значением
+      const cappedValue = Math.min(currentValue, targetValue)
 
       // Проверяем, изменилось ли значение
-      if (
-        currentValue !== previousValue &&
-        currentValue > participation.currentProgress
-      ) {
+      if (cappedValue !== participation.currentProgress) {
         updates.push({
           challengeId: participation.challengeId,
           metric,
-          newValue: currentValue,
+          newValue: cappedValue,
         })
 
-        // Сохраняем новое значение
-        previousValues.current[`${participation.challengeId}_${metric}`] =
-          currentValue
+        console.log(
+          `📊 Challenge ${challenge.title}: ${cappedValue}/${targetValue} (${Math.round(
+            (cappedValue / targetValue) * 100
+          )}%)`
+        )
       }
     }
 
@@ -124,7 +145,7 @@ export function useChallengeIntegration() {
     return updates.length > 0
   }, [
     currentUser,
-    calculateCurrentMetrics,
+    calculateChallengeMetrics,
     getActiveParticipations,
     updateProgress,
   ])
@@ -133,7 +154,6 @@ export function useChallengeIntegration() {
   const forceUpdateAllChallenges = useCallback(async () => {
     if (!currentUser?.telegramId) return
 
-    const currentMetrics = calculateCurrentMetrics()
     const activeParticipations = getActiveParticipations()
 
     for (const participation of activeParticipations) {
@@ -142,19 +162,32 @@ export function useChallengeIntegration() {
         .challenges.find(c => c.id === participation.challengeId)
       if (!challenge) continue
 
+      // Используем дату присоединения как точку отсчета
+      const startDate = new Date(
+        Math.max(
+          participation.joinedAt.getTime(),
+          challenge.startDate.getTime()
+        )
+      )
+
+      const challengeMetrics = calculateChallengeMetrics(startDate)
       const metric = challenge.requirements.metric
-      const currentValue = currentMetrics[metric]
+      const currentValue = challengeMetrics[metric]
+      const targetValue = challenge.requirements.targetValue
+
+      // Ограничиваем прогресс целевым значением
+      const cappedValue = Math.min(currentValue, targetValue)
 
       try {
         await updateProgress(
           participation.challengeId,
           currentUser.telegramId,
           metric,
-          currentValue
+          cappedValue
         )
 
         console.log(
-          `🔄 Force updated challenge: ${participation.challengeId} - ${metric}: ${currentValue}`
+          `🔄 Force updated challenge: ${participation.challengeId} - ${metric}: ${cappedValue}/${targetValue}`
         )
       } catch (error) {
         console.error(`❌ Failed to force update challenge:`, error)
@@ -162,7 +195,7 @@ export function useChallengeIntegration() {
     }
   }, [
     currentUser,
-    calculateCurrentMetrics,
+    calculateChallengeMetrics,
     getActiveParticipations,
     updateProgress,
   ])
@@ -215,7 +248,7 @@ export function useChallengeIntegration() {
   return {
     updateChallengeProgress,
     forceUpdateAllChallenges,
-    calculateCurrentMetrics,
+    calculateChallengeMetrics,
   }
 }
 

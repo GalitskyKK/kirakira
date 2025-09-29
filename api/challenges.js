@@ -36,17 +36,68 @@ async function handleList(req, res) {
     }
 
     const supabase = await getSupabaseClient()
+    console.log('🔗 Supabase client created successfully')
 
     // Получаем активные челленджи
+    console.log('📞 Calling get_active_challenges() function...')
     const { data: challenges, error: challengesError } = await supabase.rpc(
       'get_active_challenges'
     )
 
+    console.log('📦 Challenges response:', { challenges, challengesError })
+
     if (challengesError) {
-      console.error('Challenges fetch error:', challengesError)
-      return res.status(500).json({
-        success: false,
-        error: 'Ошибка при получении списка челленджей',
+      console.error('❌ Challenges fetch error:', challengesError)
+
+      // Fallback: пробуем прямой запрос к таблице
+      console.log('🔄 Trying direct table query as fallback...')
+      const { data: fallbackChallenges, error: fallbackError } = await supabase
+        .from('challenges')
+        .select('*')
+        .eq('status', 'active')
+        .lte('start_date', new Date().toISOString())
+        .gte('end_date', new Date().toISOString())
+
+      console.log('📦 Fallback response:', {
+        fallbackChallenges,
+        fallbackError,
+      })
+
+      if (fallbackError) {
+        return res.status(500).json({
+          success: false,
+          error: 'Ошибка при получении списка челленджей',
+        })
+      }
+
+      // Используем fallback данные
+      const formattedChallenges = (fallbackChallenges || []).map(challenge => ({
+        id: challenge.id,
+        title: challenge.title,
+        description: challenge.description,
+        emoji: challenge.emoji,
+        category: challenge.category,
+        type: challenge.type,
+        status: challenge.status,
+        startDate: new Date(challenge.start_date).toISOString(),
+        endDate: new Date(challenge.end_date).toISOString(),
+        maxParticipants: challenge.max_participants,
+        requirements: challenge.requirements,
+        rewards: challenge.rewards,
+        createdBy: challenge.created_by || null,
+        createdAt: new Date(challenge.created_at).toISOString(),
+        updatedAt: new Date(challenge.updated_at).toISOString(),
+        participant_count: 0,
+      }))
+
+      console.log('✅ Using fallback challenges:', formattedChallenges.length)
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          challenges: formattedChallenges,
+          userParticipations: [],
+        },
       })
     }
 
@@ -583,12 +634,50 @@ async function handleUpdateProgress(req, res) {
 
     const progress = calculateChallengeProgress(challenge, updatedParticipation)
 
+    // Проверяем, завершил ли пользователь челлендж и начисляем опыт
+    let newAchievements = []
+    if (
+      updatedParticipation.status === 'completed' &&
+      participation.status !== 'completed'
+    ) {
+      console.log(
+        `🎉 User ${telegramId} completed challenge: ${challenge.title}`
+      )
+
+      // Начисляем опыт за завершение челленджа
+      const experienceReward = challenge.rewards.experience || 0
+      if (experienceReward > 0) {
+        await awardExperience(
+          supabase,
+          parseInt(telegramId),
+          experienceReward,
+          {
+            source: 'challenge_completion',
+            challengeId: challengeId,
+            challengeTitle: challenge.title,
+          }
+        )
+        console.log(
+          `💰 Awarded ${experienceReward} experience to user ${telegramId}`
+        )
+      }
+
+      // Проверяем специальные награды
+      if (
+        challenge.rewards.achievements &&
+        challenge.rewards.achievements.length > 0
+      ) {
+        newAchievements = challenge.rewards.achievements
+        console.log(`🏆 Awarded achievements: ${newAchievements.join(', ')}`)
+      }
+    }
+
     res.status(200).json({
       success: true,
       data: {
         progress,
         leaderboard: formattedLeaderboard,
-        newAchievements: [], // TODO: Реализовать проверку новых достижений
+        newAchievements,
       },
     })
   } catch (error) {
@@ -696,6 +785,82 @@ function calculateChallengeProgress(challenge, participation) {
     isCompleted: participation.status === 'completed',
     timeRemaining,
     dailyProgress: [], // TODO: Реализовать получение ежедневного прогресса
+  }
+}
+
+/**
+ * Начисляет опыт пользователю за выполнение челленджа
+ */
+async function awardExperience(
+  supabase,
+  telegramId,
+  experienceAmount,
+  metadata = {}
+) {
+  try {
+    console.log(
+      `💰 Awarding ${experienceAmount} experience to user ${telegramId}`
+    )
+
+    // Получаем текущий опыт пользователя
+    const { data: currentUser, error: userError } = await supabase
+      .from('users')
+      .select('experience, level')
+      .eq('telegram_id', telegramId)
+      .single()
+
+    if (userError) {
+      console.error('Error fetching user for experience award:', userError)
+      return false
+    }
+
+    const currentExperience = currentUser.experience || 0
+    const currentLevel = currentUser.level || 1
+    const newExperience = currentExperience + experienceAmount
+
+    // Простая формула для уровня: level = floor(experience / 1000) + 1
+    const newLevel = Math.floor(newExperience / 1000) + 1
+    const leveledUp = newLevel > currentLevel
+
+    // Обновляем опыт и уровень пользователя
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        experience: newExperience,
+        level: newLevel,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('telegram_id', telegramId)
+
+    if (updateError) {
+      console.error('Error updating user experience:', updateError)
+      return false
+    }
+
+    // Логируем результат
+    if (leveledUp) {
+      console.log(
+        `🎉 User ${telegramId} leveled up! ${currentLevel} → ${newLevel}`
+      )
+    }
+
+    console.log(
+      `✅ Experience awarded: ${currentExperience} + ${experienceAmount} = ${newExperience}`
+    )
+
+    // TODO: Можно добавить запись в таблицу experience_log для истории
+    return {
+      success: true,
+      oldExperience: currentExperience,
+      newExperience,
+      oldLevel: currentLevel,
+      newLevel,
+      leveledUp,
+      metadata,
+    }
+  } catch (error) {
+    console.error('Award experience error:', error)
+    return false
   }
 }
 

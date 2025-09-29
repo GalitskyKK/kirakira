@@ -77,12 +77,19 @@ export const useChallengeStore = create<ChallengeStore>()(
     // Load challenges list
     loadChallenges: async (telegramId: number) => {
       set({ isLoading: true, error: null })
+      console.log(`🚀 Loading challenges for user ${telegramId}`)
 
       try {
-        const response = await fetch(
-          `/api/challenges?action=list&telegramId=${telegramId}`
+        const url = `/api/challenges?action=list&telegramId=${telegramId}`
+        console.log(`📞 Making request to: ${url}`)
+
+        const response = await fetch(url)
+        console.log(
+          `📡 Response status: ${response.status} ${response.statusText}`
         )
+
         const result = (await response.json()) as ChallengeListResponse
+        console.log(`📦 Response data:`, result)
 
         if (!result.success) {
           throw new Error(result.error || 'Ошибка загрузки челленджей')
@@ -118,6 +125,8 @@ export const useChallengeStore = create<ChallengeStore>()(
           console.log(
             `✅ Loaded ${challenges.length} challenges, ${participations.length} participations`
           )
+          console.log('📊 Challenges data:', challenges)
+          console.log('👥 Participations data:', participations)
         }
       } catch (error) {
         console.error('Failed to load challenges:', error)
