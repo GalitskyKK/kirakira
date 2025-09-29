@@ -504,6 +504,10 @@ async function handleUpdateProgress(req, res) {
   try {
     const { challengeId, telegramId, metric, value } = req.body
 
+    console.log(
+      `🔄 UPDATE_PROGRESS: challengeId=${challengeId}, telegramId=${telegramId}, metric=${metric}, value=${value}`
+    )
+
     if (!challengeId || !telegramId || !metric || value === undefined) {
       return res.status(400).json({
         success: false,
@@ -537,11 +541,22 @@ async function handleUpdateProgress(req, res) {
       .single()
 
     if (participationError || !participation) {
+      console.log(
+        `❌ Participation not found: ${participationError?.message || 'No participation'}`
+      )
       return res.status(404).json({
         success: false,
         error: 'Участие в челлендже не найдено',
       })
     }
+
+    console.log(`👤 Current participation:`, {
+      id: participation.id,
+      currentProgress: participation.current_progress,
+      maxProgress: participation.max_progress,
+      newValue: value,
+      difference: parseInt(value) - participation.current_progress,
+    })
 
     const challenge = participation.challenges
     if (!challenge || challenge.status !== 'active') {
@@ -563,13 +578,25 @@ async function handleUpdateProgress(req, res) {
       })
     }
 
+    // Проверяем, не пытаемся ли мы уменьшить прогресс
+    const newValue = parseInt(value)
+    if (newValue < participation.current_progress) {
+      console.log(
+        `⚠️ Preventing progress decrease: ${participation.current_progress} → ${newValue}`
+      )
+      return res.status(400).json({
+        success: false,
+        error: `Прогресс не может быть уменьшен с ${participation.current_progress} до ${newValue}`,
+      })
+    }
+
     // Обновляем прогресс через функцию БД
     const { error: updateError } = await supabase.rpc(
       'update_challenge_progress',
       {
         participant_uuid: participation.id,
-        new_progress: parseInt(value),
-        new_max_progress: Math.max(participation.max_progress, parseInt(value)),
+        new_progress: newValue,
+        new_max_progress: Math.max(participation.max_progress, newValue),
       }
     )
 

@@ -108,8 +108,11 @@ export function useChallengeIntegration() {
       // Ограничиваем прогресс целевым значением
       const cappedValue = Math.min(currentValue, targetValue)
 
-      // Проверяем, изменилось ли значение
-      if (cappedValue !== participation.currentProgress) {
+      // Проверяем, изменилось ли значение и не уменьшился ли прогресс
+      if (
+        cappedValue !== participation.currentProgress &&
+        cappedValue >= participation.currentProgress
+      ) {
         updates.push({
           challengeId: participation.challengeId,
           metric,
@@ -120,6 +123,10 @@ export function useChallengeIntegration() {
           `📊 Challenge ${challenge.title}: ${cappedValue}/${targetValue} (${Math.round(
             (cappedValue / targetValue) * 100
           )}%)`
+        )
+      } else if (cappedValue < participation.currentProgress) {
+        console.log(
+          `⚠️ Challenge ${challenge.title}: Skipping progress decrease ${participation.currentProgress} → ${cappedValue}`
         )
       }
     }
@@ -178,19 +185,26 @@ export function useChallengeIntegration() {
       // Ограничиваем прогресс целевым значением
       const cappedValue = Math.min(currentValue, targetValue)
 
-      try {
-        await updateProgress(
-          participation.challengeId,
-          currentUser.telegramId,
-          metric,
-          cappedValue
-        )
+      // Не уменьшаем прогресс при принудительном обновлении
+      if (cappedValue >= participation.currentProgress) {
+        try {
+          await updateProgress(
+            participation.challengeId,
+            currentUser.telegramId,
+            metric,
+            cappedValue
+          )
 
+          console.log(
+            `🔄 Force updated challenge: ${participation.challengeId} - ${metric}: ${cappedValue}/${targetValue}`
+          )
+        } catch (error) {
+          console.error(`❌ Failed to force update challenge:`, error)
+        }
+      } else {
         console.log(
-          `🔄 Force updated challenge: ${participation.challengeId} - ${metric}: ${cappedValue}/${targetValue}`
+          `⚠️ Force update skipped for ${challenge.title}: would decrease progress ${participation.currentProgress} → ${cappedValue}`
         )
-      } catch (error) {
-        console.error(`❌ Failed to force update challenge:`, error)
       }
     }
   }, [
