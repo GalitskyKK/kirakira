@@ -92,19 +92,19 @@ async function checkTodayMoodExists(telegramUserId) {
     console.log(
       `📦 API Response data: ${JSON.stringify({
         success: result.success,
-        dataLength: result.data?.length || 0,
-        hasData: !!result.data,
+        dataLength: result.data?.moodHistory?.length || 0,
+        hasData: !!result.data?.moodHistory,
       })}`
     )
 
-    if (!result.success || !result.data) {
-      console.log(`❌ No valid data in API response`)
+    if (!result.success || !result.data?.moodHistory) {
+      console.log(`❌ No valid mood data in API response`)
       // Fallback: проверяем через Supabase напрямую
       return await checkTodayMoodDirectly(telegramUserId, today)
     }
 
     // Проверяем есть ли запись за сегодня
-    const todayEntry = result.data.find(entry => {
+    const todayEntry = result.data.moodHistory.find(entry => {
       const entryDate = new Date(entry.mood_date).toISOString().split('T')[0]
       console.log(`📅 Comparing entry date ${entryDate} with today ${today}`)
       return entryDate === today
