@@ -72,7 +72,7 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
                 name={displayName}
                 username={user.username}
                 size="lg"
-                className="shadow-lg ring-4 ring-white"
+                className="rounded-full shadow-lg ring-4 ring-white dark:ring-gray-800"
               />
             </div>
 
