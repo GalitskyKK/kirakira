@@ -82,7 +82,10 @@ async function checkTodayMoodExists(telegramUserId) {
 
     if (!response.ok) {
       console.warn(`❌ Mood API request failed: ${response.status}`)
-      return false
+
+      // Fallback: проверяем через Supabase напрямую
+      console.log(`🔄 Trying direct Supabase check as fallback...`)
+      return await checkTodayMoodDirectly(telegramUserId, today)
     }
 
     const result = await response.json()
@@ -96,7 +99,8 @@ async function checkTodayMoodExists(telegramUserId) {
 
     if (!result.success || !result.data) {
       console.log(`❌ No valid data in API response`)
-      return false
+      // Fallback: проверяем через Supabase напрямую
+      return await checkTodayMoodDirectly(telegramUserId, today)
     }
 
     // Проверяем есть ли запись за сегодня
@@ -113,6 +117,49 @@ async function checkTodayMoodExists(telegramUserId) {
     return !!todayEntry
   } catch (error) {
     console.error('❌ Error checking today mood:', error)
+    // Fallback: проверяем через Supabase напрямую
+    return await checkTodayMoodDirectly(
+      telegramUserId,
+      new Date().toISOString().split('T')[0]
+    )
+  }
+}
+
+/**
+ * Fallback проверка настроения напрямую через Supabase
+ */
+async function checkTodayMoodDirectly(telegramUserId, today) {
+  try {
+    console.log(
+      `🔄 Direct Supabase check for user ${telegramUserId} on ${today}`
+    )
+
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    )
+
+    const { data, error } = await supabase
+      .from('mood_entries')
+      .select('id, mood_date')
+      .eq('telegram_id', telegramUserId)
+      .eq('mood_date', today)
+      .limit(1)
+
+    if (error) {
+      console.error('❌ Supabase direct check failed:', error)
+      return false // В случае ошибки разрешаем отмечать
+    }
+
+    const hasEntry = data && data.length > 0
+    console.log(
+      `🎯 Direct Supabase result: ${hasEntry ? 'FOUND' : 'NOT FOUND'}`
+    )
+
+    return hasEntry
+  } catch (error) {
+    console.error('❌ Direct Supabase check error:', error)
     return false // В случае ошибки разрешаем отмечать
   }
 }
@@ -420,10 +467,10 @@ function validatePayment(amount, currency, payload) {
 // Конфигурация
 const BOT_TOKEN =
   process.env.TELEGRAM_BOT_TOKEN || process.env.VITE_TELEGRAM_BOT_TOKEN
+
+// Всегда используем production URL для внутренних API вызовов
 const MINI_APP_URL =
-  process.env.VITE_APP_URL || process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : 'https://kirakira-theta.vercel.app'
+  process.env.VITE_APP_URL || 'https://kirakira-theta.vercel.app'
 
 console.log(
   `🔧 Bot config: BOT_TOKEN=${BOT_TOKEN ? 'SET' : 'MISSING'}, MINI_APP_URL=${MINI_APP_URL}`
