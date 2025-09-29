@@ -51,10 +51,10 @@ export function MobileLayout() {
           <div className="space-y-6 p-4">
             {/* Quick Status */}
             <div className="text-center">
-              <h1 className="mb-2 text-2xl font-bold text-gray-900">
+              <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
                 🌸 KiraKira
               </h1>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {todaysMood ? 'Настроение отмечено' : 'Как дела сегодня?'}
               </p>
             </div>
@@ -64,18 +64,22 @@ export function MobileLayout() {
 
             {/* Quick Stats Cards */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl bg-gradient-to-br from-garden-50 to-green-50 p-4">
-                <div className="text-2xl font-bold text-garden-600">
+              <div className="rounded-2xl bg-gradient-to-br from-garden-50 to-green-50 p-4 dark:from-garden-900/30 dark:to-green-900/30">
+                <div className="text-2xl font-bold text-garden-600 dark:text-garden-400">
                   {gardenStats.totalElements}
                 </div>
-                <div className="text-sm text-gray-600">Растений</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Растений
+                </div>
               </div>
 
-              <div className="rounded-2xl bg-gradient-to-br from-orange-50 to-yellow-50 p-4">
-                <div className="text-2xl font-bold text-orange-600">
+              <div className="rounded-2xl bg-gradient-to-br from-orange-50 to-yellow-50 p-4 dark:from-orange-900/30 dark:to-yellow-900/30">
+                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                   {garden?.streak ?? 0}
                 </div>
-                <div className="text-sm text-gray-600">Дней подряд</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Дней подряд
+                </div>
               </div>
             </div>
 
@@ -83,12 +87,14 @@ export function MobileLayout() {
             <div className="space-y-3">
               <button
                 onClick={() => setActiveTab('garden')}
-                className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left transition-colors hover:bg-gray-50"
+                className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-medium text-gray-900">Мой сад</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="font-medium text-gray-900 dark:text-gray-100">
+                      Мой сад
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
                       {gardenStats.totalElements > 0
                         ? `${gardenStats.totalElements} растений`
                         : 'Вырастите первое растение'}
@@ -100,12 +106,14 @@ export function MobileLayout() {
 
               <button
                 onClick={() => setActiveTab('community')}
-                className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left transition-colors hover:bg-gray-50"
+                className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-medium text-gray-900">Комьюнити</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="font-medium text-gray-900 dark:text-gray-100">
+                      Комьюнити
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
                       Челленджи и друзья
                     </div>
                   </div>
@@ -115,12 +123,14 @@ export function MobileLayout() {
 
               <button
                 onClick={() => setActiveTab('stats')}
-                className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left transition-colors hover:bg-gray-50"
+                className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-medium text-gray-900">Статистика</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="font-medium text-gray-900 dark:text-gray-100">
+                      Статистика
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
                       Аналитика настроения
                     </div>
                   </div>
@@ -135,14 +145,16 @@ export function MobileLayout() {
         return (
           <div>
             <div className="mb-4">
-              <h2 className="mb-1 text-xl font-bold text-gray-900">Мой сад</h2>
-              <p className="text-sm text-gray-600">
+              <h2 className="mb-1 text-xl font-bold text-gray-900 dark:text-gray-100">
+                Мой сад
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {gardenStats.totalElements} растений
               </p>
             </div>
 
             {/* Compact garden view for mobile */}
-            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
               <GardenView className="min-h-[400px]" />
             </div>
           </div>
@@ -162,10 +174,10 @@ export function MobileLayout() {
         return (
           <div>
             <div className="mb-4">
-              <h2 className="mb-1 text-xl font-bold text-gray-900">
+              <h2 className="mb-1 text-xl font-bold text-gray-900 dark:text-gray-100">
                 Статистика
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Аналитика вашего настроения
               </p>
             </div>
@@ -181,9 +193,11 @@ export function MobileLayout() {
           console.error('❌ ProfilePage crashed:', error)
           return (
             <div>
-              <div className="rounded-xl border border-red-200 bg-red-50 p-6">
-                <h2 className="font-bold text-red-900">ProfilePage Error</h2>
-                <p className="text-red-700">
+              <div className="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-900/30">
+                <h2 className="font-bold text-red-900 dark:text-red-200">
+                  ProfilePage Error
+                </h2>
+                <p className="text-red-700 dark:text-red-300">
                   {error instanceof Error ? error.message : String(error)}
                 </p>
               </div>
@@ -197,7 +211,7 @@ export function MobileLayout() {
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-garden-50 to-green-50 pb-20 sm:pb-24 dark:from-gray-900 dark:to-gray-800">
+    <div className="relative min-h-screen bg-gradient-to-br from-garden-50 to-green-50 pb-20 dark:from-gray-900 dark:to-gray-800 sm:pb-24">
       {/* Telegram Status - Always visible */}
       <div className="p-3 pb-0 sm:p-4">
         <TelegramStatus />

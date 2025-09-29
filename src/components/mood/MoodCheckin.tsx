@@ -96,11 +96,13 @@ export function MoodCheckin({
             <CheckCircle size={48} className="mx-auto mb-4 text-green-500" />
           </motion.div>
 
-          <h3 className="mb-2 text-xl font-semibold text-gray-900">
+          <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
             Спасибо за отметку!
           </h3>
 
-          <p className="mb-4 text-gray-600">Ваше настроение записано</p>
+          <p className="mb-4 text-gray-600 dark:text-gray-400">
+            Ваше настроение записано
+          </p>
 
           {unlockedElement && (
             <motion.div
@@ -218,17 +220,17 @@ export function MoodCheckin({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2 }}
               >
-                <p className="mb-1 text-lg font-bold text-garden-800">
+                <p className="mb-1 text-lg font-bold text-garden-800 dark:text-garden-200">
                   {unlockedElement.name}
                 </p>
-                <p className="text-sm text-garden-600">
+                <p className="text-sm text-garden-600 dark:text-garden-300">
                   {unlockedElement.description}
                 </p>
 
                 {/* Rarity indicator */}
                 {unlockedElement.rarity !== 'common' && (
                   <motion.div
-                    className="mt-3 inline-flex items-center rounded-full bg-gradient-to-r from-purple-100 to-pink-100 px-3 py-1 text-xs font-medium text-purple-700"
+                    className="mt-3 inline-flex items-center rounded-full bg-gradient-to-r from-purple-100 to-pink-100 px-3 py-1 text-xs font-medium text-purple-700 dark:from-purple-900/50 dark:to-pink-900/50 dark:text-purple-300"
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 1.4 }}
@@ -263,13 +265,13 @@ export function MoodCheckin({
       <Card className={className} padding="lg">
         <div className="text-center">
           <Clock size={48} className="mx-auto mb-4 text-gray-400" />
-          <h3 className="mb-2 text-lg font-semibold text-gray-900">
+          <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
             До следующей отметки
           </h3>
-          <p className="mb-4 text-gray-600">
+          <p className="mb-4 text-gray-600 dark:text-gray-400">
             {timeUntilNextCheckin.hours}ч {timeUntilNextCheckin.minutes}м
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Возвращайтесь завтра, чтобы отметить настроение и вырастить новое
             растение
           </p>
@@ -283,12 +285,12 @@ export function MoodCheckin({
       <AnimatePresence>
         {error && (
           <motion.div
-            className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3"
+            className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-900/30"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
-            <p className="text-sm text-red-700">{error}</p>
+            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -297,7 +299,7 @@ export function MoodCheckin({
 
       {!canUnlockToday && todaysMood && (
         <motion.div
-          className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3"
+          className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/30"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -308,10 +310,10 @@ export function MoodCheckin({
               className="mt-0.5 flex-shrink-0 text-blue-600"
             />
             <div>
-              <p className="text-sm font-medium text-blue-800">
+              <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
                 Элемент уже разблокирован
               </p>
-              <p className="text-xs text-blue-600">
+              <p className="text-xs text-blue-600 dark:text-blue-300">
                 Вы можете обновить настроение, но новый элемент появится только
                 завтра
               </p>
@@ -327,7 +329,7 @@ export function MoodCheckin({
           animate={{ opacity: 1 }}
         >
           <LoadingSpinner size="md" />
-          <span className="ml-2 text-sm text-gray-600">
+          <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
             {moodLoading || isSubmitting
               ? 'Сохранение...'
               : 'Выращивание растения...'}

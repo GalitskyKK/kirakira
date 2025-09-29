@@ -40,29 +40,29 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       primary: [
         'bg-garden-500 text-white',
         'hover:bg-garden-600 focus:ring-garden-500',
-        'disabled:bg-gray-300 disabled:text-gray-500',
-        'shadow-sm hover:shadow-md',
+        'disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:text-gray-500 dark:disabled:text-gray-400',
+        'shadow-sm hover:shadow-md dark:shadow-gray-900/25',
       ],
       secondary: [
-        'bg-gray-100 text-gray-900',
-        'hover:bg-gray-200 focus:ring-gray-500',
-        'disabled:bg-gray-50 disabled:text-gray-400',
+        'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100',
+        'hover:bg-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500',
+        'disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-400',
       ],
       outline: [
-        'border-garden-300 text-garden-700 bg-transparent',
-        'hover:bg-garden-50 focus:ring-garden-500',
-        'disabled:border-gray-200 disabled:text-gray-400',
+        'border-garden-300 dark:border-garden-600 text-garden-700 dark:text-garden-300 bg-transparent',
+        'hover:bg-garden-50 dark:hover:bg-garden-900/30 focus:ring-garden-500',
+        'disabled:border-gray-200 dark:disabled:border-gray-700 disabled:text-gray-400',
       ],
       ghost: [
-        'text-garden-700 bg-transparent',
-        'hover:bg-garden-50 focus:ring-garden-500',
+        'text-garden-700 dark:text-garden-300 bg-transparent',
+        'hover:bg-garden-50 dark:hover:bg-garden-900/30 focus:ring-garden-500',
         'disabled:text-gray-400',
       ],
       danger: [
         'bg-red-500 text-white',
         'hover:bg-red-600 focus:ring-red-500',
-        'disabled:bg-gray-300 disabled:text-gray-500',
-        'shadow-sm hover:shadow-md',
+        'disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:text-gray-500 dark:disabled:text-gray-400',
+        'shadow-sm hover:shadow-md dark:shadow-gray-900/25',
       ],
     }
 

@@ -30,28 +30,28 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
 
     const variantClasses = {
       default: [
-        'bg-white',
-        'border border-gray-200',
-        hover && 'hover:border-garden-300',
+        'bg-white dark:bg-gray-800',
+        'border border-gray-200 dark:border-gray-700',
+        hover && 'hover:border-garden-300 dark:hover:border-garden-600',
         clickable && 'cursor-pointer',
       ],
       elevated: [
-        'bg-white',
-        'shadow-lg',
-        hover && 'hover:shadow-xl',
+        'bg-white dark:bg-gray-800',
+        'shadow-lg dark:shadow-gray-900/25',
+        hover && 'hover:shadow-xl dark:hover:shadow-gray-900/50',
         clickable && 'cursor-pointer',
       ],
       outlined: [
         'bg-transparent',
-        'border-2 border-garden-300',
-        hover && 'hover:border-garden-400',
+        'border-2 border-garden-300 dark:border-garden-600',
+        hover && 'hover:border-garden-400 dark:hover:border-garden-500',
         clickable && 'cursor-pointer',
       ],
       glass: [
-        'bg-white/80 backdrop-blur-sm',
-        'border border-white/20',
-        'shadow-lg',
-        hover && 'hover:bg-white/90',
+        'bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm',
+        'border border-white/20 dark:border-gray-700/50',
+        'shadow-lg dark:shadow-gray-900/25',
+        hover && 'hover:bg-white/90 dark:hover:bg-gray-900/90',
         clickable && 'cursor-pointer',
       ],
     }
@@ -108,8 +108,8 @@ export function CardHeader({ children, className }: CardHeaderProps) {
   return (
     <div
       className={clsx(
-        'px-4 py-3 border-b border-gray-200',
-        'font-semibold text-gray-900',
+        'border-b border-gray-200 px-4 py-3 dark:border-gray-700',
+        'font-semibold text-gray-900 dark:text-gray-100',
         className
       )}
     >
@@ -136,8 +136,8 @@ export function CardFooter({ children, className }: CardFooterProps) {
   return (
     <div
       className={clsx(
-        'px-4 py-3 border-t border-gray-200',
-        'bg-gray-50',
+        'border-t border-gray-200 px-4 py-3 dark:border-gray-700',
+        'bg-gray-50 dark:bg-gray-800',
         className
       )}
     >

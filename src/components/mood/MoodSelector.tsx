@@ -69,10 +69,10 @@ export function MoodSelector({
   return (
     <Card className={clsx('mx-auto w-full max-w-md', className)} padding="lg">
       <div className="mb-6 text-center">
-        <h2 className="mb-2 text-xl font-semibold text-gray-900">
+        <h2 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
           {isAlreadyCheckedIn ? 'Сегодняшнее настроение' : 'Как дела?'}
         </h2>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           {isAlreadyCheckedIn
             ? 'Вы уже отметили настроение сегодня'
             : 'Выберите, что лучше всего описывает ваше настроение'}
@@ -97,7 +97,7 @@ export function MoodSelector({
                     'focus:outline-none focus:ring-2 focus:ring-offset-2',
                     selectedMood === moodKey
                       ? 'scale-105 border-current shadow-md'
-                      : 'hover:scale-102 border-gray-200 hover:border-gray-300',
+                      : 'hover:scale-102 border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600',
                     isAlreadyCheckedIn && 'cursor-not-allowed opacity-50'
                   )}
                   style={{
@@ -137,10 +137,10 @@ export function MoodSelector({
               <div className="mb-2 text-4xl">
                 {MOOD_CONFIG[selectedMood].emoji}
               </div>
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                 {MOOD_CONFIG[selectedMood].label}
               </h3>
-              <p className="mt-1 text-sm text-gray-600">
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 Насколько сильно вы это чувствуете?
               </p>
             </div>
@@ -158,7 +158,7 @@ export function MoodSelector({
                       'focus:outline-none focus:ring-2 focus:ring-offset-2',
                       isSelected
                         ? 'border-current shadow-md'
-                        : 'border-gray-200 hover:border-gray-300'
+                        : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
                     )}
                     style={{
                       color: isSelected
@@ -184,7 +184,9 @@ export function MoodSelector({
                             key={i}
                             className={clsx(
                               'h-2 w-2 rounded-full',
-                              i < intensity ? 'bg-current' : 'bg-gray-300'
+                              i < intensity
+                                ? 'bg-current'
+                                : 'bg-gray-300 dark:bg-gray-600'
                             )}
                           />
                         ))}
@@ -218,10 +220,10 @@ export function MoodSelector({
               <div className="mb-2 text-4xl">
                 {MOOD_CONFIG[selectedMood].emoji}
               </div>
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                 Добавить заметку
               </h3>
-              <p className="mt-1 text-sm text-gray-600">
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 Что происходит в вашей жизни? (необязательно)
               </p>
             </div>
@@ -231,7 +233,8 @@ export function MoodSelector({
               onChange={e => setNote(e.target.value)}
               placeholder="Расскажите о своем дне..."
               className={clsx(
-                'w-full rounded-xl border border-gray-300 p-4',
+                'w-full rounded-xl border border-gray-300 p-4 dark:border-gray-600',
+                'bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100',
                 'focus:border-transparent focus:outline-none focus:ring-2 focus:ring-garden-500',
                 'resize-none text-sm'
               )}
@@ -239,7 +242,7 @@ export function MoodSelector({
               maxLength={200}
             />
 
-            <div className="mt-1 text-right text-xs text-gray-500">
+            <div className="mt-1 text-right text-xs text-gray-500 dark:text-gray-400">
               {note.length}/200
             </div>
 
@@ -257,7 +260,7 @@ export function MoodSelector({
 
       {isAlreadyCheckedIn && todaysMood && (
         <motion.div
-          className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4"
+          className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/30"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -265,15 +268,15 @@ export function MoodSelector({
           <div className="flex items-center space-x-3">
             <div className="text-2xl">{MOOD_CONFIG[todaysMood.mood].emoji}</div>
             <div>
-              <p className="text-sm font-medium text-green-800">
+              <p className="text-sm font-medium text-green-800 dark:text-green-200">
                 {MOOD_CONFIG[todaysMood.mood].label}
               </p>
-              <p className="text-xs text-green-600">
+              <p className="text-xs text-green-600 dark:text-green-300">
                 Интенсивность:{' '}
                 {['Слабо', 'Умеренно', 'Сильно'][todaysMood.intensity - 1]}
               </p>
               {todaysMood.note && (
-                <p className="mt-1 text-xs text-green-700">
+                <p className="mt-1 text-xs text-green-700 dark:text-green-300">
                   "{todaysMood.note}"
                 </p>
               )}
