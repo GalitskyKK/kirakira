@@ -28,32 +28,48 @@ export function useChallengeIntegration() {
     (challengeStartDate: Date): Record<ChallengeMetric, number> => {
       const startTime = challengeStartDate.getTime()
 
-      return {
+      console.log(
+        `🔢 Calculating metrics from date: ${challengeStartDate.toISOString()}`
+      )
+      console.log(`⏰ Start time: ${startTime}`)
+
+      // Элементы сада, добавленные после начала челленджа
+      const gardenElementsAfterStart =
+        currentGarden?.elements.filter(
+          el => el.unlockDate.getTime() >= startTime
+        ) || []
+
+      // Записи настроения после начала челленджа
+      const moodEntriesAfterStart = moodHistory.filter(
+        mood => mood.date.getTime() >= startTime
+      )
+
+      console.log(
+        `🌱 Garden elements total: ${currentGarden?.elements.length || 0}`
+      )
+      console.log(
+        `🌱 Garden elements after start: ${gardenElementsAfterStart.length}`
+      )
+      console.log(`😊 Mood entries total: ${moodHistory.length}`)
+      console.log(
+        `😊 Mood entries after start: ${moodEntriesAfterStart.length}`
+      )
+
+      const metrics = {
         // Элементы сада, добавленные после начала челленджа
-        garden_elements_count:
-          currentGarden?.elements.filter(
-            el => el.unlockDate.getTime() >= startTime
-          ).length || 0,
+        garden_elements_count: gardenElementsAfterStart.length,
 
         // Редкие элементы, добавленные после начала челленджа
-        rare_elements_count:
-          currentGarden?.elements.filter(
-            el =>
-              el.unlockDate.getTime() >= startTime &&
-              ['rare', 'epic', 'legendary'].includes(el.rarity)
-          ).length || 0,
+        rare_elements_count: gardenElementsAfterStart.filter(el =>
+          ['rare', 'epic', 'legendary'].includes(el.rarity)
+        ).length,
 
         // Разнообразие сада (уникальные типы после начала челленджа)
-        garden_diversity: new Set(
-          currentGarden?.elements
-            .filter(el => el.unlockDate.getTime() >= startTime)
-            .map(el => el.type) || []
-        ).size,
+        garden_diversity: new Set(gardenElementsAfterStart.map(el => el.type))
+          .size,
 
         // Записи настроения после начала челленджа
-        mood_entries_count: moodHistory.filter(
-          mood => mood.date.getTime() >= startTime
-        ).length,
+        mood_entries_count: moodEntriesAfterStart.length,
 
         // Стрик дней (считаем с момента присоединения)
         streak_days: Math.max(
@@ -64,6 +80,9 @@ export function useChallengeIntegration() {
         // Взаимодействия с друзьями (пока заглушка)
         friend_interactions: 0,
       }
+
+      console.log(`📊 Calculated metrics:`, metrics)
+      return metrics
     },
     [currentGarden, moodHistory]
   )
@@ -99,14 +118,27 @@ export function useChallengeIntegration() {
         )
       )
 
+      console.log(`\n🎯 Processing challenge: ${challenge.title}`)
+      console.log(
+        `📅 Participation joined: ${participation.joinedAt.toISOString()}`
+      )
+      console.log(`📅 Challenge start: ${challenge.startDate.toISOString()}`)
+      console.log(`📅 Using start date: ${startDate.toISOString()}`)
+      console.log(`📊 Current DB progress: ${participation.currentProgress}`)
+
       // Считаем метрики с момента присоединения/начала челленджа
       const challengeMetrics = calculateChallengeMetrics(startDate)
       const metric = challenge.requirements.metric
       const currentValue = challengeMetrics[metric]
       const targetValue = challenge.requirements.targetValue
 
+      console.log(`📈 Metric: ${metric}`)
+      console.log(`🔢 Calculated value: ${currentValue}`)
+      console.log(`🎯 Target value: ${targetValue}`)
+
       // Ограничиваем прогресс целевым значением
       const cappedValue = Math.min(currentValue, targetValue)
+      console.log(`🧢 Capped value: ${cappedValue}`)
 
       // Проверяем, изменилось ли значение и не уменьшился ли прогресс
       if (
@@ -259,9 +291,62 @@ export function useChallengeIntegration() {
     return () => clearInterval(interval)
   }, [currentUser?.telegramId, updateChallengeProgress])
 
+  // Добавляем функцию для ручного пересчета всех челленджей
+  const recalculateAllChallenges = useCallback(async () => {
+    if (!currentUser?.telegramId) return
+
+    console.log('🔄 Manual recalculation of all challenges...')
+
+    const activeParticipations = getActiveParticipations()
+    console.log(`📋 Found ${activeParticipations.length} active participations`)
+
+    for (const participation of activeParticipations) {
+      const challenge = useChallengeStore
+        .getState()
+        .challenges.find(c => c.id === participation.challengeId)
+      if (!challenge) continue
+
+      const startDate = new Date(
+        Math.max(
+          participation.joinedAt.getTime(),
+          challenge.startDate.getTime()
+        )
+      )
+
+      const challengeMetrics = calculateChallengeMetrics(startDate)
+      const metric = challenge.requirements.metric
+      const currentValue = challengeMetrics[metric]
+      const targetValue = challenge.requirements.targetValue
+
+      const cappedValue = Math.min(currentValue, targetValue)
+
+      console.log(
+        `🔄 Recalculating ${challenge.title}: ${cappedValue}/${targetValue}`
+      )
+
+      try {
+        await updateProgress(
+          participation.challengeId,
+          currentUser.telegramId,
+          metric,
+          cappedValue
+        )
+        console.log(`✅ Recalculated ${challenge.title}: ${cappedValue}`)
+      } catch (error) {
+        console.error(`❌ Failed to recalculate ${challenge.title}:`, error)
+      }
+    }
+  }, [
+    currentUser,
+    getActiveParticipations,
+    calculateChallengeMetrics,
+    updateProgress,
+  ])
+
   return {
     updateChallengeProgress,
     forceUpdateAllChallenges,
+    recalculateAllChallenges,
     calculateChallengeMetrics,
   }
 }

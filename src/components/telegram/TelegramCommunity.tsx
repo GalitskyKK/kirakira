@@ -41,7 +41,7 @@ export function TelegramCommunity({ garden }: TelegramCommunityProps) {
   } = useChallengeStore()
 
   // Интеграция с реальными данными
-  useChallengeIntegration()
+  const { recalculateAllChallenges } = useChallengeIntegration()
 
   const [activeTab, setActiveTab] = useState<
     'challenges' | 'social' | 'groups'
@@ -245,6 +245,16 @@ export function TelegramCommunity({ garden }: TelegramCommunityProps) {
               <p className="text-sm text-gray-600">
                 Участвуйте в вызовах и достигайте целей вместе с друзьями
               </p>
+
+              {/* Кнопка для пересчета прогресса (временная) */}
+              {process.env['NODE_ENV'] === 'development' && (
+                <button
+                  onClick={() => recalculateAllChallenges()}
+                  className="mt-2 rounded bg-orange-500 px-3 py-1 text-xs text-white hover:bg-orange-600"
+                >
+                  🔄 Пересчитать прогресс
+                </button>
+              )}
             </div>
 
             {isLoading && (
