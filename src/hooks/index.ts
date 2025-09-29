@@ -19,5 +19,10 @@ export { useStoresSync } from './useStoresSync'
 export { useDeepLink } from './useDeepLink'
 export { useUserPhotos } from './useUserPhotos'
 export { useProfile } from './useProfile'
+export {
+  useChallengeIntegration,
+  useChallengeGardenIntegration,
+  useChallengeMoodIntegration,
+} from './useChallengeIntegration'
 
 // Additional utility hooks can be added here

@@ -7,122 +7,150 @@ import {
   Sparkles,
   Target,
   Zap,
-  Calendar,
+  Eye,
+  Clock,
+  CheckCircle,
 } from 'lucide-react'
 import { useTelegram } from '@/hooks'
+import { useChallengeIntegration } from '@/hooks/useChallengeIntegration'
 import { Button, Card } from '@/components/ui'
 import { FriendsList } from './FriendsList'
+import { ChallengeDetails } from '@/components/challenges/ChallengeDetails'
 import { useUserStore } from '@/stores'
+import { useChallengeStore } from '@/stores/challengeStore'
 import type { Garden, MoodEntry } from '@/types'
 
-interface Challenge {
-  id: string
-  title: string
-  description: string
-  emoji: string
-  duration: number // в днях
-  participants: number
-  isActive: boolean
-  type: 'personal' | 'group' | 'competitive'
-  reward?: string
-}
-
 interface TelegramCommunityProps {
-  garden: Garden | null
-  recentMoods: readonly MoodEntry[]
+  readonly garden: Garden | null
+  readonly recentMoods: readonly MoodEntry[]
 }
 
-const ACTIVE_CHALLENGES: Challenge[] = [
-  {
-    id: 'mood_streak_7',
-    title: '7 дней эмоций',
-    description: 'Отмечайте настроение каждый день в течение недели',
-    emoji: '🔥',
-    duration: 7,
-    participants: 42,
-    isActive: true,
-    type: 'personal',
-    reward: 'Особый элемент сада',
-  },
-  {
-    id: 'garden_competition',
-    title: 'Битва садов',
-    description: 'Соревнование: кто вырастит больше элементов за неделю?',
-    emoji: '🏆',
-    duration: 7,
-    participants: 18,
-    isActive: true,
-    type: 'competitive',
-    reward: 'Титул "Садовник недели"',
-  },
-  {
-    id: 'mindfulness_week',
-    title: 'Неделя осознанности',
-    description: 'Групповая практика: каждый день новое упражнение',
-    emoji: '🧘‍♀️',
-    duration: 7,
-    participants: 156,
-    isActive: true,
-    type: 'group',
-    reward: 'Групповое достижение',
-  },
-]
-
-// Реакции перенесены в FriendsList компонент
-
-export function TelegramCommunity({
-  garden,
-  recentMoods,
-}: TelegramCommunityProps) {
+export function TelegramCommunity({ garden }: TelegramCommunityProps) {
   const { webApp, hapticFeedback, showAlert, isTelegramEnv } = useTelegram()
   const { currentUser } = useUserStore()
+  const {
+    challenges,
+    userParticipations,
+    isLoading,
+    error,
+    loadChallenges,
+    joinChallenge,
+    getActiveChallenges,
+    isUserParticipating,
+    canJoinChallenge,
+  } = useChallengeStore()
+
+  // Интеграция с реальными данными
+  useChallengeIntegration()
+
   const [activeTab, setActiveTab] = useState<
     'challenges' | 'social' | 'groups'
   >('challenges')
-  const [joinedChallenges, setJoinedChallenges] = useState<string[]>([])
+  const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(
+    null
+  )
+  const [isJoining, setIsJoining] = useState<string | null>(null)
 
-  // Загружаем информацию о присоединенных челленджах
+  // Загружаем челленджи при монтировании
   useEffect(() => {
-    // Здесь можно загрузить данные о челленджах пользователя
-    // Пока используем mock данные
-    setJoinedChallenges(['mood_streak_7'])
-  }, [])
+    if (currentUser?.telegramId) {
+      void loadChallenges(currentUser.telegramId)
+    }
+  }, [currentUser?.telegramId, loadChallenges])
+
+  // Получаем активные челленджи
+  const activeChallenges = getActiveChallenges()
 
   // Присоединиться к челленджу
   const handleJoinChallenge = useCallback(
-    (challenge: Challenge) => {
-      if (!webApp) return
+    async (challengeId: string) => {
+      if (!currentUser?.telegramId) return
 
+      const challenge = challenges.find(c => c.id === challengeId)
+      if (!challenge) return
+
+      const { canJoin, reason } = canJoinChallenge(
+        challenge,
+        currentUser.telegramId
+      )
+      if (!canJoin) {
+        showAlert(reason || 'Невозможно присоединиться к челленджу')
+        return
+      }
+
+      setIsJoining(challengeId)
       hapticFeedback('light')
 
-      // Используем inline query для приглашения друзей к челленджу
-      webApp.switchInlineQuery(
-        `challenge_${challenge.id}`,
-        challenge.type === 'group' ? ['groups', 'users'] : ['users']
-      )
+      try {
+        const success = await joinChallenge(challengeId, currentUser.telegramId)
+        if (success) {
+          showAlert(
+            `Отлично! Вы присоединились к челленджу "${challenge.title}"!`
+          )
 
-      // Локально отмечаем что присоединились
-      setJoinedChallenges(prev => [...prev, challenge.id])
-      showAlert(`Отлично! Вы присоединились к челленджу "${challenge.title}"!`)
+          // Используем inline query для приглашения друзей
+          if (webApp) {
+            webApp.switchInlineQuery(
+              `challenge_${challengeId}`,
+              challenge.type === 'cooperative' ? ['groups', 'users'] : ['users']
+            )
+          }
+        }
+      } catch (error) {
+        console.error('Failed to join challenge:', error)
+      } finally {
+        setIsJoining(null)
+      }
     },
-    [webApp, hapticFeedback, showAlert]
+    [
+      currentUser,
+      challenges,
+      canJoinChallenge,
+      showAlert,
+      hapticFeedback,
+      joinChallenge,
+      webApp,
+    ]
   )
 
-  // Поделиться своим прогрессом
+  // Поделиться прогрессом
   const handleShareProgress = useCallback(
-    (challenge: Challenge) => {
+    (challengeId: string) => {
       if (!webApp || !garden) return
+
+      const challenge = challenges.find(c => c.id === challengeId)
+      const participation = userParticipations.find(
+        p => p.challengeId === challengeId
+      )
+
+      if (!challenge || !participation) return
 
       hapticFeedback('medium')
 
-      const progressText = `🎯 Мой прогресс в челленже "${challenge.title}"\n\n🌱 Элементов в саду: ${garden.elements.length}\n📈 Дней подряд: ${recentMoods.length}\n\n💪 Присоединяйтесь к KiraKira!`
+      const progressText = `🎯 Мой прогресс в челленже "${challenge.title}"\n\n📊 Прогресс: ${participation.currentProgress}/${challenge.requirements.targetValue}\n🌱 Элементов в саду: ${garden.elements.length}\n🔥 Текущий стрик: ${currentUser?.stats.currentStreak || 0}\n\n💪 Присоединяйтесь к KiraKira!`
 
       webApp.shareMessage({
         text: progressText,
         parse_mode: 'Markdown',
       })
     },
-    [webApp, hapticFeedback, garden, recentMoods]
+    [
+      webApp,
+      hapticFeedback,
+      garden,
+      challenges,
+      userParticipations,
+      currentUser,
+    ]
+  )
+
+  // Просмотреть детали челленджа
+  const handleViewChallenge = useCallback(
+    (challengeId: string) => {
+      hapticFeedback('light')
+      setSelectedChallengeId(challengeId)
+    },
+    [hapticFeedback]
   )
 
   // Создать групповой сад
@@ -135,7 +163,15 @@ export function TelegramCommunity({
     webApp.switchInlineQuery('group_garden_create', ['groups'])
   }, [webApp, hapticFeedback, showAlert])
 
-  // Реакции теперь обрабатываются в FriendsList компоненте
+  // Если выбран конкретный челлендж, показываем его детали
+  if (selectedChallengeId) {
+    return (
+      <ChallengeDetails
+        challengeId={selectedChallengeId}
+        onBack={() => setSelectedChallengeId(null)}
+      />
+    )
+  }
 
   if (!isTelegramEnv) {
     return (
@@ -178,7 +214,9 @@ export function TelegramCommunity({
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() =>
+                setActiveTab(tab.id as 'challenges' | 'social' | 'groups')
+              }
               className={`flex flex-1 items-center justify-center space-x-1 rounded-md px-2 py-2 text-xs font-medium transition-colors sm:space-x-2 sm:px-3 sm:text-sm ${
                 activeTab === tab.id
                   ? 'bg-white text-blue-600 shadow-sm dark:bg-gray-700 dark:text-blue-400'
@@ -186,7 +224,7 @@ export function TelegramCommunity({
               }`}
             >
               <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="xs:inline hidden sm:inline">{tab.label}</span>
+              <span className="hidden xs:inline sm:inline">{tab.label}</span>
             </button>
           )
         })}
@@ -209,102 +247,220 @@ export function TelegramCommunity({
               </p>
             </div>
 
-            {ACTIVE_CHALLENGES.map((challenge, index) => (
-              <motion.div
-                key={challenge.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Card className="p-3 sm:p-4">
-                  <div className="space-y-3">
-                    {/* Верхняя часть: иконка, заголовок и тип */}
-                    <div className="flex items-start space-x-3">
-                      <div className="text-2xl sm:text-3xl">
-                        {challenge.emoji}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center space-x-2">
-                          <h4 className="truncate text-sm font-semibold sm:text-base">
-                            {challenge.title}
-                          </h4>
-                          <span
-                            className={`shrink-0 rounded-full px-2 py-1 text-xs ${
-                              challenge.type === 'competitive'
-                                ? 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400'
-                                : challenge.type === 'group'
-                                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
-                                  : 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400'
-                            }`}
-                          >
-                            {challenge.type === 'competitive'
-                              ? 'Соревн.'
-                              : challenge.type === 'group'
-                                ? 'Группа'
-                                : 'Личный'}
+            {isLoading && (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <Card key={i} className="p-4">
+                    <div className="space-y-3">
+                      <div className="h-6 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+                      <div className="h-4 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+                      <div className="h-4 w-2/3 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {error && (
+              <Card className="p-4 text-center">
+                <div className="text-sm text-red-500">❌ {error}</div>
+              </Card>
+            )}
+
+            {!isLoading && !error && activeChallenges.length === 0 && (
+              <Card className="p-6 text-center">
+                <Target className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                <h3 className="mb-2 text-lg font-medium">
+                  Нет активных челленджей
+                </h3>
+                <p className="text-gray-600">
+                  Новые вызовы появятся скоро. Следите за обновлениями!
+                </p>
+              </Card>
+            )}
+
+            {!isLoading &&
+              activeChallenges.map((challenge, index) => {
+                const isParticipating = isUserParticipating(challenge.id)
+                const participation = userParticipations.find(
+                  p => p.challengeId === challenge.id
+                )
+                const isJoiningThis = isJoining === challenge.id
+                const canJoin =
+                  currentUser && currentUser.telegramId
+                    ? canJoinChallenge(challenge, currentUser.telegramId)
+                    : { canJoin: false }
+
+                // Подсчитываем время до окончания
+                const timeRemaining =
+                  new Date(challenge.endDate).getTime() - new Date().getTime()
+                const daysLeft = Math.max(
+                  0,
+                  Math.floor(timeRemaining / (1000 * 60 * 60 * 24))
+                )
+                const hoursLeft = Math.max(
+                  0,
+                  Math.floor(
+                    (timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+                  )
+                )
+
+                return (
+                  <motion.div
+                    key={challenge.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Card className="p-3 sm:p-4">
+                      <div className="space-y-3">
+                        {/* Верхняя часть: иконка, заголовок и тип */}
+                        <div className="flex items-start space-x-3">
+                          <div className="text-2xl sm:text-3xl">
+                            {challenge.emoji}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center space-x-2">
+                              <h4 className="truncate text-sm font-semibold sm:text-base">
+                                {challenge.title}
+                              </h4>
+                              <span
+                                className={`shrink-0 rounded-full px-2 py-1 text-xs ${
+                                  challenge.type === 'competitive'
+                                    ? 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400'
+                                    : challenge.type === 'cooperative'
+                                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                                      : 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+                                }`}
+                              >
+                                {challenge.type === 'competitive'
+                                  ? 'Соревн.'
+                                  : challenge.type === 'cooperative'
+                                    ? 'Группа'
+                                    : 'Личный'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Описание */}
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {challenge.description}
+                        </p>
+
+                        {/* Прогресс пользователя */}
+                        {isParticipating && participation && (
+                          <div className="rounded-lg bg-gradient-to-r from-garden-50 to-green-50 p-3 dark:from-garden-900/20 dark:to-green-900/20">
+                            <div className="mb-2 flex items-center justify-between">
+                              <span className="text-sm font-medium text-garden-700 dark:text-garden-300">
+                                Ваш прогресс
+                              </span>
+                              <span className="text-sm text-gray-600 dark:text-gray-400">
+                                {participation.currentProgress} /{' '}
+                                {challenge.requirements.targetValue}
+                              </span>
+                            </div>
+                            <div className="mb-1 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                              <div
+                                className="h-2 rounded-full bg-gradient-to-r from-garden-500 to-green-500 transition-all duration-500"
+                                style={{
+                                  width: `${Math.min(
+                                    (participation.currentProgress /
+                                      challenge.requirements.targetValue) *
+                                      100,
+                                    100
+                                  )}%`,
+                                }}
+                              />
+                            </div>
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-garden-600 dark:text-garden-400">
+                                {Math.round(
+                                  (participation.currentProgress /
+                                    challenge.requirements.targetValue) *
+                                    100
+                                )}
+                                % выполнено
+                              </span>
+                              {participation.status === 'completed' && (
+                                <div className="flex items-center space-x-1 text-green-600 dark:text-green-400">
+                                  <CheckCircle className="h-3 w-3" />
+                                  <span>Завершено!</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Статистика */}
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                          <span className="flex items-center space-x-1">
+                            <Clock className="h-3 w-3" />
+                            <span>
+                              {daysLeft > 0
+                                ? `${daysLeft} дн.`
+                                : `${hoursLeft} ч.`}
+                            </span>
                           </span>
+                          <span className="flex items-center space-x-1">
+                            <Target className="h-3 w-3" />
+                            <span>
+                              Цель: {challenge.requirements.targetValue}
+                            </span>
+                          </span>
+                          {challenge.rewards.title && (
+                            <span className="flex items-center space-x-1">
+                              <Trophy className="h-3 w-3" />
+                              <span className="truncate">
+                                {challenge.rewards.title}
+                              </span>
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Кнопки действий */}
+                        <div className="flex justify-end space-x-2 border-t border-gray-100 pt-2 dark:border-gray-700">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleViewChallenge(challenge.id)}
+                          >
+                            <Eye className="mr-1 h-3 w-3" />
+                            <span className="text-xs">Детали</span>
+                          </Button>
+
+                          {isParticipating ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleShareProgress(challenge.id)}
+                              className="dark:border-gray-600 dark:hover:bg-gray-700"
+                            >
+                              <span className="text-xs">Поделиться</span>
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              onClick={() => handleJoinChallenge(challenge.id)}
+                              disabled={!canJoin.canJoin || isJoiningThis}
+                              className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
+                            >
+                              {isJoiningThis ? (
+                                <div className="mr-1 h-3 w-3 animate-spin rounded-full border-b-2 border-white" />
+                              ) : null}
+                              <span className="text-xs">
+                                {isJoiningThis
+                                  ? 'Присоединяемся...'
+                                  : 'Участвовать'}
+                              </span>
+                            </Button>
+                          )}
                         </div>
                       </div>
-                    </div>
-
-                    {/* Описание */}
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {challenge.description}
-                    </p>
-
-                    {/* Статистика */}
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                      <span className="flex items-center space-x-1">
-                        <Users className="h-3 w-3" />
-                        <span>{challenge.participants}</span>
-                      </span>
-                      <span className="flex items-center space-x-1">
-                        <Calendar className="h-3 w-3" />
-                        <span>{challenge.duration} дн.</span>
-                      </span>
-                      {challenge.reward && (
-                        <span className="flex items-center space-x-1">
-                          <Trophy className="h-3 w-3" />
-                          <span className="truncate">{challenge.reward}</span>
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Кнопки действий */}
-                    <div className="flex justify-end space-x-2 border-t border-gray-100 pt-2 dark:border-gray-700">
-                      {joinedChallenges.includes(challenge.id) ? (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/40"
-                            disabled
-                          >
-                            <span className="text-xs">Участвую ✓</span>
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleShareProgress(challenge)}
-                            className="dark:border-gray-600 dark:hover:bg-gray-700"
-                          >
-                            <span className="text-xs">Поделиться</span>
-                          </Button>
-                        </>
-                      ) : (
-                        <Button
-                          size="sm"
-                          onClick={() => handleJoinChallenge(challenge)}
-                          className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
-                        >
-                          <span className="text-xs">Участвовать</span>
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
+                    </Card>
+                  </motion.div>
+                )
+              })}
           </motion.div>
         )}
 
