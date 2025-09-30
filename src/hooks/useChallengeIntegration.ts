@@ -26,12 +26,24 @@ export function useChallengeIntegration() {
   // Функция для подсчета метрик с момента присоединения к челленджу
   const calculateChallengeMetrics = useCallback(
     (challengeStartDate: Date): Record<ChallengeMetric, number> => {
-      const startTime = challengeStartDate.getTime()
-
       console.log(
         `🔢 Calculating metrics from date: ${challengeStartDate.toISOString()}`
       )
+      console.log(`🔢 Date type: ${typeof challengeStartDate}`)
+      console.log(`🔢 Is Date instance: ${challengeStartDate instanceof Date}`)
+
+      const startTime = challengeStartDate.getTime()
       console.log(`⏰ Start time: ${startTime}`)
+
+      // Проверяем что время корректное (не NaN и не слишком большое)
+      if (isNaN(startTime)) {
+        console.error(`❌ Invalid start time: ${startTime}`)
+      }
+      if (startTime > Date.now() + 365 * 24 * 60 * 60 * 1000) {
+        // больше чем год в будущем
+        console.error(`❌ Start time too far in future: ${startTime}`)
+        console.error(`❌ Current time: ${Date.now()}`)
+      }
 
       // Элементы сада, добавленные после начала челленджа
       const gardenElementsAfterStart =
@@ -111,19 +123,21 @@ export function useChallengeIntegration() {
       if (!challenge) continue
 
       // Используем дату присоединения как точку отсчета
-      const startDate = new Date(
-        Math.max(
-          participation.joinedAt.getTime(),
-          challenge.startDate.getTime()
-        )
-      )
+      const joinedTime = participation.joinedAt.getTime()
+      const challengeStartTime = challenge.startDate.getTime()
+      const maxTime = Math.max(joinedTime, challengeStartTime)
+      const startDate = new Date(maxTime)
 
       console.log(`\n🎯 Processing challenge: ${challenge.title}`)
       console.log(
         `📅 Participation joined: ${participation.joinedAt.toISOString()}`
       )
+      console.log(`🕐 Participation joined time: ${joinedTime}`)
       console.log(`📅 Challenge start: ${challenge.startDate.toISOString()}`)
+      console.log(`🕐 Challenge start time: ${challengeStartTime}`)
+      console.log(`🕐 Max time: ${maxTime}`)
       console.log(`📅 Using start date: ${startDate.toISOString()}`)
+      console.log(`🕐 Using start time: ${startDate.getTime()}`)
       console.log(`📊 Current DB progress: ${participation.currentProgress}`)
 
       // Считаем метрики с момента присоединения/начала челленджа
@@ -306,12 +320,16 @@ export function useChallengeIntegration() {
         .challenges.find(c => c.id === participation.challengeId)
       if (!challenge) continue
 
-      const startDate = new Date(
-        Math.max(
-          participation.joinedAt.getTime(),
-          challenge.startDate.getTime()
-        )
-      )
+      const joinedTime = participation.joinedAt.getTime()
+      const challengeStartTime = challenge.startDate.getTime()
+      const maxTime = Math.max(joinedTime, challengeStartTime)
+      const startDate = new Date(maxTime)
+
+      console.log(`🔄 Recalculating ${challenge.title}`)
+      console.log(`🔄 Joined time: ${joinedTime}`)
+      console.log(`🔄 Challenge start time: ${challengeStartTime}`)
+      console.log(`🔄 Max time: ${maxTime}`)
+      console.log(`🔄 Start date: ${startDate.toISOString()}`)
 
       const challengeMetrics = calculateChallengeMetrics(startDate)
       const metric = challenge.requirements.metric

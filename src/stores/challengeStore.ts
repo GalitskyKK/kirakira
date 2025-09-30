@@ -89,24 +89,55 @@ export const useChallengeStore = create<ChallengeStore>()(
         }
 
         if (result.data) {
+          console.log('🔄 Converting challenge dates from API response:')
+
           // Convert dates from strings
-          const challenges = result.data.challenges.map(challenge => ({
-            ...challenge,
-            startDate: new Date(challenge.startDate),
-            endDate: new Date(challenge.endDate),
-            createdAt: new Date(challenge.createdAt),
-            updatedAt: new Date(challenge.updatedAt),
-          }))
+          const challenges = result.data.challenges.map(challenge => {
+            console.log(`📅 Challenge ${challenge.title}:`)
+            console.log(`   startDate (string): ${challenge.startDate}`)
+            console.log(`   endDate (string): ${challenge.endDate}`)
+
+            const convertedChallenge = {
+              ...challenge,
+              startDate: new Date(challenge.startDate),
+              endDate: new Date(challenge.endDate),
+              createdAt: new Date(challenge.createdAt),
+              updatedAt: new Date(challenge.updatedAt),
+            }
+
+            console.log(
+              `   startDate (Date): ${convertedChallenge.startDate.toISOString()}`
+            )
+            console.log(
+              `   startDate (getTime): ${convertedChallenge.startDate.getTime()}`
+            )
+
+            return convertedChallenge
+          })
 
           const participations = result.data.userParticipations.map(
-            participation => ({
-              ...participation,
-              joinedAt: new Date(participation.joinedAt),
-              lastUpdateAt: new Date(participation.lastUpdateAt),
-              completedAt: participation.completedAt
-                ? new Date(participation.completedAt)
-                : undefined,
-            })
+            participation => {
+              console.log(`👤 Participation for ${participation.challengeId}:`)
+              console.log(`   joinedAt (string): ${participation.joinedAt}`)
+
+              const convertedParticipation = {
+                ...participation,
+                joinedAt: new Date(participation.joinedAt),
+                lastUpdateAt: new Date(participation.lastUpdateAt),
+                completedAt: participation.completedAt
+                  ? new Date(participation.completedAt)
+                  : undefined,
+              }
+
+              console.log(
+                `   joinedAt (Date): ${convertedParticipation.joinedAt.toISOString()}`
+              )
+              console.log(
+                `   joinedAt (getTime): ${convertedParticipation.joinedAt.getTime()}`
+              )
+
+              return convertedParticipation
+            }
           )
 
           set({
@@ -146,6 +177,12 @@ export const useChallengeStore = create<ChallengeStore>()(
         }
 
         if (result.data) {
+          console.log('🔄 Converting challenge details dates:')
+          console.log(`📅 Challenge ${result.data.challenge.title}:`)
+          console.log(
+            `   startDate (string): ${result.data.challenge.startDate}`
+          )
+
           const challenge = {
             ...result.data.challenge,
             startDate: new Date(result.data.challenge.startDate),
@@ -153,6 +190,13 @@ export const useChallengeStore = create<ChallengeStore>()(
             createdAt: new Date(result.data.challenge.createdAt),
             updatedAt: new Date(result.data.challenge.updatedAt),
           }
+
+          console.log(
+            `   startDate (Date): ${challenge.startDate.toISOString()}`
+          )
+          console.log(
+            `   startDate (getTime): ${challenge.startDate.getTime()}`
+          )
 
           const participation = result.data.participation
             ? {
@@ -164,6 +208,19 @@ export const useChallengeStore = create<ChallengeStore>()(
                   : undefined,
               }
             : null
+
+          if (participation && result.data.participation) {
+            console.log(`👤 Participation details:`)
+            console.log(
+              `   joinedAt (string): ${result.data.participation.joinedAt}`
+            )
+            console.log(
+              `   joinedAt (Date): ${participation.joinedAt.toISOString()}`
+            )
+            console.log(
+              `   joinedAt (getTime): ${participation.joinedAt.getTime()}`
+            )
+          }
 
           set({
             currentChallenge: challenge,
