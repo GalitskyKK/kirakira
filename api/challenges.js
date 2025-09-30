@@ -224,12 +224,15 @@ async function handleList(req, res) {
 // 🎯 ACTION: DETAILS - Детали челленджа и лидерборд
 // ===============================================
 async function handleDetails(req, res) {
+  console.log('🔥 DETAILS API CALLED! Method:', req.method)
+
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
   try {
     const { challengeId, telegramId } = req.query
+    console.log('🔥 DETAILS PARAMS:', { challengeId, telegramId })
 
     if (!challengeId || !telegramId) {
       return res.status(400).json({
@@ -967,6 +970,12 @@ export default async function handler(req, res) {
 
   try {
     const { action } = req.query
+    console.log(
+      '🔥 CHALLENGES API MAIN HANDLER! Action:',
+      action,
+      'Method:',
+      req.method
+    )
 
     switch (action) {
       case 'list':
