@@ -270,6 +270,8 @@ async function handleDetails(req, res) {
       { challenge_uuid: challengeId }
     )
 
+    console.log('🎯 LEADERBOARD FROM SQL:', leaderboard)
+
     if (leaderboardError) {
       console.error('Leaderboard fetch error:', leaderboardError)
       return res.status(500).json({
