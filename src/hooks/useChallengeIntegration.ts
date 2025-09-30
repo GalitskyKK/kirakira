@@ -166,7 +166,7 @@ export function useChallengeIntegration() {
         })
 
         console.log(
-          `📊 Challenge ${challenge.title}: ${cappedValue}/${targetValue} (${Math.round(
+          `📊 Challenge ${challenge.title}: ${participation.currentProgress} → ${cappedValue}/${targetValue} (${Math.round(
             (cappedValue / targetValue) * 100
           )}%)`
         )
@@ -249,7 +249,7 @@ export function useChallengeIntegration() {
         }
       } else {
         console.log(
-          `⚠️ Force update skipped for ${challenge.title}: would decrease progress ${participation.currentProgress} → ${cappedValue}`
+          `⚠️ Force update skipped for challenge ${participation.challengeId}: would decrease progress ${participation.currentProgress} → ${cappedValue}`
         )
       }
     }

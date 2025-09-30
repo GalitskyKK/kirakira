@@ -642,6 +642,10 @@ async function handleUpdateProgress(req, res) {
       })
     }
 
+    console.log(
+      `📊 Updating progress: ${participation.current_progress} → ${newValue}`
+    )
+
     // Обновляем прогресс через функцию БД
     const { error: updateError } = await supabase.rpc(
       'update_challenge_progress',
