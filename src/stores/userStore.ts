@@ -78,9 +78,13 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   notifications: {
     enabled: true,
     dailyReminder: true,
-    reminderTime: '09:00',
+    reminderTime: '10:00', // Время в МСК для уведомлений
     weeklyStats: true,
     milestones: true,
+    streakLost: true,
+    inactivityReminder: true,
+    weeklyMotivation: true,
+    achievements: true,
   },
   privacy: {
     dataCollection: false,

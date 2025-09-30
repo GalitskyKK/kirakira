@@ -26,7 +26,11 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "setup-bot": "node scripts/setup-bot.js",
-    "setup-bot:prod": "node scripts/setup-bot.js https://kirakira-theta.vercel.app"
+    "setup-bot:prod": "node scripts/setup-bot.js https://kirakira-theta.vercel.app",
+    "test-notifications": "node scripts/test-notifications.js",
+    "test-smart-notifications": "curl -X POST \"http://localhost:3000/api/notifications?type=smart\"",
+    "check-notifications": "curl http://localhost:3000/api/notifications",
+    "setup-notifications": "node scripts/setup-notifications.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.4",
@@ -35,6 +39,7 @@
     "date-fns": "^2.30.0",
     "framer-motion": "^10.16.5",
     "lucide-react": "^0.294.0",
+    "node-fetch": "^3.3.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.1",

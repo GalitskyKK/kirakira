@@ -30,6 +30,10 @@ export interface NotificationSettings {
   readonly reminderTime: string // HH:MM format
   readonly weeklyStats: boolean
   readonly milestones: boolean
+  readonly streakLost: boolean // Уведомления о потере стрика
+  readonly inactivityReminder: boolean // Напоминания при неактивности
+  readonly weeklyMotivation: boolean // Еженедельная мотивация
+  readonly achievements: boolean // Уведомления о достижениях
 }
 
 export interface PrivacySettings {

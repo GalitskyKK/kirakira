@@ -753,6 +753,10 @@ async function handleCommand(message) {
       )
       break
 
+    case 'notifications':
+      await handleNotificationsCommand(chat.id, from.id)
+      break
+
     case 'help':
       await sendMessage(
         chat.id,
@@ -762,6 +766,7 @@ async function handleCommand(message) {
 🌱 */garden* - Открыть мой сад и посмотреть прогресс
 😊 */mood* - Отметить настроение (раз в день)
 📊 */stats* - Посмотреть детальную статистику
+🔔 */notifications* - Настройки уведомлений
 🔗 */share* - Поделиться садом с друзьями
 
 *💡 Как это работает:*
@@ -774,6 +779,11 @@ async function handleCommand(message) {
 • Регулярность важнее количества - отмечай каждый день
 • Редкие элементы появляются при длинных стриках
 • Анализируй паттерны настроения для лучшего понимания себя
+
+*🔔 Уведомления:*
+• Настрой напоминания через /notifications
+• Получай мотивацию и поддержку каждый день
+• Контролируй свою активность
 
 *🌸 Создай свой уникальный эмоциональный сад!*`,
         {
@@ -810,6 +820,8 @@ async function handleCallbackQuery(callbackQuery) {
       await handlePremiumPurchase(callbackQuery)
     } else if (data === 'show_stats') {
       await handleStatsCommand(message.chat.id, from.id)
+    } else if (data.startsWith('toggle_notifications_')) {
+      await handleNotificationToggle(callbackQuery)
     } else if (data === 'quick_mood') {
       await sendMessage(
         message.chat.id,
@@ -993,6 +1005,98 @@ _Отмечай настроения каждый день для лучшего
 }
 
 /**
+ * Обрабатывает переключение настроек уведомлений
+ * @param {Object} callbackQuery - Объект callback query
+ */
+async function handleNotificationToggle(callbackQuery) {
+  const { from, data, message } = callbackQuery
+
+  try {
+    // Получаем текущие настройки
+    const response = await fetch(
+      `${MINI_APP_URL}/api/profile?action=get_profile&telegramId=${from.id}`
+    )
+
+    let currentSettings = {
+      enabled: true,
+      dailyReminder: true,
+      streakLost: true,
+      inactivityReminder: true,
+      weeklyMotivation: true,
+    }
+
+    if (response.ok) {
+      const result = await response.json()
+      if (result.success && result.data?.user?.notification_settings) {
+        currentSettings = {
+          ...currentSettings,
+          ...result.data.user.notification_settings,
+        }
+      }
+    }
+
+    // Обновляем настройку в зависимости от команды
+    let updatedSettings = { ...currentSettings }
+    let statusMessage = ''
+
+    switch (data) {
+      case 'toggle_notifications_all':
+        updatedSettings.enabled = !currentSettings.enabled
+        statusMessage = updatedSettings.enabled
+          ? '🔔 Все уведомления включены!'
+          : '🔕 Все уведомления отключены!'
+        break
+      case 'toggle_daily_reminder':
+        updatedSettings.dailyReminder = !currentSettings.dailyReminder
+        statusMessage = updatedSettings.dailyReminder
+          ? '✅ Ежедневные напоминания включены!'
+          : '❌ Ежедневные напоминания отключены!'
+        break
+      case 'toggle_streak_lost':
+        updatedSettings.streakLost = !currentSettings.streakLost
+        statusMessage = updatedSettings.streakLost
+          ? '✅ Уведомления о стрике включены!'
+          : '❌ Уведомления о стрике отключены!'
+        break
+      case 'toggle_weekly_motivation':
+        updatedSettings.weeklyMotivation = !currentSettings.weeklyMotivation
+        statusMessage = updatedSettings.weeklyMotivation
+          ? '✅ Еженедельная мотивация включена!'
+          : '❌ Еженедельная мотивация отключена!'
+        break
+    }
+
+    // Сохраняем настройки
+    const saveSuccess = await updateUserNotificationSettings(
+      from.id,
+      updatedSettings
+    )
+
+    if (saveSuccess) {
+      // Обновляем сообщение с новыми настройками
+      await handleNotificationsCommand(message.chat.id, from.id)
+
+      // Отправляем подтверждение
+      await sendMessage(
+        message.chat.id,
+        `${statusMessage}\n\n_Настройки сохранены!_`
+      )
+    } else {
+      await sendMessage(
+        message.chat.id,
+        '❌ Не удалось сохранить настройки. Попробуйте позже.'
+      )
+    }
+  } catch (error) {
+    console.error('Error toggling notification settings:', error)
+    await sendMessage(
+      message.chat.id,
+      '❌ Произошла ошибка при изменении настроек.'
+    )
+  }
+}
+
+/**
  * Обрабатывает покупку премиума
  */
 async function handlePremiumPurchase(callbackQuery) {
@@ -1041,6 +1145,143 @@ async function handlePremiumPurchase(callbackQuery) {
       },
     }
   )
+}
+
+/**
+ * Обрабатывает команду настроек уведомлений
+ * @param {number} chatId - ID чата
+ * @param {number} userId - ID пользователя
+ */
+async function handleNotificationsCommand(chatId, userId) {
+  try {
+    // Получаем текущие настройки пользователя
+    const response = await fetch(
+      `${MINI_APP_URL}/api/profile?action=get_profile&telegramId=${userId}`
+    )
+
+    let userNotifications = {
+      enabled: true,
+      dailyReminder: true,
+      streakLost: true,
+      inactivityReminder: true,
+      weeklyMotivation: true,
+    }
+
+    if (response.ok) {
+      const result = await response.json()
+      if (result.success && result.data?.user?.notification_settings) {
+        userNotifications = {
+          ...userNotifications,
+          ...result.data.user.notification_settings,
+        }
+      }
+    }
+
+    const settingsText = `🔔 *Настройки уведомлений*
+
+${userNotifications.enabled ? '✅' : '❌'} Все уведомления
+${userNotifications.dailyReminder ? '✅' : '❌'} Ежедневные напоминания (10:00-12:00 МСК)
+${userNotifications.streakLost ? '✅' : '❌'} Уведомления о потере стрика
+${userNotifications.inactivityReminder ? '✅' : '❌'} Напоминания при неактивности
+${userNotifications.weeklyMotivation ? '✅' : '❌'} Еженедельная мотивация
+
+*💡 Что это значит:*
+• **Ежедневные напоминания** - напоминаем отметить настроение если забыл
+• **Потеря стрика** - сообщаем когда прервалась серия дней
+• **Неактивность** - зовем обратно через 3-7 дней отсутствия  
+• **Мотивация** - поздравляем с достижениями и поддерживаем
+
+_Все уведомления приходят в удобное время и не чаще раза в день!_`
+
+    await sendMessage(chatId, settingsText, {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: userNotifications.enabled
+                ? '🔕 Отключить все'
+                : '🔔 Включить все',
+              callback_data: 'toggle_notifications_all',
+            },
+          ],
+          [
+            {
+              text: userNotifications.dailyReminder
+                ? '❌ Убрать напоминания'
+                : '✅ Включить напоминания',
+              callback_data: 'toggle_daily_reminder',
+            },
+          ],
+          [
+            {
+              text: userNotifications.streakLost
+                ? '❌ Без уведомлений о стрике'
+                : '✅ Уведомления о стрике',
+              callback_data: 'toggle_streak_lost',
+            },
+          ],
+          [
+            {
+              text: userNotifications.weeklyMotivation
+                ? '❌ Без мотивации'
+                : '✅ Еженедельная мотивация',
+              callback_data: 'toggle_weekly_motivation',
+            },
+          ],
+          [
+            {
+              text: '📱 Открыть настройки в приложении',
+              web_app: { url: `${MINI_APP_URL}?tab=profile` },
+            },
+          ],
+        ],
+      },
+    })
+  } catch (error) {
+    console.error('Error handling notifications command:', error)
+    await sendMessage(
+      chatId,
+      '❌ Произошла ошибка при загрузке настроек. Попробуйте позже или откройте настройки в приложении.',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '📱 Открыть приложение', web_app: { url: MINI_APP_URL } }],
+          ],
+        },
+      }
+    )
+  }
+}
+
+/**
+ * Обновляет настройки уведомлений пользователя
+ * @param {number} userId - ID пользователя
+ * @param {Object} settings - Новые настройки
+ */
+async function updateUserNotificationSettings(userId, settings) {
+  try {
+    const response = await fetch(
+      `${MINI_APP_URL}/api/profile?action=update_notifications`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          telegramId: userId,
+          notificationSettings: settings,
+        }),
+      }
+    )
+
+    if (response.ok) {
+      const result = await response.json()
+      return result.success
+    }
+
+    return false
+  } catch (error) {
+    console.error('Error updating notification settings:', error)
+    return false
+  }
 }
 
 /**

@@ -740,6 +740,66 @@ export default async function handler(req, res) {
         }
       }
 
+      case 'update_notifications': {
+        if (req.method !== 'POST') {
+          return res
+            .status(405)
+            .json({ success: false, error: 'Method not allowed' })
+        }
+
+        const { telegramId, notificationSettings } = req.body
+
+        if (!telegramId || !notificationSettings) {
+          return res.status(400).json({
+            success: false,
+            error:
+              'Missing required parameters: telegramId, notificationSettings',
+          })
+        }
+
+        try {
+          console.log(
+            `🔔 Updating notification settings for user ${telegramId}:`,
+            notificationSettings
+          )
+
+          const supabase = await getSupabaseClient()
+
+          const { data, error } = await supabase
+            .from('users')
+            .update({
+              notification_settings: notificationSettings,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('telegram_id', telegramId)
+            .select()
+
+          if (error) {
+            console.error('Failed to update notification settings:', error)
+            return res.status(500).json({
+              success: false,
+              error: 'Failed to update notification settings',
+            })
+          }
+
+          console.log(`✅ Notification settings updated for user ${telegramId}`)
+
+          return res.status(200).json({
+            success: true,
+            data: {
+              notificationSettings,
+              message: 'Notification settings updated successfully',
+            },
+          })
+        } catch (error) {
+          console.error('Update notifications error:', error)
+          return res.status(500).json({
+            success: false,
+            error: 'Internal server error',
+          })
+        }
+      }
+
       default:
         return res.status(400).json({ success: false, error: 'Invalid action' })
     }
