@@ -267,13 +267,18 @@ async function handleDetails(req, res) {
 
     // Ошибка участия не критична - пользователь может не участвовать
 
-    // Получаем лидерборд
-    const { data: leaderboard, error: leaderboardError } = await supabase.rpc(
-      'get_challenge_leaderboard',
-      { challenge_uuid: challengeId }
-    )
+    // Получаем лидерборд (с принудительным обновлением)
+    console.log('🔄 FORCING FRESH DB CONNECTION...')
 
-    console.log('🎯 LEADERBOARD FROM SQL:', leaderboard)
+    // Принудительно создаем новое подключение
+    const freshSupabase = await getSupabaseClient()
+
+    const { data: leaderboard, error: leaderboardError } =
+      await freshSupabase.rpc('get_challenge_leaderboard', {
+        challenge_uuid: challengeId,
+      })
+
+    console.log('🎯 LEADERBOARD FROM SQL (FRESH):', leaderboard)
 
     if (leaderboardError) {
       console.error('Leaderboard fetch error:', leaderboardError)
