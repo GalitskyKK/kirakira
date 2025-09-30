@@ -326,33 +326,45 @@ async function handleDetails(req, res) {
         }
       : undefined
 
-    const formattedLeaderboard = leaderboard.map((entry, index) => ({
-      participant: {
-        id: entry.participant_id,
-        challengeId: challengeId,
-        telegramId: entry.telegram_id,
-        status: participation?.status || 'joined',
-        joinedAt: participation?.joined_at || new Date().toISOString(),
-        currentProgress: entry.current_progress,
-        maxProgress: entry.max_progress,
-        lastUpdateAt: participation?.last_update_at || new Date().toISOString(),
-        completedAt: entry.completed_at
-          ? new Date(entry.completed_at).toISOString()
-          : undefined,
-      },
-      user: {
-        telegramId: entry.telegram_id,
-        firstName: entry.first_name || 'Пользователь',
-        lastName: entry.last_name,
+    const formattedLeaderboard = leaderboard.map((entry, index) => {
+      console.log(`🔍 Leaderboard entry ${index}:`, {
+        telegram_id: entry.telegram_id,
+        first_name: entry.first_name,
+        first_name_type: typeof entry.first_name,
         username: entry.username,
-        photoUrl: entry.photo_url,
-        level: entry.level || 1,
-      },
-      progress: entry.current_progress,
-      progressPercentage: parseFloat(entry.progress_percentage),
-      rank: parseInt(entry.rank),
-      isCurrentUser: entry.telegram_id === parseInt(telegramId),
-    }))
+        photo_url: entry.photo_url,
+        level: entry.level,
+      })
+
+      return {
+        participant: {
+          id: entry.participant_id,
+          challengeId: challengeId,
+          telegramId: entry.telegram_id,
+          status: participation?.status || 'joined',
+          joinedAt: participation?.joined_at || new Date().toISOString(),
+          currentProgress: entry.current_progress,
+          maxProgress: entry.max_progress,
+          lastUpdateAt:
+            participation?.last_update_at || new Date().toISOString(),
+          completedAt: entry.completed_at
+            ? new Date(entry.completed_at).toISOString()
+            : undefined,
+        },
+        user: {
+          telegramId: entry.telegram_id,
+          firstName: entry.first_name || 'Пользователь',
+          lastName: entry.last_name,
+          username: entry.username,
+          photoUrl: entry.photo_url,
+          level: entry.level || 1,
+        },
+        progress: entry.current_progress,
+        progressPercentage: parseFloat(entry.progress_percentage),
+        rank: parseInt(entry.rank),
+        isCurrentUser: entry.telegram_id === parseInt(telegramId),
+      }
+    })
 
     res.status(200).json({
       success: true,
