@@ -30,7 +30,8 @@
     "test-notifications": "node scripts/test-notifications.js",
     "test-smart-notifications": "curl -X POST \"http://localhost:3000/api/notifications?type=smart\"",
     "check-notifications": "curl http://localhost:3000/api/notifications",
-    "setup-notifications": "node scripts/setup-notifications.js"
+    "setup-notifications": "node scripts/setup-notifications.js",
+    "check-bot-commands": "node scripts/check-bot-commands.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.4",

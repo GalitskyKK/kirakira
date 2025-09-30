@@ -1,12 +1,17 @@
 /**
  * 📢 ОБЪЕДИНЕННАЯ СИСТЕМА УВЕДОМЛЕНИЙ KIRAKIRA
  *
+ * 🎯 ОПТИМИЗИРОВАНО ДЛЯ VERCEL HOBBY ПЛАНА (1 cron job в день)
+ *
  * Отправляет персонализированные уведомления пользователям:
  * - Напоминания об отметке настроения (стандартные)
  * - Уведомления о потере стрика
  * - Напоминания о возвращении при неактивности
  * - Мотивационные сообщения
  * - Умные персонализированные уведомления на базе ИИ-анализа
+ *
+ * 📅 Запуск: Каждый день в 11:00 МСК (08:00 UTC)
+ * 🎯 Логика: Приоритетная отправка (1 уведомление на пользователя в день)
  *
  * Поддерживает два режима:
  * ?type=standard - обычные уведомления (по умолчанию)
@@ -23,29 +28,31 @@ const NOTIFICATION_TYPES = {
   WEEKLY_MOTIVATION: 'weekly_motivation',
 }
 
-// Расписание уведомлений (МСК)
-const NOTIFICATION_SCHEDULE = {
-  [NOTIFICATION_TYPES.DAILY_MOOD_REMINDER]: {
-    timeRange: { start: '10:00', end: '12:00' },
-    timezone: 'Europe/Moscow',
-    condition: 'no_mood_today',
-  },
-  [NOTIFICATION_TYPES.STREAK_LOST]: {
-    time: '11:00',
-    timezone: 'Europe/Moscow',
-    condition: 'streak_broken_yesterday',
-  },
+// Приоритеты уведомлений (для Hobby плана Vercel - 1 запуск в день)
+const NOTIFICATION_PRIORITIES = {
   [NOTIFICATION_TYPES.INACTIVITY_RETURN]: {
-    time: '10:30',
-    timezone: 'Europe/Moscow',
+    priority: 1,
     condition: 'inactive_3_or_7_days',
   },
-  [NOTIFICATION_TYPES.WEEKLY_MOTIVATION]: {
-    time: '09:00',
-    timezone: 'Europe/Moscow',
-    dayOfWeek: 1, // Monday
-    condition: 'streak_7_plus',
+  [NOTIFICATION_TYPES.STREAK_LOST]: {
+    priority: 2,
+    condition: 'streak_broken_yesterday',
   },
+  [NOTIFICATION_TYPES.WEEKLY_MOTIVATION]: {
+    priority: 3,
+    condition: 'streak_7_plus_monday',
+  },
+  [NOTIFICATION_TYPES.DAILY_MOOD_REMINDER]: {
+    priority: 4,
+    condition: 'no_mood_today',
+  },
+}
+
+// Расписание: Каждый день в 08:00 UTC (11:00 МСК) - оптимальное время
+const NOTIFICATION_TIME = {
+  utc: '08:00',
+  moscow: '11:00',
+  schedule: '0 8 * * *', // Vercel cron format
 }
 
 // Конфигурация
@@ -450,68 +457,74 @@ async function processNotifications() {
     errors: 0,
   }
 
-  // Обрабатываем каждого пользователя
+  // 🎯 ОПТИМИЗИРОВАННАЯ ЛОГИКА ДЛЯ HOBBY ПЛАНА VERCEL
+  // За один запуск в день отправляем ВСЕ релевантные уведомления
+
   for (const user of users) {
     try {
       results.processed++
       let sent = false
+      let notificationType = ''
 
-      // 1. ЕЖЕДНЕВНОЕ НАПОМИНАНИЕ (10:00-12:00)
-      if (isTimeInRange(currentTimeStr, '10:00', '12:00')) {
-        const reminderSent = await sendDailyMoodReminder(user, todayDateStr)
-        if (reminderSent) {
-          results.dailyReminders++
-          sent = true
-        }
-      }
+      // Проверяем неактивность (высший приоритет)
+      if (user.last_visit_date && !sent) {
+        const lastVisit = new Date(user.last_visit_date)
+        const daysSinceVisit = Math.floor(
+          (moscowTime - lastVisit) / (1000 * 60 * 60 * 24)
+        )
 
-      // 2. ПОТЕРЯ СТРИКА (11:00)
-      if (currentTimeStr >= '11:00' && currentTimeStr <= '11:30' && !sent) {
-        const streakSent = await sendStreakLostNotification(user)
-        if (streakSent) {
-          results.streakLost++
-          sent = true
-        }
-      }
-
-      // 3. НЕАКТИВНОСТЬ (10:30)
-      if (currentTimeStr >= '10:30' && currentTimeStr <= '11:00' && !sent) {
-        if (user.last_visit_date) {
-          const lastVisit = new Date(user.last_visit_date)
-          const daysSinceVisit = Math.floor(
-            (moscowTime - lastVisit) / (1000 * 60 * 60 * 24)
+        if (daysSinceVisit === 3 || daysSinceVisit === 7) {
+          const inactivitySent = await sendInactivityNotification(
+            user,
+            daysSinceVisit
           )
-
-          // Отправляем уведомления через 3 и 7 дней неактивности
-          if (daysSinceVisit === 3 || daysSinceVisit === 7) {
-            const inactivitySent = await sendInactivityNotification(
-              user,
-              daysSinceVisit
-            )
-            if (inactivitySent) {
-              results.inactivity++
-              sent = true
-            }
+          if (inactivitySent) {
+            results.inactivity++
+            sent = true
+            notificationType = 'inactivity'
           }
         }
       }
 
-      // 4. ЕЖЕНЕДЕЛЬНАЯ МОТИВАЦИЯ (Понедельник, 09:00)
-      if (
-        isMonday &&
-        currentTimeStr >= '09:00' &&
-        currentTimeStr <= '09:30' &&
-        !sent
-      ) {
+      // Потеря стрика (средний приоритет)
+      if (!sent) {
+        const streakSent = await sendStreakLostNotification(user)
+        if (streakSent) {
+          results.streakLost++
+          sent = true
+          notificationType = 'streak_lost'
+        }
+      }
+
+      // Еженедельная мотивация (по понедельникам)
+      if (isMonday && !sent) {
         const motivationSent = await sendWeeklyMotivation(user)
         if (motivationSent) {
           results.weeklyMotivation++
           sent = true
+          notificationType = 'weekly_motivation'
         }
       }
 
+      // Ежедневное напоминание (самый низкий приоритет)
+      if (!sent) {
+        const reminderSent = await sendDailyMoodReminder(user, todayDateStr)
+        if (reminderSent) {
+          results.dailyReminders++
+          sent = true
+          notificationType = 'daily_reminder'
+        }
+      }
+
+      // Логируем что отправили
+      if (sent) {
+        console.log(
+          `📤 Sent ${notificationType} to ${user.telegram_id} (${user.first_name})`
+        )
+      }
+
       // Небольшая задержка между пользователями чтобы не спамить Telegram API
-      await new Promise(resolve => setTimeout(resolve, 100))
+      await new Promise(resolve => setTimeout(resolve, 150))
     } catch (error) {
       console.error(`❌ Error processing user ${user.telegram_id}:`, error)
       results.errors++
