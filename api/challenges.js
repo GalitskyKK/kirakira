@@ -274,7 +274,7 @@ async function handleDetails(req, res) {
     const freshSupabase = await getSupabaseClient()
 
     const { data: leaderboard, error: leaderboardError } =
-      await freshSupabase.rpc('get_challenge_leaderboard', {
+      await freshSupabase.rpc('get_challenge_leaderboard_v2', {
         challenge_uuid: challengeId,
       })
 
@@ -691,7 +691,7 @@ async function handleUpdateProgress(req, res) {
 
     // Получаем обновленный лидерборд
     const { data: leaderboard, error: leaderboardError } = await supabase.rpc(
-      'get_challenge_leaderboard',
+      'get_challenge_leaderboard_v2',
       { challenge_uuid: challengeId }
     )
 
