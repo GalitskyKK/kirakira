@@ -164,13 +164,32 @@ export const useChallengeStore = create<ChallengeStore>()(
 
     // Load challenge details
     loadChallengeDetails: async (challengeId: string, telegramId: number) => {
+      console.log('🚀 STORE: Making API request to load challenge details', {
+        challengeId,
+        telegramId,
+      })
       set({ isLoading: true, error: null })
 
       try {
-        const response = await fetch(
-          `/api/challenges?action=details&challengeId=${challengeId}&telegramId=${telegramId}`
-        )
+        const apiUrl = `/api/challenges?action=details&challengeId=${challengeId}&telegramId=${telegramId}`
+        console.log('🚀 STORE: Fetching URL:', apiUrl)
+
+        const response = await fetch(apiUrl)
+
+        console.log('🚀 STORE: Response received:', {
+          status: response.status,
+          ok: response.ok,
+          url: response.url,
+        })
         const result: ChallengeDetailsResponse = await response.json()
+
+        console.log('🚀 STORE: API result received:', {
+          success: result.success,
+          hasData: !!result.data,
+          hasLeaderboard: !!result.data?.leaderboard,
+          leaderboardLength: result.data?.leaderboard?.length || 0,
+          firstLeaderboardEntry: result.data?.leaderboard?.[0],
+        })
 
         if (!result.success) {
           throw new Error(result.error || 'Ошибка загрузки деталей челленджа')
@@ -386,11 +405,28 @@ export const useChallengeStore = create<ChallengeStore>()(
 
     // Refresh leaderboard
     refreshLeaderboard: async (challengeId: string, telegramId: number) => {
+      console.log('🔄 STORE: Refreshing leaderboard via API', {
+        challengeId,
+        telegramId,
+      })
       try {
-        const response = await fetch(
-          `/api/challenges?action=details&challengeId=${challengeId}&telegramId=${telegramId}`
-        )
+        const apiUrl = `/api/challenges?action=details&challengeId=${challengeId}&telegramId=${telegramId}`
+        console.log('🔄 STORE: Fetching leaderboard from:', apiUrl)
+
+        const response = await fetch(apiUrl)
+
+        console.log('🔄 STORE: Leaderboard response:', {
+          status: response.status,
+          ok: response.ok,
+        })
         const result: ChallengeDetailsResponse = await response.json()
+
+        console.log('🔄 STORE: Leaderboard API result:', {
+          success: result.success,
+          hasLeaderboard: !!result.data?.leaderboard,
+          leaderboardLength: result.data?.leaderboard?.length || 0,
+          firstEntry: result.data?.leaderboard?.[0],
+        })
 
         if (result.success && result.data) {
           set({
