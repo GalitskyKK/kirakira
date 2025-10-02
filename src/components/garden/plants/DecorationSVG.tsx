@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { useId } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
 
 interface DecorationSVGProps {
@@ -21,10 +20,6 @@ export function DecorationSVG({
   isHovered: _isHovered = false,
   name = 'Decoration',
 }: DecorationSVGProps) {
-  const uniqueId = useId()
-  const gradientId = `decoration-${uniqueId}`
-  const wingGradientId = `wing-${uniqueId}`
-
   const getRarityGlow = () => {
     switch (rarity) {
       case RarityLevel.UNCOMMON:
@@ -85,62 +80,411 @@ export function DecorationSVG({
 
   // Определяем тип украшения по имени
   const isFirefly = name === 'Светлячок'
+  const isButterfly = name === 'Бабочка'
 
-  const getSeasonalPattern = () => {
-    switch (season) {
-      case SeasonalVariant.SPRING:
-        return (
-          <>
-            {/* Цветочные узоры */}
-            <circle cx="16" cy="14" r="1.5" fill="#ec4899" opacity="0.7" />
-            <circle cx="24" cy="18" r="1.2" fill="#f97316" opacity="0.6" />
-            <circle cx="20" cy="22" r="1" fill="#fbbf24" opacity="0.8" />
-          </>
-        )
-      case SeasonalVariant.SUMMER:
-        return (
-          <>
-            {/* Солнечные пятна */}
-            <path d="M18,16 L22,16 L20,20 Z" fill="#fbbf24" opacity="0.7" />
-            <circle cx="15" cy="20" r="1.5" fill="#f59e0b" opacity="0.6" />
-            <circle cx="25" cy="15" r="1" fill="#dc2626" opacity="0.5" />
-          </>
-        )
-      case SeasonalVariant.AUTUMN:
-        return (
-          <>
-            {/* Листовые узоры */}
-            <path
-              d="M17,15 Q19,13 21,15 Q19,17 17,15"
-              fill="#dc2626"
+  if (isFirefly) {
+    return (
+      <motion.div
+        className="pixel-container relative flex items-center justify-center"
+        style={{ width: size, height: size }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{
+          scale: 1,
+          opacity: 1,
+          filter: isSelected
+            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            : 'none',
+        }}
+        whileHover={{
+          scale: 1.1,
+          y: -3,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 300,
+          damping: 20,
+        }}
+      >
+        <motion.svg
+          width={size}
+          height={size}
+          viewBox="0 0 32 32"
+          className="pixel-svg overflow-visible"
+          style={{
+            imageRendering: 'pixelated',
+            shapeRendering: 'crispEdges',
+          }}
+        >
+          {/* Firefly body */}
+          <motion.g
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            {/* Main body */}
+            <rect x="15" y="16" width="2" height="6" fill="#4a5568" />
+            <rect x="15" y="16" width="1" height="6" fill="#718096" />
+
+            {/* Head */}
+            <rect x="15" y="14" width="2" height="2" fill="#2d3748" />
+            <rect x="15" y="14" width="1" height="1" fill="#4a5568" />
+
+            {/* Glowing abdomen */}
+            <motion.rect
+              x="15"
+              y="18"
+              width="2"
+              height="3"
+              fill="#fbbf24"
+              animate={{
+                opacity: [0.6, 1, 0.6],
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+            <rect
+              x="15"
+              y="18"
+              width="1"
+              height="2"
+              fill="#ffffff"
               opacity="0.8"
             />
-            <path
-              d="M22,20 Q23,18 24,20 Q23,21 22,20"
-              fill="#ea580c"
+          </motion.g>
+
+          {/* Wings */}
+          <motion.g
+            animate={{
+              rotate: [-2, 2, -2],
+            }}
+            transition={{
+              duration: 0.2,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            style={{
+              transformOrigin: '16px 16px',
+            }}
+          >
+            {/* Left wing */}
+            <rect
+              x="12"
+              y="15"
+              width="3"
+              height="4"
+              fill="#ffffff"
               opacity="0.7"
             />
-          </>
-        )
-      case SeasonalVariant.WINTER:
-        return (
-          <>
-            {/* Снежные узоры */}
-            <g stroke="#e0e7ff" strokeWidth="0.5" fill="none" opacity="0.8">
-              <path d="M18,15 L22,19 M22,15 L18,19 M20,13 L20,21 M16,17 L24,17" />
-            </g>
-          </>
-        )
-      default:
-        return null
-    }
+            <rect
+              x="12"
+              y="15"
+              width="1"
+              height="4"
+              fill="#ffffff"
+              opacity="0.9"
+            />
+
+            {/* Right wing */}
+            <rect
+              x="17"
+              y="15"
+              width="3"
+              height="4"
+              fill="#ffffff"
+              opacity="0.7"
+            />
+            <rect
+              x="19"
+              y="15"
+              width="1"
+              height="4"
+              fill="#ffffff"
+              opacity="0.9"
+            />
+          </motion.g>
+
+          {/* Antennae */}
+          <rect x="15" y="12" width="1" height="2" fill="#2d3748" />
+          <rect x="16" y="12" width="1" height="2" fill="#2d3748" />
+          <rect x="15" y="12" width="1" height="1" fill="#4a5568" />
+          <rect x="16" y="12" width="1" height="1" fill="#4a5568" />
+
+          {/* Legs */}
+          <rect x="14" y="20" width="1" height="2" fill="#2d3748" />
+          <rect x="17" y="20" width="1" height="2" fill="#2d3748" />
+          <rect x="15" y="21" width="1" height="1" fill="#2d3748" />
+          <rect x="16" y="21" width="1" height="1" fill="#2d3748" />
+
+          {/* Light trail */}
+          <motion.g
+            animate={{
+              opacity: [0.3, 0.8, 0.3],
+              scale: [0.8, 1.2, 0.8],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'easeInOut',
+              delay: 0.5,
+            }}
+          >
+            {Array.from({ length: 5 }, (_, i) => (
+              <rect
+                key={`trail-${i}`}
+                x={13 + i}
+                y={22 + i}
+                width="1"
+                height="1"
+                fill="#fbbf24"
+                opacity={0.8 - i * 0.15}
+              />
+            ))}
+          </motion.g>
+        </motion.svg>
+      </motion.div>
+    )
   }
 
+  if (isButterfly) {
+    return (
+      <motion.div
+        className="pixel-container relative flex items-center justify-center"
+        style={{ width: size, height: size }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{
+          scale: 1,
+          opacity: 1,
+          filter: isSelected
+            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            : 'none',
+        }}
+        whileHover={{
+          scale: 1.1,
+          y: -3,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 300,
+          damping: 20,
+        }}
+      >
+        <motion.svg
+          width={size}
+          height={size}
+          viewBox="0 0 32 32"
+          className="pixel-svg overflow-visible"
+          style={{
+            imageRendering: 'pixelated',
+            shapeRendering: 'crispEdges',
+          }}
+        >
+          {/* Butterfly wings - animated */}
+          <motion.g
+            animate={{
+              rotate: [0, 5, 0, -5, 0],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+            style={{
+              transformOrigin: '16px 16px',
+            }}
+          >
+            {/* Upper wings */}
+            <rect
+              x="8"
+              y="10"
+              width="6"
+              height="6"
+              fill={seasonalColors.primary}
+            />
+            <rect
+              x="18"
+              y="10"
+              width="6"
+              height="6"
+              fill={seasonalColors.primary}
+            />
+
+            {/* Wing patterns */}
+            <rect
+              x="9"
+              y="11"
+              width="4"
+              height="4"
+              fill={seasonalColors.secondary}
+            />
+            <rect
+              x="19"
+              y="11"
+              width="4"
+              height="4"
+              fill={seasonalColors.secondary}
+            />
+
+            {/* Wing highlights */}
+            <rect
+              x="8"
+              y="10"
+              width="2"
+              height="3"
+              fill="#ffffff"
+              opacity="0.6"
+            />
+            <rect
+              x="18"
+              y="10"
+              width="2"
+              height="3"
+              fill="#ffffff"
+              opacity="0.6"
+            />
+
+            {/* Wing spots */}
+            <rect
+              x="10"
+              y="12"
+              width="2"
+              height="2"
+              fill={seasonalColors.accent}
+            />
+            <rect
+              x="20"
+              y="12"
+              width="2"
+              height="2"
+              fill={seasonalColors.accent}
+            />
+            <rect
+              x="11"
+              y="13"
+              width="1"
+              height="1"
+              fill="#ffffff"
+              opacity="0.8"
+            />
+            <rect
+              x="21"
+              y="13"
+              width="1"
+              height="1"
+              fill="#ffffff"
+              opacity="0.8"
+            />
+
+            {/* Lower wings */}
+            <rect
+              x="10"
+              y="16"
+              width="4"
+              height="4"
+              fill={seasonalColors.secondary}
+            />
+            <rect
+              x="18"
+              y="16"
+              width="4"
+              height="4"
+              fill={seasonalColors.secondary}
+            />
+
+            {/* Lower wing patterns */}
+            <rect
+              x="11"
+              y="17"
+              width="2"
+              height="2"
+              fill={seasonalColors.accent}
+            />
+            <rect
+              x="19"
+              y="17"
+              width="2"
+              height="2"
+              fill={seasonalColors.accent}
+            />
+
+            {/* Lower wing highlights */}
+            <rect
+              x="10"
+              y="16"
+              width="1"
+              height="2"
+              fill="#ffffff"
+              opacity="0.5"
+            />
+            <rect
+              x="18"
+              y="16"
+              width="1"
+              height="2"
+              fill="#ffffff"
+              opacity="0.5"
+            />
+          </motion.g>
+
+          {/* Butterfly body */}
+          <motion.g
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            {/* Main body */}
+            <rect x="15" y="12" width="2" height="8" fill="#4a5568" />
+            <rect x="15" y="12" width="1" height="8" fill="#718096" />
+
+            {/* Head */}
+            <rect x="15" y="10" width="2" height="2" fill="#2d3748" />
+            <rect x="15" y="10" width="1" height="1" fill="#4a5568" />
+
+            {/* Antennae */}
+            <rect x="15" y="8" width="1" height="2" fill="#2d3748" />
+            <rect x="16" y="8" width="1" height="2" fill="#2d3748" />
+            <rect x="15" y="8" width="1" height="1" fill="#4a5568" />
+            <rect x="16" y="8" width="1" height="1" fill="#4a5568" />
+          </motion.g>
+
+          {/* Flutter trail */}
+          <motion.g
+            animate={{
+              opacity: [0.2, 0.6, 0.2],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'easeInOut',
+              delay: 1,
+            }}
+          >
+            {Array.from({ length: 4 }, (_, i) => (
+              <rect
+                key={`flutter-${i}`}
+                x={6 + i * 5}
+                y={22 + i}
+                width="1"
+                height="1"
+                fill={seasonalColors.accent}
+                opacity={0.6 - i * 0.1}
+              />
+            ))}
+          </motion.g>
+        </motion.svg>
+      </motion.div>
+    )
+  }
+
+  // Default decoration - decorative flower/ornament
   return (
     <motion.div
-      className="relative flex items-center justify-center"
+      className="pixel-container relative flex items-center justify-center"
       style={{ width: size, height: size }}
-      initial={{ scale: 0, rotate: -180 }}
+      initial={{ scale: 0, rotate: -45 }}
       animate={{
         scale: 1,
         rotate: 0,
@@ -148,317 +492,410 @@ export function DecorationSVG({
           ? `drop-shadow(0 0 20px ${getRarityGlow()})`
           : 'none',
       }}
+      whileHover={{
+        scale: 1.1,
+        y: -2,
+        rotate: 5,
+      }}
       transition={{
         type: 'spring',
         stiffness: 300,
         damping: 20,
-        delay: Math.random() * 0.5,
       }}
     >
-      <svg
+      <motion.svg
         width={size}
         height={size}
-        viewBox="0 0 40 40"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 32 32"
+        className="pixel-svg overflow-visible"
         style={{
-          shapeRendering: 'geometricPrecision',
-          textRendering: 'geometricPrecision',
+          imageRendering: 'pixelated',
+          shapeRendering: 'crispEdges',
         }}
       >
-        <defs>
-          <radialGradient id={gradientId} cx="50%" cy="40%" r="60%">
-            <stop offset="0%" stopColor={seasonalColors.accent} />
-            <stop offset="50%" stopColor={seasonalColors.primary} />
-            <stop offset="100%" stopColor={seasonalColors.secondary} />
-          </radialGradient>
+        {/* Shadow */}
+        <motion.ellipse
+          cx="16"
+          cy="30"
+          rx="4"
+          ry="1.5"
+          fill="#000000"
+          opacity="0.3"
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        />
 
-          <linearGradient
-            id={wingGradientId}
-            x1="0%"
-            y1="0%"
-            x2="100%"
-            y2="100%"
-          >
-            <stop offset="0%" stopColor={seasonalColors.wing} opacity="0.9" />
-            <stop
-              offset="50%"
-              stopColor={seasonalColors.primary}
-              opacity="0.7"
-            />
-            <stop
-              offset="100%"
-              stopColor={seasonalColors.secondary}
-              opacity="0.5"
-            />
-          </linearGradient>
+        {/* Main decorative element */}
+        <motion.g
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+        >
+          {/* Central ornament */}
+          <rect
+            x="12"
+            y="12"
+            width="8"
+            height="8"
+            fill={seasonalColors.primary}
+          />
+          <rect
+            x="14"
+            y="10"
+            width="4"
+            height="4"
+            fill={seasonalColors.primary}
+          />
+          <rect
+            x="15"
+            y="8"
+            width="2"
+            height="2"
+            fill={seasonalColors.secondary}
+          />
 
-          {rarity === RarityLevel.LEGENDARY && (
-            <filter id={`glow-${uniqueId}`}>
-              <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-              <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          )}
-        </defs>
+          {/* Ornament pattern */}
+          <rect
+            x="12"
+            y="12"
+            width="4"
+            height="4"
+            fill="#ffffff"
+            opacity="0.5"
+          />
+          <rect
+            x="14"
+            y="10"
+            width="2"
+            height="2"
+            fill="#ffffff"
+            opacity="0.6"
+          />
+          <rect
+            x="15"
+            y="8"
+            width="1"
+            height="2"
+            fill="#ffffff"
+            opacity="0.8"
+          />
 
-        {/* Рендер в зависимости от типа украшения */}
-        {isFirefly ? (
-          // СВЕТЛЯЧОК - простое светящееся тело с мерцанием
-          <motion.g filter={`url(#glow-${uniqueId})`}>
-            {/* Основное тело светлячка */}
-            <motion.ellipse
-              cx="20"
-              cy="20"
-              rx="3"
-              ry="6"
-              fill={seasonalColors.primary}
-              animate={{
-                opacity: [0.7, 1, 0.7],
-                scale: [1, 1.1, 1],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                },
-              }}
-            />
+          {/* Right side shadow */}
+          <rect
+            x="16"
+            y="12"
+            width="4"
+            height="8"
+            fill="#000000"
+            opacity="0.2"
+          />
+          <rect
+            x="16"
+            y="10"
+            width="2"
+            height="4"
+            fill="#000000"
+            opacity="0.15"
+          />
 
-            {/* Светящаяся аура */}
-            <motion.circle
-              cx="20"
-              cy="20"
-              r="8"
-              fill={seasonalColors.accent}
-              opacity="0.3"
-              animate={{
-                r: [8, 12, 8],
-                opacity: [0.3, 0.1, 0.3],
-                transition: {
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                },
-              }}
-            />
+          {/* Decorative elements around */}
+          <rect
+            x="10"
+            y="14"
+            width="2"
+            height="2"
+            fill={seasonalColors.accent}
+          />
+          <rect
+            x="20"
+            y="16"
+            width="2"
+            height="2"
+            fill={seasonalColors.accent}
+          />
+          <rect
+            x="14"
+            y="6"
+            width="2"
+            height="2"
+            fill={seasonalColors.accent}
+          />
+          <rect
+            x="16"
+            y="22"
+            width="2"
+            height="2"
+            fill={seasonalColors.accent}
+          />
 
-            {/* Мерцающие точки света */}
-            {Array.from({ length: 6 }, (_, i) => (
-              <motion.circle
-                key={i}
-                cx={20 + Math.cos((i * 60 * Math.PI) / 180) * 10}
-                cy={20 + Math.sin((i * 60 * Math.PI) / 180) * 10}
-                r="1"
+          {/* Small accent details */}
+          <rect
+            x="10"
+            y="14"
+            width="1"
+            height="1"
+            fill="#ffffff"
+            opacity="0.7"
+          />
+          <rect
+            x="20"
+            y="16"
+            width="1"
+            height="1"
+            fill="#ffffff"
+            opacity="0.7"
+          />
+          <rect
+            x="14"
+            y="6"
+            width="1"
+            height="1"
+            fill="#ffffff"
+            opacity="0.7"
+          />
+          <rect
+            x="16"
+            y="22"
+            width="1"
+            height="1"
+            fill="#ffffff"
+            opacity="0.7"
+          />
+        </motion.g>
+
+        {/* Floating sparkles around decoration */}
+        <motion.g
+          animate={{
+            rotate: [0, 360],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: 'linear',
+          }}
+          style={{
+            transformOrigin: '16px 16px',
+          }}
+        >
+          {Array.from({ length: 6 }, (_, i) => {
+            const angle = i * 60
+            const radius = 12
+            const x = 16 + Math.cos((angle * Math.PI) / 180) * radius
+            const y = 16 + Math.sin((angle * Math.PI) / 180) * radius
+
+            return (
+              <motion.rect
+                key={`sparkle-${i}`}
+                x={x}
+                y={y}
+                width="1"
+                height="1"
                 fill={seasonalColors.accent}
                 animate={{
-                  opacity: [0, 1, 0],
-                  scale: [0, 1, 0],
-                  transition: {
-                    duration: 2,
-                    repeat: Infinity,
-                    delay: i * 0.3,
-                    ease: 'easeInOut',
-                  },
+                  opacity: [0.3, 1, 0.3],
+                  scale: [0.5, 1, 0.5],
                 }}
-              />
-            ))}
-
-            {/* Световые лучи */}
-            <motion.g
-              animate={{
-                rotate: [0, 360],
-                transition: { duration: 8, repeat: Infinity, ease: 'linear' },
-              }}
-              style={{ transformOrigin: '20px 20px' }}
-            >
-              <path
-                d="M20 12 L20 8"
-                stroke={seasonalColors.accent}
-                strokeWidth="1"
-                opacity="0.6"
-              />
-              <path
-                d="M20 32 L20 28"
-                stroke={seasonalColors.accent}
-                strokeWidth="1"
-                opacity="0.6"
-              />
-              <path
-                d="M12 20 L8 20"
-                stroke={seasonalColors.accent}
-                strokeWidth="1"
-                opacity="0.6"
-              />
-              <path
-                d="M32 20 L28 20"
-                stroke={seasonalColors.accent}
-                strokeWidth="1"
-                opacity="0.6"
-              />
-            </motion.g>
-          </motion.g>
-        ) : (
-          // БАБОЧКА - сложные крылья и тело
-          <>
-            {/* Тело бабочки */}
-            <motion.ellipse
-              cx="20"
-              cy="20"
-              rx="1.5"
-              ry="8"
-              fill={seasonalColors.secondary}
-              animate={{
-                ry: [8, 8.5, 8],
-                transition: {
+                transition={{
                   duration: 2,
                   repeat: Infinity,
+                  delay: i * 0.3,
                   ease: 'easeInOut',
-                },
+                }}
+              />
+            )
+          })}
+        </motion.g>
+
+        {/* Seasonal decorations */}
+        {season === SeasonalVariant.SPRING && (
+          <motion.g
+            animate={{
+              scale: [0, 1, 0],
+              opacity: [0, 1, 0],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              delay: 2,
+            }}
+          >
+            {/* Spring petals */}
+            <rect
+              x="8"
+              y="10"
+              width="2"
+              height="1"
+              fill="#ec4899"
+              opacity="0.8"
+            />
+            <rect
+              x="22"
+              y="18"
+              width="2"
+              height="1"
+              fill="#f97316"
+              opacity="0.8"
+            />
+            <rect
+              x="6"
+              y="20"
+              width="1"
+              height="2"
+              fill="#fbbf24"
+              opacity="0.8"
+            />
+          </motion.g>
+        )}
+
+        {season === SeasonalVariant.AUTUMN && (
+          <motion.g
+            animate={{
+              y: [0, 15],
+              opacity: [1, 0],
+              rotate: [0, 90],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              delay: 2,
+              stagger: 0.5,
+            }}
+          >
+            {/* Falling leaves */}
+            <rect x="6" y="8" width="2" height="1" fill="#dc2626" />
+            <rect x="24" y="12" width="1" height="2" fill="#ea580c" />
+            <rect x="26" y="20" width="2" height="1" fill="#f59e0b" />
+          </motion.g>
+        )}
+
+        {/* Magical effects for rare decorations */}
+        {rarity !== RarityLevel.COMMON && (
+          <motion.g
+            animate={{
+              opacity: [0.5, 1, 0.5],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              delay: 2,
+            }}
+          >
+            {/* Magical glow points */}
+            <rect
+              x="6"
+              y="12"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.8"
+            />
+            <rect
+              x="26"
+              y="18"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.8"
+            />
+            <rect
+              x="16"
+              y="4"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.9"
+            />
+            <rect
+              x="12"
+              y="26"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.8"
+            />
+          </motion.g>
+        )}
+
+        {/* Legendary effects */}
+        {rarity === RarityLevel.LEGENDARY && (
+          <motion.g>
+            {/* Central energy */}
+            <motion.rect
+              x="15"
+              y="15"
+              width="2"
+              height="2"
+              fill="#fbbf24"
+              opacity="0.8"
+              animate={{
+                opacity: [0.4, 1, 0.4],
+                scale: [1, 1.3, 1],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: 3,
               }}
             />
 
-            {/* Усики */}
-            <motion.g
-              animate={{
-                rotate: [-2, 2, -2],
-                transition: {
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                },
-              }}
-              style={{ transformOrigin: '20px 12px' }}
-            >
-              <path
-                d="M18 12 Q16 8 14 10"
-                stroke={seasonalColors.secondary}
-                strokeWidth="1"
-                fill="none"
-                strokeLinecap="round"
-              />
-              <path
-                d="M22 12 Q24 8 26 10"
-                stroke={seasonalColors.secondary}
-                strokeWidth="1"
-                fill="none"
-                strokeLinecap="round"
-              />
-              <circle cx="14" cy="10" r="0.5" fill={seasonalColors.accent} />
-              <circle cx="26" cy="10" r="0.5" fill={seasonalColors.accent} />
-            </motion.g>
+            {/* Legendary sparkles */}
+            {Array.from({ length: 8 }, (_, i) => {
+              const positions = [
+                { x: 4, y: 8 },
+                { x: 28, y: 12 },
+                { x: 2, y: 20 },
+                { x: 30, y: 24 },
+                { x: 8, y: 2 },
+                { x: 24, y: 4 },
+                { x: 12, y: 30 },
+                { x: 20, y: 28 },
+              ]
+              const pos = positions[i]
+              if (!pos) return null
 
-            {/* Верхние крылья */}
-            <motion.g
-              animate={{
-                rotate: [-5, 5, -5],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                },
-              }}
-              style={{ transformOrigin: '20px 20px' }}
-              filter={
-                rarity === RarityLevel.LEGENDARY
-                  ? `url(#glow-${uniqueId})`
-                  : undefined
-              }
-            >
-              {/* Левое верхнее крыло */}
-              <path
-                d="M18 16 Q8 10 6 18 Q8 24 14 22 Q18 20 18 16 Z"
-                fill={`url(#${wingGradientId})`}
-                stroke={seasonalColors.primary}
-                strokeWidth="0.5"
-              />
-
-              {/* Правое верхнее крыло */}
-              <path
-                d="M22 16 Q32 10 34 18 Q32 24 26 22 Q22 20 22 16 Z"
-                fill={`url(#${wingGradientId})`}
-                stroke={seasonalColors.primary}
-                strokeWidth="0.5"
-              />
-
-              {/* Нижние крылья */}
-              {/* Левое нижнее крыло */}
-              <path
-                d="M18 22 Q10 26 8 30 Q10 34 16 32 Q18 28 18 22 Z"
-                fill={`url(#${wingGradientId})`}
-                stroke={seasonalColors.primary}
-                strokeWidth="0.5"
-                opacity="0.9"
-              />
-
-              {/* Правое нижнее крыло */}
-              <path
-                d="M22 22 Q30 26 32 30 Q30 34 24 32 Q22 28 22 22 Z"
-                fill={`url(#${wingGradientId})`}
-                stroke={seasonalColors.primary}
-                strokeWidth="0.5"
-                opacity="0.9"
-              />
-            </motion.g>
-
-            {/* Узоры на крыльях */}
-            <motion.g
-              animate={{
-                opacity: [0.6, 1, 0.6],
-                transition: { duration: 2.5, repeat: Infinity },
-              }}
-            >
-              {getSeasonalPattern()}
-            </motion.g>
-          </>
-        )}
-
-        {/* Премиум эффекты */}
-        {rarity === RarityLevel.EPIC && (
-          <motion.g
-            animate={{
-              rotate: [0, 360],
-              transition: { duration: 8, repeat: Infinity, ease: 'linear' },
-            }}
-            style={{ transformOrigin: '20px 20px' }}
-          >
-            <circle cx="12" cy="18" r="1" fill="#a855f7" opacity="0.6" />
-            <circle cx="28" cy="18" r="1" fill="#a855f7" opacity="0.6" />
-            <circle cx="16" cy="26" r="0.8" fill="#a855f7" opacity="0.5" />
-            <circle cx="24" cy="26" r="0.8" fill="#a855f7" opacity="0.5" />
+              return (
+                <motion.rect
+                  key={`legendary-sparkle-${i}`}
+                  x={pos.x}
+                  y={pos.y}
+                  width="1"
+                  height="1"
+                  fill="#ffffff"
+                  animate={{
+                    opacity: [0, 1, 0],
+                    scale: [0, 1, 0],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    delay: 3.5 + i * 0.2,
+                  }}
+                />
+              )
+            })}
           </motion.g>
         )}
+      </motion.svg>
 
-        {rarity === RarityLevel.LEGENDARY && (
-          <>
-            <motion.g
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.5, 1, 0.5],
-                transition: { duration: 2, repeat: Infinity },
-              }}
-            >
-              <circle cx="20" cy="20" r="12" fill="#f59e0b" opacity="0.1" />
-              <circle cx="20" cy="20" r="8" fill="#fbbf24" opacity="0.2" />
-            </motion.g>
-
-            {/* Искры вокруг */}
-            <motion.g
-              animate={{
-                rotate: [0, 360],
-                transition: { duration: 6, repeat: Infinity, ease: 'linear' },
-              }}
-              style={{ transformOrigin: '20px 20px' }}
-            >
-              <circle cx="8" cy="20" r="1" fill="#fbbf24" opacity="0.8" />
-              <circle cx="32" cy="20" r="1" fill="#fbbf24" opacity="0.8" />
-              <circle cx="20" cy="8" r="1" fill="#f59e0b" opacity="0.8" />
-              <circle cx="20" cy="32" r="1" fill="#f59e0b" opacity="0.8" />
-            </motion.g>
-          </>
-        )}
-      </svg>
+      {/* Magical aura */}
+      {rarity !== RarityLevel.COMMON && (
+        <motion.div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: `radial-gradient(circle, ${getRarityGlow()}20 0%, transparent 70%)`,
+          }}
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.6, 0.3],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+      )}
     </motion.div>
   )
 }

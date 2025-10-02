@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { useId } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
 
 interface GrassSVGProps {
@@ -21,9 +20,6 @@ export function GrassSVG({
   isHovered: _isHovered = false,
   name = 'Grass',
 }: GrassSVGProps) {
-  const uniqueId = useId()
-  const gradientId = `grass-${uniqueId}`
-
   const getRarityGlow = () => {
     switch (rarity) {
       case RarityLevel.UNCOMMON:
@@ -80,64 +76,9 @@ export function GrassSVG({
   // Определяем тип элемента по имени
   const isMoss = name === 'Мох'
 
-  const getSeasonalDecorations = () => {
-    switch (season) {
-      case SeasonalVariant.SPRING:
-        return (
-          <>
-            {/* Капли росы */}
-            <circle cx="12" cy="25" r="1" fill="#06b6d4" opacity="0.6" />
-            <circle cx="28" cy="30" r="0.8" fill="#06b6d4" opacity="0.5" />
-          </>
-        )
-      case SeasonalVariant.SUMMER:
-        return (
-          <>
-            {/* Солнечные блики */}
-            <circle cx="15" cy="20" r="1.5" fill="#fbbf24" opacity="0.7" />
-            <circle cx="25" cy="25" r="1" fill="#fbbf24" opacity="0.5" />
-          </>
-        )
-      case SeasonalVariant.AUTUMN:
-        return (
-          <>
-            {/* Опавшие листья */}
-            <ellipse
-              cx="10"
-              cy="35"
-              rx="3"
-              ry="1.5"
-              fill="#dc2626"
-              opacity="0.6"
-            />
-            <ellipse
-              cx="30"
-              cy="38"
-              rx="2"
-              ry="1"
-              fill="#ea580c"
-              opacity="0.7"
-            />
-          </>
-        )
-      case SeasonalVariant.WINTER:
-        return (
-          <>
-            {/* Снежинки */}
-            <g stroke="#f1f5f9" strokeWidth="0.5" fill="none" opacity="0.8">
-              <path d="M18,15 L18,21 M15,18 L21,18 M16,16 L20,20 M20,16 L16,20" />
-              <path d="M26,28 L26,32 M24,30 L28,30 M25,29 L27,31 M27,29 L25,31" />
-            </g>
-          </>
-        )
-      default:
-        return null
-    }
-  }
-
   return (
     <motion.div
-      className="relative flex items-center justify-center"
+      className="pixel-container relative flex items-center justify-center"
       style={{ width: size, height: size }}
       initial={{ scale: 0 }}
       animate={{
@@ -146,6 +87,10 @@ export function GrassSVG({
           ? `drop-shadow(0 0 20px ${getRarityGlow()})`
           : 'none',
       }}
+      whileHover={{
+        scale: 1.05,
+        y: -2,
+      }}
       transition={{
         type: 'spring',
         stiffness: 300,
@@ -153,230 +98,728 @@ export function GrassSVG({
         delay: Math.random() * 0.3,
       }}
     >
-      <svg
+      <motion.svg
         width={size}
         height={size}
-        viewBox="0 0 40 40"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 32 32"
+        className="pixel-svg overflow-visible"
         style={{
-          shapeRendering: 'geometricPrecision',
-          textRendering: 'geometricPrecision',
+          imageRendering: 'pixelated',
+          shapeRendering: 'crispEdges',
         }}
       >
-        <defs>
-          <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={seasonalColors.accent} />
-            <stop offset="50%" stopColor={seasonalColors.primary} />
-            <stop offset="100%" stopColor={seasonalColors.secondary} />
-          </linearGradient>
-
-          {rarity === RarityLevel.LEGENDARY && (
-            <filter id={`glow-${uniqueId}`}>
-              <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-              <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          )}
-        </defs>
-
-        {/* Основание травы */}
-        <ellipse
-          cx="20"
-          cy="38"
-          rx="8"
-          ry="2"
-          fill={seasonalColors.secondary}
+        {/* Shadow */}
+        <motion.ellipse
+          cx="16"
+          cy="30"
+          rx="6"
+          ry="1.5"
+          fill="#000000"
           opacity="0.3"
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
         />
 
-        {/* Рендер травы vs мха */}
         {isMoss ? (
           // МОХ - низкий, густой, мягкий
           <motion.g
-            animate={{
-              scale: [1, 1.02, 1],
-              transition: { duration: 4, repeat: Infinity, ease: 'easeInOut' },
-            }}
-            filter={
-              rarity === RarityLevel.LEGENDARY
-                ? `url(#glow-${uniqueId})`
-                : undefined
-            }
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
           >
-            {/* Основные мшистые комки */}
-            <ellipse
-              cx="15"
-              cy="35"
-              rx="6"
-              ry="4"
+            {/* Moss base - низкий и округлый */}
+            <rect
+              x="8"
+              y="26"
+              width="16"
+              height="4"
               fill={seasonalColors.primary}
-              opacity="0.9"
             />
-            <ellipse
-              cx="25"
-              cy="36"
-              rx="7"
-              ry="3"
+            <rect
+              x="10"
+              y="24"
+              width="12"
+              height="2"
+              fill={seasonalColors.primary}
+            />
+            <rect
+              x="12"
+              y="22"
+              width="8"
+              height="2"
               fill={seasonalColors.secondary}
-              opacity="0.8"
             />
-            <ellipse
-              cx="20"
-              cy="33"
-              rx="5"
-              ry="5"
+
+            {/* Moss texture - мягкие детали */}
+            <rect
+              x="8"
+              y="26"
+              width="6"
+              height="2"
+              fill="#ffffff"
+              opacity="0.3"
+            />
+            <rect
+              x="18"
+              y="27"
+              width="6"
+              height="3"
+              fill="#000000"
+              opacity="0.15"
+            />
+
+            {/* Small moss bumps */}
+            <rect
+              x="11"
+              y="23"
+              width="2"
+              height="1"
               fill={seasonalColors.accent}
-              opacity="0.7"
+            />
+            <rect
+              x="19"
+              y="24"
+              width="2"
+              height="1"
+              fill={seasonalColors.accent}
+            />
+            <rect
+              x="15"
+              y="22"
+              width="2"
+              height="1"
+              fill={seasonalColors.accent}
             />
 
-            {/* Мелкие мшистые точки */}
-            {Array.from({ length: 12 }, (_, i) => (
-              <circle
-                key={i}
-                cx={12 + i * 1.5 + Math.sin(i) * 2}
-                cy={32 + Math.cos(i * 0.5) * 3}
-                r={0.8 + Math.random() * 0.4}
-                fill={seasonalColors.primary}
-                opacity={0.6 + Math.random() * 0.3}
-              />
-            ))}
-
-            {/* Текстурные линии для мягкости */}
-            <path
-              d="M10 35 Q15 33 20 35 Q25 37 30 35"
-              stroke={seasonalColors.accent}
-              strokeWidth="0.5"
-              fill="none"
+            {/* Moss highlights */}
+            <rect
+              x="12"
+              y="22"
+              width="3"
+              height="1"
+              fill="#ffffff"
+              opacity="0.6"
+            />
+            <rect
+              x="10"
+              y="24"
+              width="4"
+              height="1"
+              fill="#ffffff"
               opacity="0.4"
             />
-            <path
-              d="M12 33 Q17 31 22 33 Q27 35 32 33"
-              stroke={seasonalColors.secondary}
-              strokeWidth="0.3"
-              fill="none"
-              opacity="0.3"
+
+            {/* Moss details */}
+            <rect
+              x="9"
+              y="26"
+              width="1"
+              height="1"
+              fill={seasonalColors.accent}
+              opacity="0.8"
+            />
+            <rect
+              x="22"
+              y="27"
+              width="1"
+              height="1"
+              fill={seasonalColors.accent}
+              opacity="0.8"
+            />
+            <rect
+              x="14"
+              y="23"
+              width="1"
+              height="1"
+              fill={seasonalColors.accent}
+              opacity="0.9"
             />
           </motion.g>
         ) : (
           // ТРАВА - высокая, стройная
           <motion.g
-            animate={
-              season === SeasonalVariant.SUMMER
-                ? {
-                    x: [0, 1, 0, -1, 0],
-                    transition: {
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                    },
-                  }
-                : {}
-            }
-            filter={
-              rarity === RarityLevel.LEGENDARY
-                ? `url(#glow-${uniqueId})`
-                : undefined
-            }
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
           >
-            {/* Длинные стебли по краям */}
-            <path
-              d="M8 38 Q10 28 12 18 Q14 15 16 12"
-              stroke={`url(#${gradientId})`}
-              strokeWidth="2"
-              fill="none"
-              strokeLinecap="round"
+            {/* Grass blades - пиксельные травинки */}
+
+            {/* Tall center blade */}
+            <rect
+              x="15"
+              y="10"
+              width="2"
+              height="18"
+              fill={seasonalColors.primary}
             />
-            <path
-              d="M32 38 Q30 30 28 20 Q26 17 24 14"
-              stroke={`url(#${gradientId})`}
-              strokeWidth="2"
-              fill="none"
-              strokeLinecap="round"
+            <rect
+              x="15"
+              y="10"
+              width="1"
+              height="18"
+              fill={seasonalColors.accent}
+            />
+            <rect
+              x="16"
+              y="12"
+              width="1"
+              height="16"
+              fill={seasonalColors.secondary}
+            />
+            <rect
+              x="15"
+              y="8"
+              width="2"
+              height="2"
+              fill={seasonalColors.accent}
+            />
+            <rect
+              x="16"
+              y="6"
+              width="1"
+              height="2"
+              fill={seasonalColors.accent}
             />
 
-            {/* Средние стебли */}
-            <path
-              d="M14 38 Q16 25 18 15 Q19 13 20 10"
-              stroke={`url(#${gradientId})`}
-              strokeWidth="2.5"
-              fill="none"
-              strokeLinecap="round"
+            {/* Left tall blade */}
+            <rect
+              x="11"
+              y="14"
+              width="2"
+              height="14"
+              fill={seasonalColors.secondary}
             />
-            <path
-              d="M26 38 Q24 28 22 18 Q21 15 20 12"
-              stroke={`url(#${gradientId})`}
-              strokeWidth="2.5"
-              fill="none"
-              strokeLinecap="round"
+            <rect
+              x="11"
+              y="14"
+              width="1"
+              height="14"
+              fill={seasonalColors.accent}
             />
-
-            {/* Центральные высокие стебли */}
-            <path
-              d="M20 38 Q18 22 17 8"
-              stroke={`url(#${gradientId})`}
-              strokeWidth="3"
-              fill="none"
-              strokeLinecap="round"
+            <rect
+              x="11"
+              y="12"
+              width="2"
+              height="2"
+              fill={seasonalColors.accent}
             />
-            <path
-              d="M20 38 Q22 25 23 12"
-              stroke={`url(#${gradientId})`}
-              strokeWidth="2.5"
-              fill="none"
-              strokeLinecap="round"
+            <rect
+              x="12"
+              y="10"
+              width="1"
+              height="2"
+              fill={seasonalColors.accent}
             />
 
-            {/* Короткие стебли */}
-            <path
-              d="M11 38 Q12 32 13 28"
-              stroke={`url(#${gradientId})`}
-              strokeWidth="1.5"
-              fill="none"
-              strokeLinecap="round"
+            {/* Right tall blade */}
+            <rect
+              x="19"
+              y="12"
+              width="2"
+              height="16"
+              fill={seasonalColors.secondary}
             />
-            <path
-              d="M29 38 Q28 34 27 30"
-              stroke={`url(#${gradientId})`}
-              strokeWidth="1.5"
-              fill="none"
-              strokeLinecap="round"
+            <rect
+              x="19"
+              y="12"
+              width="1"
+              height="16"
+              fill={seasonalColors.accent}
+            />
+            <rect
+              x="19"
+              y="10"
+              width="2"
+              height="2"
+              fill={seasonalColors.accent}
+            />
+            <rect
+              x="20"
+              y="8"
+              width="1"
+              height="2"
+              fill={seasonalColors.accent}
+            />
+
+            {/* Medium blades */}
+            <rect
+              x="8"
+              y="18"
+              width="1"
+              height="10"
+              fill={seasonalColors.primary}
+            />
+            <rect
+              x="13"
+              y="16"
+              width="1"
+              height="12"
+              fill={seasonalColors.secondary}
+            />
+            <rect
+              x="18"
+              y="15"
+              width="1"
+              height="13"
+              fill={seasonalColors.primary}
+            />
+            <rect
+              x="23"
+              y="20"
+              width="1"
+              height="8"
+              fill={seasonalColors.secondary}
+            />
+
+            {/* Short blades */}
+            <rect
+              x="7"
+              y="22"
+              width="1"
+              height="6"
+              fill={seasonalColors.secondary}
+            />
+            <rect
+              x="9"
+              y="21"
+              width="1"
+              height="7"
+              fill={seasonalColors.primary}
+            />
+            <rect
+              x="22"
+              y="19"
+              width="1"
+              height="9"
+              fill={seasonalColors.secondary}
+            />
+            <rect
+              x="24"
+              y="23"
+              width="1"
+              height="5"
+              fill={seasonalColors.primary}
+            />
+            <rect
+              x="6"
+              y="24"
+              width="1"
+              height="4"
+              fill={seasonalColors.accent}
+            />
+            <rect
+              x="25"
+              y="25"
+              width="1"
+              height="3"
+              fill={seasonalColors.accent}
+            />
+
+            {/* Grass highlights */}
+            <rect
+              x="15"
+              y="10"
+              width="1"
+              height="8"
+              fill="#ffffff"
+              opacity="0.6"
+            />
+            <rect
+              x="11"
+              y="14"
+              width="1"
+              height="6"
+              fill="#ffffff"
+              opacity="0.5"
+            />
+            <rect
+              x="19"
+              y="12"
+              width="1"
+              height="7"
+              fill="#ffffff"
+              opacity="0.5"
             />
           </motion.g>
         )}
 
-        {/* Сезонные декорации */}
-        {getSeasonalDecorations()}
+        {/* Seasonal decorations */}
+        {season === SeasonalVariant.SPRING && (
+          <motion.g
+            animate={{
+              scale: [0, 1, 0],
+              opacity: [0, 1, 0],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              delay: 2,
+            }}
+          >
+            {/* Dew drops */}
+            <rect
+              x="12"
+              y="16"
+              width="1"
+              height="1"
+              fill="#06b6d4"
+              opacity="0.8"
+            />
+            <rect
+              x="20"
+              y="18"
+              width="1"
+              height="1"
+              fill="#06b6d4"
+              opacity="0.7"
+            />
+            <rect
+              x="16"
+              y="14"
+              width="1"
+              height="1"
+              fill="#06b6d4"
+              opacity="0.9"
+            />
+          </motion.g>
+        )}
 
-        {/* Премиум эффекты */}
-        {rarity === RarityLevel.EPIC && (
+        {season === SeasonalVariant.SUMMER && (
           <motion.g
             animate={{
               opacity: [0.5, 1, 0.5],
-              transition: { duration: 2, repeat: Infinity },
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              delay: 2,
             }}
           >
-            <circle cx="17" cy="8" r="1" fill="#a855f7" opacity="0.6" />
-            <circle cx="23" cy="12" r="0.8" fill="#a855f7" opacity="0.4" />
+            {/* Sun highlights */}
+            <rect
+              x="14"
+              y="8"
+              width="1"
+              height="1"
+              fill="#fbbf24"
+              opacity="0.8"
+            />
+            <rect
+              x="18"
+              y="10"
+              width="1"
+              height="1"
+              fill="#fbbf24"
+              opacity="0.7"
+            />
+            <rect
+              x="21"
+              y="14"
+              width="1"
+              height="1"
+              fill="#fbbf24"
+              opacity="0.6"
+            />
           </motion.g>
         )}
 
-        {rarity === RarityLevel.LEGENDARY && (
+        {season === SeasonalVariant.AUTUMN && (
           <motion.g
             animate={{
-              rotate: [0, 360],
-              transition: { duration: 8, repeat: Infinity, ease: 'linear' },
+              y: [0, 10],
+              opacity: [1, 0],
             }}
-            style={{ transformOrigin: '20px 20px' }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              delay: 2,
+              stagger: 0.3,
+            }}
           >
-            <circle cx="15" cy="10" r="1.5" fill="#f59e0b" opacity="0.8" />
-            <circle cx="25" cy="15" r="1" fill="#f59e0b" opacity="0.6" />
-            <circle cx="20" cy="8" r="1.2" fill="#fbbf24" opacity="0.7" />
+            {/* Dry leaves falling */}
+            <rect x="10" y="20" width="1" height="1" fill="#dc2626" />
+            <rect x="17" y="22" width="1" height="1" fill="#f59e0b" />
+            <rect x="21" y="24" width="1" height="1" fill="#ea580c" />
           </motion.g>
         )}
-      </svg>
+
+        {season === SeasonalVariant.WINTER && (
+          <motion.g
+            animate={{
+              opacity: [0.7, 1, 0.7],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              delay: 2,
+            }}
+          >
+            {/* Frost on grass tips */}
+            <rect
+              x="15"
+              y="6"
+              width="2"
+              height="1"
+              fill="#ffffff"
+              opacity="0.9"
+            />
+            <rect
+              x="11"
+              y="10"
+              width="2"
+              height="1"
+              fill="#ffffff"
+              opacity="0.8"
+            />
+            <rect
+              x="19"
+              y="8"
+              width="2"
+              height="1"
+              fill="#ffffff"
+              opacity="0.9"
+            />
+            <rect
+              x="8"
+              y="18"
+              width="1"
+              height="1"
+              fill="#ffffff"
+              opacity="0.7"
+            />
+            <rect
+              x="23"
+              y="20"
+              width="1"
+              height="1"
+              fill="#ffffff"
+              opacity="0.7"
+            />
+          </motion.g>
+        )}
+
+        {/* Swaying animation */}
+        <motion.g
+          animate={{
+            rotate: [-0.5, 0.5, -0.5],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+          style={{
+            transformOrigin: '16px 28px',
+          }}
+        >
+          {/* Wind effect on grass tips */}
+          {!isMoss &&
+            Array.from({ length: 5 }, (_, i) => {
+              const positions = [
+                { x: 15, y: 8 },
+                { x: 11, y: 12 },
+                { x: 19, y: 10 },
+                { x: 13, y: 16 },
+                { x: 18, y: 15 },
+              ]
+              const pos = positions[i]
+              if (!pos) return null
+
+              return (
+                <motion.rect
+                  key={`tip-${i}`}
+                  x={pos.x}
+                  y={pos.y}
+                  width="1"
+                  height="2"
+                  fill={seasonalColors.accent}
+                  opacity="0.8"
+                  animate={{
+                    x: [pos.x, pos.x + 0.5, pos.x - 0.5, pos.x],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    delay: i * 0.2,
+                    ease: 'easeInOut',
+                  }}
+                />
+              )
+            })}
+        </motion.g>
+
+        {/* Magical effects for rare grass */}
+        {rarity !== RarityLevel.COMMON && (
+          <motion.g
+            animate={{
+              opacity: [0.5, 1, 0.5],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              delay: 2,
+            }}
+          >
+            {/* Magic sparkles */}
+            <rect
+              x="6"
+              y="20"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.8"
+            />
+            <rect
+              x="26"
+              y="22"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.8"
+            />
+            <rect
+              x="16"
+              y="5"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.9"
+            />
+            {!isMoss && (
+              <>
+                <rect
+                  x="12"
+                  y="9"
+                  width="1"
+                  height="1"
+                  fill={getRarityGlow()}
+                  opacity="0.8"
+                />
+                <rect
+                  x="20"
+                  y="7"
+                  width="1"
+                  height="1"
+                  fill={getRarityGlow()}
+                  opacity="0.8"
+                />
+              </>
+            )}
+          </motion.g>
+        )}
+
+        {/* Legendary effects */}
+        {rarity === RarityLevel.LEGENDARY && (
+          <motion.g>
+            {/* Magical growth energy */}
+            {!isMoss && (
+              <motion.rect
+                x="15"
+                y="24"
+                width="2"
+                height="2"
+                fill="#fbbf24"
+                opacity="0.6"
+                animate={{
+                  opacity: [0.3, 0.8, 0.3],
+                  scale: [1, 1.2, 1],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  delay: 3,
+                }}
+              />
+            )}
+
+            {/* Legendary sparkles */}
+            {Array.from({ length: 4 }, (_, i) => {
+              const positions = isMoss
+                ? [
+                    { x: 5, y: 24 },
+                    { x: 27, y: 26 },
+                    { x: 14, y: 21 },
+                    { x: 18, y: 23 },
+                  ]
+                : [
+                    { x: 5, y: 18 },
+                    { x: 27, y: 20 },
+                    { x: 14, y: 4 },
+                    { x: 22, y: 6 },
+                  ]
+              const pos = positions[i]
+              if (!pos) return null
+
+              return (
+                <motion.rect
+                  key={`legendary-sparkle-${i}`}
+                  x={pos.x}
+                  y={pos.y}
+                  width="1"
+                  height="1"
+                  fill="#ffffff"
+                  animate={{
+                    opacity: [0, 1, 0],
+                    scale: [0, 1, 0],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    delay: 3.5 + i * 0.3,
+                  }}
+                />
+              )
+            })}
+          </motion.g>
+        )}
+
+        {/* Growth particles for epic/legendary */}
+        {(rarity === RarityLevel.EPIC || rarity === RarityLevel.LEGENDARY) && (
+          <motion.g>
+            {Array.from({ length: 3 }, (_, i) => (
+              <motion.rect
+                key={`particle-${i}`}
+                x={12 + i * 4}
+                y={isMoss ? 20 : 12}
+                width="1"
+                height="1"
+                fill={getRarityGlow()}
+                animate={{
+                  y: [isMoss ? 20 : 12, isMoss ? 15 : 5, isMoss ? 20 : 12],
+                  opacity: [0, 1, 0],
+                  scale: [0.5, 1, 0.5],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  delay: 4 + i * 0.5,
+                  ease: 'easeOut',
+                }}
+              />
+            ))}
+          </motion.g>
+        )}
+      </motion.svg>
+
+      {/* Magical aura */}
+      {rarity !== RarityLevel.COMMON && (
+        <motion.div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: `radial-gradient(circle, ${getRarityGlow()}15 0%, transparent 70%)`,
+          }}
+          animate={{
+            scale: [1, 1.1, 1],
+            opacity: [0.2, 0.4, 0.2],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+      )}
     </motion.div>
   )
 }

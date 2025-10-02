@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { useId } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
 
 interface TreeSVGProps {
@@ -21,13 +20,16 @@ export function TreeSVG({
   isHovered: _isHovered = false,
   name = 'Tree',
 }: TreeSVGProps) {
-  const uniqueId = useId()
-  const gradientId = `tree-${uniqueId}`
-
   // Определяем тип дерева по имени
   const isSprout = name === 'Росток'
   const isBranch = name === 'Веточка'
   const isSapling = name === 'Саженец'
+  const isTreeOfLife =
+    name?.toLowerCase().includes('древо жизни') ||
+    name?.toLowerCase().includes('tree of life')
+  const isAuroraTree =
+    name?.toLowerCase().includes('дерево авроры') ||
+    name?.toLowerCase().includes('aurora tree')
 
   const getRarityGlow = () => {
     switch (rarity) {
@@ -81,25 +83,523 @@ export function TreeSVG({
 
   const seasonalColors = getSeasonalColors()
 
+  // Пиксельное дерево в зависимости от типа
+  if (isSprout) {
+    return (
+      <motion.div
+        className="pixel-container relative flex items-center justify-center"
+        style={{ width: size, height: size }}
+        initial={{ scale: 0 }}
+        animate={{
+          scale: 1,
+          filter: isSelected
+            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            : 'none',
+        }}
+        whileHover={{
+          scale: 1.1,
+          y: -2,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 300,
+          damping: 20,
+        }}
+      >
+        <motion.svg
+          width={size}
+          height={size}
+          viewBox="0 0 32 32"
+          className="pixel-svg overflow-visible"
+          style={{
+            imageRendering: 'pixelated',
+            shapeRendering: 'crispEdges',
+          }}
+        >
+          {/* Shadow */}
+          <motion.ellipse
+            cx="16"
+            cy="30"
+            rx="3"
+            ry="1"
+            fill="#000000"
+            opacity="0.3"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          />
+
+          {/* Small sprout */}
+          <motion.g
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+          >
+            {/* Tiny stem */}
+            <rect
+              x="15"
+              y="26"
+              width="2"
+              height="4"
+              fill={seasonalColors.trunk}
+            />
+            <rect x="15" y="26" width="1" height="4" fill="#a0785a" />
+
+            {/* Small leaves */}
+            <rect
+              x="13"
+              y="24"
+              width="2"
+              height="2"
+              fill={seasonalColors.leaves}
+            />
+            <rect
+              x="17"
+              y="25"
+              width="2"
+              height="2"
+              fill={seasonalColors.leaves}
+            />
+            <rect
+              x="15"
+              y="22"
+              width="2"
+              height="2"
+              fill={seasonalColors.accent}
+            />
+
+            {/* Leaf highlights */}
+            <rect
+              x="13"
+              y="24"
+              width="1"
+              height="1"
+              fill="#ffffff"
+              opacity="0.6"
+            />
+            <rect
+              x="17"
+              y="25"
+              width="1"
+              height="1"
+              fill="#ffffff"
+              opacity="0.6"
+            />
+            <rect
+              x="15"
+              y="22"
+              width="1"
+              height="1"
+              fill="#ffffff"
+              opacity="0.7"
+            />
+          </motion.g>
+
+          {/* Sparkles for rare sprouts */}
+          {rarity !== RarityLevel.COMMON && (
+            <motion.g
+              animate={{
+                opacity: [0.5, 1, 0.5],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: 1,
+              }}
+            >
+              <rect
+                x="12"
+                y="21"
+                width="1"
+                height="1"
+                fill={getRarityGlow()}
+                opacity="0.8"
+              />
+              <rect
+                x="19"
+                y="23"
+                width="1"
+                height="1"
+                fill={getRarityGlow()}
+                opacity="0.8"
+              />
+            </motion.g>
+          )}
+        </motion.svg>
+      </motion.div>
+    )
+  }
+
+  if (isBranch) {
+    return (
+      <motion.div
+        className="pixel-container relative flex items-center justify-center"
+        style={{ width: size, height: size }}
+        initial={{ scale: 0 }}
+        animate={{
+          scale: 1,
+          filter: isSelected
+            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            : 'none',
+        }}
+        whileHover={{
+          scale: 1.1,
+          y: -2,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 300,
+          damping: 20,
+        }}
+      >
+        <motion.svg
+          width={size}
+          height={size}
+          viewBox="0 0 32 32"
+          className="pixel-svg overflow-visible"
+          style={{
+            imageRendering: 'pixelated',
+            shapeRendering: 'crispEdges',
+          }}
+        >
+          {/* Shadow */}
+          <motion.ellipse
+            cx="16"
+            cy="30"
+            rx="4"
+            ry="1.5"
+            fill="#000000"
+            opacity="0.3"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          />
+
+          {/* Branch sapling */}
+          <motion.g
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+          >
+            {/* Main stem */}
+            <rect
+              x="15"
+              y="20"
+              width="2"
+              height="10"
+              fill={seasonalColors.trunk}
+            />
+            <rect x="15" y="20" width="1" height="10" fill="#a0785a" />
+
+            {/* Side branches */}
+            <rect
+              x="13"
+              y="22"
+              width="2"
+              height="1"
+              fill={seasonalColors.trunk}
+            />
+            <rect
+              x="17"
+              y="24"
+              width="2"
+              height="1"
+              fill={seasonalColors.trunk}
+            />
+
+            {/* Leaf clusters */}
+            <rect
+              x="11"
+              y="20"
+              width="3"
+              height="3"
+              fill={seasonalColors.leaves}
+            />
+            <rect
+              x="18"
+              y="22"
+              width="3"
+              height="3"
+              fill={seasonalColors.leaves}
+            />
+            <rect
+              x="14"
+              y="18"
+              width="4"
+              height="3"
+              fill={seasonalColors.accent}
+            />
+
+            {/* Leaf highlights */}
+            <rect
+              x="11"
+              y="20"
+              width="1"
+              height="2"
+              fill="#ffffff"
+              opacity="0.5"
+            />
+            <rect
+              x="18"
+              y="22"
+              width="1"
+              height="2"
+              fill="#ffffff"
+              opacity="0.5"
+            />
+            <rect
+              x="14"
+              y="18"
+              width="2"
+              height="1"
+              fill="#ffffff"
+              opacity="0.6"
+            />
+          </motion.g>
+
+          {/* Magic effects for rare branches */}
+          {rarity !== RarityLevel.COMMON && (
+            <motion.g
+              animate={{
+                opacity: [0.5, 1, 0.5],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: 1,
+              }}
+            >
+              <rect
+                x="10"
+                y="19"
+                width="1"
+                height="1"
+                fill={getRarityGlow()}
+                opacity="0.8"
+              />
+              <rect
+                x="21"
+                y="21"
+                width="1"
+                height="1"
+                fill={getRarityGlow()}
+                opacity="0.8"
+              />
+              <rect
+                x="16"
+                y="17"
+                width="1"
+                height="1"
+                fill={getRarityGlow()}
+                opacity="0.8"
+              />
+            </motion.g>
+          )}
+        </motion.svg>
+      </motion.div>
+    )
+  }
+
+  if (isSapling) {
+    return (
+      <motion.div
+        className="pixel-container relative flex items-center justify-center"
+        style={{ width: size, height: size }}
+        initial={{ scale: 0 }}
+        animate={{
+          scale: 1,
+          filter: isSelected
+            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            : 'none',
+        }}
+        whileHover={{
+          scale: 1.1,
+          y: -2,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 300,
+          damping: 20,
+        }}
+      >
+        <motion.svg
+          width={size}
+          height={size}
+          viewBox="0 0 32 32"
+          className="pixel-svg overflow-visible"
+          style={{
+            imageRendering: 'pixelated',
+            shapeRendering: 'crispEdges',
+          }}
+        >
+          {/* Shadow */}
+          <motion.ellipse
+            cx="16"
+            cy="30"
+            rx="5"
+            ry="2"
+            fill="#000000"
+            opacity="0.3"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          />
+
+          {/* Young sapling */}
+          <motion.g
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+          >
+            {/* Trunk */}
+            <rect
+              x="14"
+              y="18"
+              width="4"
+              height="12"
+              fill={seasonalColors.trunk}
+            />
+            <rect x="14" y="18" width="2" height="12" fill="#a0785a" />
+            <rect x="16" y="18" width="2" height="12" fill="#6b4423" />
+
+            {/* Small crown */}
+            <rect
+              x="10"
+              y="14"
+              width="12"
+              height="6"
+              fill={seasonalColors.leaves}
+            />
+            <rect
+              x="12"
+              y="12"
+              width="8"
+              height="2"
+              fill={seasonalColors.leaves}
+            />
+            <rect
+              x="14"
+              y="10"
+              width="4"
+              height="2"
+              fill={seasonalColors.accent}
+            />
+
+            {/* Crown highlights */}
+            <rect
+              x="10"
+              y="14"
+              width="4"
+              height="3"
+              fill="#ffffff"
+              opacity="0.4"
+            />
+            <rect
+              x="12"
+              y="12"
+              width="3"
+              height="2"
+              fill="#ffffff"
+              opacity="0.5"
+            />
+            <rect
+              x="14"
+              y="10"
+              width="2"
+              height="2"
+              fill="#ffffff"
+              opacity="0.6"
+            />
+
+            {/* Crown shadows */}
+            <rect
+              x="18"
+              y="17"
+              width="4"
+              height="3"
+              fill="#000000"
+              opacity="0.2"
+            />
+            <rect
+              x="16"
+              y="15"
+              width="6"
+              height="2"
+              fill="#000000"
+              opacity="0.15"
+            />
+          </motion.g>
+
+          {/* Magic effects */}
+          {rarity !== RarityLevel.COMMON && (
+            <motion.g
+              animate={{
+                opacity: [0.5, 1, 0.5],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: 1,
+              }}
+            >
+              <rect
+                x="9"
+                y="13"
+                width="1"
+                height="1"
+                fill={getRarityGlow()}
+                opacity="0.8"
+              />
+              <rect
+                x="22"
+                y="15"
+                width="1"
+                height="1"
+                fill={getRarityGlow()}
+                opacity="0.8"
+              />
+              <rect
+                x="15"
+                y="9"
+                width="1"
+                height="1"
+                fill={getRarityGlow()}
+                opacity="0.8"
+              />
+              <rect
+                x="17"
+                y="11"
+                width="1"
+                height="1"
+                fill={getRarityGlow()}
+                opacity="0.8"
+              />
+            </motion.g>
+          )}
+        </motion.svg>
+      </motion.div>
+    )
+  }
+
+  // Взрослое дерево (по умолчанию)
   return (
     <motion.div
-      className="relative flex items-center justify-center"
+      className="pixel-container relative flex items-center justify-center"
       style={{ width: size, height: size }}
-      initial={{ scale: 0, y: 20 }}
+      initial={{ scale: 0 }}
       animate={{
         scale: 1,
-        y: 0,
         filter: isSelected
           ? `drop-shadow(0 0 20px ${getRarityGlow()})`
           : 'none',
       }}
       whileHover={{
-        scale: 1.05,
-        y: -3,
+        scale: 1.1,
+        y: -2,
       }}
       transition={{
         type: 'spring',
-        stiffness: 200,
+        stiffness: 300,
         damping: 20,
       }}
     >
@@ -134,401 +634,398 @@ export function TreeSVG({
       <motion.svg
         width={size}
         height={size}
-        viewBox="0 0 100 100"
-        className="overflow-visible"
+        viewBox="0 0 32 32"
+        className="pixel-svg overflow-visible"
+        style={{
+          imageRendering: 'pixelated',
+          shapeRendering: 'crispEdges',
+        }}
       >
-        <defs>
-          {/* Trunk gradient */}
-          <linearGradient
-            id={`${gradientId}-trunk`}
-            x1="0%"
-            y1="0%"
-            x2="100%"
-            y2="0%"
-          >
-            <stop
-              offset="0%"
-              style={{ stopColor: '#92400e', stopOpacity: 1 }}
-            />
-            <stop
-              offset="50%"
-              style={{ stopColor: '#a16207', stopOpacity: 1 }}
-            />
-            <stop
-              offset="100%"
-              style={{ stopColor: '#78350f', stopOpacity: 1 }}
-            />
-          </linearGradient>
+        {/* Shadow */}
+        <motion.ellipse
+          cx="16"
+          cy="30"
+          rx="8"
+          ry="2"
+          fill="#000000"
+          opacity="0.4"
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        />
 
-          {/* Leaves gradient */}
-          <radialGradient id={`${gradientId}-leaves`} cx="50%" cy="50%" r="60%">
-            <stop
-              offset="0%"
-              style={{ stopColor: '#22c55e', stopOpacity: 1 }}
-            />
-            <stop
-              offset="60%"
-              style={{ stopColor: '#16a34a', stopOpacity: 0.9 }}
-            />
-            <stop
-              offset="100%"
-              style={{ stopColor: '#15803d', stopOpacity: 0.8 }}
-            />
-          </radialGradient>
+        {/* Tree trunk */}
+        <motion.g
+          initial={{ scaleY: 0 }}
+          animate={{ scaleY: 1 }}
+          transition={{ duration: 1, delay: 0.4 }}
+        >
+          {/* Main trunk */}
+          <rect
+            x="13"
+            y="16"
+            width="6"
+            height="14"
+            fill={seasonalColors.trunk}
+          />
 
-          {/* Shadow filter */}
-          <filter id={`${gradientId}-shadow`}>
-            <feDropShadow
-              dx="0"
-              dy="4"
-              stdDeviation="4"
-              floodColor="#000"
-              floodOpacity="0.2"
-            />
-          </filter>
-        </defs>
+          {/* Trunk highlights */}
+          <rect x="13" y="16" width="3" height="14" fill="#a0785a" />
 
-        {/* Рендер в зависимости от типа дерева */}
-        {isSprout ? (
-          // РОСТОК - маленький, простой, только начинающий расти
+          {/* Trunk shadows */}
+          <rect x="16" y="16" width="3" height="14" fill="#6b4423" />
+
+          {/* Trunk texture */}
+          <rect
+            x="14"
+            y="20"
+            width="4"
+            height="1"
+            fill="#654321"
+            opacity="0.6"
+          />
+          <rect
+            x="14"
+            y="24"
+            width="4"
+            height="1"
+            fill="#654321"
+            opacity="0.6"
+          />
+          <rect
+            x="14"
+            y="28"
+            width="4"
+            height="1"
+            fill="#654321"
+            opacity="0.6"
+          />
+
+          {/* Trunk highlights */}
+          <rect
+            x="13"
+            y="18"
+            width="1"
+            height="8"
+            fill="#b8946f"
+            opacity="0.8"
+          />
+        </motion.g>
+
+        {/* Tree crown - детализированная крона */}
+        <motion.g
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
+        >
+          {/* Main crown body */}
+          <rect
+            x="6"
+            y="8"
+            width="20"
+            height="12"
+            fill={seasonalColors.leaves}
+          />
+
+          {/* Crown rounded top */}
+          <rect
+            x="8"
+            y="6"
+            width="16"
+            height="2"
+            fill={seasonalColors.leaves}
+          />
+          <rect
+            x="10"
+            y="4"
+            width="12"
+            height="2"
+            fill={seasonalColors.leaves}
+          />
+          <rect
+            x="12"
+            y="2"
+            width="8"
+            height="2"
+            fill={seasonalColors.accent}
+          />
+
+          {/* Crown left highlight */}
+          <rect x="6" y="8" width="8" height="6" fill="#ffffff" opacity="0.3" />
+          <rect x="8" y="6" width="6" height="2" fill="#ffffff" opacity="0.4" />
+          <rect
+            x="10"
+            y="4"
+            width="4"
+            height="2"
+            fill="#ffffff"
+            opacity="0.5"
+          />
+          <rect
+            x="12"
+            y="2"
+            width="3"
+            height="2"
+            fill="#ffffff"
+            opacity="0.6"
+          />
+
+          {/* Crown right shadow */}
+          <rect
+            x="18"
+            y="8"
+            width="8"
+            height="12"
+            fill="#000000"
+            opacity="0.2"
+          />
+          <rect
+            x="18"
+            y="6"
+            width="6"
+            height="2"
+            fill="#000000"
+            opacity="0.15"
+          />
+          <rect
+            x="17"
+            y="4"
+            width="5"
+            height="2"
+            fill="#000000"
+            opacity="0.1"
+          />
+
+          {/* Crown details and texture */}
+          <rect
+            x="9"
+            y="10"
+            width="2"
+            height="2"
+            fill={seasonalColors.accent}
+            opacity="0.8"
+          />
+          <rect
+            x="21"
+            y="12"
+            width="2"
+            height="2"
+            fill={seasonalColors.accent}
+            opacity="0.8"
+          />
+          <rect
+            x="14"
+            y="6"
+            width="2"
+            height="2"
+            fill={seasonalColors.accent}
+            opacity="0.9"
+          />
+          <rect
+            x="7"
+            y="16"
+            width="2"
+            height="2"
+            fill={seasonalColors.accent}
+            opacity="0.7"
+          />
+        </motion.g>
+
+        {/* Seasonal decorations */}
+        {season === SeasonalVariant.AUTUMN && (
           <motion.g
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+            animate={{
+              y: [0, 20],
+              opacity: [1, 0],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              delay: 2,
+              stagger: 0.5,
+            }}
           >
-            {/* Простой тонкий стебель */}
-            <motion.rect
-              x="48"
-              y="60"
-              width="4"
-              height="25"
-              fill={seasonalColors.trunk}
-              rx="2"
-              initial={{ scaleY: 0 }}
-              animate={{ scaleY: 1 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              style={{ transformOrigin: 'center bottom' }}
+            {/* Falling leaves */}
+            <rect x="12" y="20" width="1" height="1" fill="#ea580c" />
+            <rect x="18" y="22" width="1" height="1" fill="#f59e0b" />
+            <rect x="10" y="24" width="1" height="1" fill="#dc2626" />
+          </motion.g>
+        )}
+
+        {season === SeasonalVariant.SPRING && (
+          <motion.g
+            animate={{
+              scale: [0, 1, 0],
+              opacity: [0, 1, 0],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              delay: 2,
+            }}
+          >
+            {/* Spring flowers on tree */}
+            <rect x="11" y="9" width="1" height="1" fill="#f8fafc" />
+            <rect x="19" y="11" width="1" height="1" fill="#f8fafc" />
+            <rect x="15" y="7" width="1" height="1" fill="#f8fafc" />
+            <rect x="8" y="14" width="1" height="1" fill="#f8fafc" />
+          </motion.g>
+        )}
+
+        {season === SeasonalVariant.WINTER && (
+          <motion.g
+            animate={{
+              opacity: [0.7, 1, 0.7],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              delay: 2,
+            }}
+          >
+            {/* Snow on branches */}
+            <rect
+              x="8"
+              y="8"
+              width="16"
+              height="1"
+              fill="#ffffff"
+              opacity="0.9"
             />
-
-            {/* Несколько маленьких листочков */}
-            <motion.g
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-            >
-              <circle cx="50" cy="58" r="3" fill={seasonalColors.leaves} />
-              <circle
-                cx="46"
-                cy="60"
-                r="2"
-                fill={seasonalColors.accent}
-                opacity="0.8"
-              />
-              <circle
-                cx="54"
-                cy="62"
-                r="2.5"
-                fill={seasonalColors.leaves}
-                opacity="0.9"
-              />
-            </motion.g>
-
-            {/* Росток из земли */}
-            <ellipse
-              cx="50"
-              cy="85"
-              rx="6"
-              ry="2"
-              fill={seasonalColors.trunk}
-              opacity="0.3"
+            <rect
+              x="10"
+              y="4"
+              width="12"
+              height="1"
+              fill="#ffffff"
+              opacity="0.9"
+            />
+            <rect
+              x="12"
+              y="2"
+              width="8"
+              height="1"
+              fill="#ffffff"
+              opacity="0.9"
+            />
+            <rect
+              x="6"
+              y="12"
+              width="20"
+              height="1"
+              fill="#ffffff"
+              opacity="0.8"
             />
           </motion.g>
-        ) : isBranch ? (
-          // ВЕТОЧКА - тонкая, изогнутая, с листьями
+        )}
+
+        {/* Magical effects for rare trees */}
+        {rarity !== RarityLevel.COMMON && (
           <motion.g
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+            animate={{
+              opacity: [0.5, 1, 0.5],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              delay: 2,
+            }}
           >
-            {/* Изогнутая веточка */}
-            <motion.path
-              d="M20 80 Q30 70 40 65 Q50 60 60 58 Q70 56 80 55"
-              stroke={seasonalColors.trunk}
-              strokeWidth="4"
-              fill="none"
-              strokeLinecap="round"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 1, delay: 0.2 }}
+            {/* Magical leaves */}
+            <rect
+              x="5"
+              y="10"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.8"
             />
-
-            {/* Боковые веточки */}
-            <motion.path
-              d="M35 67 Q30 63 25 65"
-              stroke={seasonalColors.trunk}
-              strokeWidth="2"
-              fill="none"
-              strokeLinecap="round"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 0.5, delay: 0.8 }}
+            <rect
+              x="26"
+              y="13"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.8"
             />
-            <motion.path
-              d="M55 59 Q60 55 65 57"
-              stroke={seasonalColors.trunk}
-              strokeWidth="2"
-              fill="none"
-              strokeLinecap="round"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 0.5, delay: 1 }}
+            <rect
+              x="13"
+              y="1"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.8"
             />
-
-            {/* Листья на веточке */}
-            <motion.g
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 1.2 }}
-            >
-              <circle cx="25" cy="65" r="3" fill={seasonalColors.leaves} />
-              <circle cx="40" cy="65" r="2.5" fill={seasonalColors.accent} />
-              <circle cx="65" cy="57" r="3" fill={seasonalColors.leaves} />
-              <circle cx="80" cy="55" r="2" fill={seasonalColors.accent} />
-            </motion.g>
+            <rect
+              x="19"
+              y="3"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.8"
+            />
+            <rect
+              x="9"
+              y="18"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.8"
+            />
           </motion.g>
-        ) : isSapling ? (
-          // САЖЕНЕЦ - молодое дерево, среднего размера
-          <motion.g
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-          >
-            {/* Ствол молодого дерева */}
-            <motion.rect
-              x="47"
-              y="55"
-              width="6"
-              height="35"
-              fill={seasonalColors.trunk}
-              rx="3"
-              initial={{ scaleY: 0 }}
-              animate={{ scaleY: 1 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              style={{ transformOrigin: 'center bottom' }}
-            />
+        )}
 
-            {/* Небольшая крона */}
-            <motion.circle
-              cx="50"
-              cy="50"
-              r="12"
-              fill={seasonalColors.leaves}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
+        {/* Legendary tree effects */}
+        {rarity === RarityLevel.LEGENDARY && (
+          <motion.g>
+            {/* Mystical energy in trunk */}
+            <motion.rect
+              x="15"
+              y="22"
+              width="2"
+              height="4"
+              fill="#fbbf24"
+              opacity="0.7"
+              animate={{
+                opacity: [0.3, 0.9, 0.3],
+                scaleY: [1, 1.2, 1],
+              }}
               transition={{
-                type: 'spring',
-                stiffness: 200,
-                damping: 15,
-                delay: 0.6,
+                duration: 2,
+                repeat: Infinity,
+                delay: 3,
               }}
             />
 
-            {/* Несколько веточек */}
-            <motion.g
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 1 }}
-            >
-              <path
-                d="M47 60 Q40 55 35 58"
-                stroke={seasonalColors.trunk}
-                strokeWidth="2"
-                fill="none"
-                strokeLinecap="round"
-              />
-              <path
-                d="M53 60 Q60 55 65 58"
-                stroke={seasonalColors.trunk}
-                strokeWidth="2"
-                fill="none"
-                strokeLinecap="round"
-              />
-
-              {/* Листья на веточках */}
-              <circle cx="35" cy="58" r="2" fill={seasonalColors.accent} />
-              <circle cx="65" cy="58" r="2" fill={seasonalColors.accent} />
-            </motion.g>
-
-            {/* Акцентные листья */}
-            <motion.g
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 1.2 }}
-            >
-              {Array.from({ length: 6 }, (_, i) => {
-                const angle = i * 60
-                const radius = 8
-                const x = 50 + Math.cos((angle * Math.PI) / 180) * radius
-                const y = 50 + Math.sin((angle * Math.PI) / 180) * radius
-
-                return (
-                  <circle
-                    key={i}
-                    cx={x}
-                    cy={y}
-                    r={1.5}
-                    fill={seasonalColors.accent}
-                    opacity="0.8"
-                  />
-                )
-              })}
-            </motion.g>
-          </motion.g>
-        ) : (
-          // Обычное дерево для остальных случаев
-          <motion.rect
-            x="45"
-            y="45"
-            width="10"
-            height="45"
-            fill={seasonalColors.trunk}
-            rx="2"
-            filter={`url(#${gradientId}-shadow)`}
-            initial={{ scaleY: 0, y: 50 }}
-            animate={{ scaleY: 1, y: 5 }}
-            transition={{ duration: 1, delay: 0.3 }}
-          />
-        )}
-
-        {/* Trunk texture lines */}
-        {Array.from({ length: 6 }, (_, i) => (
-          <motion.line
-            key={i}
-            x1="46"
-            y1={65 + i * 6}
-            x2="54"
-            y2={65 + i * 6}
-            stroke="#78350f"
-            strokeWidth="0.5"
-            opacity="0.6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.6 }}
-            transition={{ delay: 1 + i * 0.1 }}
-          />
-        ))}
-
-        {/* Main crown */}
-        <motion.circle
-          cx="50"
-          cy="45"
-          r="25"
-          fill={`url(#${gradientId}-leaves)`}
-          filter={`url(#${gradientId}-shadow)`}
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{
-            duration: 0.8,
-            delay: 0.6,
-            type: 'spring',
-            stiffness: 150,
-          }}
-        />
-
-        {/* Additional leaf clusters */}
-        <motion.circle
-          cx="35"
-          cy="35"
-          r="15"
-          fill={`url(#${gradientId}-leaves)`}
-          opacity="0.8"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-        />
-
-        <motion.circle
-          cx="65"
-          cy="40"
-          r="12"
-          fill={`url(#${gradientId}-leaves)`}
-          opacity="0.7"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.6, delay: 1.0 }}
-        />
-
-        {/* Swaying leaves animation */}
-        <motion.g
-          animate={{
-            rotate: [-1, 1, -1],
-            transformOrigin: '50 60',
-          }}
-          transition={{
-            duration: 4,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-        >
-          {/* Individual leaves */}
-          {Array.from({ length: 12 }, (_, i) => {
-            const angle = i * 30
-            const radius = 20 + Math.random() * 10
-            const x = 50 + Math.cos((angle * Math.PI) / 180) * radius
-            const y = 45 + Math.sin((angle * Math.PI) / 180) * radius
-
-            return (
-              <motion.ellipse
-                key={i}
-                cx={x}
-                cy={y}
-                rx="3"
-                ry="6"
-                fill="#22c55e"
-                opacity="0.7"
-                transform={`rotate(${angle} ${x} ${y})`}
-                initial={{ scale: 0, rotate: angle - 90 }}
-                animate={{
-                  scale: 1,
-                  rotate: angle,
-                }}
-                transition={{
-                  duration: 0.4,
-                  delay: 1.2 + i * 0.05,
-                }}
-              />
-            )
-          })}
-        </motion.g>
-
-        {/* Fruits for rare trees */}
-        {(rarity === RarityLevel.RARE ||
-          rarity === RarityLevel.EPIC ||
-          rarity === RarityLevel.LEGENDARY) && (
-          <motion.g>
-            {Array.from({ length: 3 }, (_, i) => {
+            {/* Legendary sparkles around crown */}
+            {Array.from({ length: 6 }, (_, i) => {
               const positions = [
-                { x: 40, y: 35 },
-                { x: 60, y: 50 },
-                { x: 45, y: 30 },
+                { x: 4, y: 12 },
+                { x: 28, y: 15 },
+                { x: 15, y: 0 },
+                { x: 11, y: 2 },
+                { x: 21, y: 4 },
+                { x: 16, y: 20 },
               ]
               const pos = positions[i]
               if (!pos) return null
 
               return (
-                <motion.circle
-                  key={i}
-                  cx={pos.x}
-                  cy={pos.y}
-                  r="2.5"
-                  fill="#dc2626"
-                  initial={{ scale: 0 }}
+                <motion.rect
+                  key={`tree-sparkle-${i}`}
+                  x={pos.x}
+                  y={pos.y}
+                  width="1"
+                  height="1"
+                  fill="#ffffff"
                   animate={{
-                    scale: [0, 1.2, 1],
+                    opacity: [0, 1, 0],
+                    scale: [0, 1.5, 0],
                   }}
                   transition={{
-                    duration: 0.6,
-                    delay: 1.5 + i * 0.2,
-                    type: 'spring',
+                    duration: 1.5,
+                    repeat: Infinity,
+                    delay: 3.5 + i * 0.3,
                   }}
                 />
               )
@@ -536,27 +1033,228 @@ export function TreeSVG({
           </motion.g>
         )}
 
-        {/* Magical energy for legendary */}
-        {rarity === RarityLevel.LEGENDARY && (
-          <motion.circle
-            cx="50"
-            cy="45"
-            r="30"
-            fill="none"
-            stroke="#fbbf24"
-            strokeWidth="1"
-            opacity="0.4"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{
-              scale: [1, 1.1, 1],
-              opacity: [0.4, 0.1, 0.4],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              delay: 2,
-            }}
-          />
+        {/* Tree of Life effects (Legendary) */}
+        {isTreeOfLife && (
+          <motion.g>
+            {/* Sacred light emanating from the tree */}
+            <motion.g
+              animate={{
+                opacity: [0.4, 0.8, 0.4],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                delay: 2,
+              }}
+            >
+              {/* Golden light rays */}
+              <rect
+                x="16"
+                y="2"
+                width="1"
+                height="8"
+                fill="#fbbf24"
+                opacity="0.8"
+              />
+              <rect
+                x="2"
+                y="16"
+                width="8"
+                height="1"
+                fill="#fbbf24"
+                opacity="0.8"
+              />
+              <rect
+                x="22"
+                y="16"
+                width="8"
+                height="1"
+                fill="#fbbf24"
+                opacity="0.8"
+              />
+
+              {/* Sacred symbols on trunk */}
+              <rect
+                x="14"
+                y="20"
+                width="4"
+                height="1"
+                fill="#ffffff"
+                opacity="0.9"
+              />
+              <rect
+                x="15"
+                y="19"
+                width="2"
+                height="1"
+                fill="#ffffff"
+                opacity="0.9"
+              />
+              <rect
+                x="15"
+                y="21"
+                width="2"
+                height="1"
+                fill="#ffffff"
+                opacity="0.9"
+              />
+              <rect
+                x="16"
+                y="18"
+                width="1"
+                height="4"
+                fill="#ffffff"
+                opacity="0.9"
+              />
+            </motion.g>
+
+            {/* Life essence particles */}
+            {Array.from({ length: 8 }, (_, i) => {
+              const angle = i * 45
+              const radius = 18
+              const x = 16 + Math.cos((angle * Math.PI) / 180) * radius
+              const y = 16 + Math.sin((angle * Math.PI) / 180) * radius
+
+              return (
+                <motion.rect
+                  key={`life-essence-${i}`}
+                  x={x}
+                  y={y}
+                  width="1"
+                  height="1"
+                  fill="#22c55e"
+                  animate={{
+                    opacity: [0.3, 1, 0.3],
+                    scale: [0.5, 1.5, 0.5],
+                    y: [y, y - 10, y],
+                  }}
+                  transition={{
+                    duration: 4,
+                    repeat: Infinity,
+                    delay: 2.5 + i * 0.2,
+                  }}
+                />
+              )
+            })}
+          </motion.g>
+        )}
+
+        {/* Aurora Tree effects (Premium) */}
+        {isAuroraTree && (
+          <motion.g>
+            {/* Aurora colors flowing through the tree */}
+            <motion.g
+              animate={{
+                opacity: [0.5, 1, 0.5],
+              }}
+              transition={{
+                duration: 2.5,
+                repeat: Infinity,
+                delay: 1.5,
+              }}
+            >
+              {/* Aurora lights in crown */}
+              <rect
+                x="8"
+                y="8"
+                width="2"
+                height="1"
+                fill="#8b5cf6"
+                opacity="0.7"
+              />
+              <rect
+                x="12"
+                y="6"
+                width="2"
+                height="1"
+                fill="#06b6d4"
+                opacity="0.7"
+              />
+              <rect
+                x="18"
+                y="7"
+                width="2"
+                height="1"
+                fill="#ec4899"
+                opacity="0.7"
+              />
+              <rect
+                x="22"
+                y="10"
+                width="2"
+                height="1"
+                fill="#10b981"
+                opacity="0.7"
+              />
+
+              {/* Aurora flowing in trunk */}
+              <motion.rect
+                x="15"
+                y="18"
+                width="2"
+                height="8"
+                fill="#8b5cf6"
+                opacity="0.6"
+                animate={{
+                  fill: ['#8b5cf6', '#06b6d4', '#ec4899', '#10b981', '#8b5cf6'],
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  delay: 2,
+                }}
+              />
+            </motion.g>
+
+            {/* Aurora particles */}
+            {Array.from({ length: 10 }, (_, i) => {
+              const colors = [
+                '#8b5cf6',
+                '#06b6d4',
+                '#ec4899',
+                '#10b981',
+                '#f59e0b',
+              ]
+              const positions = [
+                { x: 6, y: 12 },
+                { x: 26, y: 14 },
+                { x: 4, y: 18 },
+                { x: 28, y: 16 },
+                { x: 10, y: 4 },
+                { x: 22, y: 6 },
+                { x: 8, y: 24 },
+                { x: 24, y: 22 },
+                { x: 2, y: 20 },
+                { x: 30, y: 18 },
+              ]
+              const pos = positions[i]
+              const color = colors[i % colors.length]
+              if (!pos) return null
+
+              return (
+                <motion.rect
+                  key={`aurora-particle-${i}`}
+                  x={pos.x}
+                  y={pos.y}
+                  width="1"
+                  height="1"
+                  fill={color}
+                  animate={{
+                    opacity: [0, 1, 0],
+                    scale: [0.5, 1.2, 0.5],
+                    x: [pos.x, pos.x + (Math.random() - 0.5) * 6, pos.x],
+                    y: [pos.y, pos.y - 5, pos.y],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    delay: 2 + i * 0.2,
+                    ease: 'easeOut',
+                  }}
+                />
+              )
+            })}
+          </motion.g>
         )}
       </motion.svg>
 
@@ -565,14 +1263,14 @@ export function TreeSVG({
         <motion.div
           className="absolute inset-0 rounded-full"
           style={{
-            background: `radial-gradient(circle, ${getRarityGlow()}15 0%, transparent 80%)`,
+            background: `radial-gradient(circle, ${getRarityGlow()}15 0%, transparent 70%)`,
           }}
           animate={{
-            scale: [1, 1.1, 1],
+            scale: [1, 1.15, 1],
             opacity: [0.2, 0.4, 0.2],
           }}
           transition={{
-            duration: 4,
+            duration: 3,
             repeat: Infinity,
             ease: 'easeInOut',
           }}

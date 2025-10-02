@@ -545,23 +545,23 @@ export const useChallengeStore = create<ChallengeStore>()(
 )
 
 // Subscribe to challenge store changes for debugging
-if (process.env['NODE_ENV'] === 'development') {
-  useChallengeStore.subscribe(
-    state => state.challenges,
-    challenges => {
-      console.log('📊 Challenge store - challenges updated:', challenges.length)
-    }
-  )
+// if (process.env['NODE_ENV'] === 'development') {
+//   useChallengeStore.subscribe(
+//     state => state.challenges,
+//     challenges => {
+//       console.log('📊 Challenge store - challenges updated:', challenges.length)
+//     }
+//   )
 
-  useChallengeStore.subscribe(
-    state => state.currentChallenge,
-    currentChallenge => {
-      if (currentChallenge) {
-        console.log(
-          '🎯 Challenge store - current challenge:',
-          currentChallenge.title
-        )
-      }
-    }
-  )
-}
+//   useChallengeStore.subscribe(
+//     state => state.currentChallenge,
+//     currentChallenge => {
+//       if (currentChallenge) {
+//         console.log(
+//           '🎯 Challenge store - current challenge:',
+//           currentChallenge.title
+//         )
+//       }
+//     }
+//   )
+// }

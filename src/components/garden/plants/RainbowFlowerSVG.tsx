@@ -1,12 +1,10 @@
 import { motion } from 'framer-motion'
-import { useId } from 'react'
-import { RarityLevel, SeasonalVariant } from '@/types'
+import { RarityLevel } from '@/types'
 
 interface RainbowFlowerSVGProps {
   size?: number
   color?: string
   rarity?: RarityLevel
-  season?: SeasonalVariant | undefined
   isSelected?: boolean
   isHovered?: boolean
   name?: string
@@ -14,15 +12,12 @@ interface RainbowFlowerSVGProps {
 
 export function RainbowFlowerSVG({
   size = 64,
-  color: _color = '#ff69b4', // Базовый цвет не используется для радужного цветка
-  rarity = RarityLevel.LEGENDARY,
-  season: _season,
+  color = '#ec4899',
+  rarity = RarityLevel.EPIC,
   isSelected = false,
   isHovered: _isHovered = false,
   name: _name = 'Rainbow Flower',
 }: RainbowFlowerSVGProps) {
-  const uniqueId = useId()
-
   const getRarityGlow = () => {
     switch (rarity) {
       case RarityLevel.UNCOMMON:
@@ -34,52 +29,25 @@ export function RainbowFlowerSVG({
       case RarityLevel.LEGENDARY:
         return '#f59e0b'
       default:
-        return '#ff69b4'
+        return color
     }
   }
 
-  // TODO: Добавить сезонные модификации цветов
-  // const getSeasonalColors = () => {
-  //   // Базовые радужные цвета модифицируются по сезонам
-  //   switch (season) {
-  //     case SeasonalVariant.SPRING:
-  //       return {
-  //         primary: ['#ff69b4', '#00ffff', '#ffff00', '#00ff00', '#ff00ff'],
-  //         accent: '#fce7f3',
-  //         intensity: 0.9
-  //       }
-  //     case SeasonalVariant.SUMMER:
-  //       return {
-  //         primary: ['#ff1493', '#1e90ff', '#ffa500', '#32cd32', '#da70d6'],
-  //         accent: '#fef3c7',
-  //         intensity: 1.0
-  //       }
-  //     case SeasonalVariant.AUTUMN:
-  //       return {
-  //         primary: ['#dc2626', '#ea580c', '#f59e0b', '#eab308', '#f97316'],
-  //         accent: '#fed7aa',
-  //         intensity: 0.8
-  //       }
-  //     case SeasonalVariant.WINTER:
-  //       return {
-  //         primary: ['#e0e7ff', '#c7d2fe', '#cbd5e1', '#f1f5f9', '#e2e8f0'],
-  //         accent: '#f8fafc',
-  //         intensity: 0.6
-  //       }
-  //     default:
-  //       return {
-  //         primary: ['#ff69b4', '#00ffff', '#ffff00', '#00ff00', '#ff00ff'],
-  //         accent: '#fce7f3',
-  //         intensity: 0.9
-  //       }
-  //   }
-  // }
-
-  // const seasonalColors = getSeasonalColors() // TODO: использовать для сезонных модификаций цветов
+  // Rainbow colors for petals
+  const rainbowColors = [
+    '#ef4444', // red
+    '#f97316', // orange
+    '#eab308', // yellow
+    '#22c55e', // green
+    '#06b6d4', // cyan
+    '#3b82f6', // blue
+    '#8b5cf6', // purple
+    '#ec4899', // pink
+  ]
 
   return (
     <motion.div
-      className="relative flex items-center justify-center"
+      className="pixel-container relative flex items-center justify-center"
       style={{ width: size, height: size }}
       initial={{ scale: 0, rotate: -45 }}
       animate={{
@@ -89,262 +57,432 @@ export function RainbowFlowerSVG({
           ? `drop-shadow(0 0 25px ${getRarityGlow()})`
           : 'none',
       }}
+      whileHover={{
+        scale: 1.15,
+        y: -5,
+        filter: `drop-shadow(0 10px 30px rgba(236, 72, 153, 0.5))`,
+      }}
       transition={{
         type: 'spring',
-        stiffness: 300,
-        damping: 20,
-        delay: Math.random() * 0.5,
+        stiffness: 200,
+        damping: 15,
       }}
     >
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 40 40"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        style={{
-          shapeRendering: 'geometricPrecision',
-          textRendering: 'geometricPrecision',
-        }}
-      >
-        {/* Градиенты для радужных лепестков */}
-        <defs>
-          <linearGradient
-            id={`rainbow1-${uniqueId}`}
-            x1="0%"
-            y1="0%"
-            x2="100%"
-            y2="100%"
-          >
-            <stop offset="0%" stopColor="#ff69b4" stopOpacity="0.9" />
-            <stop offset="30%" stopColor="#ff1493" stopOpacity="0.8" />
-            <stop offset="70%" stopColor="#ff69b4" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#c71585" stopOpacity="0.6" />
-          </linearGradient>
-          <linearGradient
-            id={`rainbow2-${uniqueId}`}
-            x1="100%"
-            y1="0%"
-            x2="0%"
-            y2="100%"
-          >
-            <stop offset="0%" stopColor="#00ffff" stopOpacity="0.9" />
-            <stop offset="30%" stopColor="#1e90ff" stopOpacity="0.8" />
-            <stop offset="70%" stopColor="#00bfff" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#0080ff" stopOpacity="0.6" />
-          </linearGradient>
-          <linearGradient
-            id={`rainbow3-${uniqueId}`}
-            x1="0%"
-            y1="100%"
-            x2="100%"
-            y2="0%"
-          >
-            <stop offset="0%" stopColor="#ffff00" stopOpacity="0.9" />
-            <stop offset="30%" stopColor="#ffa500" stopOpacity="0.8" />
-            <stop offset="70%" stopColor="#ff8c00" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#ff6347" stopOpacity="0.6" />
-          </linearGradient>
-          <linearGradient
-            id={`rainbow4-${uniqueId}`}
-            x1="100%"
-            y1="100%"
-            x2="0%"
-            y2="0%"
-          >
-            <stop offset="0%" stopColor="#00ff00" stopOpacity="0.9" />
-            <stop offset="30%" stopColor="#32cd32" stopOpacity="0.8" />
-            <stop offset="70%" stopColor="#00ff7f" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#228b22" stopOpacity="0.6" />
-          </linearGradient>
-          <linearGradient
-            id={`rainbow5-${uniqueId}`}
-            x1="50%"
-            y1="0%"
-            x2="50%"
-            y2="100%"
-          >
-            <stop offset="0%" stopColor="#ff00ff" stopOpacity="0.9" />
-            <stop offset="30%" stopColor="#da70d6" stopOpacity="0.8" />
-            <stop offset="70%" stopColor="#dda0dd" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#ba55d3" stopOpacity="0.6" />
-          </linearGradient>
-          <radialGradient id={`center-${uniqueId}`} cx="50%" cy="50%" r="70%">
-            <stop offset="0%" stopColor="#ffd700" stopOpacity="1" />
-            <stop offset="40%" stopColor="#ffb347" stopOpacity="0.9" />
-            <stop offset="70%" stopColor="#ff8c00" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="#ff6347" stopOpacity="0.6" />
-          </radialGradient>
-          <filter id={`glow-${uniqueId}`}>
-            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-            <feColorMatrix
-              type="matrix"
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.7 0"
-              result="softenedBlur"
-            />
-            <feMerge>
-              <feMergeNode in="softenedBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* Стебель */}
-        <motion.path
-          d="M20 35 Q18 30 20 25 Q22 20 20 15"
-          stroke="#4ade80"
-          strokeWidth="2"
-          fill="none"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 1, delay: 0.5 }}
-        />
-
-        {/* Листья */}
-        <motion.ellipse
-          cx="15"
-          cy="25"
-          rx="3"
-          ry="5"
-          fill="#22c55e"
-          transform="rotate(-30 15 25)"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.8 }}
-        />
-        <motion.ellipse
-          cx="25"
-          cy="22"
-          rx="3"
-          ry="5"
-          fill="#22c55e"
-          transform="rotate(30 25 22)"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.9 }}
-        />
-
-        {/* Радужные лепестки с гладкими формами */}
-        <motion.path
-          d="M20 5 Q16 8 16 15 Q16 20 20 18 Q24 20 24 15 Q24 8 20 5 Z"
-          fill={`url(#rainbow1-${uniqueId})`}
-          filter={`url(#glow-${uniqueId})`}
-          initial={{ scale: 0 }}
-          animate={{
-            scale: 1,
-            rotate: [0, 5, -5, 0],
-          }}
-          transition={{
-            scale: { delay: 1, duration: 0.3 },
-            rotate: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
-          }}
-          style={{ transformOrigin: '20px 15px' }}
-        />
-
-        <motion.path
-          d="M28 8 Q31 12 28 18 Q25 22 20 18 Q25 14 28 8 Z"
-          fill={`url(#rainbow2-${uniqueId})`}
-          filter={`url(#glow-${uniqueId})`}
-          initial={{ scale: 0 }}
-          animate={{
-            scale: 1,
-            rotate: [0, 5, -5, 0],
-          }}
-          transition={{
-            scale: { delay: 1.1, duration: 0.3 },
-            rotate: { duration: 3.2, repeat: Infinity, ease: 'easeInOut' },
-          }}
-          style={{ transformOrigin: '20px 15px' }}
-        />
-
-        <motion.path
-          d="M25 25 Q28 29 22 32 Q18 29 20 25 Q22 21 25 25 Z"
-          fill={`url(#rainbow3-${uniqueId})`}
-          filter={`url(#glow-${uniqueId})`}
-          initial={{ scale: 0 }}
-          animate={{
-            scale: 1,
-            rotate: [0, 5, -5, 0],
-          }}
-          transition={{
-            scale: { delay: 1.2, duration: 0.3 },
-            rotate: { duration: 2.8, repeat: Infinity, ease: 'easeInOut' },
-          }}
-          style={{ transformOrigin: '20px 15px' }}
-        />
-
-        <motion.path
-          d="M15 25 Q12 29 18 32 Q22 29 20 25 Q18 21 15 25 Z"
-          fill={`url(#rainbow4-${uniqueId})`}
-          filter={`url(#glow-${uniqueId})`}
-          initial={{ scale: 0 }}
-          animate={{
-            scale: 1,
-            rotate: [0, 5, -5, 0],
-          }}
-          transition={{
-            scale: { delay: 1.3, duration: 0.3 },
-            rotate: { duration: 3.1, repeat: Infinity, ease: 'easeInOut' },
-          }}
-          style={{ transformOrigin: '20px 15px' }}
-        />
-
-        <motion.path
-          d="M12 8 Q9 12 12 18 Q15 22 20 18 Q15 14 12 8 Z"
-          fill={`url(#rainbow5-${uniqueId})`}
-          filter={`url(#glow-${uniqueId})`}
-          initial={{ scale: 0 }}
-          animate={{
-            scale: 1,
-            rotate: [0, 5, -5, 0],
-          }}
-          transition={{
-            scale: { delay: 1.4, duration: 0.3 },
-            rotate: { duration: 2.9, repeat: Infinity, ease: 'easeInOut' },
-          }}
-          style={{ transformOrigin: '20px 15px' }}
-        />
-
-        {/* Сверкающий центр */}
-        <motion.circle
-          cx="20"
-          cy="15"
-          r="3"
-          fill={`url(#center-${uniqueId})`}
-          filter={`url(#glow-${uniqueId})`}
-          initial={{ scale: 0 }}
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.8, 1, 0.8],
-          }}
-          transition={{
-            scale: { delay: 1.5, duration: 0.3 },
-            opacity: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
-          }}
-        />
-
-        {/* Блестящие частицы */}
-        {[...Array(6)].map((_, i) => (
-          <motion.circle
+      {/* Rainbow particles floating */}
+      <div className="pointer-events-none absolute inset-0">
+        {Array.from({ length: 12 }, (_, i) => (
+          <motion.div
             key={i}
-            cx={20 + Math.cos((i * 60 * Math.PI) / 180) * 12}
-            cy={15 + Math.sin((i * 60 * Math.PI) / 180) * 12}
-            r="0.5"
-            fill="#ffffff"
-            initial={{ scale: 0, opacity: 0 }}
+            className="absolute h-1 w-1 rounded-full"
+            style={{
+              background: rainbowColors[i % rainbowColors.length],
+              left: `${20 + Math.random() * 60}%`,
+              top: `${20 + Math.random() * 60}%`,
+            }}
             animate={{
               scale: [0, 1, 0],
               opacity: [0, 1, 0],
+              rotate: [0, 360],
+              y: [0, -20, 0],
             }}
             transition={{
-              duration: 2,
+              duration: 3,
               repeat: Infinity,
-              delay: 2 + i * 0.2,
+              delay: i * 0.2,
               ease: 'easeInOut',
             }}
           />
         ))}
-      </svg>
+      </div>
+
+      <motion.svg
+        width={size}
+        height={size}
+        viewBox="0 0 32 32"
+        className="pixel-svg overflow-visible"
+        style={{
+          imageRendering: 'pixelated',
+          shapeRendering: 'crispEdges',
+        }}
+      >
+        {/* Rainbow shadow */}
+        <motion.ellipse
+          cx="16"
+          cy="30"
+          rx="5"
+          ry="1.5"
+          fill="#000000"
+          opacity="0.4"
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        />
+
+        {/* Rainbow stem */}
+        <motion.g
+          initial={{ scaleY: 0 }}
+          animate={{ scaleY: 1 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+        >
+          {/* Main stem with rainbow gradient effect */}
+          <rect x="15" y="20" width="2" height="8" fill="#22c55e" />
+          <motion.rect
+            x="15"
+            y="20"
+            width="1"
+            height="8"
+            fill="#4ade80"
+            animate={{
+              fill: ['#4ade80', '#fbbf24', '#f59e0b', '#ef4444', '#4ade80'],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              delay: 2,
+            }}
+          />
+        </motion.g>
+
+        {/* Rainbow leaves */}
+        <motion.g
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
+        >
+          {/* Left leaf */}
+          <rect x="12" y="24" width="3" height="2" fill="#22c55e" />
+          <rect x="11" y="25" width="2" height="1" fill="#16a34a" />
+          <motion.rect
+            x="12"
+            y="24"
+            width="1"
+            height="2"
+            fill="#4ade80"
+            animate={{
+              fill: ['#4ade80', '#06b6d4', '#3b82f6', '#4ade80'],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              delay: 2.5,
+            }}
+          />
+
+          {/* Right leaf */}
+          <rect x="17" y="26" width="3" height="2" fill="#22c55e" />
+          <rect x="19" y="27" width="2" height="1" fill="#16a34a" />
+          <motion.rect
+            x="19"
+            y="26"
+            width="1"
+            height="2"
+            fill="#4ade80"
+            animate={{
+              fill: ['#4ade80', '#8b5cf6', '#ec4899', '#4ade80'],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              delay: 3,
+            }}
+          />
+        </motion.g>
+
+        {/* Rainbow flower petals */}
+        <motion.g
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.9 }}
+        >
+          {/* Bottom petal - red */}
+          <rect x="14" y="14" width="4" height="3" fill="#ef4444" />
+          <rect x="15" y="17" width="2" height="1" fill="#ef4444" />
+          <rect
+            x="14"
+            y="14"
+            width="1"
+            height="3"
+            fill="#ffffff"
+            opacity="0.6"
+          />
+
+          {/* Top petal - purple */}
+          <rect x="14" y="8" width="4" height="3" fill="#8b5cf6" />
+          <rect x="15" y="7" width="2" height="1" fill="#8b5cf6" />
+          <rect
+            x="17"
+            y="8"
+            width="1"
+            height="3"
+            fill="#000000"
+            opacity="0.2"
+          />
+
+          {/* Left petal - green */}
+          <rect x="10" y="10" width="3" height="4" fill="#22c55e" />
+          <rect x="9" y="11" width="1" height="2" fill="#22c55e" />
+          <rect
+            x="10"
+            y="10"
+            width="3"
+            height="1"
+            fill="#ffffff"
+            opacity="0.6"
+          />
+
+          {/* Right petal - blue */}
+          <rect x="19" y="10" width="3" height="4" fill="#3b82f6" />
+          <rect x="22" y="11" width="1" height="2" fill="#3b82f6" />
+          <rect
+            x="19"
+            y="13"
+            width="3"
+            height="1"
+            fill="#000000"
+            opacity="0.2"
+          />
+        </motion.g>
+
+        {/* Rainbow flower center */}
+        <motion.g
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.6, delay: 1.2 }}
+        >
+          {/* Center base */}
+          <rect x="14" y="10" width="4" height="4" fill="#fbbf24" />
+
+          {/* Center rainbow cycling */}
+          <motion.rect
+            x="14"
+            y="10"
+            width="2"
+            height="2"
+            fill="#ffffff"
+            animate={{
+              fill: rainbowColors,
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              delay: 2,
+            }}
+          />
+
+          {/* Center shadow */}
+          <rect x="16" y="12" width="2" height="2" fill="#f59e0b" />
+
+          {/* Inner rainbow details */}
+          <motion.rect
+            x="15"
+            y="11"
+            width="1"
+            height="1"
+            fill="#ffffff"
+            animate={{
+              fill: ['#ffffff', ...rainbowColors, '#ffffff'],
+            }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              delay: 2.5,
+            }}
+          />
+          <rect
+            x="16"
+            y="12"
+            width="1"
+            height="1"
+            fill="#ffffff"
+            opacity="0.8"
+          />
+        </motion.g>
+
+        {/* Rainbow shimmer effects */}
+        <motion.g
+          animate={{
+            rotate: [0, 360],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: 'linear',
+          }}
+          style={{
+            transformOrigin: '16px 12px',
+          }}
+        >
+          {Array.from({ length: 8 }, (_, i) => {
+            const angle = i * 45
+            const radius = 10
+            const x = 16 + Math.cos((angle * Math.PI) / 180) * radius
+            const y = 12 + Math.sin((angle * Math.PI) / 180) * radius
+
+            return (
+              <motion.rect
+                key={`shimmer-${i}`}
+                x={x}
+                y={y}
+                width="1"
+                height="1"
+                fill={rainbowColors[i]}
+                animate={{
+                  opacity: [0.3, 1, 0.3],
+                  scale: [0.5, 1.2, 0.5],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  delay: 1.5 + i * 0.25,
+                }}
+              />
+            )
+          })}
+        </motion.g>
+
+        {/* Rainbow petal color cycling */}
+        {Array.from({ length: 4 }, (_, i) => {
+          const petalPositions = [
+            { x: 16, y: 15 }, // bottom
+            { x: 16, y: 9 }, // top
+            { x: 12, y: 12 }, // left
+            { x: 20, y: 12 }, // right
+          ]
+          const pos = petalPositions[i]
+          if (!pos) return null
+
+          return (
+            <motion.rect
+              key={`rainbow-accent-${i}`}
+              x={pos.x}
+              y={pos.y}
+              width="1"
+              height="1"
+              fill={rainbowColors[i * 2]}
+              animate={{
+                fill: rainbowColors,
+                opacity: [0.5, 1, 0.5],
+              }}
+              transition={{
+                fill: { duration: 6, repeat: Infinity },
+                opacity: { duration: 2, repeat: Infinity },
+                delay: 2 + i * 0.5,
+              }}
+            />
+          )
+        })}
+
+        {/* Legendary rainbow effects */}
+        {rarity === RarityLevel.LEGENDARY && (
+          <motion.g>
+            {/* Rainbow trail */}
+            <motion.g
+              animate={{
+                rotate: [0, 360],
+              }}
+              transition={{
+                duration: 6,
+                repeat: Infinity,
+                ease: 'linear',
+              }}
+              style={{
+                transformOrigin: '16px 12px',
+              }}
+            >
+              {Array.from({ length: 12 }, (_, i) => {
+                const angle = i * 30
+                const radius = 14
+                const x = 16 + Math.cos((angle * Math.PI) / 180) * radius
+                const y = 12 + Math.sin((angle * Math.PI) / 180) * radius
+
+                return (
+                  <motion.rect
+                    key={`rainbow-trail-${i}`}
+                    x={x}
+                    y={y}
+                    width="1"
+                    height="1"
+                    fill={rainbowColors[i % rainbowColors.length]}
+                    animate={{
+                      opacity: [0, 1, 0],
+                      scale: [0.5, 1.5, 0.5],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      delay: 3 + i * 0.1,
+                    }}
+                  />
+                )
+              })}
+            </motion.g>
+          </motion.g>
+        )}
+
+        {/* Special rainbow sparkles */}
+        {Array.from({ length: 6 }, (_, i) => {
+          const positions = [
+            { x: 6, y: 8 },
+            { x: 26, y: 10 },
+            { x: 4, y: 16 },
+            { x: 28, y: 14 },
+            { x: 8, y: 4 },
+            { x: 24, y: 18 },
+          ]
+          const pos = positions[i]
+          if (!pos) return null
+
+          return (
+            <motion.rect
+              key={`rainbow-sparkle-${i}`}
+              x={pos.x}
+              y={pos.y}
+              width="1"
+              height="1"
+              fill={rainbowColors[i]}
+              animate={{
+                opacity: [0, 1, 0],
+                scale: [0, 1.5, 0],
+                fill: [
+                  rainbowColors[i],
+                  rainbowColors[(i + 1) % rainbowColors.length],
+                ],
+              }}
+              transition={{
+                opacity: {
+                  duration: 1.5,
+                  repeat: Infinity,
+                  delay: 2.5 + i * 0.3,
+                },
+                scale: {
+                  duration: 1.5,
+                  repeat: Infinity,
+                  delay: 2.5 + i * 0.3,
+                },
+                fill: { duration: 4, repeat: Infinity, delay: 3 + i * 0.2 },
+              }}
+            />
+          )
+        })}
+      </motion.svg>
+
+      {/* Rainbow magical aura */}
+      <motion.div
+        className="absolute inset-0 rounded-full"
+        style={{
+          background: `conic-gradient(from 0deg, #ef444440, #f9731640, #eab30840, #22c55e40, #06b6d440, #3b82f640, #8b5cf640, #ec489940)`,
+        }}
+        animate={{
+          rotate: [0, 360],
+          scale: [1, 1.3, 1],
+          opacity: [0.4, 0.8, 0.4],
+        }}
+        transition={{
+          rotate: { duration: 4, repeat: Infinity, ease: 'linear' },
+          scale: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+          opacity: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+        }}
+      />
     </motion.div>
   )
 }

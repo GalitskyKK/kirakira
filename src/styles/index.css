@@ -249,6 +249,38 @@
       0 0 20px rgba(168, 85, 247, 0.3),
       0 0 40px rgba(168, 85, 247, 0.1);
   }
+
+  /* Pixel Art Styles */
+  .pixel-art {
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-crisp-edges;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    shape-rendering: crispEdges;
+    text-rendering: geometricPrecision;
+  }
+
+  .pixel-svg {
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-crisp-edges;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    shape-rendering: crispEdges;
+  }
+
+  .pixel-container {
+    position: relative;
+    image-rendering: pixelated;
+  }
+
+  /* Pixel shadow effects */
+  .pixel-shadow {
+    filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.3));
+  }
+
+  .pixel-glow {
+    filter: drop-shadow(0px 0px 4px currentColor);
+  }
 }
 
 /* Utilities layer */

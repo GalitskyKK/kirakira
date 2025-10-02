@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import { useId } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
 
 interface WaterSVGProps {
@@ -21,10 +20,6 @@ export function WaterSVG({
   isHovered: _isHovered = false,
   name = 'Water',
 }: WaterSVGProps) {
-  const uniqueId = useId()
-  const gradientId = `water-${uniqueId}`
-  const waveGradientId = `wave-${uniqueId}`
-
   const getRarityGlow = () => {
     switch (rarity) {
       case RarityLevel.UNCOMMON:
@@ -41,472 +36,1176 @@ export function WaterSVG({
   }
 
   const getSeasonalColors = () => {
-    const baseBlue = color
     switch (season) {
       case SeasonalVariant.SPRING:
         return {
-          primary: '#0ea5e9', // Яркий весенний голубой
-          secondary: '#0284c7',
-          accent: '#38bdf8',
-          surface: '#e0f2fe',
+          primary: '#0ea5e9',
+          secondary: '#06b6d4',
+          accent: '#67e8f9',
         }
       case SeasonalVariant.SUMMER:
         return {
-          primary: '#0891b2', // Глубокий летний бирюзовый
-          secondary: '#0e7490',
-          accent: '#22d3ee',
-          surface: '#cffafe',
+          primary: '#0284c7',
+          secondary: '#0ea5e9',
+          accent: '#38bdf8',
         }
       case SeasonalVariant.AUTUMN:
         return {
-          primary: '#0f766e', // Тёмный осенний бирюзовый
-          secondary: '#134e4a',
-          accent: '#5eead4',
-          surface: '#f0fdfa',
+          primary: '#0c4a6e',
+          secondary: '#0369a1',
+          accent: '#0ea5e9',
         }
       case SeasonalVariant.WINTER:
         return {
-          primary: '#475569', // Холодный зимний серо-голубой
+          primary: '#1e293b',
           secondary: '#334155',
-          accent: '#cbd5e1',
-          surface: '#f8fafc',
+          accent: '#64748b',
         }
       default:
         return {
-          primary: baseBlue,
-          secondary: '#0284c7',
-          accent: '#38bdf8',
-          surface: '#e0f2fe',
+          primary: color,
+          secondary: '#0ea5e9',
+          accent: '#67e8f9',
         }
     }
   }
 
   const seasonalColors = getSeasonalColors()
 
-  // Определяем тип водного элемента по имени
-  const isDrop = name === 'Капля'
+  // Определяем тип воды по названию
   const isPuddle = name === 'Лужа'
-  const isSpring = name === 'Источник'
+  const isStream = name === 'Ручей'
+  const isDrop =
+    name?.toLowerCase().includes('капля') ||
+    name?.toLowerCase().includes('drop')
+  const isSpring =
+    name?.toLowerCase().includes('источник') ||
+    name?.toLowerCase().includes('spring')
 
-  const getSeasonalEffects = () => {
-    switch (season) {
-      case SeasonalVariant.SPRING:
-        return (
-          <>
-            {/* Пузырьки жизни */}
-            <motion.g
-              animate={{
-                y: [0, -3, 0],
-                opacity: [0.6, 1, 0.6],
-                transition: { duration: 2, repeat: Infinity },
-              }}
-            >
-              <circle cx="25" cy="15" r="1" fill="#22d3ee" opacity="0.8" />
-              <circle cx="15" cy="20" r="0.8" fill="#38bdf8" opacity="0.6" />
-              <circle cx="18" cy="12" r="0.6" fill="#0ea5e9" opacity="0.7" />
-            </motion.g>
-          </>
-        )
-      case SeasonalVariant.SUMMER:
-        return (
-          <>
-            {/* Солнечные блики на воде */}
-            <motion.g
-              animate={{
-                opacity: [0.4, 0.9, 0.4],
-                transition: { duration: 1.5, repeat: Infinity },
-              }}
-            >
-              <ellipse
-                cx="22"
-                cy="18"
-                rx="2"
-                ry="1"
-                fill="#fbbf24"
-                opacity="0.6"
-              />
-              <ellipse
-                cx="18"
-                cy="25"
-                rx="1.5"
-                ry="0.8"
-                fill="#f59e0b"
-                opacity="0.5"
-              />
-            </motion.g>
-          </>
-        )
-      case SeasonalVariant.AUTUMN:
-        return (
-          <>
-            {/* Опавшие листья на воде */}
-            <motion.g
-              animate={{
-                x: [0, 1, 0, -1, 0],
-                transition: { duration: 4, repeat: Infinity },
-              }}
-            >
-              <path
-                d="M16,20 Q18,18 20,20 Q18,22 16,20"
-                fill="#dc2626"
-                opacity="0.7"
-              />
-              <path
-                d="M24,26 Q25,24 26,26 Q25,27 24,26"
-                fill="#ea580c"
-                opacity="0.6"
-              />
-            </motion.g>
-          </>
-        )
-      case SeasonalVariant.WINTER:
-        return (
-          <>
-            {/* Ледяные кристаллы */}
-            <g stroke="#e2e8f0" strokeWidth="0.5" fill="none" opacity="0.8">
-              <path d="M15,15 L19,19 M19,15 L15,19 M17,13 L17,21 M13,17 L21,17" />
-              <path d="M24,24 L26,26 M26,24 L24,26 M25,22 L25,28 M22,25 L28,25" />
-            </g>
-          </>
-        )
-      default:
-        return null
-    }
+  if (isDrop) {
+    // Капля - маленькая вода
+    return (
+      <motion.div
+        className="pixel-container relative flex items-center justify-center"
+        style={{ width: size, height: size }}
+        initial={{ scale: 0, y: -20 }}
+        animate={{
+          scale: 1,
+          y: 0,
+          filter: isSelected
+            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            : 'none',
+        }}
+        whileHover={{ scale: 1.1, y: -2 }}
+        transition={{
+          type: 'spring',
+          stiffness: 400,
+          damping: 25,
+        }}
+      >
+        <motion.svg
+          width={size}
+          height={size}
+          viewBox="0 0 32 32"
+          className="pixel-svg overflow-visible"
+          style={{
+            imageRendering: 'pixelated',
+            shapeRendering: 'crispEdges',
+          }}
+        >
+          {/* Drop shadow */}
+          <motion.ellipse
+            cx="16"
+            cy="29"
+            rx="2"
+            ry="1"
+            fill="#000000"
+            opacity="0.3"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          />
+
+          {/* Water drop - tear shape */}
+          <motion.g
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+          >
+            {/* Drop bottom */}
+            <rect
+              x="14"
+              y="24"
+              width="4"
+              height="3"
+              fill={seasonalColors.primary}
+            />
+            <rect
+              x="13"
+              y="23"
+              width="6"
+              height="1"
+              fill={seasonalColors.primary}
+            />
+            <rect
+              x="12"
+              y="22"
+              width="8"
+              height="1"
+              fill={seasonalColors.primary}
+            />
+
+            {/* Drop middle */}
+            <rect
+              x="11"
+              y="18"
+              width="10"
+              height="4"
+              fill={seasonalColors.primary}
+            />
+            <rect
+              x="10"
+              y="15"
+              width="12"
+              height="3"
+              fill={seasonalColors.primary}
+            />
+
+            {/* Drop top (pointed) */}
+            <rect
+              x="12"
+              y="12"
+              width="8"
+              height="3"
+              fill={seasonalColors.primary}
+            />
+            <rect
+              x="14"
+              y="10"
+              width="4"
+              height="2"
+              fill={seasonalColors.primary}
+            />
+            <rect
+              x="15"
+              y="8"
+              width="2"
+              height="2"
+              fill={seasonalColors.primary}
+            />
+
+            {/* Drop highlight */}
+            <rect
+              x="11"
+              y="18"
+              width="4"
+              height="4"
+              fill={seasonalColors.accent}
+              opacity="0.8"
+            />
+            <rect
+              x="12"
+              y="15"
+              width="3"
+              height="3"
+              fill={seasonalColors.accent}
+              opacity="0.7"
+            />
+            <rect
+              x="14"
+              y="12"
+              width="2"
+              height="3"
+              fill="#ffffff"
+              opacity="0.9"
+            />
+
+            {/* Drop shadow */}
+            <rect
+              x="18"
+              y="20"
+              width="4"
+              height="4"
+              fill={seasonalColors.secondary}
+            />
+            <rect
+              x="18"
+              y="15"
+              width="4"
+              height="5"
+              fill={seasonalColors.secondary}
+            />
+          </motion.g>
+
+          {/* Drop shimmer */}
+          <motion.rect
+            x="13"
+            y="16"
+            width="1"
+            height="4"
+            fill="#ffffff"
+            opacity="0.9"
+            animate={{
+              opacity: [0.5, 1, 0.5],
+              y: [16, 14, 16],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              delay: 1,
+            }}
+          />
+        </motion.svg>
+      </motion.div>
+    )
   }
 
+  if (isSpring) {
+    // Источник - бьющая вода
+    return (
+      <motion.div
+        className="pixel-container relative flex items-center justify-center"
+        style={{ width: size, height: size }}
+        initial={{ scale: 0 }}
+        animate={{
+          scale: 1,
+          filter: isSelected
+            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            : 'none',
+        }}
+        whileHover={{ scale: 1.1 }}
+        transition={{
+          type: 'spring',
+          stiffness: 300,
+          damping: 20,
+        }}
+      >
+        <motion.svg
+          width={size}
+          height={size}
+          viewBox="0 0 32 32"
+          className="pixel-svg overflow-visible"
+          style={{
+            imageRendering: 'pixelated',
+            shapeRendering: 'crispEdges',
+          }}
+        >
+          {/* Spring base pool */}
+          <motion.g
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <rect
+              x="6"
+              y="24"
+              width="20"
+              height="6"
+              fill={seasonalColors.primary}
+            />
+            <rect
+              x="8"
+              y="22"
+              width="16"
+              height="2"
+              fill={seasonalColors.primary}
+            />
+            <rect
+              x="10"
+              y="20"
+              width="12"
+              height="2"
+              fill={seasonalColors.primary}
+            />
+
+            {/* Pool depth */}
+            <rect
+              x="6"
+              y="26"
+              width="20"
+              height="4"
+              fill={seasonalColors.secondary}
+            />
+            <rect
+              x="8"
+              y="24"
+              width="16"
+              height="2"
+              fill={seasonalColors.secondary}
+            />
+
+            {/* Pool highlight */}
+            <rect
+              x="8"
+              y="22"
+              width="6"
+              height="2"
+              fill={seasonalColors.accent}
+              opacity="0.8"
+            />
+            <rect
+              x="10"
+              y="20"
+              width="4"
+              height="2"
+              fill="#ffffff"
+              opacity="0.7"
+            />
+          </motion.g>
+
+          {/* Water jet animation */}
+          <motion.g
+            animate={{
+              scale: [1, 1.1, 1],
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          >
+            {/* Central water jet */}
+            <motion.rect
+              x="15"
+              y="4"
+              width="2"
+              height="16"
+              fill={seasonalColors.accent}
+              animate={{
+                scaleY: [1, 1.2, 1],
+                opacity: [0.8, 1, 0.8],
+              }}
+              transition={{
+                duration: 1,
+                repeat: Infinity,
+                delay: 0.5,
+              }}
+            />
+
+            {/* Side water jets */}
+            <motion.rect
+              x="13"
+              y="8"
+              width="1"
+              height="12"
+              fill={seasonalColors.primary}
+              animate={{
+                scaleY: [0.8, 1.1, 0.8],
+                opacity: [0.6, 0.9, 0.6],
+              }}
+              transition={{
+                duration: 1.2,
+                repeat: Infinity,
+                delay: 0.7,
+              }}
+            />
+            <motion.rect
+              x="18"
+              y="8"
+              width="1"
+              height="12"
+              fill={seasonalColors.primary}
+              animate={{
+                scaleY: [0.8, 1.1, 0.8],
+                opacity: [0.6, 0.9, 0.6],
+              }}
+              transition={{
+                duration: 1.2,
+                repeat: Infinity,
+                delay: 0.9,
+              }}
+            />
+          </motion.g>
+
+          {/* Water droplets */}
+          {Array.from({ length: 6 }, (_, i) => (
+            <motion.rect
+              key={`spring-drop-${i}`}
+              x={12 + i * 2}
+              y={6 + i * 1}
+              width="1"
+              height="1"
+              fill={seasonalColors.accent}
+              animate={{
+                y: [6 + i, 24, 6 + i],
+                opacity: [0, 1, 0],
+                scale: [0.5, 1, 0.5],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: 1 + i * 0.2,
+                ease: 'easeOut',
+              }}
+            />
+          ))}
+
+          {/* Magical spring effects for higher rarities */}
+          {(rarity === RarityLevel.RARE ||
+            rarity === RarityLevel.EPIC ||
+            rarity === RarityLevel.LEGENDARY) && (
+            <motion.g>
+              {/* Magic sparkles around spring */}
+              {Array.from({ length: 4 }, (_, i) => {
+                const positions = [
+                  { x: 4, y: 12 },
+                  { x: 28, y: 14 },
+                  { x: 6, y: 30 },
+                  { x: 26, y: 28 },
+                ]
+                const pos = positions[i]
+                if (!pos) return null
+
+                return (
+                  <motion.rect
+                    key={`spring-sparkle-${i}`}
+                    x={pos.x}
+                    y={pos.y}
+                    width="1"
+                    height="1"
+                    fill={getRarityGlow()}
+                    animate={{
+                      opacity: [0, 1, 0],
+                      scale: [0.5, 1.5, 0.5],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      delay: 2 + i * 0.3,
+                    }}
+                  />
+                )
+              })}
+            </motion.g>
+          )}
+        </motion.svg>
+      </motion.div>
+    )
+  }
+
+  if (isPuddle) {
+    return (
+      <motion.div
+        className="pixel-container relative flex items-center justify-center"
+        style={{ width: size, height: size }}
+        initial={{ scale: 0 }}
+        animate={{
+          scale: 1,
+          filter: isSelected
+            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            : 'none',
+        }}
+        whileHover={{
+          scale: 1.05,
+          y: -1,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 400,
+          damping: 25,
+        }}
+      >
+        <motion.svg
+          width={size}
+          height={size}
+          viewBox="0 0 32 32"
+          className="pixel-svg overflow-visible"
+          style={{
+            imageRendering: 'pixelated',
+            shapeRendering: 'crispEdges',
+          }}
+        >
+          {/* Small puddle */}
+          <motion.g
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            {/* Puddle main body */}
+            <rect
+              x="10"
+              y="26"
+              width="12"
+              height="4"
+              fill={seasonalColors.primary}
+            />
+            <rect
+              x="12"
+              y="24"
+              width="8"
+              height="2"
+              fill={seasonalColors.primary}
+            />
+            <rect
+              x="14"
+              y="22"
+              width="4"
+              height="2"
+              fill={seasonalColors.secondary}
+            />
+
+            {/* Water surface highlights */}
+            <rect
+              x="10"
+              y="26"
+              width="6"
+              height="2"
+              fill="#ffffff"
+              opacity="0.5"
+            />
+            <rect
+              x="12"
+              y="24"
+              width="3"
+              height="2"
+              fill="#ffffff"
+              opacity="0.6"
+            />
+
+            {/* Water depth shadows */}
+            <rect
+              x="16"
+              y="27"
+              width="6"
+              height="3"
+              fill="#000000"
+              opacity="0.2"
+            />
+            <rect
+              x="15"
+              y="25"
+              width="5"
+              height="2"
+              fill="#000000"
+              opacity="0.15"
+            />
+
+            {/* Surface ripples */}
+            <motion.g
+              animate={{
+                opacity: [0.3, 0.8, 0.3],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: 1,
+              }}
+            >
+              <rect
+                x="13"
+                y="25"
+                width="6"
+                height="1"
+                fill={seasonalColors.accent}
+                opacity="0.7"
+              />
+              <rect
+                x="11"
+                y="27"
+                width="10"
+                height="1"
+                fill={seasonalColors.accent}
+                opacity="0.6"
+              />
+            </motion.g>
+          </motion.g>
+
+          {/* Puddle reflections */}
+          {Array.from({ length: 3 }, (_, i) => (
+            <motion.rect
+              key={`puddle-reflection-${i}`}
+              x={11 + i * 3}
+              y={26 + i}
+              width="1"
+              height="1"
+              fill="#ffffff"
+              opacity="0.8"
+              animate={{
+                opacity: [0.4, 0.9, 0.4],
+                scale: [0.8, 1.2, 0.8],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                delay: 1.5 + i * 0.3,
+              }}
+            />
+          ))}
+        </motion.svg>
+      </motion.div>
+    )
+  }
+
+  if (isStream) {
+    return (
+      <motion.div
+        className="pixel-container relative flex items-center justify-center"
+        style={{ width: size, height: size }}
+        initial={{ scale: 0 }}
+        animate={{
+          scale: 1,
+          filter: isSelected
+            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            : 'none',
+        }}
+        whileHover={{
+          scale: 1.05,
+          y: -1,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 400,
+          damping: 25,
+        }}
+      >
+        <motion.svg
+          width={size}
+          height={size}
+          viewBox="0 0 32 32"
+          className="pixel-svg overflow-visible"
+          style={{
+            imageRendering: 'pixelated',
+            shapeRendering: 'crispEdges',
+          }}
+        >
+          {/* Winding stream */}
+          <motion.g
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            {/* Stream main flow */}
+            <rect
+              x="2"
+              y="20"
+              width="8"
+              height="3"
+              fill={seasonalColors.primary}
+            />
+            <rect
+              x="8"
+              y="16"
+              width="6"
+              height="3"
+              fill={seasonalColors.primary}
+            />
+            <rect
+              x="12"
+              y="12"
+              width="8"
+              height="3"
+              fill={seasonalColors.primary}
+            />
+            <rect
+              x="18"
+              y="8"
+              width="6"
+              height="3"
+              fill={seasonalColors.primary}
+            />
+            <rect
+              x="22"
+              y="4"
+              width="8"
+              height="3"
+              fill={seasonalColors.primary}
+            />
+
+            {/* Stream banks */}
+            <rect x="2" y="19" width="8" height="1" fill="#8b7355" />
+            <rect x="2" y="23" width="8" height="1" fill="#8b7355" />
+            <rect x="8" y="15" width="6" height="1" fill="#8b7355" />
+            <rect x="8" y="19" width="6" height="1" fill="#8b7355" />
+
+            {/* Water highlights */}
+            <rect
+              x="2"
+              y="20"
+              width="4"
+              height="1"
+              fill="#ffffff"
+              opacity="0.6"
+            />
+            <rect
+              x="12"
+              y="12"
+              width="4"
+              height="1"
+              fill="#ffffff"
+              opacity="0.6"
+            />
+            <rect
+              x="22"
+              y="4"
+              width="4"
+              height="1"
+              fill="#ffffff"
+              opacity="0.6"
+            />
+
+            {/* Flow animation */}
+            <motion.g
+              animate={{
+                x: [0, -2, 0, 2, 0],
+                opacity: [0.5, 1, 0.5],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            >
+              <rect
+                x="4"
+                y="21"
+                width="2"
+                height="1"
+                fill={seasonalColors.accent}
+              />
+              <rect
+                x="10"
+                y="17"
+                width="2"
+                height="1"
+                fill={seasonalColors.accent}
+              />
+              <rect
+                x="16"
+                y="13"
+                width="2"
+                height="1"
+                fill={seasonalColors.accent}
+              />
+              <rect
+                x="20"
+                y="9"
+                width="2"
+                height="1"
+                fill={seasonalColors.accent}
+              />
+              <rect
+                x="26"
+                y="5"
+                width="2"
+                height="1"
+                fill={seasonalColors.accent}
+              />
+            </motion.g>
+          </motion.g>
+        </motion.svg>
+      </motion.div>
+    )
+  }
+
+  // Pond (default water)
   return (
     <motion.div
-      className="relative flex items-center justify-center"
+      className="pixel-container relative flex items-center justify-center"
       style={{ width: size, height: size }}
-      initial={{ scale: 0, opacity: 0 }}
+      initial={{ scale: 0 }}
       animate={{
         scale: 1,
-        opacity: 1,
         filter: isSelected
           ? `drop-shadow(0 0 20px ${getRarityGlow()})`
           : 'none',
       }}
+      whileHover={{
+        scale: 1.05,
+        y: -1,
+      }}
       transition={{
         type: 'spring',
-        stiffness: 300,
-        damping: 20,
-        delay: Math.random() * 0.3,
+        stiffness: 400,
+        damping: 25,
       }}
     >
-      <svg
+      <motion.svg
         width={size}
         height={size}
-        viewBox="0 0 40 40"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 32 32"
+        className="pixel-svg overflow-visible"
         style={{
-          shapeRendering: 'geometricPrecision',
-          textRendering: 'geometricPrecision',
+          imageRendering: 'pixelated',
+          shapeRendering: 'crispEdges',
         }}
       >
-        <defs>
-          <radialGradient id={gradientId} cx="50%" cy="30%" r="70%">
-            <stop offset="0%" stopColor={seasonalColors.accent} />
-            <stop offset="50%" stopColor={seasonalColors.primary} />
-            <stop offset="100%" stopColor={seasonalColors.secondary} />
-          </radialGradient>
+        {/* Pond main body */}
+        <motion.g
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        >
+          {/* Water surface */}
+          <rect
+            x="6"
+            y="18"
+            width="20"
+            height="10"
+            fill={seasonalColors.primary}
+          />
+          <rect
+            x="8"
+            y="16"
+            width="16"
+            height="2"
+            fill={seasonalColors.primary}
+          />
+          <rect
+            x="10"
+            y="14"
+            width="12"
+            height="2"
+            fill={seasonalColors.secondary}
+          />
+          <rect
+            x="12"
+            y="12"
+            width="8"
+            height="2"
+            fill={seasonalColors.secondary}
+          />
 
-          <linearGradient id={waveGradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop
-              offset="0%"
-              stopColor={seasonalColors.primary}
+          {/* Pond banks */}
+          <rect x="6" y="17" width="20" height="1" fill="#8b7355" />
+          <rect x="6" y="28" width="20" height="1" fill="#8b7355" />
+          <rect x="8" y="15" width="16" height="1" fill="#8b7355" />
+          <rect x="10" y="13" width="12" height="1" fill="#8b7355" />
+
+          {/* Water depth gradient */}
+          <rect
+            x="6"
+            y="18"
+            width="8"
+            height="6"
+            fill="#ffffff"
+            opacity="0.3"
+          />
+          <rect
+            x="8"
+            y="16"
+            width="6"
+            height="2"
+            fill="#ffffff"
+            opacity="0.4"
+          />
+          <rect
+            x="10"
+            y="14"
+            width="4"
+            height="2"
+            fill="#ffffff"
+            opacity="0.5"
+          />
+
+          {/* Water shadows */}
+          <rect
+            x="18"
+            y="22"
+            width="8"
+            height="6"
+            fill="#000000"
+            opacity="0.2"
+          />
+          <rect
+            x="16"
+            y="20"
+            width="10"
+            height="4"
+            fill="#000000"
+            opacity="0.15"
+          />
+        </motion.g>
+
+        {/* Animated water ripples */}
+        <motion.g
+          animate={{
+            scale: [1, 1.1, 1],
+            opacity: [0.3, 0.8, 0.3],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            delay: 1,
+          }}
+        >
+          {/* Concentric ripples */}
+          <rect
+            x="14"
+            y="20"
+            width="4"
+            height="1"
+            fill={seasonalColors.accent}
+            opacity="0.7"
+          />
+          <rect
+            x="12"
+            y="22"
+            width="8"
+            height="1"
+            fill={seasonalColors.accent}
+            opacity="0.6"
+          />
+          <rect
+            x="10"
+            y="24"
+            width="12"
+            height="1"
+            fill={seasonalColors.accent}
+            opacity="0.5"
+          />
+        </motion.g>
+
+        {/* Water surface reflections */}
+        {Array.from({ length: 8 }, (_, i) => {
+          const positions = [
+            { x: 12, y: 20 },
+            { x: 18, y: 18 },
+            { x: 14, y: 22 },
+            { x: 20, y: 20 },
+            { x: 16, y: 24 },
+            { x: 10, y: 18 },
+            { x: 22, y: 24 },
+            { x: 8, y: 26 },
+          ]
+          const pos = positions[i]
+          if (!pos) return null
+
+          return (
+            <motion.rect
+              key={`reflection-${i}`}
+              x={pos.x}
+              y={pos.y}
+              width="1"
+              height="1"
+              fill="#ffffff"
+              opacity="0.8"
+              animate={{
+                opacity: [0.4, 0.9, 0.4],
+                scale: [0.8, 1.2, 0.8],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: 1.5 + i * 0.2,
+              }}
+            />
+          )
+        })}
+
+        {/* Seasonal effects */}
+        {season === SeasonalVariant.WINTER && (
+          <motion.g
+            animate={{
+              opacity: [0.7, 1, 0.7],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              delay: 2,
+            }}
+          >
+            {/* Ice crystals on surface */}
+            <rect
+              x="12"
+              y="16"
+              width="8"
+              height="1"
+              fill="#ffffff"
+              opacity="0.9"
+            />
+            <rect
+              x="10"
+              y="20"
+              width="12"
+              height="1"
+              fill="#ffffff"
               opacity="0.8"
             />
-            <stop
-              offset="50%"
-              stopColor={seasonalColors.accent}
-              opacity="0.6"
+            <rect
+              x="14"
+              y="24"
+              width="4"
+              height="1"
+              fill="#ffffff"
+              opacity="0.9"
             />
-            <stop
-              offset="100%"
-              stopColor={seasonalColors.primary}
-              opacity="0.8"
-            />
-          </linearGradient>
+          </motion.g>
+        )}
 
-          {rarity === RarityLevel.LEGENDARY && (
-            <filter id={`glow-${uniqueId}`}>
-              <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-              <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          )}
-        </defs>
-
-        {/* Рендер в зависимости от типа водного элемента */}
-        {isDrop ? (
-          // КАПЛЯ - одиночная капля воды
+        {season === SeasonalVariant.SPRING && (
           <motion.g
             animate={{
               y: [0, -2, 0],
-              transition: {
-                duration: 2.5,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              },
+              opacity: [0.6, 1, 0.6],
             }}
-            filter={
-              rarity === RarityLevel.LEGENDARY
-                ? `url(#glow-${uniqueId})`
-                : undefined
-            }
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              delay: 2,
+            }}
           >
-            <path
-              d="M20 8 Q16 12 16 18 Q16 24 20 24 Q24 24 24 18 Q24 12 20 8 Z"
-              fill={`url(#${gradientId})`}
-              stroke={seasonalColors.accent}
-              strokeWidth="0.5"
-            />
-            {/* Блик на капле */}
-            <ellipse
-              cx="18.5"
-              cy="16"
-              rx="1.5"
-              ry="2"
-              fill={seasonalColors.surface}
+            {/* Bubbles rising */}
+            <rect
+              x="15"
+              y="26"
+              width="1"
+              height="1"
+              fill="#ffffff"
               opacity="0.8"
             />
-            {/* Капельки рядом */}
-            <circle
-              cx="12"
-              cy="30"
-              r="1.5"
-              fill={seasonalColors.primary}
+            <rect
+              x="17"
+              y="24"
+              width="1"
+              height="1"
+              fill="#ffffff"
               opacity="0.7"
             />
-            <circle
-              cx="28"
-              cy="32"
-              r="1"
-              fill={seasonalColors.accent}
-              opacity="0.6"
+            <rect
+              x="19"
+              y="22"
+              width="1"
+              height="1"
+              fill="#ffffff"
+              opacity="0.8"
             />
-          </motion.g>
-        ) : isPuddle ? (
-          // ЛУЖА - плоская поверхность воды
-          <motion.g
-            filter={
-              rarity === RarityLevel.LEGENDARY
-                ? `url(#glow-${uniqueId})`
-                : undefined
-            }
-          >
-            <motion.ellipse
-              cx="20"
-              cy="28"
-              rx="16"
-              ry="6"
-              fill={`url(#${gradientId})`}
-              animate={{
-                ry: [6, 7, 6],
-                transition: {
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                },
-              }}
-            />
-            {/* Отражение */}
-            <ellipse
-              cx="20"
-              cy="28"
-              rx="12"
-              ry="3"
-              fill={seasonalColors.surface}
-              opacity="0.4"
-            />
-            {/* Рябь */}
-            <motion.g
-              animate={{
-                opacity: [0.3, 0.7, 0.3],
-                transition: { duration: 3, repeat: Infinity },
-              }}
-            >
-              <ellipse
-                cx="20"
-                cy="28"
-                rx="14"
-                ry="5"
-                stroke={seasonalColors.accent}
-                strokeWidth="0.3"
-                fill="none"
-              />
-              <ellipse
-                cx="20"
-                cy="28"
-                rx="10"
-                ry="3"
-                stroke={seasonalColors.accent}
-                strokeWidth="0.2"
-                fill="none"
-              />
-            </motion.g>
-          </motion.g>
-        ) : isSpring ? (
-          // ИСТОЧНИК - вертикальный поток с пузырьками
-          <motion.g
-            filter={
-              rarity === RarityLevel.LEGENDARY
-                ? `url(#glow-${uniqueId})`
-                : undefined
-            }
-          >
-            {/* Основание источника */}
-            <ellipse
-              cx="20"
-              cy="35"
-              rx="8"
-              ry="4"
-              fill={seasonalColors.primary}
-            />
-
-            {/* Вертикальный поток */}
-            <motion.path
-              d="M20 35 Q18 25 19 15 Q20 10 20 5"
-              stroke={`url(#${waveGradientId})`}
-              strokeWidth="3"
-              fill="none"
-              strokeLinecap="round"
-              animate={{
-                d: [
-                  'M20 35 Q18 25 19 15 Q20 10 20 5',
-                  'M20 35 Q22 25 21 15 Q20 10 20 5',
-                  'M20 35 Q18 25 19 15 Q20 10 20 5',
-                ],
-                transition: {
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                },
-              }}
-            />
-
-            {/* Пузырьки */}
-            {Array.from({ length: 8 }, (_, i) => (
-              <motion.circle
-                key={i}
-                cx={18 + i * 0.5}
-                cy={30 - i * 3}
-                r={0.8 + Math.random() * 0.4}
-                fill={seasonalColors.accent}
-                opacity="0.7"
-                animate={{
-                  y: [0, -10, -20],
-                  opacity: [0.7, 0.3, 0],
-                  transition: {
-                    duration: 2,
-                    repeat: Infinity,
-                    delay: i * 0.3,
-                    ease: 'easeOut',
-                  },
-                }}
-              />
-            ))}
-          </motion.g>
-        ) : (
-          // РУЧЕЕК - горизонтальный поток с волнами
-          <motion.g
-            animate={{
-              x: [0, 2, 0, -2, 0],
-              transition: { duration: 4, repeat: Infinity, ease: 'easeInOut' },
-            }}
-            filter={
-              rarity === RarityLevel.LEGENDARY
-                ? `url(#glow-${uniqueId})`
-                : undefined
-            }
-          >
-            {/* Основное русло */}
-            <path
-              d="M5 20 Q10 18 15 20 Q20 22 25 20 Q30 18 35 20 Q40 22 45 20"
-              stroke={`url(#${waveGradientId})`}
-              strokeWidth="4"
-              fill="none"
-              strokeLinecap="round"
-            />
-
-            {/* Волны потока */}
-            <motion.path
-              d="M8 22 Q12 20 16 22 Q20 24 24 22 Q28 20 32 22"
-              stroke={seasonalColors.accent}
-              strokeWidth="2"
-              fill="none"
-              strokeLinecap="round"
-              animate={{
-                d: [
-                  'M8 22 Q12 20 16 22 Q20 24 24 22 Q28 20 32 22',
-                  'M8 24 Q12 22 16 24 Q20 26 24 24 Q28 22 32 24',
-                  'M8 22 Q12 20 16 22 Q20 24 24 22 Q28 20 32 22',
-                ],
-                transition: {
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                },
-              }}
-            />
-
-            {/* Брызги */}
-            {Array.from({ length: 4 }, (_, i) => (
-              <motion.circle
-                key={i}
-                cx={10 + i * 8}
-                cy={18 + Math.sin(i) * 2}
-                r="0.5"
-                fill={seasonalColors.accent}
-                animate={{
-                  scale: [0, 1, 0],
-                  opacity: [0, 0.8, 0],
-                  transition: {
-                    duration: 1,
-                    repeat: Infinity,
-                    delay: i * 0.25,
-                    ease: 'easeOut',
-                  },
-                }}
-              />
-            ))}
           </motion.g>
         )}
 
-        {/* Сезонные эффекты */}
-        {getSeasonalEffects()}
-
-        {/* Премиум эффекты */}
-        {rarity === RarityLevel.EPIC && (
+        {/* Magical effects for rare water */}
+        {rarity !== RarityLevel.COMMON && (
           <motion.g
             animate={{
-              rotate: [0, 360],
-              transition: { duration: 6, repeat: Infinity, ease: 'linear' },
+              opacity: [0.5, 1, 0.5],
             }}
-            style={{ transformOrigin: '20px 20px' }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              delay: 2,
+            }}
           >
-            <circle cx="12" cy="15" r="1" fill="#a855f7" opacity="0.6" />
-            <circle cx="28" cy="20" r="0.8" fill="#a855f7" opacity="0.5" />
-            <circle cx="25" cy="30" r="1.2" fill="#a855f7" opacity="0.4" />
+            {/* Magical sparkles on water surface */}
+            <rect
+              x="8"
+              y="18"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.8"
+            />
+            <rect
+              x="24"
+              y="22"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.8"
+            />
+            <rect
+              x="16"
+              y="14"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.9"
+            />
+            <rect
+              x="12"
+              y="26"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.8"
+            />
+            <rect
+              x="20"
+              y="16"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.8"
+            />
           </motion.g>
         )}
 
+        {/* Legendary water effects */}
         {rarity === RarityLevel.LEGENDARY && (
-          <motion.g
-            animate={{
-              scale: [1, 1.1, 1],
-              opacity: [0.6, 1, 0.6],
-              transition: { duration: 3, repeat: Infinity },
-            }}
-          >
-            <circle cx="20" cy="16" r="2" fill="#f59e0b" opacity="0.3" />
-            <circle cx="20" cy="16" r="1" fill="#fbbf24" opacity="0.8" />
+          <motion.g>
+            {/* Mystical whirlpool center */}
+            <motion.rect
+              x="15"
+              y="21"
+              width="2"
+              height="2"
+              fill="#fbbf24"
+              opacity="0.7"
+              animate={{
+                opacity: [0.3, 0.9, 0.3],
+                scale: [1, 1.3, 1],
+                rotate: [0, 360],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                delay: 3,
+              }}
+            />
+
+            {/* Legendary sparkles around pond */}
+            {Array.from({ length: 6 }, (_, i) => {
+              const positions = [
+                { x: 4, y: 20 },
+                { x: 28, y: 24 },
+                { x: 16, y: 10 },
+                { x: 6, y: 28 },
+                { x: 26, y: 16 },
+                { x: 14, y: 30 },
+              ]
+              const pos = positions[i]
+              if (!pos) return null
+
+              return (
+                <motion.rect
+                  key={`legendary-sparkle-${i}`}
+                  x={pos.x}
+                  y={pos.y}
+                  width="1"
+                  height="1"
+                  fill="#ffffff"
+                  animate={{
+                    opacity: [0, 1, 0],
+                    scale: [0, 1, 0],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    delay: 3.5 + i * 0.3,
+                  }}
+                />
+              )
+            })}
           </motion.g>
         )}
-      </svg>
+      </motion.svg>
+
+      {/* Magical aura */}
+      {rarity !== RarityLevel.COMMON && (
+        <motion.div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: `radial-gradient(circle, ${getRarityGlow()}15 0%, transparent 70%)`,
+          }}
+          animate={{
+            scale: [1, 1.1, 1],
+            opacity: [0.2, 0.4, 0.2],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+      )}
     </motion.div>
   )
 }

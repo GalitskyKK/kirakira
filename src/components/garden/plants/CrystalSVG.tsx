@@ -1,11 +1,11 @@
 import { motion } from 'framer-motion'
-import { useId } from 'react'
-import { RarityLevel } from '@/types'
+import { RarityLevel, SeasonalVariant } from '@/types'
 
 interface CrystalSVGProps {
   size?: number
   color?: string
   rarity?: RarityLevel
+  season?: SeasonalVariant | undefined
   isSelected?: boolean
   isHovered?: boolean
   name?: string
@@ -15,17 +15,15 @@ export function CrystalSVG({
   size = 64,
   color = '#3b82f6',
   rarity = RarityLevel.COMMON,
+  season,
   isSelected = false,
   isHovered: _isHovered = false,
   name: _name = 'Crystal',
 }: CrystalSVGProps) {
-  const uniqueId = useId()
-  const gradientId = `crystal-${uniqueId}`
-
   const getRarityGlow = () => {
     switch (rarity) {
       case RarityLevel.UNCOMMON:
-        return '#22c56e'
+        return '#22c55e'
       case RarityLevel.RARE:
         return '#3b82f6'
       case RarityLevel.EPIC:
@@ -37,9 +35,58 @@ export function CrystalSVG({
     }
   }
 
+  // Сезонные цвета для кристаллов
+  const getSeasonalColors = () => {
+    const baseColor = color
+    switch (season) {
+      case SeasonalVariant.SPRING:
+        return {
+          main: '#22c55e', // Весенний зеленый кристалл
+          core: '#dcfce7',
+          facets: '#16a34a',
+          glow: '#4ade80',
+          decoration: '#a3e635', // Растительные элементы
+        }
+      case SeasonalVariant.SUMMER:
+        return {
+          main: '#eab308', // Летний золотой кристалл
+          core: '#fef9c3',
+          facets: '#ca8a04',
+          glow: '#fde047',
+          decoration: '#f59e0b', // Солнечные блики
+        }
+      case SeasonalVariant.AUTUMN:
+        return {
+          main: '#ea580c', // Осенний оранжевый кристалл
+          core: '#fed7aa',
+          facets: '#c2410c',
+          glow: '#fb923c',
+          decoration: '#dc2626', // Осенние листья
+        }
+      case SeasonalVariant.WINTER:
+        return {
+          main: '#e0e7ff', // Зимний ледяной кристалл
+          core: '#f8fafc',
+          facets: '#c7d2fe',
+          glow: '#cbd5e1',
+          decoration: '#ffffff', // Снежинки
+        }
+      default:
+        return {
+          main: baseColor,
+          core: '#dbeafe',
+          facets: '#1d4ed8',
+          glow: '#60a5fa',
+          decoration: baseColor,
+        }
+    }
+  }
+
+  const seasonalColors = getSeasonalColors()
+
   return (
     <motion.div
-      className="relative flex items-center justify-center"
+      className="pixel-container relative flex items-center justify-center"
       style={{ width: size, height: size }}
       initial={{ scale: 0, rotate: -180, opacity: 0 }}
       animate={{
@@ -91,192 +138,374 @@ export function CrystalSVG({
       <motion.svg
         width={size}
         height={size}
-        viewBox="0 0 100 100"
-        className="overflow-visible"
+        viewBox="0 0 32 32"
+        className="pixel-svg overflow-visible"
+        style={{
+          imageRendering: 'pixelated',
+          shapeRendering: 'crispEdges',
+        }}
       >
-        <defs>
-          {/* Main crystal gradient */}
-          <linearGradient
-            id={`${gradientId}-main`}
-            x1="0%"
-            y1="0%"
-            x2="100%"
-            y2="100%"
-          >
-            <stop offset="0%" style={{ stopColor: color, stopOpacity: 0.9 }} />
-            <stop offset="30%" style={{ stopColor: color, stopOpacity: 0.7 }} />
-            <stop offset="70%" style={{ stopColor: color, stopOpacity: 0.5 }} />
-            <stop
-              offset="100%"
-              style={{ stopColor: color, stopOpacity: 0.8 }}
-            />
-          </linearGradient>
-
-          {/* Highlight gradient */}
-          <linearGradient
-            id={`${gradientId}-highlight`}
-            x1="0%"
-            y1="0%"
-            x2="100%"
-            y2="100%"
-          >
-            <stop
-              offset="0%"
-              style={{ stopColor: '#ffffff', stopOpacity: 0.8 }}
-            />
-            <stop
-              offset="50%"
-              style={{ stopColor: '#ffffff', stopOpacity: 0.3 }}
-            />
-            <stop
-              offset="100%"
-              style={{ stopColor: color, stopOpacity: 0.1 }}
-            />
-          </linearGradient>
-
-          {/* Glow filter */}
-          <filter id={`${gradientId}-glow`}>
-            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          {/* Inner glow */}
-          <filter id={`${gradientId}-inner-glow`}>
-            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* Crystal base/ground */}
+        {/* Crystal base/shadow */}
         <motion.ellipse
-          cx="50"
-          cy="85"
-          rx="15"
-          ry="3"
-          fill={color}
-          opacity="0.3"
+          cx="16"
+          cy="29"
+          rx="6"
+          ry="1.5"
+          fill="#000000"
+          opacity="0.4"
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ duration: 0.8, delay: 0.5 }}
         />
 
-        {/* Main crystal body */}
-        <motion.path
-          d="M50 20 L35 50 L40 80 L60 80 L65 50 Z"
-          fill={`url(#${gradientId}-main)`}
-          stroke={color}
-          strokeWidth="1"
-          filter={`url(#${gradientId}-glow)`}
-          initial={{ pathLength: 0, opacity: 0 }}
-          animate={{ pathLength: 1, opacity: 1 }}
+        {/* Main crystal body - pixelated gem shape */}
+        <motion.g
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
           transition={{ duration: 1.2, delay: 0.2 }}
-        />
+        >
+          {/* Crystal main body (diamond shape) */}
+          <rect
+            x="12"
+            y="12"
+            width="8"
+            height="12"
+            fill={seasonalColors.main}
+          />
 
-        {/* Crystal facets */}
-        <motion.path
-          d="M50 20 L42 35 L50 50 Z"
-          fill={`url(#${gradientId}-highlight)`}
-          opacity="0.6"
+          {/* Crystal top point */}
+          <rect x="14" y="8" width="4" height="4" fill={seasonalColors.main} />
+          <rect x="15" y="6" width="2" height="2" fill={seasonalColors.main} />
+          <rect x="15" y="4" width="2" height="2" fill={seasonalColors.main} />
+
+          {/* Crystal bottom point */}
+          <rect x="14" y="24" width="4" height="2" fill={seasonalColors.main} />
+          <rect x="15" y="26" width="2" height="2" fill={seasonalColors.main} />
+
+          {/* Left facet highlight */}
+          <rect
+            x="12"
+            y="12"
+            width="4"
+            height="12"
+            fill="#ffffff"
+            opacity="0.5"
+          />
+          <rect
+            x="14"
+            y="8"
+            width="2"
+            height="4"
+            fill="#ffffff"
+            opacity="0.6"
+          />
+          <rect
+            x="15"
+            y="6"
+            width="1"
+            height="2"
+            fill="#ffffff"
+            opacity="0.8"
+          />
+          <rect
+            x="15"
+            y="4"
+            width="1"
+            height="2"
+            fill="#ffffff"
+            opacity="0.9"
+          />
+
+          {/* Right facet shadow */}
+          <rect
+            x="16"
+            y="12"
+            width="4"
+            height="12"
+            fill="#000000"
+            opacity="0.3"
+          />
+          <rect
+            x="16"
+            y="8"
+            width="2"
+            height="4"
+            fill="#000000"
+            opacity="0.2"
+          />
+          <rect
+            x="16"
+            y="6"
+            width="1"
+            height="2"
+            fill="#000000"
+            opacity="0.15"
+          />
+
+          {/* Bottom facet */}
+          <rect
+            x="14"
+            y="24"
+            width="2"
+            height="2"
+            fill="#ffffff"
+            opacity="0.4"
+          />
+          <rect
+            x="16"
+            y="24"
+            width="2"
+            height="2"
+            fill="#000000"
+            opacity="0.25"
+          />
+          <rect
+            x="15"
+            y="26"
+            width="1"
+            height="2"
+            fill="#ffffff"
+            opacity="0.3"
+          />
+          <rect
+            x="16"
+            y="26"
+            width="1"
+            height="2"
+            fill="#000000"
+            opacity="0.2"
+          />
+        </motion.g>
+
+        {/* Crystal inner facets and details */}
+        <motion.g
           initial={{ opacity: 0 }}
-          animate={{ opacity: 0.6 }}
+          animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.8 }}
-        />
+        >
+          {/* Inner facet lines */}
+          <rect
+            x="14"
+            y="10"
+            width="4"
+            height="1"
+            fill="#ffffff"
+            opacity="0.7"
+          />
+          <rect
+            x="13"
+            y="14"
+            width="6"
+            height="1"
+            fill="#000000"
+            opacity="0.2"
+          />
+          <rect
+            x="14"
+            y="18"
+            width="4"
+            height="1"
+            fill="#ffffff"
+            opacity="0.5"
+          />
+          <rect
+            x="13"
+            y="22"
+            width="6"
+            height="1"
+            fill="#000000"
+            opacity="0.25"
+          />
 
-        <motion.path
-          d="M50 20 L58 35 L50 50 Z"
-          fill={color}
-          opacity="0.4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.4 }}
-          transition={{ duration: 0.8, delay: 1.0 }}
-        />
+          {/* Vertical facet lines */}
+          <rect
+            x="15"
+            y="8"
+            width="1"
+            height="16"
+            fill="#000000"
+            opacity="0.15"
+          />
+          <rect
+            x="16"
+            y="8"
+            width="1"
+            height="16"
+            fill="#000000"
+            opacity="0.1"
+          />
+        </motion.g>
 
-        <motion.path
-          d="M50 50 L35 50 L40 80 L50 70 Z"
-          fill={`url(#${gradientId}-highlight)`}
-          opacity="0.5"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.5 }}
-          transition={{ duration: 0.8, delay: 1.2 }}
-        />
-
-        <motion.path
-          d="M50 50 L65 50 L60 80 L50 70 Z"
-          fill={color}
-          opacity="0.3"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.3 }}
-          transition={{ duration: 0.8, delay: 1.4 }}
-        />
-
-        {/* Inner light core */}
-        <motion.ellipse
-          cx="50"
-          cy="50"
-          rx="8"
-          ry="15"
-          fill="#ffffff"
-          opacity="0.4"
-          filter={`url(#${gradientId}-inner-glow)`}
+        {/* Crystal core energy */}
+        <motion.g
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.6, delay: 1.6 }}
-        />
+        >
+          {/* Pulsing core */}
+          <motion.rect
+            x="15"
+            y="15"
+            width="2"
+            height="6"
+            fill="#ffffff"
+            opacity="0.8"
+            animate={{
+              opacity: [0.4, 1, 0.4],
+              scaleY: [1, 1.1, 1],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
 
-        {/* Pulsing energy core */}
-        <motion.circle
-          cx="50"
-          cy="50"
-          r="4"
-          fill={color}
-          initial={{ scale: 0 }}
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.8, 0.4, 0.8],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            delay: 2,
-            ease: 'easeInOut',
-          }}
-        />
+          {/* Inner glow pixels */}
+          <rect
+            x="14"
+            y="16"
+            width="1"
+            height="1"
+            fill="#ffffff"
+            opacity="0.6"
+          />
+          <rect
+            x="17"
+            y="16"
+            width="1"
+            height="1"
+            fill="#ffffff"
+            opacity="0.6"
+          />
+          <rect
+            x="15"
+            y="14"
+            width="2"
+            height="1"
+            fill="#ffffff"
+            opacity="0.7"
+          />
+          <rect
+            x="15"
+            y="21"
+            width="2"
+            height="1"
+            fill="#ffffff"
+            opacity="0.7"
+          />
+        </motion.g>
 
-        {/* Magical runes for epic/legendary */}
+        {/* Special effects for rare crystals */}
+        {rarity !== RarityLevel.COMMON && (
+          <motion.g
+            animate={{
+              opacity: [0.5, 1, 0.5],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              delay: 2,
+            }}
+          >
+            {/* Magical rune pixels */}
+            <rect
+              x="13"
+              y="9"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.9"
+            />
+            <rect
+              x="18"
+              y="11"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.9"
+            />
+            <rect
+              x="12"
+              y="17"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.9"
+            />
+            <rect
+              x="19"
+              y="19"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.9"
+            />
+            <rect
+              x="16"
+              y="23"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.9"
+            />
+          </motion.g>
+        )}
+
+        {/* Magical energy for epic/legendary */}
         {(rarity === RarityLevel.EPIC || rarity === RarityLevel.LEGENDARY) && (
           <motion.g>
-            {/* Rune symbols */}
-            <motion.circle
-              cx="45"
-              cy="40"
-              r="1.5"
-              fill="#fbbf24"
-              initial={{ opacity: 0 }}
+            {/* Energy orbs around crystal */}
+            {Array.from({ length: 4 }, (_, i) => {
+              const positions = [
+                { x: 10, y: 10 },
+                { x: 22, y: 10 },
+                { x: 10, y: 22 },
+                { x: 22, y: 22 },
+              ]
+              const pos = positions[i]
+              if (!pos) return null
+
+              return (
+                <motion.rect
+                  key={i}
+                  x={pos.x}
+                  y={pos.y}
+                  width="1"
+                  height="1"
+                  fill="#fbbf24"
+                  animate={{
+                    opacity: [0, 1, 0],
+                    scale: [0.5, 2, 0.5],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    delay: 2.5 + i * 0.5,
+                  }}
+                />
+              )
+            })}
+          </motion.g>
+        )}
+
+        {/* Legendary effects */}
+        {rarity === RarityLevel.LEGENDARY && (
+          <motion.g>
+            {/* Pulsing energy waves */}
+            <motion.rect
+              x="8"
+              y="8"
+              width="16"
+              height="16"
+              fill="none"
+              stroke={getRarityGlow()}
+              strokeWidth="1"
+              opacity="0.4"
+              strokeDasharray="1,1"
               animate={{
-                opacity: [0, 1, 0],
-                scale: [0.5, 1, 0.5],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                delay: 2.5,
-              }}
-            />
-            <motion.circle
-              cx="55"
-              cy="60"
-              r="1.5"
-              fill="#fbbf24"
-              initial={{ opacity: 0 }}
-              animate={{
-                opacity: [0, 1, 0],
-                scale: [0.5, 1, 0.5],
+                scale: [1, 1.3, 1],
+                opacity: [0.4, 0.1, 0.4],
               }}
               transition={{
                 duration: 3,
@@ -284,47 +513,95 @@ export function CrystalSVG({
                 delay: 3,
               }}
             />
+
+            {/* Legendary sparkles */}
+            {Array.from({ length: 6 }, (_, i) => {
+              const sparklePositions = [
+                { x: 8, y: 16 },
+                { x: 24, y: 16 },
+                { x: 16, y: 3 },
+                { x: 16, y: 28 },
+                { x: 11, y: 7 },
+                { x: 21, y: 25 },
+              ]
+              const pos = sparklePositions[i]
+              if (!pos) return null
+
+              return (
+                <motion.rect
+                  key={`sparkle-${i}`}
+                  x={pos.x}
+                  y={pos.y}
+                  width="1"
+                  height="1"
+                  fill="#ffffff"
+                  animate={{
+                    opacity: [0, 1, 0],
+                    scale: [0, 1, 0],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    delay: 3.5 + i * 0.3,
+                  }}
+                />
+              )
+            })}
           </motion.g>
         )}
 
-        {/* Energy waves */}
-        <motion.circle
-          cx="50"
-          cy="50"
-          r="25"
-          fill="none"
-          stroke={color}
-          strokeWidth="1"
-          opacity="0.3"
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{
-            scale: [1, 1.5, 1],
-            opacity: [0.3, 0, 0.3],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            delay: 2.5,
-          }}
-        />
-
         {/* Reflection highlights */}
-        <motion.line
-          x1="48"
-          y1="25"
-          x2="48"
-          y2="45"
-          stroke="#ffffff"
-          strokeWidth="1"
-          opacity="0.6"
+        <motion.g
           initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 0.6, 0] }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            delay: 3,
-          }}
-        />
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 2 }}
+        >
+          {/* Sharp pixel highlights */}
+          <rect
+            x="14"
+            y="7"
+            width="1"
+            height="2"
+            fill="#ffffff"
+            opacity="0.9"
+          />
+          <rect
+            x="13"
+            y="13"
+            width="1"
+            height="1"
+            fill="#ffffff"
+            opacity="0.8"
+          />
+          <rect
+            x="12"
+            y="20"
+            width="1"
+            height="1"
+            fill="#ffffff"
+            opacity="0.7"
+          />
+
+          {/* Moving reflection */}
+          <motion.rect
+            x="15"
+            y="12"
+            width="1"
+            height="8"
+            fill="#ffffff"
+            opacity="0.6"
+            animate={{
+              opacity: [0, 0.8, 0],
+              x: [15, 16, 15],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              delay: 3,
+              ease: 'easeInOut',
+            }}
+          />
+        </motion.g>
       </motion.svg>
 
       {/* Magical aura */}

@@ -1,11 +1,11 @@
 import { motion } from 'framer-motion'
-import { useId } from 'react'
-import { RarityLevel } from '@/types'
+import { RarityLevel, SeasonalVariant } from '@/types'
 
 interface StoneSVGProps {
   size?: number
   color?: string
   rarity?: RarityLevel
+  season?: SeasonalVariant | undefined
   isSelected?: boolean
   isHovered?: boolean
   name?: string
@@ -15,13 +15,11 @@ export function StoneSVG({
   size = 64,
   color = '#6b7280',
   rarity = RarityLevel.COMMON,
+  season,
   isSelected = false,
   isHovered: _isHovered = false,
-  name: _name = 'Stone',
+  name = 'Stone',
 }: StoneSVGProps) {
-  const uniqueId = useId()
-  const gradientId = `stone-${uniqueId}`
-
   const getRarityGlow = () => {
     switch (rarity) {
       case RarityLevel.UNCOMMON:
@@ -37,9 +35,66 @@ export function StoneSVG({
     }
   }
 
+  // Сезонные цвета для камней
+  const getSeasonalColors = () => {
+    const baseColor = '#9ca3af' // основной серый камня
+    switch (season) {
+      case SeasonalVariant.SPRING:
+        return {
+          main: '#a3a3a3', // Свежий весенний серый
+          highlight: '#e5e7eb',
+          shadow: '#4b5563',
+          moss: '#22c55e', // Яркий весенний мох
+          decoration: '#16a34a', // Молодые растения
+        }
+      case SeasonalVariant.SUMMER:
+        return {
+          main: '#78716c', // Теплый летний серый
+          highlight: '#d6d3d1',
+          shadow: '#44403c',
+          moss: '#15803d', // Темный летний мох
+          decoration: '#fbbf24', // Солнечные блики
+        }
+      case SeasonalVariant.AUTUMN:
+        return {
+          main: '#a8a29e', // Прохладный осенний серый
+          highlight: '#f5f5f4',
+          shadow: '#57534e',
+          moss: '#84cc16', // Желто-зеленый осенний мох
+          decoration: '#ea580c', // Осенние листья
+        }
+      case SeasonalVariant.WINTER:
+        return {
+          main: '#d1d5db', // Холодный зимний серый
+          highlight: '#f9fafb',
+          shadow: '#6b7280',
+          moss: '#6b7280', // Замерзший мох
+          decoration: '#e0e7ff', // Иней и снег
+        }
+      default:
+        return {
+          main: baseColor,
+          highlight: '#d1d5db',
+          shadow: '#4b5563',
+          moss: '#22c55e',
+          decoration: baseColor,
+        }
+    }
+  }
+
+  const seasonalColors = getSeasonalColors()
+
+  // Определяем тип камня по имени
+  const isGravel =
+    name?.toLowerCase().includes('галька') ||
+    name?.toLowerCase().includes('gravel')
+  const isBoulder =
+    name?.toLowerCase().includes('булыжник') ||
+    name?.toLowerCase().includes('boulder')
+
   return (
     <motion.div
-      className="relative flex items-center justify-center"
+      className="pixel-container relative flex items-center justify-center"
       style={{ width: size, height: size }}
       initial={{ scale: 0, y: 20 }}
       animate={{
@@ -62,69 +117,28 @@ export function StoneSVG({
       <motion.svg
         width={size}
         height={size}
-        viewBox="0 0 100 100"
-        className="overflow-visible"
+        viewBox="0 0 32 32"
+        className="pixel-svg overflow-visible"
+        style={{
+          imageRendering: 'pixelated',
+          shapeRendering: 'crispEdges',
+        }}
       >
-        <defs>
-          {/* Main stone gradient */}
-          <linearGradient
-            id={`${gradientId}-main`}
-            x1="0%"
-            y1="0%"
-            x2="100%"
-            y2="100%"
-          >
-            <stop
-              offset="0%"
-              style={{ stopColor: '#9ca3af', stopOpacity: 1 }}
-            />
-            <stop offset="50%" style={{ stopColor: color, stopOpacity: 1 }} />
-            <stop
-              offset="100%"
-              style={{ stopColor: '#4b5563', stopOpacity: 1 }}
-            />
-          </linearGradient>
-
-          {/* Shadow gradient */}
-          <radialGradient id={`${gradientId}-shadow`} cx="50%" cy="90%" r="60%">
-            <stop
-              offset="0%"
-              style={{ stopColor: '#000000', stopOpacity: 0.3 }}
-            />
-            <stop
-              offset="100%"
-              style={{ stopColor: '#000000', stopOpacity: 0 }}
-            />
-          </radialGradient>
-
-          {/* Rune glow */}
-          <filter id={`${gradientId}-rune-glow`}>
-            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
         {/* Shadow */}
         <motion.ellipse
-          cx="50"
-          cy="85"
-          rx="18"
-          ry="4"
-          fill={`url(#${gradientId}-shadow)`}
+          cx="16"
+          cy="29"
+          rx="7"
+          ry="1.5"
+          fill="#000000"
+          opacity="0.4"
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         />
 
-        {/* Main stone body */}
-        <motion.path
-          d="M35 70 Q30 50 40 35 Q50 30 60 35 Q70 50 65 70 Q60 80 50 82 Q40 80 35 70 Z"
-          fill={`url(#${gradientId}-main)`}
-          stroke="#4b5563"
-          strokeWidth="1"
+        {/* Stone base - варианты по типу */}
+        <motion.g
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{
@@ -133,121 +147,441 @@ export function StoneSVG({
             type: 'spring',
             stiffness: 150,
           }}
-        />
+        >
+          {isGravel ? (
+            // Галька - маленькие округлые камешки
+            <>
+              {/* Основной камешек */}
+              <rect
+                x="12"
+                y="16"
+                width="8"
+                height="6"
+                fill={seasonalColors.main}
+              />
+              <rect
+                x="11"
+                y="17"
+                width="2"
+                height="4"
+                fill={seasonalColors.main}
+              />
+              <rect
+                x="19"
+                y="17"
+                width="2"
+                height="4"
+                fill={seasonalColors.main}
+              />
 
-        {/* Stone texture - cracks and lines */}
-        <motion.path
-          d="M45 40 Q50 45 55 42"
-          stroke="#374151"
-          strokeWidth="1"
-          fill="none"
-          opacity="0.6"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
+              {/* Дополнительные мелкие камешки */}
+              <rect
+                x="8"
+                y="20"
+                width="4"
+                height="3"
+                fill={seasonalColors.main}
+              />
+              <rect
+                x="20"
+                y="20"
+                width="4"
+                height="3"
+                fill={seasonalColors.main}
+              />
+              <rect
+                x="14"
+                y="23"
+                width="4"
+                height="2"
+                fill={seasonalColors.main}
+              />
+
+              {/* Блики на гальке */}
+              <rect
+                x="12"
+                y="16"
+                width="3"
+                height="2"
+                fill={seasonalColors.highlight}
+              />
+              <rect
+                x="8"
+                y="20"
+                width="2"
+                height="1"
+                fill={seasonalColors.highlight}
+              />
+              <rect
+                x="20"
+                y="20"
+                width="2"
+                height="1"
+                fill={seasonalColors.highlight}
+              />
+
+              {/* Тени гальки */}
+              <rect
+                x="17"
+                y="20"
+                width="3"
+                height="2"
+                fill={seasonalColors.shadow}
+              />
+              <rect
+                x="10"
+                y="22"
+                width="2"
+                height="1"
+                fill={seasonalColors.shadow}
+              />
+              <rect
+                x="22"
+                y="22"
+                width="2"
+                height="1"
+                fill={seasonalColors.shadow}
+              />
+            </>
+          ) : isBoulder ? (
+            // Булыжник - большой массивный камень
+            <>
+              {/* Основной булыжник */}
+              <rect
+                x="4"
+                y="12"
+                width="24"
+                height="14"
+                fill={seasonalColors.main}
+              />
+              <rect
+                x="6"
+                y="8"
+                width="20"
+                height="4"
+                fill={seasonalColors.main}
+              />
+              <rect
+                x="8"
+                y="6"
+                width="16"
+                height="2"
+                fill={seasonalColors.main}
+              />
+
+              {/* Блики на булыжнике */}
+              <rect
+                x="4"
+                y="12"
+                width="10"
+                height="6"
+                fill={seasonalColors.highlight}
+              />
+              <rect
+                x="6"
+                y="8"
+                width="8"
+                height="4"
+                fill={seasonalColors.highlight}
+              />
+              <rect
+                x="8"
+                y="6"
+                width="6"
+                height="2"
+                fill={seasonalColors.highlight}
+              />
+
+              {/* Тени булыжника */}
+              <rect
+                x="18"
+                y="18"
+                width="10"
+                height="8"
+                fill={seasonalColors.shadow}
+              />
+              <rect
+                x="18"
+                y="8"
+                width="8"
+                height="10"
+                fill={seasonalColors.shadow}
+              />
+              <rect
+                x="18"
+                y="6"
+                width="6"
+                height="2"
+                fill={seasonalColors.shadow}
+              />
+            </>
+          ) : (
+            // Обычный камень (существующий код)
+            <>
+              {/* Stone main body */}
+              <rect
+                x="6"
+                y="15"
+                width="20"
+                height="12"
+                fill={seasonalColors.main}
+              />
+
+              {/* Stone top sections */}
+              <rect
+                x="8"
+                y="12"
+                width="16"
+                height="3"
+                fill={seasonalColors.main}
+              />
+              <rect
+                x="10"
+                y="9"
+                width="12"
+                height="3"
+                fill={seasonalColors.main}
+              />
+              <rect
+                x="12"
+                y="7"
+                width="8"
+                height="2"
+                fill={seasonalColors.main}
+              />
+
+              {/* Stone left side highlight */}
+              <rect
+                x="6"
+                y="15"
+                width="6"
+                height="12"
+                fill={seasonalColors.highlight}
+              />
+              <rect
+                x="8"
+                y="12"
+                width="4"
+                height="3"
+                fill={seasonalColors.highlight}
+              />
+              <rect
+                x="10"
+                y="9"
+                width="3"
+                height="3"
+                fill={seasonalColors.highlight}
+              />
+              <rect
+                x="12"
+                y="7"
+                width="2"
+                height="2"
+                fill={seasonalColors.highlight}
+              />
+
+              {/* Stone right side shadow */}
+              <rect
+                x="20"
+                y="15"
+                width="6"
+                height="12"
+                fill={seasonalColors.shadow}
+              />
+              <rect
+                x="20"
+                y="12"
+                width="4"
+                height="3"
+                fill={seasonalColors.shadow}
+              />
+              <rect
+                x="19"
+                y="9"
+                width="3"
+                height="3"
+                fill={seasonalColors.shadow}
+              />
+              <rect
+                x="18"
+                y="7"
+                width="2"
+                height="2"
+                fill={seasonalColors.shadow}
+              />
+
+              {/* Top highlight */}
+              <rect x="12" y="7" width="4" height="1" fill="#f3f4f6" />
+              <rect x="10" y="9" width="6" height="1" fill="#e5e7eb" />
+              <rect x="8" y="12" width="8" height="1" fill="#e5e7eb" />
+            </>
+          )}
+        </motion.g>
+
+        {/* Stone texture and cracks */}
+        <motion.g
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 1 }}
-        />
+        >
+          {/* Horizontal cracks */}
+          <rect
+            x="9"
+            y="18"
+            width="6"
+            height="1"
+            fill="#374151"
+            opacity="0.6"
+          />
+          <rect
+            x="17"
+            y="21"
+            width="5"
+            height="1"
+            fill="#374151"
+            opacity="0.6"
+          />
+          <rect
+            x="11"
+            y="24"
+            width="4"
+            height="1"
+            fill="#374151"
+            opacity="0.6"
+          />
 
-        <motion.path
-          d="M38 55 Q42 60 46 58"
-          stroke="#374151"
-          strokeWidth="1"
-          fill="none"
-          opacity="0.6"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 1, delay: 1.2 }}
-        />
+          {/* Vertical cracks */}
+          <rect
+            x="14"
+            y="13"
+            width="1"
+            height="4"
+            fill="#374151"
+            opacity="0.5"
+          />
+          <rect
+            x="18"
+            y="16"
+            width="1"
+            height="6"
+            fill="#374151"
+            opacity="0.5"
+          />
 
-        <motion.path
-          d="M55 65 Q58 68 62 66"
-          stroke="#374151"
-          strokeWidth="1"
-          fill="none"
-          opacity="0.6"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 1, delay: 1.4 }}
-        />
+          {/* Small texture details */}
+          <rect x="11" y="16" width="1" height="1" fill="#6b7280" />
+          <rect x="19" y="19" width="1" height="1" fill="#6b7280" />
+          <rect x="13" y="22" width="1" height="1" fill="#6b7280" />
+          <rect x="21" y="23" width="1" height="1" fill="#6b7280" />
+        </motion.g>
 
-        {/* Moss patches */}
-        <motion.circle
-          cx="42"
-          cy="72"
-          r="3"
-          fill="#22c55e"
-          opacity="0.7"
+        {/* Moss patches on stone */}
+        <motion.g
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.6, delay: 1.6 }}
-        />
+        >
+          {/* Moss spots */}
+          <rect
+            x="7"
+            y="25"
+            width="3"
+            height="2"
+            fill={seasonalColors.moss}
+            opacity="0.8"
+          />
+          <rect
+            x="22"
+            y="24"
+            width="2"
+            height="2"
+            fill="#16a34a"
+            opacity="0.7"
+          />
+          <rect
+            x="12"
+            y="26"
+            width="2"
+            height="1"
+            fill={seasonalColors.moss}
+            opacity="0.6"
+          />
 
-        <motion.ellipse
-          cx="58"
-          cy="75"
-          rx="4"
-          ry="2"
-          fill="#16a34a"
-          opacity="0.6"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.6, delay: 1.8 }}
-        />
+          {/* Small moss details */}
+          <rect
+            x="9"
+            y="24"
+            width="1"
+            height="1"
+            fill={seasonalColors.moss}
+            opacity="0.9"
+          />
+          <rect
+            x="21"
+            y="26"
+            width="1"
+            height="1"
+            fill="#16a34a"
+            opacity="0.8"
+          />
+        </motion.g>
 
-        {/* Highlight */}
-        <motion.ellipse
-          cx="45"
-          cy="45"
-          rx="8"
-          ry="6"
-          fill="#ffffff"
-          opacity="0.2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.2 }}
-          transition={{ delay: 2 }}
-        />
-
-        {/* Magical runes for rare stones */}
+        {/* Special rune/crystal effects for rare stones */}
         {(rarity === RarityLevel.RARE ||
           rarity === RarityLevel.EPIC ||
           rarity === RarityLevel.LEGENDARY) && (
-          <motion.g filter={`url(#${gradientId}-rune-glow)`}>
-            {/* Runic symbols */}
-            <motion.path
-              d="M48 45 L52 45 M50 43 L50 47 M49 44 L51 46"
-              stroke={getRarityGlow()}
-              strokeWidth="1.5"
-              fill="none"
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={{
-                pathLength: 1,
-                opacity: [0, 1, 0.6],
-              }}
-              transition={{
-                duration: 2,
-                delay: 2.5,
-                repeat: Infinity,
-                repeatDelay: 3,
-              }}
+          <motion.g
+            animate={{
+              opacity: [0.5, 1, 0.5],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              delay: 2.5,
+            }}
+          >
+            {/* Magical rune on stone */}
+            <rect
+              x="14"
+              y="16"
+              width="4"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.8"
+            />
+            <rect
+              x="15"
+              y="15"
+              width="2"
+              height="3"
+              fill={getRarityGlow()}
+              opacity="0.8"
+            />
+            <rect
+              x="16"
+              y="14"
+              width="1"
+              height="1"
+              fill={getRarityGlow()}
+              opacity="0.8"
             />
 
-            <motion.circle
-              cx="50"
-              cy="58"
-              r="2"
-              stroke={getRarityGlow()}
-              strokeWidth="1"
-              fill="none"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{
-                scale: [0, 1, 0],
-                opacity: [0, 1, 0],
-              }}
-              transition={{
-                duration: 2,
-                delay: 3,
-                repeat: Infinity,
-                repeatDelay: 3,
-              }}
+            {/* Glowing crystal embedded in stone */}
+            <rect
+              x="19"
+              y="18"
+              width="2"
+              height="2"
+              fill={getRarityGlow()}
+              opacity="0.9"
+            />
+            <rect
+              x="20"
+              y="17"
+              width="1"
+              height="1"
+              fill="#ffffff"
+              opacity="0.8"
             />
           </motion.g>
         )}
@@ -256,27 +590,84 @@ export function StoneSVG({
         {rarity === RarityLevel.LEGENDARY && (
           <motion.g>
             {Array.from({ length: 4 }, (_, i) => {
-              const angle = i * 90
-              const x = 50 + Math.cos((angle * Math.PI) / 180) * 25
-              const y = 60 + Math.sin((angle * Math.PI) / 180) * 15
+              const positions = [
+                { x: 5, y: 20 },
+                { x: 27, y: 22 },
+                { x: 15, y: 6 },
+                { x: 24, y: 14 },
+              ]
+              const pos = positions[i]
+              if (!pos) return null
 
               return (
-                <motion.circle
+                <motion.rect
                   key={i}
-                  cx={x}
-                  cy={y}
-                  r="1"
+                  x={pos.x}
+                  y={pos.y}
+                  width="1"
+                  height="1"
                   fill="#fbbf24"
-                  initial={{ scale: 0, opacity: 0 }}
                   animate={{
-                    scale: [0, 1.5, 0],
                     opacity: [0, 1, 0],
+                    scale: [0.5, 2, 0.5],
                   }}
                   transition={{
                     duration: 3,
                     delay: 3 + i * 0.5,
                     repeat: Infinity,
-                    repeatDelay: 2,
+                  }}
+                />
+              )
+            })}
+
+            {/* Pulsing energy core */}
+            <motion.rect
+              x="15"
+              y="19"
+              width="2"
+              height="2"
+              fill="#fbbf24"
+              animate={{
+                opacity: [0.3, 0.9, 0.3],
+                scale: [1, 1.3, 1],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: 3.5,
+              }}
+            />
+          </motion.g>
+        )}
+
+        {/* Additional legendary sparkles */}
+        {rarity === RarityLevel.LEGENDARY && (
+          <motion.g>
+            {Array.from({ length: 3 }, (_, i) => {
+              const sparklePos = [
+                { x: 10, y: 11 },
+                { x: 23, y: 17 },
+                { x: 17, y: 25 },
+              ]
+              const pos = sparklePos[i]
+              if (!pos) return null
+
+              return (
+                <motion.rect
+                  key={`sparkle-${i}`}
+                  x={pos.x}
+                  y={pos.y}
+                  width="1"
+                  height="1"
+                  fill="#ffffff"
+                  animate={{
+                    opacity: [0, 1, 0],
+                    scale: [0, 1, 0],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    delay: 4 + i * 0.4,
                   }}
                 />
               )
@@ -286,18 +677,19 @@ export function StoneSVG({
 
         {/* Energy pulse for epic/legendary */}
         {(rarity === RarityLevel.EPIC || rarity === RarityLevel.LEGENDARY) && (
-          <motion.circle
-            cx="50"
-            cy="60"
-            r="30"
+          <motion.rect
+            x="8"
+            y="10"
+            width="16"
+            height="16"
             fill="none"
             stroke={getRarityGlow()}
             strokeWidth="1"
             opacity="0.3"
-            initial={{ scale: 0, opacity: 0 }}
+            strokeDasharray="2,2"
             animate={{
-              scale: [1, 1.3, 1],
-              opacity: [0.3, 0, 0.3],
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.1, 0.3],
             }}
             transition={{
               duration: 4,
@@ -305,6 +697,192 @@ export function StoneSVG({
               delay: 3,
             }}
           />
+        )}
+
+        {/* Сезонные декоративные элементы для камней */}
+        {season && (
+          <motion.g
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1.5, delay: 3 }}
+          >
+            {season === SeasonalVariant.SPRING && (
+              // Весенние росточки и мох
+              <>
+                <motion.rect
+                  x="6"
+                  y="12"
+                  width="1"
+                  height="2"
+                  fill={seasonalColors.decoration}
+                  animate={{ scaleY: [0.5, 1, 0.5] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                />
+                <rect
+                  x="25"
+                  y="18"
+                  width="1"
+                  height="1"
+                  fill={seasonalColors.decoration}
+                  opacity="0.8"
+                />
+                <rect
+                  x="4"
+                  y="20"
+                  width="1"
+                  height="1"
+                  fill={seasonalColors.decoration}
+                  opacity="0.7"
+                />
+                <rect
+                  x="28"
+                  y="24"
+                  width="1"
+                  height="1"
+                  fill={seasonalColors.decoration}
+                  opacity="0.6"
+                />
+              </>
+            )}
+            {season === SeasonalVariant.SUMMER && (
+              // Летние блики и сухость
+              <>
+                <motion.rect
+                  x="14"
+                  y="6"
+                  width="4"
+                  height="1"
+                  fill={seasonalColors.decoration}
+                  animate={{ opacity: [0.4, 1, 0.4] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+                <rect
+                  x="10"
+                  y="5"
+                  width="1"
+                  height="1"
+                  fill={seasonalColors.decoration}
+                  opacity="0.8"
+                />
+                <rect
+                  x="22"
+                  y="7"
+                  width="1"
+                  height="1"
+                  fill={seasonalColors.decoration}
+                  opacity="0.7"
+                />
+                <rect
+                  x="8"
+                  y="8"
+                  width="1"
+                  height="1"
+                  fill={seasonalColors.decoration}
+                  opacity="0.6"
+                />
+              </>
+            )}
+            {season === SeasonalVariant.AUTUMN && (
+              // Осенние листочки на камне
+              <>
+                <rect
+                  x="8"
+                  y="14"
+                  width="2"
+                  height="1"
+                  fill={seasonalColors.decoration}
+                  opacity="0.7"
+                />
+                <rect
+                  x="22"
+                  y="16"
+                  width="2"
+                  height="1"
+                  fill={seasonalColors.decoration}
+                  opacity="0.6"
+                />
+                <rect
+                  x="12"
+                  y="28"
+                  width="1"
+                  height="1"
+                  fill="#dc2626"
+                  opacity="0.5"
+                />
+                <rect
+                  x="20"
+                  y="29"
+                  width="1"
+                  height="1"
+                  fill="#f59e0b"
+                  opacity="0.5"
+                />
+                <rect
+                  x="6"
+                  y="26"
+                  width="1"
+                  height="1"
+                  fill="#ea580c"
+                  opacity="0.4"
+                />
+              </>
+            )}
+            {season === SeasonalVariant.WINTER && (
+              // Зимний иней и снежинки
+              <>
+                <motion.rect
+                  x="12"
+                  y="8"
+                  width="1"
+                  height="1"
+                  fill={seasonalColors.decoration}
+                  animate={{ opacity: [0.3, 1, 0.3] }}
+                  transition={{ duration: 4, repeat: Infinity, delay: 1 }}
+                />
+                <motion.rect
+                  x="20"
+                  y="10"
+                  width="1"
+                  height="1"
+                  fill={seasonalColors.decoration}
+                  animate={{ opacity: [0.3, 1, 0.3] }}
+                  transition={{ duration: 4, repeat: Infinity, delay: 2 }}
+                />
+                <rect
+                  x="10"
+                  y="6"
+                  width="1"
+                  height="1"
+                  fill="#f1f5f9"
+                  opacity="0.9"
+                />
+                <rect
+                  x="24"
+                  y="12"
+                  width="1"
+                  height="1"
+                  fill="#f1f5f9"
+                  opacity="0.8"
+                />
+                <rect
+                  x="16"
+                  y="4"
+                  width="1"
+                  height="1"
+                  fill="#ffffff"
+                  opacity="0.7"
+                />
+                <rect
+                  x="6"
+                  y="28"
+                  width="2"
+                  height="1"
+                  fill="#ddd6fe"
+                  opacity="0.6"
+                />
+              </>
+            )}
+          </motion.g>
         )}
       </motion.svg>
 
