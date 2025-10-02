@@ -90,9 +90,13 @@ export const useMoodStore = create<MoodStore>()(
 
         const todaysMood =
           storedHistory.find(entry => {
-            const entryDate = new Date(entry.date)
-            entryDate.setHours(0, 0, 0, 0)
-            return entryDate.getTime() === today.getTime()
+            // 🔧 ИСПРАВЛЕНИЕ: Правильно сравниваем даты с учетом часовых поясов
+            const entryDateStr = new Date(entry.date)
+              .toISOString()
+              .split('T')[0] // YYYY-MM-DD
+            const todayStr = today.toISOString().split('T')[0] // YYYY-MM-DD
+
+            return entryDateStr === todayStr
           }) ?? null
 
         // Calculate streak
@@ -218,9 +222,13 @@ export const useMoodStore = create<MoodStore>()(
 
               const todaysMood =
                 convertedMoods.find((entry: MoodEntry) => {
-                  const entryDate = new Date(entry.date)
-                  entryDate.setHours(0, 0, 0, 0)
-                  return entryDate.getTime() === today.getTime()
+                  // 🔧 ИСПРАВЛЕНИЕ: Правильно сравниваем даты с учетом часовых поясов
+                  // entry.date уже содержит дату из mood_date (только дата, без времени)
+                  // Создаем локальную дату из строки mood_date для корректного сравнения
+                  const entryDateStr = entry.date.toISOString().split('T')[0] // YYYY-MM-DD
+                  const todayStr = today.toISOString().split('T')[0] // YYYY-MM-DD
+
+                  return entryDateStr === todayStr
                 }) || null
 
               const stats = calculateMoodStats(convertedMoods)

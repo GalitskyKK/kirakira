@@ -59,11 +59,9 @@ async function handleRecord(req, res) {
       })
     }
 
-    const moodDate = new Date(date)
-
     console.log(`🗄️ Recording mood to Supabase for user ${telegramUserId}:`, {
       mood,
-      date: moodDate.toISOString(),
+      date: new Date(date).toISOString(),
       note,
       intensity,
     })
@@ -100,8 +98,19 @@ async function handleRecord(req, res) {
       }
     }
 
-    // Форматируем дату для PostgreSQL (только дата, без времени)
-    const formattedDate = moodDate.toISOString().split('T')[0]
+    // 🔧 ИСПРАВЛЕНИЕ: Правильно форматируем дату с учетом часового пояса пользователя
+    // Клиент отправляет дату в своем локальном времени, нужно извлечь только дату
+    const moodDate = new Date(date)
+
+    // Получаем локальную дату пользователя (YYYY-MM-DD) независимо от UTC
+    const userYear = moodDate.getFullYear()
+    const userMonth = String(moodDate.getMonth() + 1).padStart(2, '0')
+    const userDay = String(moodDate.getDate()).padStart(2, '0')
+    const formattedDate = `${userYear}-${userMonth}-${userDay}`
+
+    console.log(
+      `📅 Date processing: client sent ${date}, saving as ${formattedDate}`
+    )
 
     // Используем UPSERT для замены записи за день
     const { data, error } = await supabase
