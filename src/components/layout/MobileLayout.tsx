@@ -28,11 +28,7 @@ const TABS = ['mood', 'garden', 'community', 'stats', 'profile']
 export function MobileLayout() {
   const [activeTab, setActiveTab] = useState('mood')
   const { garden, gardenStats } = useGardenState()
-  const {
-    todaysMood,
-    canCheckinToday: _canCheckinToday,
-    moodHistory,
-  } = useMoodTracking()
+  const { canCheckinToday, moodHistory } = useMoodTracking()
   // Removed currentUser as it's not used in this component
 
   const tabIndex = TABS.indexOf(activeTab)
@@ -55,7 +51,9 @@ export function MobileLayout() {
                 🌸 KiraKira
               </h1>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                {todaysMood ? 'Настроение отмечено' : 'Как дела сегодня?'}
+                {!canCheckinToday()
+                  ? 'Настроение отмечено'
+                  : 'Как дела сегодня?'}
               </p>
             </div>
 

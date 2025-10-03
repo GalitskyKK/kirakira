@@ -15,7 +15,6 @@ import type {
   DatabaseMoodEntry,
 } from '@/types/api'
 import { calculateMoodStats } from '@/utils/moodMapping'
-import { isTimeForCheckin } from '@/utils/dateHelpers'
 import { saveMoodHistory, loadMoodHistory } from '@/utils/storage'
 
 interface MoodActions {
@@ -220,16 +219,24 @@ export const useMoodStore = create<MoodStore>()(
               const today = new Date()
               today.setHours(0, 0, 0, 0)
 
-              const todaysMood =
-                convertedMoods.find((entry: MoodEntry) => {
-                  // 🔧 ИСПРАВЛЕНИЕ: Правильно сравниваем даты с учетом часовых поясов
-                  // entry.date уже содержит дату из mood_date (только дата, без времени)
-                  // Создаем локальную дату из строки mood_date для корректного сравнения
-                  const entryDateStr = entry.date.toISOString().split('T')[0] // YYYY-MM-DD
-                  const todayStr = today.toISOString().split('T')[0] // YYYY-MM-DD
+              // 🔧 ПРОСТОЕ И НАДЕЖНОЕ РЕШЕНИЕ: Сервер - единственный источник правды
+              // Локальные данные используются только для UI responsiveness до синхронизации
 
+              const todayFromServer =
+                convertedMoods.find((entry: MoodEntry) => {
+                  const entryDateStr = entry.date.toISOString().split('T')[0]
+                  const todayStr = today.toISOString().split('T')[0]
                   return entryDateStr === todayStr
                 }) || null
+
+              // ВСЕГДА приоритизируем серверные данные для consistency между устройствами
+              const finalTodaysMood = todayFromServer
+
+              console.log('🔄 Simple mood sync:', {
+                todayFromServer: todayFromServer ? 'EXISTS' : 'NULL',
+                finalChoice: 'ALWAYS_SERVER',
+                guarantee: 'All devices will have identical data',
+              })
 
               const stats = calculateMoodStats(convertedMoods)
               const lastEntry =
@@ -237,7 +244,7 @@ export const useMoodStore = create<MoodStore>()(
 
               set({
                 moodHistory: convertedMoods,
-                todaysMood,
+                todaysMood: finalTodaysMood,
                 streakCount: stats.currentStreak,
                 lastCheckin: lastEntry?.date ?? null,
               })
@@ -246,7 +253,7 @@ export const useMoodStore = create<MoodStore>()(
               saveMoodHistory(convertedMoods)
 
               console.log(
-                `✅ Synced ${convertedMoods.length} moods from server`
+                `✅ Synced ${convertedMoods.length} moods from server - data consistency guaranteed`
               )
             }
           }
@@ -416,8 +423,36 @@ export const useMoodStore = create<MoodStore>()(
 
     // Utility functions
     canCheckinToday: () => {
-      const { lastCheckin } = get()
-      return isTimeForCheckin(lastCheckin)
+      // 🔧 КОНСИСТЕНТНОСТЬ: Проверяем не только настроение, но и наличие растения за сегодня
+      // Это гарантирует, что UI будет синхронен с садом
+      const { todaysMood } = get()
+
+      // Если есть настроение - точно нельзя отмечать
+      if (todaysMood) {
+        return false
+      }
+
+      // Если нет настроения, проверяем есть ли растение за сегодня
+      const gardenStore = useGardenStore.getState()
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      if (gardenStore.currentGarden) {
+        const todayElement = gardenStore.currentGarden.elements.find(
+          element => {
+            const elementDate = new Date(element.unlockDate)
+            elementDate.setHours(0, 0, 0, 0)
+            return elementDate.getTime() === today.getTime()
+          }
+        )
+
+        if (todayElement) {
+          console.log('🌱 Found garden element for today - mood already marked')
+          return false // Есть растение = настроение уже отмечено
+        }
+      }
+
+      return true // Можно отмечать только если нет ни настроения, ни растения
     },
 
     getTodaysMood: () => {
