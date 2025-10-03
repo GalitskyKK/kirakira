@@ -36,7 +36,6 @@ async function handleList(req, res) {
     }
 
     const supabase = await getSupabaseClient()
-    console.log('🔗 Supabase client created successfully')
 
     // Получаем активные челленджи
     console.log('📞 Calling get_active_challenges() function...')
