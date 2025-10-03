@@ -13,7 +13,6 @@ import {
   differenceInMonths,
   addDays,
   // subDays,
-  isSameDay,
   parseISO,
   isValid,
 } from 'date-fns'
@@ -83,14 +82,25 @@ export function getRelativeTimeString(date: Date | string): string {
 
 /**
  * Checks if it's time for daily check-in
+ * Uses the same date comparison logic as todaysMood to ensure consistency
  */
 export function isTimeForCheckin(lastCheckin: Date | null): boolean {
   if (lastCheckin === null) return true
 
-  const today = startOfDay(new Date())
-  const lastCheckinDay = startOfDay(lastCheckin)
+  // 🔧 ИСПРАВЛЕНИЕ: Используем ту же логику сравнения строк дат что и в todaysMood
+  // Это обеспечивает корректную работу с часовыми поясами
+  const today = new Date()
+  const entryDateStr = lastCheckin.toISOString().split('T')[0] // YYYY-MM-DD
+  const todayStr = today.toISOString().split('T')[0] // YYYY-MM-DD
 
-  return !isSameDay(today, lastCheckinDay)
+  console.log('🕐 isTimeForCheckin check:', {
+    lastCheckin: lastCheckin.toISOString(),
+    entryDateStr,
+    todayStr,
+    canCheckin: entryDateStr !== todayStr,
+  })
+
+  return entryDateStr !== todayStr // Можно отметить если даты разные
 }
 
 /**

@@ -98,7 +98,8 @@ export function MoodSelector({
                     selectedMood === moodKey
                       ? 'scale-105 border-current shadow-md'
                       : 'hover:scale-102 border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600',
-                    isAlreadyCheckedIn && 'cursor-not-allowed opacity-50'
+                    isAlreadyCheckedIn &&
+                      'pointer-events-none cursor-not-allowed opacity-50'
                   )}
                   style={{
                     color:
@@ -108,10 +109,12 @@ export function MoodSelector({
                         ? `${moodConfig.color}10`
                         : undefined,
                   }}
-                  onClick={() =>
-                    !isAlreadyCheckedIn && handleMoodSelect(moodKey)
-                  }
-                  disabled={isAlreadyCheckedIn}
+                  onClick={() => {
+                    if (!isAlreadyCheckedIn) {
+                      handleMoodSelect(moodKey)
+                    }
+                  }}
+                  disabled={isAlreadyCheckedIn || isLoading}
                   {...(!isAlreadyCheckedIn && {
                     whileHover: { scale: 1.02 },
                     whileTap: { scale: 0.98 },

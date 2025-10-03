@@ -361,6 +361,10 @@ export const useGardenStore = create<GardenStore>()(
       try {
         // Get existing positions to avoid overlap
         const existingPositions = currentGarden.elements.map(el => el.position)
+        console.log('🔍 Existing positions in garden:', {
+          count: existingPositions.length,
+          positions: existingPositions.map(p => `(${p.x},${p.y})`).join(', '),
+        })
 
         // Generate new element
         const newElement = generateDailyElement(
@@ -370,6 +374,33 @@ export const useGardenStore = create<GardenStore>()(
           mood,
           existingPositions
         )
+
+        console.log('🌱 Generated new element:', {
+          id: newElement.id,
+          position: `(${newElement.position.x},${newElement.position.y})`,
+          name: newElement.name,
+          type: newElement.type,
+        })
+
+        // Final collision check before adding to garden
+        const finalCollisionCheck = currentGarden.elements.some(
+          el =>
+            el.position.x === newElement.position.x &&
+            el.position.y === newElement.position.y
+        )
+
+        if (finalCollisionCheck) {
+          console.error(
+            '❌ COLLISION DETECTED! Generated element position conflicts with existing element'
+          )
+          console.error('New element position:', newElement.position)
+          console.error('Existing positions:', existingPositions)
+          set({
+            error: 'Failed to generate element: position collision detected',
+            isLoading: false,
+          })
+          return null
+        }
 
         // Update garden with new element
         const updatedGarden: Garden = {

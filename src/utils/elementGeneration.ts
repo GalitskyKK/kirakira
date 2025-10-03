@@ -500,6 +500,11 @@ function generatePosition(
   const SHELF_COUNT = 4
   const MAX_POSITIONS_PER_SHELF = 10
 
+  console.log('🎯 Generating position for new element:', {
+    existingPositionsCount: existingPositions.length,
+    existingPositions: existingPositions.map(p => `(${p.x},${p.y})`).join(', '),
+  })
+
   while (attempts < maxAttempts) {
     const position: Position2D = {
       x: random.nextInt(0, MAX_POSITIONS_PER_SHELF - 1), // Position on shelf (0-9)
@@ -511,8 +516,12 @@ function generatePosition(
       pos => pos.x === position.x && pos.y === position.y
     )
 
+    console.log(
+      `🎲 Attempt ${attempts + 1}: position (${position.x}, ${position.y}) - ${isOccupied ? 'OCCUPIED' : 'FREE'}`
+    )
+
     if (!isOccupied) {
-      console.log('🎲 Generated random position for new element:', {
+      console.log('✅ Generated random position for new element:', {
         position,
         shelfNumber: position.y,
         positionOnShelf: position.x,
@@ -523,6 +532,8 @@ function generatePosition(
 
     attempts++
   }
+
+  console.warn('⚠️ Max attempts reached, falling back to sequential search')
 
   // Fallback: find first available position (shelf by shelf)
   for (let y = 0; y < SHELF_COUNT; y++) {
@@ -544,7 +555,10 @@ function generatePosition(
   }
 
   // Ultimate fallback: top-left corner of first shelf
-  console.warn('⚠️ All positions occupied, using ultimate fallback (0,0)')
+  console.error(
+    '❌ All positions occupied, using ultimate fallback (0,0) - THIS WILL CAUSE COLLISION!'
+  )
+  console.error('Existing positions:', existingPositions)
   return { x: 0, y: 0 }
 }
 
