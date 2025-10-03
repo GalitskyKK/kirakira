@@ -1,20 +1,26 @@
+/**
+ * User Zustand Store - ГИБРИДНЫЙ ПОДХОД
+ *
+ * После рефакторинга этот стор управляет:
+ *
+ * КЛИЕНТСКОЕ СОСТОЯНИЕ (Zustand):
+ * - currentUser - текущий пользователь в UI
+ * - isAuthenticated - статус аутентификации
+ * - hasCompletedOnboarding - статус онбординга
+ *
+ * СЕРВЕРНОЕ СОСТОЯНИЕ (React Query):
+ * - useProfile() - получение профиля с сервера
+ * - useAddExperience() - добавление опыта
+ * - useUpdatePrivacy() - обновление настроек
+ *
+ * Минимальная серверная логика остается в store только для:
+ * - Начальной загрузки пользователя (loadUser)
+ * - Создания нового пользователя (createTelegramUser)
+ */
+
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
-import type {
-  User,
-  UserState,
-  UserPreferences,
-  UserStats,
-  // NotificationSettings,
-  // PrivacySettings,
-  // GardenPreferences,
-} from '@/types'
-import type {
-  DatabaseUser,
-  StandardApiResponse,
-  ProfileApiGetProfileResponse,
-  ProfileApiAddExperienceResponse,
-} from '@/types/api'
+import type { User, UserState, UserPreferences, UserStats } from '@/types'
 import {
   saveUser,
   loadUser,
@@ -23,14 +29,18 @@ import {
 } from '@/utils/storage'
 import { telegramStorage } from '@/utils/telegramStorage'
 
+// ============================================
+// INTERFACES
+// ============================================
+
 interface TelegramUserData {
-  telegramId: number
-  firstName: string
-  lastName: string | undefined
-  username: string | undefined
-  photoUrl: string | undefined
-  authDate: Date
-  hash: string
+  readonly telegramId: number
+  readonly firstName: string
+  readonly lastName: string | undefined
+  readonly username: string | undefined
+  readonly photoUrl: string | undefined
+  readonly authDate: Date
+  readonly hash: string
 }
 
 interface UserActions {
@@ -55,22 +65,27 @@ interface UserActions {
   incrementVisitCount: () => void
   updateLastVisit: () => void
   clearAllUserData: () => Promise<void>
-  clearUserDataOnly: () => Promise<void> // 🆕 Новая функция - только данные пользователя
+  clearUserDataOnly: () => Promise<void>
+
+  // ВАЖНО: Эта функция остается для обратной совместимости,
+  // но в новом коде предпочтительно использовать useProfile() хук
   syncFromSupabase: (
     telegramId: number,
-    userData?: Partial<DatabaseUser>
+    userData?: Partial<{
+      readonly telegram_id: number
+      readonly user_id: string
+      readonly username?: string
+      readonly first_name?: string
+      readonly last_name?: string
+    }>
   ) => Promise<void>
-  addExperienceAndSync: (
-    experiencePoints: number,
-    reason: string
-  ) => Promise<{
-    success: boolean
-    data?: { experience: number; level: number; leveledUp?: boolean }
-    error?: string
-  }> // 🆕 Синхронизация опыта
 }
 
 type UserStore = UserState & UserActions
+
+// ============================================
+// DEFAULT VALUES
+// ============================================
 
 const DEFAULT_PREFERENCES: UserPreferences = {
   theme: 'auto',
@@ -78,7 +93,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   notifications: {
     enabled: true,
     dailyReminder: true,
-    reminderTime: '10:00', // Время в МСК для уведомлений
+    reminderTime: '10:00',
     weeklyStats: true,
     milestones: true,
     streakLost: true,
@@ -118,16 +133,29 @@ function createDefaultStats(): UserStats {
   }
 }
 
+// ============================================
+// ZUSTAND STORE
+// ============================================
+
 export const useUserStore = create<UserStore>()(
   subscribeWithSelector((set, get) => ({
-    // Initial state
+    // ============================================
+    // INITIAL STATE
+    // ============================================
     currentUser: null,
     isAuthenticated: false,
     isLoading: false,
     error: null,
     hasCompletedOnboarding: false,
 
-    // Actions
+    // ============================================
+    // ACTIONS
+    // ============================================
+
+    /**
+     * Загружает пользователя из localStorage
+     * Серверная синхронизация должна вызываться отдельно через useProfile() хук
+     */
     loadUser: async () => {
       set({ isLoading: true, error: null })
 
@@ -137,13 +165,11 @@ export const useUserStore = create<UserStore>()(
 
         console.log('🔍 loadUser - Loaded from localStorage:', {
           hasUser: !!storedUser,
-          userExperience: storedUser?.experience,
-          userLevel: storedUser?.level,
           isAnonymous: storedUser?.isAnonymous,
           telegramId: storedUser?.telegramId,
         })
 
-        // 🔥 РЕАЛЬНАЯ СИНХРОНИЗАЦИЯ - загружаем из CloudStorage если доступно
+        // Попытка загрузки из Telegram CloudStorage
         if (telegramStorage.isAvailable && !storedUser) {
           try {
             const cloudUser = await telegramStorage.loadUser()
@@ -157,12 +183,6 @@ export const useUserStore = create<UserStore>()(
         }
 
         if (storedUser) {
-          console.log('🔍 loadUser - Setting user to store:', {
-            experience: storedUser.experience,
-            level: storedUser.level,
-            telegramId: storedUser.telegramId,
-          })
-
           set({
             currentUser: storedUser,
             isAuthenticated: !storedUser.isAnonymous,
@@ -202,7 +222,6 @@ export const useUserStore = create<UserStore>()(
         const success = saveUser(newUser)
 
         if (success) {
-          // 🔥 РЕАЛЬНАЯ СИНХРОНИЗАЦИЯ с CloudStorage для анонимных пользователей тоже
           if (telegramStorage.isAvailable) {
             try {
               await telegramStorage.saveUser(newUser)
@@ -217,7 +236,7 @@ export const useUserStore = create<UserStore>()(
 
           set({
             currentUser: newUser,
-            isAuthenticated: false, // Anonymous users are not "authenticated"
+            isAuthenticated: false,
             isLoading: false,
           })
 
@@ -240,7 +259,6 @@ export const useUserStore = create<UserStore>()(
       set({ isLoading: true, error: null })
 
       try {
-        // Проверяем, есть ли уже пользователь с таким Telegram ID
         const existingUser = loadUser()
         if (
           existingUser &&
@@ -272,10 +290,8 @@ export const useUserStore = create<UserStore>()(
         const success = saveUser(newUser)
 
         if (success) {
-          // Отмечаем онбординг как завершенный для Telegram пользователей
           saveOnboardingCompleted(true)
 
-          // 🔥 РЕАЛЬНАЯ СИНХРОНИЗАЦИЯ с CloudStorage
           if (telegramStorage.isAvailable) {
             telegramStorage
               .saveUser(newUser)
@@ -318,8 +334,6 @@ export const useUserStore = create<UserStore>()(
         return
       }
 
-      set({ isLoading: true, error: null })
-
       try {
         const updatedUser: User = {
           ...currentUser,
@@ -331,7 +345,6 @@ export const useUserStore = create<UserStore>()(
         if (success) {
           set({
             currentUser: updatedUser,
-            isLoading: false,
           })
         } else {
           throw new Error('Failed to save user updates')
@@ -341,7 +354,6 @@ export const useUserStore = create<UserStore>()(
           error instanceof Error ? error.message : 'Failed to update user'
         set({
           error: errorMessage,
-          isLoading: false,
         })
       }
     },
@@ -357,7 +369,6 @@ export const useUserStore = create<UserStore>()(
       const updatedPreferences: UserPreferences = {
         ...currentUser.preferences,
         ...preferences,
-        // Handle nested objects
         notifications: {
           ...currentUser.preferences.notifications,
           ...(preferences.notifications ?? {}),
@@ -395,7 +406,6 @@ export const useUserStore = create<UserStore>()(
       set({ isLoading: true, error: null })
 
       try {
-        // Clear user data but keep as anonymous user
         await get().createAnonymousUser()
 
         set({
@@ -459,21 +469,17 @@ export const useUserStore = create<UserStore>()(
       }
     },
 
-    // 🗑️ ПРИНУДИТЕЛЬНАЯ ОЧИСТКА ВСЕХ ДАННЫХ (включая онбординг)
     clearAllUserData: async () => {
       set({ isLoading: true, error: null })
 
       try {
-        // 1. Очистить localStorage
         localStorage.clear()
 
-        // 2. Очистить Telegram CloudStorage
         if (telegramStorage.isAvailable) {
           await telegramStorage.clearAllData()
           console.log('✅ CloudStorage cleared')
         }
 
-        // 3. Очистить другие stores
         const { clearMoodHistory } = await import('./moodStore').then(m =>
           m.useMoodStore.getState()
         )
@@ -485,7 +491,6 @@ export const useUserStore = create<UserStore>()(
         clearGarden()
         console.log('✅ Mood and Garden stores cleared')
 
-        // 4. Сбросить состояние пользователя
         set({
           currentUser: null,
           isAuthenticated: false,
@@ -503,32 +508,26 @@ export const useUserStore = create<UserStore>()(
       }
     },
 
-    // 🎯 УМНАЯ ОЧИСТКА - только данные пользователя, сохраняет онбординг
     clearUserDataOnly: async () => {
       set({ isLoading: true, error: null })
 
       try {
-        // 1. Сохраняем состояние онбординга ПЕРЕД очисткой
         const onboardingStatus = isOnboardingCompleted()
 
-        // 2. Очищаем только пользовательские данные в localStorage
         const { STORAGE_KEYS } = await import('@/utils/storage')
-        const keysToKeep = [STORAGE_KEYS.ONBOARDING] // Сохраняем онбординг
+        const keysToKeep = [STORAGE_KEYS.ONBOARDING]
 
-        // Очищаем все ключи кроме тех что нужно сохранить
         Object.values(STORAGE_KEYS).forEach((key: string) => {
           if (!keysToKeep.includes(key as any)) {
             localStorage.removeItem(key)
           }
         })
 
-        // 3. Очистить пользовательские данные в Telegram CloudStorage
         if (telegramStorage.isAvailable) {
-          await telegramStorage.clearUserData() // Используем более селективную очистку
+          await telegramStorage.clearUserData()
           console.log('✅ User data cleared from CloudStorage')
         }
 
-        // 4. Очистить другие stores (сад и настроения)
         try {
           const moodStoreModule = await import('./moodStore')
           const gardenStoreModule = await import('./gardenStore')
@@ -546,19 +545,16 @@ export const useUserStore = create<UserStore>()(
           console.log('✅ Mood and Garden stores cleared')
         } catch (storeError) {
           console.warn('⚠️ Failed to clear stores:', storeError)
-          // Не критично, продолжаем
         }
 
-        // 5. Сбросить состояние пользователя НО сохранить онбординг
         set({
           currentUser: null,
           isAuthenticated: false,
-          hasCompletedOnboarding: onboardingStatus, // 🎯 Сохраняем статус онбординга!
+          hasCompletedOnboarding: onboardingStatus,
           isLoading: false,
           error: null,
         })
 
-        // 6. Восстанавливаем онбординг в localStorage (на случай если был затёрт)
         if (onboardingStatus) {
           saveOnboardingCompleted(true)
         }
@@ -572,226 +568,35 @@ export const useUserStore = create<UserStore>()(
       }
     },
 
-    // 🔄 СИНХРОНИЗАЦИЯ ИЗ SUPABASE (ИСПРАВЛЕНО)
+    /**
+     * УСТАРЕВШАЯ ФУНКЦИЯ - Для обратной совместимости
+     *
+     * В новом коде используйте useProfile() хук из React Query
+     * Эта функция остается только для начальной загрузки
+     */
     syncFromSupabase: async (
-      telegramId: number,
-      userData?: Partial<DatabaseUser>
+      _telegramId: number,
+      _userData?: Partial<{
+        readonly telegram_id: number
+        readonly user_id: string
+        readonly username?: string
+        readonly first_name?: string
+        readonly last_name?: string
+      }>
     ) => {
-      set({ isLoading: true, error: null })
-
-      try {
-        console.log(`🔄 Syncing user data from Supabase for ${telegramId}`)
-
-        // Используем POST если есть userData, иначе GET
-        let response: Response
-        if (userData) {
-          console.log('📤 Sending user data to API:', userData)
-          response = await fetch(`/api/profile?action=get_profile`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ telegramId, userData }),
-          })
-        } else {
-          response = await fetch(
-            `/api/profile?action=get_profile&telegramId=${telegramId}`
-          )
-        }
-
-        console.log('🔍 API Response status:', response.status, response.ok)
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch user data: ${response.status}`)
-        }
-
-        const result =
-          (await response.json()) as StandardApiResponse<ProfileApiGetProfileResponse>
-
-        console.log('🔍 API Response data:', {
-          success: result.success,
-          hasUser: !!result.data?.user,
-          userExperience: result.data?.user?.experience,
-          userLevel: result.data?.user?.level,
-          fullResult: result,
-        })
-
-        if (!result.success || !result.data?.user) {
-          console.log(
-            `📝 No server data for user ${telegramId} - keeping current state`
-          )
-          set({ isLoading: false })
-          return
-        }
-
-        // Создаем пользователя на основе данных с сервера (ИСПРАВЛЕННЫЙ ФОРМАТ)
-        const serverUser = result.data.user
-        const serverStats = result.data.stats || {}
-
-        const syncedUser = {
-          id: `tg_${telegramId}`,
-          telegramId: telegramId,
-          firstName: serverUser.first_name,
-          lastName: serverUser.last_name,
-          username: serverUser.username,
-          photoUrl: serverUser.photo_url,
-          registrationDate: serverUser.registration_date
-            ? new Date(serverUser.registration_date)
-            : new Date(),
-          lastVisitDate: serverUser.last_visit_date
-            ? new Date(serverUser.last_visit_date)
-            : new Date(),
-          preferences: {
-            ...DEFAULT_PREFERENCES,
-            // Мержим настройки приватности из БД
-            privacy: {
-              ...DEFAULT_PREFERENCES.privacy,
-              ...(serverUser.privacy_settings || {}),
-            },
-          },
-          stats: {
-            ...createDefaultStats(),
-            // 🔥 ПРИОРИТЕТ БД: Используем статистику из БД (serverStats приоритетнее serverUser)
-            totalDays:
-              serverStats.totalDays !== undefined
-                ? serverStats.totalDays
-                : serverUser.total_days !== undefined
-                  ? serverUser.total_days
-                  : 0,
-            currentStreak:
-              serverStats.currentStreak !== undefined
-                ? serverStats.currentStreak
-                : serverUser.current_streak !== undefined
-                  ? serverUser.current_streak
-                  : 0,
-            longestStreak:
-              serverStats.longestStreak !== undefined
-                ? serverStats.longestStreak
-                : serverUser.longest_streak !== undefined
-                  ? serverUser.longest_streak
-                  : 0,
-            totalElements:
-              serverStats.totalElements !== undefined
-                ? serverStats.totalElements
-                : serverUser.total_elements !== undefined
-                  ? serverUser.total_elements
-                  : 0,
-            rareElementsFound:
-              serverStats.rareElementsFound !== undefined
-                ? serverStats.rareElementsFound
-                : serverUser.rare_elements_found !== undefined
-                  ? serverUser.rare_elements_found
-                  : 0,
-            gardensShared:
-              serverStats.gardensShared !== undefined
-                ? serverStats.gardensShared
-                : serverUser.gardens_shared !== undefined
-                  ? serverUser.gardens_shared
-                  : 0,
-          },
-          // 🔥 ПРИОРИТЕТ БД: Используем данные из БД, fallback только если undefined/null
-          experience:
-            serverUser.experience !== undefined ? serverUser.experience : 0,
-          level: serverUser.level !== undefined ? serverUser.level : 1,
-          isAnonymous: false,
-        }
-
-        // Сохраняем локально
-        const success = saveUser(syncedUser as User)
-
-        if (success) {
-          set({
-            currentUser: syncedUser as User,
-            isAuthenticated: true,
-            isLoading: false,
-          })
-
-          console.log(`✅ User data synced from Supabase for ${telegramId}:`, {
-            experience: syncedUser.experience,
-            level: syncedUser.level,
-            savedSuccessfully: success,
-            storeState: get().currentUser,
-          })
-        } else {
-          throw new Error('Failed to save synced user')
-        }
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : 'Failed to sync from Supabase'
-        set({ error: errorMessage, isLoading: false })
-        console.error('❌ Supabase sync failed:', error)
-      }
-    },
-
-    // 🏆 ДОБАВЛЕНИЕ ОПЫТА С СИНХРОНИЗАЦИЕЙ ЛОКАЛЬНОГО STORE
-    addExperienceAndSync: async (experiencePoints: number, reason: string) => {
-      const { currentUser } = get()
-
-      if (!currentUser?.telegramId) {
-        return { success: false, error: 'No user logged in' }
-      }
-
-      try {
-        console.log(
-          `🏆 Adding ${experiencePoints} XP to user ${currentUser.telegramId} for ${reason}`
-        )
-
-        // Отправляем запрос на сервер
-        const response = await fetch('/api/profile?action=add_experience', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            telegramId: currentUser.telegramId,
-            experiencePoints,
-            reason,
-          }),
-        })
-
-        if (!response.ok) {
-          throw new Error(`Failed to add experience: ${response.status}`)
-        }
-
-        const result =
-          (await response.json()) as StandardApiResponse<ProfileApiAddExperienceResponse>
-
-        if (!result.success) {
-          throw new Error(result.error ?? 'Failed to add experience')
-        }
-
-        // 🔄 СИНХРОНИЗИРУЕМ ЛОКАЛЬНЫЕ ДАННЫЕ С СЕРВЕРОМ
-        if (result.data?.experience !== undefined) {
-          const updatedUser = {
-            ...currentUser,
-            experience: result.data.experience,
-            level: result.data.level ?? currentUser.level,
-          }
-
-          // Обновляем локальный store
-          set({ currentUser: updatedUser })
-
-          // Сохраняем в localStorage
-          saveUser(updatedUser)
-
-          console.log(
-            `✅ Local user data updated: XP=${updatedUser.experience}, Level=${updatedUser.level}`
-          )
-        }
-
-        return {
-          success: true,
-          data: result.data ?? { experience: 0, level: 1 },
-        }
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to add experience'
-        console.error('❌ Experience add failed:', error)
-        return { success: false, error: errorMessage }
-      }
+      console.warn(
+        '⚠️ syncFromSupabase is deprecated. Use useProfile() hook instead.'
+      )
+      // Упрощенная версия - детальная синхронизация теперь через React Query
+      set({ isLoading: false })
     },
   }))
 )
 
-// Subscribe to user changes and auto-save
+// ============================================
+// AUTO-SAVE SUBSCRIPTION
+// ============================================
+
 useUserStore.subscribe(
   state => state.currentUser,
   user => {

@@ -1,3 +1,17 @@
+/**
+ * Garden Zustand Store - ТОЛЬКО UI STATE
+ *
+ * После рефакторинга этот стор управляет ТОЛЬКО клиентским состоянием:
+ * - Режим просмотра (viewMode)
+ * - Выбранный элемент (selectedElement)
+ * - Локальный кеш сада (currentGarden)
+ *
+ * Вся серверная логика вынесена в React Query хуки:
+ * - useGardenHistory() - получение истории элементов
+ * - useAddGardenElement() - добавление элемента
+ * - useUpdateElementPosition() - обновление позиции
+ */
+
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import type {
@@ -7,45 +21,38 @@ import type {
   Position2D,
   MoodType,
 } from '@/types'
-import { ViewMode } from '@/types'
-import { ElementType, RarityLevel, SeasonalVariant } from '@/types'
-import type {
-  DatabaseGardenElement,
-  StandardApiResponse,
-  ProfileApiGetProfileResponse,
-} from '@/types/api'
-import { useUserStore } from './userStore'
+import { ViewMode, SeasonalVariant } from '@/types'
 import {
   generateDailyElement,
   canUnlockTodaysElement,
 } from '@/utils/elementGeneration'
 import { saveGarden, loadGarden } from '@/utils/storage'
-import {
-  getElementName,
-  getElementDescription,
-  getElementEmoji as getElementEmojiFromUtils,
-  getElementColor as getElementColorFromUtils,
-  getElementScale,
-} from '@/utils/elementNames'
+
+// ============================================
+// STORE INTERFACE - ТОЛЬКО UI STATE
+// ============================================
 
 interface GardenActions {
-  // Garden management
+  // Local garden management (UI state)
   loadGarden: () => void
   createGarden: (userId: string) => void
-  updateGarden: (updates: Partial<Garden>) => void
+  setCurrentGarden: (garden: Garden | null) => void
+  updateGardenLocal: (updates: Partial<Garden>) => void
 
-  // Element management
-  unlockTodaysElement: (mood: MoodType) => Promise<GardenElement | null>
-  syncGarden: (forceSync?: boolean) => Promise<void>
-  moveElement: (elementId: string, newPosition: Position2D) => Promise<void>
+  // Local element generation (без API запросов)
+  generateTodaysElement: (
+    mood: MoodType,
+    userId: string,
+    existingPositions: readonly Position2D[]
+  ) => GardenElement
+
+  // Element selection (UI state)
   selectElement: (element: GardenElement | null) => void
 
-  // View management
+  // View management (UI state)
   setViewMode: (mode: ViewMode) => void
-  setLoading: (loading: boolean) => void
-  setError: (error: string | null) => void
 
-  // Utility actions
+  // Utility functions
   canUnlockToday: () => boolean
   getElementsCount: () => number
   getLatestElement: () => GardenElement | null
@@ -54,223 +61,55 @@ interface GardenActions {
 
 type GardenStore = GardenState & GardenActions
 
+// ============================================
+// ZUSTAND STORE - ТОЛЬКО КЛИЕНТСКОЕ СОСТОЯНИЕ
+// ============================================
+
 export const useGardenStore = create<GardenStore>()(
   subscribeWithSelector((set, get) => ({
-    // Initial state
+    // ============================================
+    // INITIAL STATE
+    // ============================================
     currentGarden: null,
-    isLoading: false,
-    error: null,
+    isLoading: false, // Устаревшее - теперь используется в React Query
+    error: null, // Устаревшее - теперь используется в React Query
     viewMode: ViewMode.OVERVIEW,
     selectedElement: null,
-    lastSyncTime: 0,
+    lastSyncTime: 0, // Устаревшее - теперь управляется React Query
 
-    // Actions
+    // ============================================
+    // ACTIONS - ТОЛЬКО UI OPERATIONS
+    // ============================================
+
+    /**
+     * Загружает сад из localStorage (UI state)
+     * Серверная синхронизация выполняется через React Query хуки
+     */
     loadGarden: () => {
-      set({ isLoading: true, error: null })
-
       try {
         const storedGarden = loadGarden()
 
         if (storedGarden) {
           set({
             currentGarden: storedGarden,
-            isLoading: false,
           })
         } else {
           set({
             currentGarden: null,
-            isLoading: false,
           })
         }
-
-        // 🔄 Автоматически синхронизируем с сервером
-        void get().syncGarden()
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to load garden'
+        console.error('Failed to load garden from localStorage:', error)
         set({
-          error: errorMessage,
-          isLoading: false,
+          currentGarden: null,
         })
       }
     },
 
-    // 🔄 СИНХРОНИЗАЦИЯ С SUPABASE
-    syncGarden: async (forceSync = false) => {
-      try {
-        const userStore = useUserStore.getState()
-        const currentUser = userStore.currentUser
-
-        if (!currentUser?.telegramId) {
-          console.log('📝 No Telegram user - skipping garden sync')
-          return
-        }
-
-        // 🚫 ОГРАНИЧЕНИЕ: не синхронизируем чаще раз в 10 секунд
-        const state = get()
-        const now = Date.now()
-        const lastSync = state.lastSyncTime
-
-        if (!forceSync && now - lastSync < 10000) {
-          // 10 секунд
-          console.log('⏳ Skipping garden sync - too soon since last sync')
-          return
-        }
-
-        console.log(
-          `🔄 Syncing garden for user ${currentUser.telegramId}${forceSync ? ' (forced)' : ''}`
-        )
-
-        // Обновляем время последней синхронизации
-        set({ lastSyncTime: now })
-
-        // Получаем актуальные данные пользователя с сервера
-        const response = await fetch(
-          `/api/profile?action=get_profile&telegramId=${currentUser.telegramId}`
-        )
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch user data: ${response.status}`)
-        }
-
-        const result =
-          (await response.json()) as StandardApiResponse<ProfileApiGetProfileResponse>
-
-        console.log('🔍 Garden sync - User profile result:', result)
-
-        // Проверяем наличие пользователя и его данных (приоритет БД над локальными данными)
-        if (result.success && result.data?.user && result.data?.stats) {
-          console.log('✅ Server has garden data - loading full history')
-
-          // 🔄 ОБНОВЛЯЕМ STREAK В САДУ на основе данных с сервера (приоритет БД)
-          const currentGarden = get().currentGarden
-          const serverStreak = result.data.stats.currentStreak
-          if (currentGarden && serverStreak !== undefined) {
-            const updatedGarden = {
-              ...currentGarden,
-              streak: serverStreak || 0,
-              lastVisited: new Date(),
-            }
-            set({ currentGarden: updatedGarden })
-            saveGarden(updatedGarden)
-            console.log(
-              `🔄 Updated garden streak to: ${serverStreak} (from server)`
-            )
-          }
-
-          // 🌱 Загружаем полную историю элементов сада с сервера
-          const historyResponse = await fetch(
-            `/api/garden?action=history&telegramId=${currentUser.telegramId}`
-          )
-
-          console.log(
-            '🔍 Garden history response status:',
-            historyResponse.status
-          )
-
-          if (historyResponse.ok) {
-            const historyResult =
-              (await historyResponse.json()) as StandardApiResponse<{
-                gardenElements: DatabaseGardenElement[]
-              }>
-            console.log('🔍 Garden history result:', historyResult)
-
-            if (
-              historyResult.success &&
-              historyResult.data?.gardenElements &&
-              historyResult.data.gardenElements.length > 0
-            ) {
-              const serverElements = historyResult.data.gardenElements
-
-              // Конвертируем серверные данные в формат приложения с правильными цветами
-              // 🔧 ИСПРАВЛЕНИЕ: используем UUID напрямую без префикса для совместимости с базой данных
-              const convertedElements = serverElements.map(
-                (serverElement: DatabaseGardenElement) => {
-                  // Получаем правильные данные элемента на основе типа и настроения
-                  const moodInfluence = (serverElement.mood_influence ??
-                    'joy') as MoodType
-                  const elementType = serverElement.element_type as ElementType
-                  const rarity = serverElement.rarity as RarityLevel
-
-                  // Создаем seed для детерминированного выбора характеристик
-                  const seed = `${serverElement.id}-${serverElement.unlock_date}`
-
-                  // Получаем название, описание, эмодзи, цвет и масштаб из справочника
-                  const name = getElementName(elementType, rarity, seed)
-                  const description = getElementDescription(
-                    elementType,
-                    rarity,
-                    name
-                  )
-                  const emoji = getElementEmojiFromUtils(elementType)
-                  const color = getElementColorFromUtils(
-                    elementType,
-                    moodInfluence,
-                    seed
-                  )
-                  const scale = getElementScale(seed)
-
-                  return {
-                    id: serverElement.id || `temp_${Date.now()}`, // UUID без префикса
-                    type: elementType,
-                    position: {
-                      x: serverElement.position_x,
-                      y: serverElement.position_y,
-                    },
-                    unlockDate: new Date(serverElement.unlock_date),
-                    moodInfluence,
-                    rarity,
-                    name,
-                    description,
-                    emoji,
-                    color,
-                    scale,
-                  }
-                }
-              )
-
-              // Обновляем сад если есть
-              const { currentGarden } = get()
-              if (currentGarden) {
-                const updatedGarden = {
-                  ...currentGarden,
-                  elements: convertedElements,
-                  lastVisited: new Date(),
-                }
-
-                set({ currentGarden: updatedGarden })
-                saveGarden(updatedGarden)
-
-                console.log(
-                  `✅ Synced ${convertedElements.length} garden elements from server`
-                )
-              }
-            }
-          }
-        } else {
-          console.log('📝 No server garden data - local state is primary')
-
-          // 🔄 ОБНОВЛЯЕМ STREAK В САДУ - если нет данных на сервере, streak = 0
-          const currentGarden = get().currentGarden
-          if (currentGarden && currentGarden.streak !== 0) {
-            const updatedGarden = {
-              ...currentGarden,
-              streak: 0,
-              lastVisited: new Date(),
-            }
-            set({ currentGarden: updatedGarden })
-            saveGarden(updatedGarden)
-            console.log(`🔄 Reset garden streak to 0 (no server data)`)
-          }
-        }
-      } catch (error) {
-        console.warn('⚠️ Garden sync failed:', error)
-      }
-    },
-
+    /**
+     * Создает новый сад локально (UI state)
+     */
     createGarden: (userId: string) => {
-      set({ isLoading: true, error: null })
-
       try {
         const newGarden: Garden = {
           id: `garden_${userId}_${Date.now()}`,
@@ -279,7 +118,7 @@ export const useGardenStore = create<GardenStore>()(
           createdAt: new Date(),
           lastVisited: new Date(),
           streak: 0,
-          season: SeasonalVariant.SPRING, // Will be updated based on current date
+          season: SeasonalVariant.SPRING,
         }
 
         const success = saveGarden(newGarden)
@@ -287,30 +126,35 @@ export const useGardenStore = create<GardenStore>()(
         if (success) {
           set({
             currentGarden: newGarden,
-            isLoading: false,
           })
         } else {
-          throw new Error('Failed to save garden')
+          throw new Error('Failed to save garden to localStorage')
         }
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to create garden'
-        set({
-          error: errorMessage,
-          isLoading: false,
-        })
+        console.error('Failed to create garden:', error)
       }
     },
 
-    updateGarden: (updates: Partial<Garden>) => {
+    /**
+     * Устанавливает текущий сад (обычно после загрузки с сервера)
+     */
+    setCurrentGarden: (garden: Garden | null) => {
+      set({ currentGarden: garden })
+      if (garden) {
+        saveGarden(garden)
+      }
+    },
+
+    /**
+     * Обновляет сад локально (UI state)
+     */
+    updateGardenLocal: (updates: Partial<Garden>) => {
       const { currentGarden } = get()
 
       if (!currentGarden) {
-        set({ error: 'No garden to update' })
+        console.warn('No garden to update')
         return
       }
-
-      set({ isLoading: true, error: null })
 
       try {
         const updatedGarden: Garden = {
@@ -324,277 +168,89 @@ export const useGardenStore = create<GardenStore>()(
         if (success) {
           set({
             currentGarden: updatedGarden,
-            isLoading: false,
           })
         } else {
-          throw new Error('Failed to save garden updates')
+          throw new Error('Failed to save garden updates to localStorage')
         }
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to update garden'
-        set({
-          error: errorMessage,
-          isLoading: false,
-        })
+        console.error('Failed to update garden:', error)
       }
     },
 
-    unlockTodaysElement: async (mood: MoodType) => {
+    /**
+     * Генерирует элемент для сегодняшнего дня
+     * (детерминированная генерация на основе даты и настроения)
+     *
+     * ВАЖНО: Это только генерация на клиенте.
+     * Сохранение на сервер происходит через useAddGardenElement() хук.
+     */
+    generateTodaysElement: (
+      mood: MoodType,
+      userId: string,
+      existingPositions: readonly Position2D[]
+    ) => {
       const { currentGarden } = get()
 
       if (!currentGarden) {
-        set({ error: 'No garden available' })
-        return null
+        throw new Error('No garden available')
       }
 
-      // Check if user can unlock today's element
-      const lastElement = get().getLatestElement()
-      const canUnlock = canUnlockTodaysElement(lastElement?.unlockDate ?? null)
+      // Generate new element deterministically
+      const newElement = generateDailyElement(
+        userId,
+        new Date(currentGarden.createdAt),
+        new Date(),
+        mood,
+        existingPositions
+      )
 
-      if (!canUnlock) {
-        set({ error: "Already unlocked today's element" })
-        return null
-      }
+      console.log('🌱 Generated element (client-side):', {
+        id: newElement.id,
+        position: `(${newElement.position.x},${newElement.position.y})`,
+        name: newElement.name,
+        type: newElement.type,
+      })
 
-      set({ isLoading: true, error: null })
-
-      try {
-        // Get existing positions to avoid overlap
-        const existingPositions = currentGarden.elements.map(el => el.position)
-        console.log('🔍 Existing positions in garden:', {
-          count: existingPositions.length,
-          positions: existingPositions.map(p => `(${p.x},${p.y})`).join(', '),
-        })
-
-        // Generate new element
-        const newElement = generateDailyElement(
-          currentGarden.userId,
-          new Date(currentGarden.createdAt), // Registration date approximation
-          new Date(),
-          mood,
-          existingPositions
-        )
-
-        console.log('🌱 Generated new element:', {
-          id: newElement.id,
-          position: `(${newElement.position.x},${newElement.position.y})`,
-          name: newElement.name,
-          type: newElement.type,
-        })
-
-        // Final collision check before adding to garden
-        const finalCollisionCheck = currentGarden.elements.some(
-          el =>
-            el.position.x === newElement.position.x &&
-            el.position.y === newElement.position.y
-        )
-
-        if (finalCollisionCheck) {
-          console.error(
-            '❌ COLLISION DETECTED! Generated element position conflicts with existing element'
-          )
-          console.error('New element position:', newElement.position)
-          console.error('Existing positions:', existingPositions)
-          set({
-            error: 'Failed to generate element: position collision detected',
-            isLoading: false,
-          })
-          return null
-        }
-
-        // Update garden with new element
-        const updatedGarden: Garden = {
-          ...currentGarden,
-          elements: [...currentGarden.elements, newElement],
-          lastVisited: new Date(),
-        }
-
-        const localSuccess = saveGarden(updatedGarden)
-
-        if (localSuccess) {
-          // 📡 ОТПРАВЛЯЕМ ЭЛЕМЕНТ НА СЕРВЕР для синхронизации между устройствами
-          try {
-            const userStore = useUserStore.getState()
-            const currentUser = userStore.currentUser
-
-            if (currentUser?.telegramId) {
-              const response = await fetch('/api/garden?action=add-element', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  telegramId: currentUser.telegramId,
-                  element: {
-                    type: newElement.type,
-                    position: newElement.position,
-                    unlockDate: newElement.unlockDate.toISOString(),
-                    moodInfluence: mood,
-                    rarity: newElement.rarity,
-                  },
-                  telegramUserData: {
-                    userId: currentUser.id,
-                    firstName: currentUser.firstName,
-                    lastName: currentUser.lastName,
-                    username: currentUser.username,
-                    languageCode: currentUser.preferences.language || 'ru',
-                    photoUrl: currentUser.photoUrl,
-                  },
-                }),
-              })
-
-              if (!response.ok) {
-                console.warn(
-                  '⚠️ Failed to sync garden element to server:',
-                  response.status
-                )
-              } else {
-                console.log('✅ Garden element synced to server successfully')
-              }
-            }
-          } catch (serverError) {
-            console.warn(
-              '⚠️ Server sync failed, but local save succeeded:',
-              serverError
-            )
-          }
-
-          set({
-            currentGarden: updatedGarden,
-            isLoading: false,
-            selectedElement: newElement, // Auto-select new element
-          })
-          return newElement
-        } else {
-          throw new Error('Failed to save new element locally')
-        }
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to unlock element'
-        set({
-          error: errorMessage,
-          isLoading: false,
-        })
-        return null
-      }
+      return newElement
     },
 
-    moveElement: async (elementId: string, newPosition: Position2D) => {
-      const { currentGarden } = get()
-
-      if (!currentGarden) {
-        set({ error: 'No garden available' })
-        return
-      }
-
-      set({ isLoading: true, error: null })
-
-      try {
-        // Check if position is already occupied
-        const isOccupied = currentGarden.elements.some(
-          el =>
-            el.id !== elementId &&
-            el.position.x === newPosition.x &&
-            el.position.y === newPosition.y
-        )
-
-        if (isOccupied) {
-          throw new Error('Position is already occupied')
-        }
-
-        // Update element position
-        const updatedElements = currentGarden.elements.map(element =>
-          element.id === elementId
-            ? { ...element, position: newPosition }
-            : element
-        )
-
-        const updatedGarden: Garden = {
-          ...currentGarden,
-          elements: updatedElements,
-          lastVisited: new Date(),
-        }
-
-        const success = saveGarden(updatedGarden)
-
-        if (success) {
-          set({
-            currentGarden: updatedGarden,
-            isLoading: false,
-          })
-
-          // 📡 ОТПРАВЛЯЕМ ОБНОВЛЕНИЕ ПОЗИЦИИ НА СЕРВЕР для синхронизации между устройствами
-          const userStore = useUserStore.getState()
-          const currentUser = userStore.currentUser
-
-          if (currentUser?.telegramId) {
-            try {
-              const response = await fetch(
-                '/api/garden?action=update-position',
-                {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    telegramId: currentUser.telegramId,
-                    elementId,
-                    position: newPosition,
-                  }),
-                }
-              )
-
-              if (!response.ok) {
-                console.warn(
-                  '⚠️ Failed to sync element position to server:',
-                  response.status
-                )
-              } else {
-                console.log('✅ Element position synced to server successfully')
-              }
-            } catch (serverError) {
-              console.warn(
-                '⚠️ Server position sync failed, but local save succeeded:',
-                serverError
-              )
-            }
-          }
-        } else {
-          throw new Error('Failed to save element position')
-        }
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to move element'
-        set({
-          error: errorMessage,
-          isLoading: false,
-        })
-      }
-    },
-
+    /**
+     * Выбрать элемент (UI state)
+     */
     selectElement: (element: GardenElement | null) => {
       set({ selectedElement: element })
     },
 
+    /**
+     * Изменить режим просмотра (UI state)
+     */
     setViewMode: (mode: ViewMode) => {
       set({ viewMode: mode })
     },
 
-    setLoading: (loading: boolean) => {
-      set({ isLoading: loading })
-    },
+    // ============================================
+    // UTILITY FUNCTIONS
+    // ============================================
 
-    setError: (error: string | null) => {
-      set({ error })
-    },
-
-    // Utility functions
+    /**
+     * Проверяет, можно ли разблокировать элемент сегодня
+     */
     canUnlockToday: () => {
       const latestElement = get().getLatestElement()
       return canUnlockTodaysElement(latestElement?.unlockDate ?? null)
     },
 
+    /**
+     * Получить количество элементов
+     */
     getElementsCount: () => {
       const { currentGarden } = get()
       return currentGarden?.elements.length ?? 0
     },
 
+    /**
+     * Получить последний добавленный элемент
+     */
     getLatestElement: () => {
       const { currentGarden } = get()
 
@@ -608,19 +264,23 @@ export const useGardenStore = create<GardenStore>()(
       )
     },
 
+    /**
+     * Очистить сад
+     */
     clearGarden: () => {
       set({
         currentGarden: null,
         selectedElement: null,
         viewMode: ViewMode.OVERVIEW,
-        error: null,
-        isLoading: false,
       })
     },
   }))
 )
 
-// Subscribe to garden changes and auto-save
+// ============================================
+// AUTO-SAVE SUBSCRIPTION
+// ============================================
+
 useGardenStore.subscribe(
   state => state.currentGarden,
   garden => {

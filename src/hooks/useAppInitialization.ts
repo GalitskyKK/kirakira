@@ -122,11 +122,9 @@ export function useAppInitialization(
       if (finalConfig.enableStoresSync) {
         logIfDev('🔄 Синхронизация stores...', { workingMode, telegramUserId })
 
-        // В Telegram режиме передаем telegramUserId для серверной синхронизации
-        // В браузерном режиме работаем только локально
-        const storesResult = await syncStores(
-          workingMode === 'telegram' ? telegramUserId : undefined
-        )
+        // Синхронизация через React Query хуки теперь выполняется автоматически
+        // useStoresSync больше не выполняет ручную синхронизацию
+        const storesResult = await syncStores()
 
         if (!storesResult.success) {
           throw new Error(`Stores sync failed: ${storesResult.error}`)

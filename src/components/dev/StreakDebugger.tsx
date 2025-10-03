@@ -40,7 +40,7 @@ interface StreakDebugInfo {
 }
 
 export function StreakDebugger() {
-  const { moodHistory, loadMoodHistory, syncMoodHistory } = useMoodStore()
+  const { moodHistory, loadMoodHistory } = useMoodStore()
   const { currentUser } = useUserStore()
   const [debugInfo, setDebugInfo] = useState<StreakDebugInfo | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -275,7 +275,6 @@ export function StreakDebugger() {
 
   const handleRefresh = async () => {
     loadMoodHistory()
-    await syncMoodHistory(true)
     await analyzeStreaks()
   }
 

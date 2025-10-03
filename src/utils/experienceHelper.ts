@@ -1,10 +1,15 @@
 /**
  * 🏆 ХЕЛПЕР ДЛЯ АВТОМАТИЧЕСКОГО НАЧИСЛЕНИЯ ОПЫТА
- * Вызывается при действиях пользователя для синхронизации с БД
+ *
+ * ПОСЛЕ РЕФАКТОРИНГА:
+ * Использует централизованный API клиент вместо прямых fetch запросов.
+ *
+ * Для использования в React компонентах предпочтительнее использовать
+ * useAddExperience() хук из React Query.
  */
 
+import { profileApi } from '@/api/client'
 import { EXPERIENCE_REWARDS } from './achievements'
-import type { StandardApiResponse } from '@/types/api'
 
 type ExperienceReason =
   | 'mood_entry'
@@ -22,10 +27,6 @@ interface AddExperienceOptions {
   readonly details?: string
 }
 
-/**
- * Отправляет запрос на начисление опыта пользователю
- * ОБНОВЛЕНО: Использует централизованную функцию из userStore для синхронизации
- */
 interface ExperienceResult {
   readonly success: boolean
   readonly data?: {
@@ -36,6 +37,11 @@ interface ExperienceResult {
   readonly error?: string
 }
 
+/**
+ * Отправляет запрос на начисление опыта пользователю
+ *
+ * ОБНОВЛЕНО: Использует централизованный API клиент с Zod валидацией
+ */
 export async function addExperience({
   telegramId,
   points,
@@ -43,44 +49,29 @@ export async function addExperience({
   details = '',
 }: AddExperienceOptions): Promise<ExperienceResult> {
   try {
-    // Импортируем userStore динамически для избежания циклических зависимостей
-    const { useUserStore } = await import('@/stores/userStore')
-    const { addExperienceAndSync, currentUser } = useUserStore.getState()
+    console.log(`🏆 Adding ${points} XP to user ${telegramId} for ${reason}`)
 
-    // Проверяем, что пользователь соответствует
-    if (currentUser?.telegramId === telegramId) {
-      console.log(`🏆 Using centralized experience sync for user ${telegramId}`)
-      return await addExperienceAndSync(points, `${reason}: ${details}`.trim())
-    }
-
-    // Fallback для других пользователей (например, в dev режиме)
-    console.log(
-      `🏆 Adding ${points} XP to user ${telegramId} for ${reason} (fallback)`
+    const result = await profileApi.addExperience(
+      telegramId,
+      points,
+      `${reason}: ${details}`.trim()
     )
-
-    const response = await fetch('/api/profile?action=add_experience', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        telegramId,
-        experiencePoints: points,
-        reason: `${reason}: ${details}`.trim(),
-      }),
-    })
-
-    if (!response.ok) {
-      console.warn(`❌ Failed to add experience: ${response.status}`)
-      return { success: false, error: `HTTP ${response.status}` }
-    }
-
-    const result = (await response.json()) as StandardApiResponse<{
-      experience: number
-      level: number
-      leveledUp?: boolean
-    }>
 
     if (result.success && result.data) {
       console.log(`✅ Added ${points} XP for ${reason}:`, result.data)
+
+      // Обновляем локальный стор если это текущий пользователь
+      const { useUserStore } = await import('@/stores/userStore')
+      const { currentUser, updateUser } = useUserStore.getState()
+
+      if (currentUser?.telegramId === telegramId) {
+        updateUser({
+          experience: result.data.experience,
+          level: result.data.level,
+        })
+        console.log('🔄 Updated local user store with new XP')
+      }
+
       return { success: true, data: result.data }
     } else {
       console.warn(`❌ Experience API error:`, result.error)

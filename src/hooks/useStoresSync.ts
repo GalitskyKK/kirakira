@@ -1,41 +1,50 @@
-import { useCallback } from 'react'
-import { initializeStores } from '@/stores'
-import type { StoresSyncResult } from '@/types/initialization'
+/**
+ * Hook for syncing stores with server state
+ *
+ * ПОСЛЕ РЕФАКТОРИНГА:
+ * Этот хук больше не нужен для ручной синхронизации.
+ * React Query автоматически управляет кешированием и синхронизацией.
+ *
+ * Оставлен для обратной совместимости, но помечен как deprecated.
+ *
+ * Используйте вместо него:
+ * - useGardenHistory() - автоматически синхронизирует сад
+ * - useMoodHistory() - автоматически синхронизирует настроения
+ * - useProfile() - автоматически синхронизирует профиль
+ */
+
+import { useEffect, useRef } from 'react'
+import { useUserStore } from '@/stores'
 
 /**
- * Хук для синхронизации stores с сервером
+ * @deprecated Этот хук устарел после внедрения React Query.
+ * Используйте соответствующие React Query хуки напрямую.
  */
-export function useStoresSync() {
-  const syncStores = useCallback(
-    async (telegramId?: number): Promise<StoresSyncResult> => {
-      try {
-        // Инициализируем базовые stores
-        await initializeStores()
+export function useStoresSync(enabled = true) {
+  const { currentUser } = useUserStore()
+  const hasInitializedRef = useRef(false)
 
-        // Если есть Telegram ID - синхронизируем данные с сервером
-        if (telegramId) {
-          // Динамический импорт stores для принудительной синхронизации
-          const { useMoodStore } = await import('@/stores/moodStore')
-          const { useGardenStore } = await import('@/stores/gardenStore')
+  useEffect(() => {
+    if (!enabled || !currentUser?.telegramId || hasInitializedRef.current) {
+      return
+    }
 
-          // Принудительная синхронизация один раз при входе
-          await Promise.all([
-            useMoodStore.getState().syncMoodHistory(true), // forceSync = true
-            useGardenStore.getState().syncGarden(true), // forceSync = true
-          ])
-        }
+    console.warn(
+      '⚠️ useStoresSync is deprecated. Use React Query hooks (useGardenHistory, useMoodHistory, useProfile) instead.'
+    )
 
-        return { success: true }
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Stores sync failed'
-        return { success: false, error: errorMessage }
-      }
-    },
-    []
-  )
+    hasInitializedRef.current = true
+
+    // Больше не выполняем ручную синхронизацию
+    // React Query хуки должны быть вызваны в компонентах напрямую
+  }, [enabled, currentUser])
 
   return {
-    syncStores,
+    isInitialized: true,
+    syncStores: async (_retryOnError = false) => {
+      console.warn('syncStores is deprecated. Use React Query hooks instead.')
+      // No-op для обратной совместимости
+      return { success: true, error: null }
+    },
   }
 }

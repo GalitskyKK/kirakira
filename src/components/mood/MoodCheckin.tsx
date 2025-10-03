@@ -269,7 +269,14 @@ export function MoodCheckin({
             До следующей отметки
           </h3>
           <p className="mb-4 text-gray-600 dark:text-gray-400">
-            {timeUntilNextCheckin.hours}ч {timeUntilNextCheckin.minutes}м
+            {timeUntilNextCheckin ? (
+              <>
+                {new Date(timeUntilNextCheckin).getHours()}ч{' '}
+                {new Date(timeUntilNextCheckin).getMinutes()}м
+              </>
+            ) : (
+              'Скоро'
+            )}
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Возвращайтесь завтра, чтобы отметить настроение и вырастить новое

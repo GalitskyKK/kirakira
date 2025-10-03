@@ -1,8 +1,28 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import './styles/index.css'
+
+// ============================================
+// REACT QUERY SETUP
+// ============================================
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2, // Повторяем запросы при ошибке
+      staleTime: 5 * 60 * 1000, // 5 минут - данные считаются свежими
+      gcTime: 10 * 60 * 1000, // 10 минут - время кеширования (cacheTime в v5)
+      refetchOnWindowFocus: false, // Не перезапрашивать при фокусе
+      refetchOnReconnect: true, // Перезапрашивать при восстановлении соединения
+    },
+    mutations: {
+      retry: 1, // Одна попытка для мутаций
+    },
+  },
+})
 
 // 🔍 КРИТИЧНАЯ ДИАГНОСТИКА СРЕДЫ ВЫПОЛНЕНИЯ (только в dev режиме)
 if (import.meta.env.DEV) {
@@ -56,7 +76,9 @@ if (import.meta.env.DEV) {
 root.render(
   <React.StrictMode>
     <ErrorBoundary>
-      <App />
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
     </ErrorBoundary>
   </React.StrictMode>
 )

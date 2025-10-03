@@ -13,7 +13,7 @@ interface MoodStatsProps {
 }
 
 export function MoodStats({ className }: MoodStatsProps) {
-  const { moodStats, streakCount, recentTrend, moodRecommendation } =
+  const { moodStats, streakCount, moodRecommendation, getRecentMoods } =
     useMoodTracking()
 
   interface ChartDataPoint {
@@ -25,7 +25,7 @@ export function MoodStats({ className }: MoodStatsProps) {
   }
 
   const chartData = useMemo((): ChartDataPoint[] => {
-    const last7Days = recentTrend.slice(0, 7).reverse()
+    const last7Days = getRecentMoods(7)
     return last7Days.map((entry: MoodEntry) => ({
       date: entry.date.getDate(),
       mood: entry.mood,
@@ -33,7 +33,7 @@ export function MoodStats({ className }: MoodStatsProps) {
       emoji: MOOD_CONFIG[entry.mood].emoji,
       color: MOOD_CONFIG[entry.mood].color,
     }))
-  }, [recentTrend])
+  }, [getRecentMoods])
 
   const topMoods = useMemo(() => {
     return Object.entries(moodStats.moodDistribution)
@@ -213,7 +213,7 @@ export function MoodStats({ className }: MoodStatsProps) {
         )}
 
         {/* Recommendation */}
-        {moodRecommendation.mood && (
+        {moodRecommendation && (
           <Card padding="sm" variant="glass">
             <div className="flex items-start space-x-3">
               <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/50">
@@ -224,21 +224,10 @@ export function MoodStats({ className }: MoodStatsProps) {
               </div>
               <div className="flex-1">
                 <p className="mb-1 text-sm font-medium text-gray-900 dark:text-gray-100">
-                  Паттерн настроения
+                  Рекомендация
                 </p>
-                <div className="mb-2 flex items-center space-x-2">
-                  <span className="text-lg">
-                    {MOOD_CONFIG[moodRecommendation.mood].emoji}
-                  </span>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
-                    {MOOD_CONFIG[moodRecommendation.mood].label}
-                  </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    ({moodRecommendation.confidence}%)
-                  </span>
-                </div>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  {moodRecommendation.reason}
+                  {moodRecommendation}
                 </p>
               </div>
             </div>

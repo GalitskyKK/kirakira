@@ -1,6 +1,6 @@
 export interface Position2D {
-  x: number
-  y: number
+  readonly x: number
+  readonly y: number
 }
 
 export enum ElementType {

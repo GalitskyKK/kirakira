@@ -1,29 +1,40 @@
-import { useCallback, useMemo } from 'react'
-import { useGardenStore } from '@/stores'
-import type { MoodType, Position2D, GardenElement } from '@/types'
-
 /**
  * Hook for managing garden state and operations
+ *
+ * ПОСЛЕ РЕФАКТОРИНГА:
+ * - UI state управляется через Zustand (gardenStore)
+ * - Серверное состояние через React Query хуки (useGardenQueries)
+ */
+
+import { useCallback, useMemo } from 'react'
+import { useGardenStore } from '@/stores'
+import type { Position2D, MoodType, GardenElement } from '@/types'
+
+/**
+ * Hook for managing garden UI state and local operations
+ *
+ * Для серверных операций используйте:
+ * - useGardenHistory() - загрузка элементов с сервера
+ * - useAddGardenElement() - добавление элемента
+ * - useUpdateElementPosition() - обновление позиции
  */
 export function useGardenState() {
   const {
     currentGarden,
-    isLoading,
-    error,
+    isLoading, // Deprecated - используйте isLoading из React Query хуков
+    error, // Deprecated - используйте error из React Query хуков
     viewMode,
     selectedElement,
     loadGarden,
     createGarden,
-    updateGarden,
-    unlockTodaysElement,
-    moveElement,
+    updateGardenLocal,
     selectElement,
     setViewMode,
-    setError,
     canUnlockToday,
     getElementsCount,
     getLatestElement,
     clearGarden,
+    generateTodaysElement,
   } = useGardenStore()
 
   // Memoized garden statistics
@@ -43,16 +54,22 @@ export function useGardenState() {
     const totalElements = elements.length
 
     // Group by type
-    const elementsByType = elements.reduce((acc, element) => {
-      acc[element.type] = (acc[element.type] ?? 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const elementsByType = elements.reduce(
+      (acc, element) => {
+        acc[element.type] = (acc[element.type] ?? 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
     // Group by rarity
-    const elementsByRarity = elements.reduce((acc, element) => {
-      acc[element.rarity] = (acc[element.rarity] ?? 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const elementsByRarity = elements.reduce(
+      (acc, element) => {
+        acc[element.rarity] = (acc[element.rarity] ?? 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
     // Calculate average age in days
     const now = new Date()
@@ -62,7 +79,8 @@ export function useGardenState() {
       )
       return sum + age
     }, 0)
-    const averageAge = totalElements > 0 ? Math.round(totalAge / totalElements) : 0
+    const averageAge =
+      totalElements > 0 ? Math.round(totalAge / totalElements) : 0
 
     // Find newest and oldest elements
     const sortedByDate = [...elements].sort(
@@ -110,87 +128,47 @@ export function useGardenState() {
     return availablePositions
   }, [isPositionOccupied])
 
-  // Unlock today's element with error handling
-  const unlockElement = useCallback(
-    async (mood: MoodType): Promise<GardenElement | null> => {
-      try {
-        setError(null)
-        const element = await unlockTodaysElement(mood)
-        return element
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to unlock element'
-        setError(errorMessage)
-        return null
-      }
-    },
-    [unlockTodaysElement, setError]
-  )
-
-  // Move element with validation
-  const moveElementSafely = useCallback(
-    async (elementId: string, newPosition: Position2D): Promise<boolean> => {
-      try {
-        setError(null)
-
-        // Check if position is valid
-        if (
-          newPosition.x < 0 ||
-          newPosition.x >= 10 ||
-          newPosition.y < 0 ||
-          newPosition.y >= 10
-        ) {
-          setError('Position is out of bounds')
-          return false
-        }
-
-        // Check if position is occupied by another element
-        if (
-          currentGarden?.elements.some(
-            el =>
-              el.id !== elementId &&
-              el.position.x === newPosition.x &&
-              el.position.y === newPosition.y
-          )
-        ) {
-          setError('Position is already occupied')
-          return false
-        }
-
-        await moveElement(elementId, newPosition)
-        return true
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to move element'
-        setError(errorMessage)
-        return false
-      }
-    },
-    [moveElement, setError, currentGarden]
-  )
-
   // Initialize garden for new user
   const initializeGarden = useCallback(
     async (userId: string): Promise<boolean> => {
       try {
-        setError(null)
         await createGarden(userId)
         return true
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to create garden'
-        setError(errorMessage)
+        console.error('Failed to create garden:', error)
         return false
       }
     },
-    [createGarden, setError]
+    [createGarden]
+  )
+
+  // Deprecated: Unlock element (use useAddGardenElement from React Query)
+  const unlockElement = useCallback(
+    async (_mood: MoodType): Promise<GardenElement | null> => {
+      console.warn(
+        'unlockElement is deprecated. Use useAddGardenElement() from React Query'
+      )
+      return null
+    },
+    []
+  )
+
+  // Deprecated: Move element (use useUpdateElementPosition from React Query)
+  const moveElementSafely = useCallback(
+    async (_elementId: string, _newPosition: Position2D): Promise<boolean> => {
+      console.warn(
+        'moveElementSafely is deprecated. Use useUpdateElementPosition() from React Query'
+      )
+      return false
+    },
+    []
   )
 
   return {
     // State
     garden: currentGarden,
-    isLoading,
-    error,
+    isLoading, // Deprecated - используйте isLoading из useGardenHistory()
+    error, // Deprecated - используйте error из useGardenHistory()
     viewMode,
     selectedElement,
 
@@ -200,12 +178,9 @@ export function useGardenState() {
     // Actions
     loadGarden,
     initializeGarden,
-    updateGarden,
-    unlockElement,
-    moveElementSafely,
+    updateGarden: updateGardenLocal,
     selectElement,
     setViewMode,
-    setError,
     clearGarden,
 
     // Utility functions
@@ -214,5 +189,11 @@ export function useGardenState() {
     getLatestElement,
     isPositionOccupied,
     getAvailablePositions,
+    generateTodaysElement,
+
+    // Deprecated - for backward compatibility
+    // Components should migrate to React Query hooks
+    unlockElement,
+    moveElementSafely,
   }
 }

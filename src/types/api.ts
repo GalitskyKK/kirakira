@@ -71,7 +71,7 @@ export interface CreateGardenRequest {
 
 export interface UpdateElementPositionRequest {
   readonly elementId: string
-  readonly newPosition: { x: number; y: number }
+  readonly newPosition: { readonly x: number; readonly y: number }
 }
 
 export interface ShareGardenRequest {
