@@ -7,7 +7,7 @@ import type {
   Position2D,
   MoodType,
 } from '@/types'
-import { MOOD_CONFIG, ViewMode } from '@/types'
+import { ViewMode } from '@/types'
 import { ElementType, RarityLevel, SeasonalVariant } from '@/types'
 import type {
   DatabaseGardenElement,
@@ -20,6 +20,13 @@ import {
   canUnlockTodaysElement,
 } from '@/utils/elementGeneration'
 import { saveGarden, loadGarden } from '@/utils/storage'
+import {
+  getElementName,
+  getElementDescription,
+  getElementEmoji as getElementEmojiFromUtils,
+  getElementColor as getElementColorFromUtils,
+  getElementScale,
+} from '@/utils/elementNames'
 
 interface GardenActions {
   // Garden management
@@ -180,97 +187,44 @@ export const useGardenStore = create<GardenStore>()(
               const convertedElements = serverElements.map(
                 (serverElement: DatabaseGardenElement) => {
                   // Получаем правильные данные элемента на основе типа и настроения
-                  const elementTypeStr = String(serverElement.element_type)
                   const moodInfluence = (serverElement.mood_influence ??
                     'joy') as MoodType
+                  const elementType = serverElement.element_type as ElementType
+                  const rarity = serverElement.rarity as RarityLevel
 
-                  // Мапим базовые цвета для каждого типа элемента
-                  const getElementColor = (
-                    type: string,
-                    mood: MoodType
-                  ): string => {
-                    const moodConfig = MOOD_CONFIG[mood] ?? MOOD_CONFIG.joy
+                  // Создаем seed для детерминированного выбора характеристик
+                  const seed = `${serverElement.id}-${serverElement.unlock_date}`
 
-                    switch (type) {
-                      case 'flower':
-                        return moodConfig.color // Цветы берут цвет от настроения
-                      case 'tree':
-                        return '#22c55e' // Зеленый для деревьев
-                      case 'crystal':
-                        return '#3b82f6' // Синий для кристаллов
-                      case 'stone':
-                        return '#6b7280' // Серый для камней
-                      case 'mushroom':
-                        return '#8b4513' // Коричневый для грибов
-                      case 'grass':
-                        return '#22c55e' // Зеленый для травы
-                      case 'water':
-                        return '#06b6d4' // Голубой для воды
-                      case 'decoration':
-                        return '#f59e0b' // Золотой для декораций
-                      case 'rainbow_flower':
-                        return '#ec4899' // Розовый для радужных цветов
-                      case 'glowing_crystal':
-                        return '#06b6d4' // Голубой для светящихся кристаллов
-                      case 'mystic_mushroom':
-                        return '#8b5cf6' // Фиолетовый для мистических грибов
-                      case 'aurora_tree':
-                        return '#22c55e' // Зеленый для полярных деревьев
-                      case 'starlight_decoration':
-                        return '#f59e0b' // Золотой для звездных декораций
-                      default:
-                        return moodConfig.color // Fallback к цвету настроения
-                    }
-                  }
-
-                  // Мапим эмодзи для каждого типа
-                  const getElementEmoji = (type: string): string => {
-                    switch (type) {
-                      case 'flower':
-                        return '🌸'
-                      case 'tree':
-                        return '🌳'
-                      case 'crystal':
-                        return '💎'
-                      case 'stone':
-                        return '🪨'
-                      case 'mushroom':
-                        return '🍄'
-                      case 'grass':
-                        return '🌱'
-                      case 'water':
-                        return '💧'
-                      case 'decoration':
-                        return '🦋'
-                      case 'rainbow_flower':
-                        return '🌈'
-                      case 'glowing_crystal':
-                        return '✨'
-                      case 'mystic_mushroom':
-                        return '🍄‍🟫'
-                      case 'aurora_tree':
-                        return '🌲'
-                      case 'starlight_decoration':
-                        return '⭐'
-                      default:
-                        return '🌸'
-                    }
-                  }
+                  // Получаем название, описание, эмодзи, цвет и масштаб из справочника
+                  const name = getElementName(elementType, rarity, seed)
+                  const description = getElementDescription(
+                    elementType,
+                    rarity,
+                    name
+                  )
+                  const emoji = getElementEmojiFromUtils(elementType)
+                  const color = getElementColorFromUtils(
+                    elementType,
+                    moodInfluence,
+                    seed
+                  )
+                  const scale = getElementScale(seed)
 
                   return {
                     id: serverElement.id || `temp_${Date.now()}`, // UUID без префикса
-                    type: serverElement.element_type as ElementType,
+                    type: elementType,
                     position: {
                       x: serverElement.position_x,
                       y: serverElement.position_y,
                     },
                     unlockDate: new Date(serverElement.unlock_date),
                     moodInfluence,
-                    rarity: serverElement.rarity as RarityLevel,
-                    name: `${elementTypeStr}`, // Generate from type
-                    description: `A ${serverElement.rarity} ${elementTypeStr}`, // Generate description
-                    emoji: getElementEmoji(elementTypeStr),
-                    color: getElementColor(elementTypeStr, moodInfluence),
+                    rarity,
+                    name,
+                    description,
+                    emoji,
+                    color,
+                    scale,
                   }
                 }
               )

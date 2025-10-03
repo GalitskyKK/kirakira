@@ -47,6 +47,7 @@ export interface GardenElement {
   readonly description: string
   readonly emoji: string
   readonly color: string
+  readonly scale?: number // Масштаб элемента для разнообразия (0.85-1.15)
 }
 
 export interface Garden {

@@ -32,9 +32,12 @@ export function PlantRenderer({
   showTooltip = false,
   onClick,
 }: PlantRendererProps) {
+  // Применяем масштаб элемента для разнообразия
+  const actualSize = Math.round(size * (element.scale ?? 1.0))
+
   const renderPlant = () => {
     const commonProps = {
-      size,
+      size: actualSize,
       color: element.color,
       rarity: element.rarity,
       season: element.seasonalVariant,
