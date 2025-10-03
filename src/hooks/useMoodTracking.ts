@@ -5,7 +5,7 @@ import { getMoodDisplayProps, getRecommendedMood } from '@/utils/moodMapping'
 import { getTimeUntilNextCheckin, formatDate } from '@/utils/dateHelpers'
 
 /**
- * Hook for managing mood tracking and statistics
+ * Hook for managing mood tracking and statistic
  */
 export function useMoodTracking() {
   const {
