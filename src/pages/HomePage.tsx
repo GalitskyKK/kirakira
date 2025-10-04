@@ -6,15 +6,44 @@ import { MoodCheckin, MoodStats } from '@/components/mood'
 import { MobileLayout } from '@/components/layout/MobileLayout'
 import { Card } from '@/components/ui'
 import { useGardenState, useMoodTracking, useElementGeneration } from '@/hooks'
+import { useGardenHistory } from '@/hooks/queries/useGardenQueries'
+import { useMoodHistory } from '@/hooks/queries/useMoodQueries'
+import { useUserStore } from '@/stores'
 import { formatDate } from '@/utils/dateHelpers'
 
 export function HomePage() {
-  const { garden: _garden, gardenStats } = useGardenState()
-  const { todaysMood, streakCount } = useMoodTracking()
+  const { currentUser } = useUserStore()
+  const { gardenStats } = useGardenState()
+  const { streakCount } = useMoodTracking()
   const { canUnlock, getMilestoneInfo } = useElementGeneration()
   const [isMobile, setIsMobile] = useState(false)
 
+  // Load data using React Query
+  const { data: gardenElements } = useGardenHistory(currentUser?.telegramId)
+  const { data: moodHistory } = useMoodHistory(
+    currentUser?.telegramId,
+    currentUser?.id ?? ''
+  )
+
+  // Get today's mood from loaded data
+  const todaysMood = moodHistory?.[0]
+
   const milestoneInfo = getMilestoneInfo
+
+  // Sync React Query data to stores
+  useEffect(() => {
+    if (gardenElements && currentUser) {
+      // Garden data is already cached locally, no need to manually sync
+      console.log('✅ Garden data loaded:', gardenElements.length, 'elements')
+    }
+  }, [gardenElements, currentUser])
+
+  useEffect(() => {
+    if (moodHistory && currentUser) {
+      // Mood data is already cached locally, no need to manually sync
+      console.log('✅ Mood data loaded:', moodHistory.length, 'entries')
+    }
+  }, [moodHistory, currentUser])
 
   // Check screen size
   useEffect(() => {

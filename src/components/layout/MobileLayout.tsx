@@ -7,6 +7,9 @@ import { TelegramCommunity } from '@/components/telegram'
 import { TelegramStatus } from '@/components/ui'
 import { ProfilePage } from '@/pages/ProfilePage'
 import { useGardenState, useMoodTracking } from '@/hooks'
+import { useGardenHistory } from '@/hooks/queries/useGardenQueries'
+import { useMoodHistory } from '@/hooks/queries/useMoodQueries'
+import { useUserStore } from '@/stores'
 
 const tabVariants = {
   enter: (direction: number) => ({
@@ -27,12 +30,31 @@ const TABS = ['mood', 'garden', 'community', 'stats', 'profile']
 
 export function MobileLayout() {
   const [activeTab, setActiveTab] = useState('mood')
+  const { currentUser } = useUserStore()
   const { garden, gardenStats } = useGardenState()
-  const { canCheckinToday, moodHistory } = useMoodTracking()
-  // Removed currentUser as it's not used in this component
+  const { canCheckinToday } = useMoodTracking()
+
+  // Load data using React Query
+  const { isLoading: gardenLoading } = useGardenHistory(currentUser?.telegramId)
+  const { data: moodHistory, isLoading: moodLoading } = useMoodHistory(
+    currentUser?.telegramId,
+    currentUser?.id ?? ''
+  )
 
   const tabIndex = TABS.indexOf(activeTab)
   const [direction, setDirection] = useState(0)
+
+  // Show loading state
+  if (gardenLoading || moodLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 text-4xl">🌸</div>
+          <div className="text-lg text-gray-600">Загрузка данных...</div>
+        </div>
+      </div>
+    )
+  }
 
   const handleTabChange = (newTab: string) => {
     const newIndex = TABS.indexOf(newTab)
@@ -163,7 +185,7 @@ export function MobileLayout() {
           <div>
             <TelegramCommunity
               garden={garden}
-              recentMoods={moodHistory.slice(0, 7)}
+              recentMoods={moodHistory?.slice(0, 7) ?? []}
             />
           </div>
         )

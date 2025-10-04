@@ -5,7 +5,12 @@ import { MoodSelector } from './MoodSelector'
 import { PlantRenderer } from '@/components/garden/plants'
 import { Card, LoadingSpinner } from '@/components/ui'
 import { useMoodTracking, useGardenState } from '@/hooks'
-// import { getTimeUntilNextCheckin } from '@/utils/dateHelpers'
+import { useRecordMood } from '@/hooks/queries/useMoodQueries'
+import {
+  useAddGardenElement,
+  useGardenHistory,
+} from '@/hooks/queries/useGardenQueries'
+import { useUserStore } from '@/stores'
 import type { MoodType, MoodIntensity, GardenElement } from '@/types'
 
 interface MoodCheckinProps {
@@ -14,25 +19,35 @@ interface MoodCheckinProps {
 }
 
 export function MoodCheckin({
-  onElementUnlocked,
+  onElementUnlocked: _onElementUnlocked,
   className,
 }: MoodCheckinProps) {
-  const {
-    canCheckinToday,
-    todaysMood,
-    timeUntilNextCheckin,
-    checkInToday,
-    updateTodaysMoodEntry,
-    isLoading: moodLoading,
-    error: moodError,
-  } = useMoodTracking()
+  const { currentUser } = useUserStore()
+  const { canCheckinToday, todaysMood, timeUntilNextCheckin } =
+    useMoodTracking()
 
-  const {
-    unlockElement,
-    canUnlockToday,
-    isLoading: gardenLoading,
-    error: gardenError,
-  } = useGardenState()
+  const { canUnlockToday, generateTodaysElement } = useGardenState()
+
+  // React Query mutations
+  const recordMood = useRecordMood(
+    currentUser?.telegramId,
+    currentUser?.id ?? ''
+  )
+  const addElement = useAddGardenElement(currentUser?.telegramId)
+  const { data: gardenElements } = useGardenHistory(currentUser?.telegramId)
+
+  // Helper to create telegram user data
+  const getTelegramUserData = () => {
+    if (!currentUser) return undefined
+
+    return {
+      userId: currentUser.id,
+      firstName: currentUser.firstName,
+      lastName: currentUser.lastName,
+      username: currentUser.username,
+      photoUrl: currentUser.photoUrl,
+    } as const
+  }
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
@@ -45,20 +60,47 @@ export function MoodCheckin({
     intensity: MoodIntensity,
     note?: string
   ) => {
+    if (!currentUser) {
+      console.error('No user found')
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
-      // Save mood entry
-      const moodEntry = todaysMood
-        ? await updateTodaysMoodEntry(mood, intensity, note)
-        : await checkInToday(mood, intensity, note)
+      const telegramUserData = getTelegramUserData()
+      if (!telegramUserData) return
 
-      if (moodEntry && canUnlockToday()) {
-        // Unlock garden element
-        const element = await unlockElement(mood)
-        if (element) {
-          setUnlockedElement(element)
-          onElementUnlocked?.()
+      // Record mood using React Query
+      await recordMood.mutateAsync({
+        mood,
+        intensity,
+        ...(note && { note }),
+        telegramUserData: telegramUserData as any,
+      })
+
+      // If can unlock today, generate and add garden element
+      if (canUnlockToday()) {
+        const existingPositions = (gardenElements ?? []).map(el => el.position)
+        const newElement = generateTodaysElement(
+          mood,
+          currentUser.id,
+          existingPositions
+        )
+
+        if (newElement) {
+          await addElement.mutateAsync({
+            element: {
+              type: newElement.type,
+              position: newElement.position,
+              unlockDate: newElement.unlockDate.toISOString(),
+              moodInfluence: newElement.moodInfluence,
+              rarity: newElement.rarity,
+            },
+            telegramUserData: telegramUserData as any,
+          })
+
+          setUnlockedElement(newElement)
         }
       }
 
@@ -76,8 +118,8 @@ export function MoodCheckin({
     }
   }
 
-  const isLoading = moodLoading || gardenLoading || isSubmitting
-  const error = moodError || gardenError
+  const isLoading = recordMood.isPending || addElement.isPending || isSubmitting
+  const error = recordMood.error ?? addElement.error
 
   if (showSuccess) {
     return (
@@ -297,7 +339,9 @@ export function MoodCheckin({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
-            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+            <p className="text-sm text-red-700 dark:text-red-300">
+              {error instanceof Error ? error.message : String(error)}
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -337,7 +381,7 @@ export function MoodCheckin({
         >
           <LoadingSpinner size="md" />
           <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-            {moodLoading || isSubmitting
+            {recordMood.isPending || isSubmitting
               ? 'Сохранение...'
               : 'Выращивание растения...'}
           </span>
