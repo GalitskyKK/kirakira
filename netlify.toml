@@ -1,0 +1,4 @@
+[[redirects]]
+  from = "/api/garden"
+  to = "/.netlify/functions/garden"
+  status = 200
