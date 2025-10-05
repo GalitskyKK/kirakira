@@ -15,7 +15,7 @@ export {
 export { useTelegramStorage } from './useTelegramStorage'
 export { useAppInitialization } from './useAppInitialization'
 export { useTelegramSync } from './useTelegramSync'
-export { useStoresSync } from './useStoresSync'
+// export { useStoresSync } from './useStoresSync' // DEPRECATED - React Query handles sync automatically
 export { useDeepLink } from './useDeepLink'
 export { useUserPhotos } from './useUserPhotos'
 export { useProfile } from './useProfile'

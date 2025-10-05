@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useTelegramSync } from './useTelegramSync'
-import { useStoresSync } from './useStoresSync'
 import { useUserStore } from '@/stores'
 import {
   InitializationState,
@@ -33,7 +32,6 @@ export function useAppInitialization(
   })
 
   const { syncTelegramUser, hasTelegramUser, telegramReady } = useTelegramSync()
-  const { syncStores } = useStoresSync()
   const { currentUser, createAnonymousUser } = useUserStore()
 
   const updateProgress = useCallback(
@@ -118,20 +116,12 @@ export function useAppInitialization(
 
       updateProgress(InitializationStage.STORES_SYNC, 60)
 
-      // Этап 2: Синхронизация stores (если включена)
-      if (finalConfig.enableStoresSync) {
-        logIfDev('🔄 Синхронизация stores...', { workingMode, telegramUserId })
-
-        // Синхронизация через React Query хуки теперь выполняется автоматически
-        // useStoresSync больше не выполняет ручную синхронизацию
-        const storesResult = await syncStores()
-
-        if (!storesResult.success) {
-          throw new Error(`Stores sync failed: ${storesResult.error}`)
-        }
-
-        logIfDev('✅ Stores синхронизация завершена', { mode: workingMode })
-      }
+      // Этап 2: Синхронизация stores больше не нужна!
+      // React Query автоматически загружает данные через:
+      // - useGardenHistory() в компонентах
+      // - useMoodHistory() в компонентах
+      // - useProfile() в компонентах
+      logIfDev('✅ Stores sync skipped - React Query handles it automatically')
 
       updateProgress(InitializationStage.COMPLETED, 100)
       logIfDev('🎉 Инициализация завершена успешно')
@@ -148,7 +138,6 @@ export function useAppInitialization(
     hasTelegramUser,
     telegramReady,
     syncTelegramUser,
-    syncStores,
     updateProgress,
     logIfDev,
     ensureBrowserUser,
