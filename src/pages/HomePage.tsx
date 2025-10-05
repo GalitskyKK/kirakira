@@ -30,20 +30,35 @@ export function HomePage() {
 
   const milestoneInfo = getMilestoneInfo
 
-  // Sync React Query data to stores
-  useEffect(() => {
-    if (gardenElements && currentUser) {
-      // Garden data is already cached locally, no need to manually sync
-      console.log('✅ Garden data loaded:', gardenElements.length, 'elements')
-    }
-  }, [gardenElements, currentUser])
+  // Sync React Query data to local stores for UI
+  const { updateGarden } = useGardenState()
+  const { setMoodHistory: updateMoodHistory } = useMoodTracking()
 
   useEffect(() => {
-    if (moodHistory && currentUser) {
-      // Mood data is already cached locally, no need to manually sync
-      console.log('✅ Mood data loaded:', moodHistory.length, 'entries')
+    if (gardenElements && currentUser && gardenElements.length > 0) {
+      console.log(
+        '✅ Syncing garden data to store:',
+        gardenElements.length,
+        'elements'
+      )
+      // Синхронизируем элементы в локальный store для статистики
+      updateGarden({
+        elements: gardenElements,
+      })
     }
-  }, [moodHistory, currentUser])
+  }, [gardenElements, currentUser, updateGarden])
+
+  useEffect(() => {
+    if (moodHistory && moodHistory.length > 0) {
+      console.log(
+        '✅ Syncing mood data to store:',
+        moodHistory.length,
+        'entries'
+      )
+      // Синхронизируем данные в локальный store для статистики
+      updateMoodHistory(moodHistory)
+    }
+  }, [moodHistory, updateMoodHistory])
 
   // Check screen size
   useEffect(() => {

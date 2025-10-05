@@ -14,7 +14,6 @@ export function useTelegramSync() {
     currentUser,
     clearAllUserData,
     clearUserDataOnly,
-    syncFromSupabase,
     createTelegramUser,
   } = useUserStore()
 
@@ -83,23 +82,10 @@ export function useTelegramSync() {
           }
 
           console.log(
-            '🔄 Вызываем syncFromSupabase для нового пользователя (clear):',
-            telegramUser.telegramId
+            '✅ Данные пользователя будут загружены автоматически через React Query useProfile()'
           )
 
-          // Передаем данные пользователя для создания в БД
-          const telegramUserData = {
-            first_name: telegramUser.firstName,
-            last_name: telegramUser.lastName,
-            username: telegramUser.username,
-            photo_url: telegramUser.photoUrl,
-            language_code: telegramUser.languageCode,
-          }
-
-          await syncFromSupabase(
-            telegramUser.telegramId,
-            telegramUserData as any
-          )
+          // React Query автоматически загрузит данные пользователя
 
           // Если пользователя нет на сервере - создаем
           const { currentUser: syncedUser } = useUserStore.getState()
@@ -115,25 +101,12 @@ export function useTelegramSync() {
             })
           }
         } else {
-          // Принудительная синхронизация для существующих пользователей
+          // Данные существующего пользователя будут загружены автоматически
           console.log(
-            '🔄 Вызываем syncFromSupabase для существующего пользователя:',
-            telegramUser.telegramId
+            '✅ Существующий пользователь. Данные будут загружены через React Query.'
           )
 
-          // Передаем обновленные данные пользователя
-          const telegramUserData = {
-            first_name: telegramUser.firstName,
-            last_name: telegramUser.lastName,
-            username: telegramUser.username,
-            photo_url: telegramUser.photoUrl,
-            language_code: telegramUser.languageCode,
-          }
-
-          await syncFromSupabase(
-            telegramUser.telegramId,
-            telegramUserData as any
-          )
+          // React Query автоматически загрузит актуальные данные
         }
 
         return { success: true, mode: 'telegram', user: telegramUser }
@@ -148,7 +121,6 @@ export function useTelegramSync() {
       currentUser,
       clearAllUserData,
       clearUserDataOnly,
-      syncFromSupabase,
       createTelegramUser,
     ])
 

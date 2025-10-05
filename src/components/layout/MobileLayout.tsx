@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MobileTabNavigation } from './MobileTabNavigation'
 import { GardenView } from '@/components/garden'
@@ -31,11 +31,14 @@ const TABS = ['mood', 'garden', 'community', 'stats', 'profile']
 export function MobileLayout() {
   const [activeTab, setActiveTab] = useState('mood')
   const { currentUser } = useUserStore()
-  const { garden, gardenStats } = useGardenState()
-  const { canCheckinToday } = useMoodTracking()
+  const { garden, gardenStats, updateGarden } = useGardenState()
+  const { canCheckinToday, setMoodHistory: updateMoodHistory } =
+    useMoodTracking()
 
   // Load data using React Query
-  const { isLoading: gardenLoading } = useGardenHistory(currentUser?.telegramId)
+  const { data: gardenElements, isLoading: gardenLoading } = useGardenHistory(
+    currentUser?.telegramId
+  )
   const { data: moodHistory, isLoading: moodLoading } = useMoodHistory(
     currentUser?.telegramId,
     currentUser?.id ?? ''
@@ -43,6 +46,21 @@ export function MobileLayout() {
 
   const tabIndex = TABS.indexOf(activeTab)
   const [direction, setDirection] = useState(0)
+
+  // Sync React Query data to local stores for UI/statistics
+  useEffect(() => {
+    if (gardenElements && currentUser && gardenElements.length > 0) {
+      updateGarden({
+        elements: gardenElements,
+      })
+    }
+  }, [gardenElements, currentUser, updateGarden])
+
+  useEffect(() => {
+    if (moodHistory && moodHistory.length > 0) {
+      updateMoodHistory(moodHistory)
+    }
+  }, [moodHistory, updateMoodHistory])
 
   // Show loading state
   if (gardenLoading || moodLoading) {
