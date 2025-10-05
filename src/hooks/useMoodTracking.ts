@@ -27,7 +27,7 @@ export function useMoodTracking() {
     clearMoodHistory,
   } = useMoodStore()
 
-  // Memoized mood statistics
+  // Memoized mood statistic
   const moodStats: MoodStats = useMemo(() => getMoodStats(), [getMoodStats])
 
   // Get time until next check-in
