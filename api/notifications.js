@@ -50,9 +50,9 @@ const NOTIFICATION_PRIORITIES = {
 
 // Расписание: Каждый день в 08:00 UTC (11:00 МСК) - оптимальное время
 const NOTIFICATION_TIME = {
-  utc: '08:00',
-  moscow: '11:00',
-  schedule: '0 8 * * *', // Vercel cron format
+  utc: '09:00',
+  moscow: '12:00',
+  schedule: '0 9 * * *', // Vercel cron format
 }
 
 // Конфигурация
@@ -544,6 +544,8 @@ async function processNotifications() {
 /**
  * 🎯 ОБЪЕДИНЕННЫЙ VERCEL FUNCTIONS HANDLER
  * Поддерживает оба типа уведомлений в одном endpoint
+ *
+ * VERCEL CRON отправляет GET запросы, поэтому обрабатываем оба метода!
  */
 export default async function handler(req, res) {
   // Проверяем метод
@@ -554,8 +556,8 @@ export default async function handler(req, res) {
   // Получаем тип уведомлений из query параметра
   const notificationType = req.query.type || 'standard'
 
-  // GET для проверки статуса
-  if (req.method === 'GET') {
+  // Проверка статуса только если явно указан параметр status=true
+  if (req.method === 'GET' && req.query.status === 'true') {
     return res.status(200).json({
       status: `Notifications system ready (${notificationType})`,
       availableTypes: ['standard', 'smart'],
@@ -565,6 +567,7 @@ export default async function handler(req, res) {
     })
   }
 
+  // Обрабатываем уведомления для GET (Vercel Cron) и POST (ручной запуск)
   try {
     let result
 
@@ -584,6 +587,8 @@ export default async function handler(req, res) {
     res.status(200).json({
       ...result,
       type: notificationType,
+      method: req.method,
+      triggeredBy: req.method === 'GET' ? 'Vercel Cron' : 'Manual POST',
     })
   } catch (error) {
     console.error('❌ Notifications handler error:', error)
