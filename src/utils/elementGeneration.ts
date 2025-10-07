@@ -487,7 +487,14 @@ function selectElementTemplate(
 
 /**
  * Generates a valid position within the garden grid
- * Optimized for shelf layout: 4 shelves (y: 0-3) with positions (x: 0-9)
+ * УЛУЧШЕНО: Множественные комнаты с правильным количеством слотов
+ *
+ * Логика распределения:
+ * - Каждая комната содержит 4 полки
+ * - Комната 0: полки 0-3, Комната 1: полки 4-7, и т.д.
+ * - До 5 позиций на каждой полке (x: 0-4) - соответствует ShelfView
+ * - 20 элементов на комнату (4 полки × 5 позиций)
+ * - Автоматически заполняет комнаты последовательно
  */
 function generatePosition(
   random: SeededRandom,
@@ -496,19 +503,35 @@ function generatePosition(
   const maxAttempts = 100
   let attempts = 0
 
-  // Shelf system: 4 shelves (y: 0-3), up to 10 positions per shelf (x: 0-9)
-  const SHELF_COUNT = 4
-  const MAX_POSITIONS_PER_SHELF = 10
+  const SHELVES_PER_ROOM = 4
+  const MAX_POSITIONS_PER_SHELF = 5 // ИСПРАВЛЕНО: 5 позиций (соответствует ShelfView)
 
-  console.log('🎯 Generating position for new element:', {
+  console.log('🎯 Generating position for new element (Multi-room system):', {
     existingPositionsCount: existingPositions.length,
     existingPositions: existingPositions.map(p => `(${p.x},${p.y})`).join(', '),
   })
 
+  // Определяем текущую комнату на основе количества элементов
+  const ELEMENTS_PER_ROOM = SHELVES_PER_ROOM * MAX_POSITIONS_PER_SHELF // 20 элементов
+  const currentRoomIndex = Math.floor(
+    existingPositions.length / ELEMENTS_PER_ROOM
+  )
+  const startShelf = currentRoomIndex * SHELVES_PER_ROOM
+  const endShelf = startShelf + SHELVES_PER_ROOM
+
+  console.log('🏠 Current room calculation:', {
+    elementsCount: existingPositions.length,
+    elementsPerRoom: ELEMENTS_PER_ROOM,
+    currentRoomIndex,
+    shelfRange: `${startShelf}-${endShelf - 1}`,
+    maxPositionsPerShelf: MAX_POSITIONS_PER_SHELF,
+  })
+
+  // Пытаемся найти случайную позицию в текущей комнате
   while (attempts < maxAttempts) {
     const position: Position2D = {
-      x: random.nextInt(0, MAX_POSITIONS_PER_SHELF - 1), // Position on shelf (0-9)
-      y: random.nextInt(0, SHELF_COUNT - 1), // Shelf number (0-3)
+      x: random.nextInt(0, MAX_POSITIONS_PER_SHELF - 1), // Position on shelf (0-4)
+      y: random.nextInt(startShelf, endShelf - 1), // Shelf in current room
     }
 
     // Check if position is already occupied
@@ -521,9 +544,12 @@ function generatePosition(
     )
 
     if (!isOccupied) {
+      const localShelf = position.y - startShelf
       console.log('✅ Generated random position for new element:', {
         position,
-        shelfNumber: position.y,
+        roomIndex: currentRoomIndex,
+        globalShelfNumber: position.y,
+        localShelfNumber: localShelf,
         positionOnShelf: position.x,
         attempt: attempts + 1,
       })
@@ -535,31 +561,42 @@ function generatePosition(
 
   console.warn('⚠️ Max attempts reached, falling back to sequential search')
 
-  // Fallback: find first available position (shelf by shelf)
-  for (let y = 0; y < SHELF_COUNT; y++) {
-    for (let x = 0; x < MAX_POSITIONS_PER_SHELF; x++) {
-      const position: Position2D = { x, y }
-      const isOccupied = existingPositions.some(
-        pos => pos.x === position.x && pos.y === position.y
-      )
-      if (!isOccupied) {
-        console.log('🔄 Fallback position found for new element:', {
-          position,
-          shelfNumber: position.y,
-          positionOnShelf: position.x,
-          fallback: true,
-        })
-        return position
+  // Fallback: find first available position (room by room, shelf by shelf)
+  // Ищем во всех комнатах, начиная с текущей
+  const MAX_ROOMS = 200 // Поддержка до 200 комнат (4000 элементов = 200 × 20)
+
+  for (let roomIndex = currentRoomIndex; roomIndex < MAX_ROOMS; roomIndex++) {
+    const roomStartShelf = roomIndex * SHELVES_PER_ROOM
+    const roomEndShelf = roomStartShelf + SHELVES_PER_ROOM
+
+    for (let y = roomStartShelf; y < roomEndShelf; y++) {
+      for (let x = 0; x < MAX_POSITIONS_PER_SHELF; x++) {
+        const position: Position2D = { x, y }
+        const isOccupied = existingPositions.some(
+          pos => pos.x === position.x && pos.y === position.y
+        )
+        if (!isOccupied) {
+          const localShelf = y - roomStartShelf
+          console.log('🔄 Fallback position found for new element:', {
+            position,
+            roomIndex,
+            globalShelfNumber: y,
+            localShelfNumber: localShelf,
+            positionOnShelf: x,
+            fallback: true,
+          })
+          return position
+        }
       }
     }
   }
 
-  // Ultimate fallback: top-left corner of first shelf
+  // Ultimate fallback: first position in next room (shouldn't happen)
+  const nextRoomStart = (currentRoomIndex + 1) * SHELVES_PER_ROOM
   console.error(
-    '❌ All positions occupied, using ultimate fallback (0,0) - THIS WILL CAUSE COLLISION!'
+    '❌ Could not find position in current room, moving to next room'
   )
-  console.error('Existing positions:', existingPositions)
-  return { x: 0, y: 0 }
+  return { x: 0, y: nextRoomStart }
 }
 
 /**

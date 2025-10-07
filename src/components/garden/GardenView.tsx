@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { clsx } from 'clsx'
 import { useGardenState } from '@/hooks'
-import { ShelfView } from './ShelfView'
+import { GardenRoomManager } from './GardenRoomManager'
 import { GardenStats } from './GardenStats'
 import { ElementDetails } from './ElementDetails'
 import { LoadingOverlay, Card } from '@/components/ui'
@@ -19,8 +19,10 @@ export function GardenView({ className }: GardenViewProps) {
     isLoading,
     selectedElement,
     viewMode,
+    currentRoomIndex,
     selectElement,
     setViewMode,
+    setCurrentRoomIndex,
     moveElementSafely,
   } = useGardenState()
 
@@ -72,9 +74,9 @@ export function GardenView({ className }: GardenViewProps) {
   )
 
   const handleSlotClick = useCallback(
-    async (shelfIndex: number, position: number) => {
-      console.log('🎯 handleSlotClick called:', {
-        shelfIndex,
+    async (globalShelfIndex: number, position: number) => {
+      console.log('🎯 handleSlotClick called (from GardenRoomManager):', {
+        globalShelfIndex,
         position,
         elementBeingMoved: elementBeingMoved?.name,
         hasElementBeingMoved: !!elementBeingMoved,
@@ -83,41 +85,16 @@ export function GardenView({ className }: GardenViewProps) {
       if (elementBeingMoved) {
         console.log('✅ Element is being moved, proceeding with move')
         try {
-          // Элементы на полке зависят от размера экрана (соответствует логике ShelfView)
-          const elementsPerShelf = window.innerWidth < 1024 ? 4 : 5
+          // GardenRoomManager передаёт уже глобальные координаты
+          // globalShelfIndex уже учитывает текущую комнату
+          const gridX = position
+          const gridY = globalShelfIndex
 
-          // БЕЗОПАСНЫЕ координаты с проверками границ
-          const maxPosition = elementsPerShelf - 1
-          const maxShelf = 3 // У нас 4 полки (0-3)
-
-          // Проверяем границы
-          if (position > maxPosition || shelfIndex > maxShelf) {
-            console.error('❌ Invalid slot coordinates:', {
-              shelfIndex,
-              maxShelf,
-              position,
-              maxPosition,
-              elementsPerShelf,
-            })
-            return
-          }
-
-          // НОВАЯ система: упаковываем shelfIndex и position в координаты 10x10
-          // Используем "виртуальную" сетку где каждая полка занимает определенные ряды
-          const gridX = position // Позиция на полке (0-4)
-          const gridY = shelfIndex // Каждая полка = отдельный ряд (0-3)
-
-          console.log('📍 Moving element to SAFE SLOT coordinates:', {
+          console.log('📍 Moving element to coordinates:', {
             elementName: elementBeingMoved.name,
-            fromShelf: 'unknown',
-            toShelf: shelfIndex,
-            toPosition: position,
-            elementsPerShelf,
+            globalShelfIndex,
+            position,
             finalCoords: { gridX, gridY },
-            boundsCheck: {
-              positionOK: position <= maxPosition,
-              shelfOK: shelfIndex <= maxShelf,
-            },
           })
 
           await moveElementSafely(elementBeingMoved.id, { x: gridX, y: gridY })
@@ -256,15 +233,17 @@ export function GardenView({ className }: GardenViewProps) {
               </div>
 
               {/* Mobile-first adaptive layout */}
-              <div className="flex h-full flex-col lg:flex-row">
-                {/* Garden Display - Shelf View Only */}
-                <div className="flex-1 p-2 sm:p-4">
-                  <ShelfView
+              <div className="flex flex-col lg:flex-row">
+                {/* Garden Display - Room Manager with Multi-Room Support */}
+                <div className="flex-1 p-2 sm:p-4 lg:p-6">
+                  <GardenRoomManager
                     elements={garden.elements}
                     selectedElement={selectedElement}
                     draggedElement={draggedElement}
                     elementBeingMoved={elementBeingMoved}
                     viewMode={viewMode}
+                    currentRoomIndex={currentRoomIndex}
+                    onRoomChange={setCurrentRoomIndex}
                     onElementClick={handleElementClick}
                     onElementLongPress={handleElementLongPress}
                     onSlotClick={handleSlotClick}

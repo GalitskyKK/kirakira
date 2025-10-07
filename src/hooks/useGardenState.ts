@@ -12,6 +12,7 @@ export function useGardenState() {
     error,
     viewMode,
     selectedElement,
+    currentRoomIndex,
     loadGarden,
     createGarden,
     updateGarden,
@@ -19,6 +20,7 @@ export function useGardenState() {
     moveElement,
     selectElement,
     setViewMode,
+    setCurrentRoomIndex,
     setError,
     canUnlockToday,
     getElementsCount,
@@ -43,16 +45,22 @@ export function useGardenState() {
     const totalElements = elements.length
 
     // Group by type
-    const elementsByType = elements.reduce((acc, element) => {
-      acc[element.type] = (acc[element.type] ?? 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const elementsByType = elements.reduce(
+      (acc, element) => {
+        acc[element.type] = (acc[element.type] ?? 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
     // Group by rarity
-    const elementsByRarity = elements.reduce((acc, element) => {
-      acc[element.rarity] = (acc[element.rarity] ?? 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const elementsByRarity = elements.reduce(
+      (acc, element) => {
+        acc[element.rarity] = (acc[element.rarity] ?? 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
     // Calculate average age in days
     const now = new Date()
@@ -62,7 +70,8 @@ export function useGardenState() {
       )
       return sum + age
     }, 0)
-    const averageAge = totalElements > 0 ? Math.round(totalAge / totalElements) : 0
+    const averageAge =
+      totalElements > 0 ? Math.round(totalAge / totalElements) : 0
 
     // Find newest and oldest elements
     const sortedByDate = [...elements].sort(
@@ -171,10 +180,10 @@ export function useGardenState() {
 
   // Initialize garden for new user
   const initializeGarden = useCallback(
-    async (userId: string): Promise<boolean> => {
+    (userId: string): boolean => {
       try {
         setError(null)
-        await createGarden(userId)
+        createGarden(userId)
         return true
       } catch (error) {
         const errorMessage =
@@ -193,6 +202,7 @@ export function useGardenState() {
     error,
     viewMode,
     selectedElement,
+    currentRoomIndex,
 
     // Statistics
     gardenStats,
@@ -205,6 +215,7 @@ export function useGardenState() {
     moveElementSafely,
     selectElement,
     setViewMode,
+    setCurrentRoomIndex,
     setError,
     clearGarden,
 

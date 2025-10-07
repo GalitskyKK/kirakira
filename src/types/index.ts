@@ -16,6 +16,10 @@ export {
   GARDEN_GRID_SIZE,
   MAX_ELEMENTS_PER_DAY,
   ELEMENT_SIZE,
+  SHELVES_PER_ROOM,
+  MAX_POSITIONS_PER_SHELF,
+  ELEMENTS_PER_ROOM,
+  ROOM_TRANSITION_DURATION,
 } from './garden'
 
 export { MoodIntensity, MOOD_CONFIG } from './mood'

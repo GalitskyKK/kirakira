@@ -67,6 +67,7 @@ export interface GardenState {
   readonly viewMode: ViewMode
   readonly selectedElement: GardenElement | null
   readonly lastSyncTime: number // Время последней синхронизации для ограничения запросов
+  readonly currentRoomIndex: number // Текущая комната сада
 }
 
 export enum ViewMode {
@@ -83,6 +84,30 @@ export type MoodType =
   | 'anger'
   | 'anxiety'
 
+// Garden Room System - для масштабируемости сада
+export interface GardenRoom {
+  readonly id: string
+  readonly index: number // Номер комнаты (0, 1, 2, ...)
+  readonly name: string // "Первая комната", "Вторая комната", и т.д.
+  readonly elements: readonly GardenElement[] // Элементы в этой комнате
+  readonly capacity: number // Максимум элементов в комнате
+  readonly isFull: boolean // Комната заполнена
+}
+
+export interface RoomNavigationState {
+  readonly currentRoomIndex: number
+  readonly totalRooms: number
+  readonly canNavigateNext: boolean
+  readonly canNavigatePrev: boolean
+}
+
+// Константы для сада
 export const GARDEN_GRID_SIZE = 10
 export const MAX_ELEMENTS_PER_DAY = 1
 export const ELEMENT_SIZE = 40 // pixels
+
+// Константы для системы комнат
+export const SHELVES_PER_ROOM = 4 // 4 полки в комнате
+export const MAX_POSITIONS_PER_SHELF = 5 // До 5 позиций на полке (соответствует ShelfView)
+export const ELEMENTS_PER_ROOM = SHELVES_PER_ROOM * MAX_POSITIONS_PER_SHELF // 20 элементов на комнату
+export const ROOM_TRANSITION_DURATION = 0.5 // Длительность анимации перехода (секунды)

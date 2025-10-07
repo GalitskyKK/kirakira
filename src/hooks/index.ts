@@ -1,5 +1,6 @@
 // Re-export all hooks for easier importing
 export { useGardenState } from './useGardenState'
+export { useGardenRooms } from './useGardenRooms'
 export { useMoodTracking } from './useMoodTracking'
 export { useElementGeneration } from './useElementGeneration'
 export {

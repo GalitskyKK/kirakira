@@ -166,9 +166,9 @@ export function ShelfView({
   const isElementMoving = elementBeingMoved !== null
 
   return (
-    <div className="shelf-container relative h-full min-h-[600px] w-full overflow-hidden">
+    <div className="shelf-container relative min-h-[650px] w-full overflow-visible sm:min-h-[700px] lg:min-h-[750px]">
       {/* Background with wooden texture and magical atmosphere */}
-      <div className="absolute inset-0">
+      <div className="absolute left-0 right-0 top-0 h-full min-h-[650px] sm:min-h-[700px] lg:min-h-[750px]">
         <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100" />
 
         {/* Subtle wood grain texture */}
@@ -213,7 +213,7 @@ export function ShelfView({
 
       {/* Main shelf container with perspective */}
       <motion.div
-        className="relative h-full w-full"
+        className="relative w-full"
         style={{
           perspective: '1200px',
           perspectiveOrigin: 'center center',
@@ -435,7 +435,7 @@ export function ShelfView({
                 {/* Elements on this shelf */}
                 <div
                   className={clsx(
-                    'shelf-elements absolute inset-x-0 top-0 flex items-end justify-center z-10',
+                    'shelf-elements absolute inset-x-0 top-0 z-10 flex items-end justify-center',
                     isMobile ? 'bottom-4 px-2' : 'bottom-4 px-8'
                   )}
                   style={{
@@ -560,8 +560,8 @@ export function ShelfView({
           })}
         </div>
 
-        {/* Empty state */}
-        {elements.length === 0 && (
+        {/* Empty state - скрываем при перемещении элемента */}
+        {elements.length === 0 && !isElementMoving && (
           <motion.div
             className="absolute inset-0 flex items-center justify-center"
             initial={{ opacity: 0, y: 30 }}
@@ -589,6 +589,26 @@ export function ShelfView({
               <p className="text-gray-600">
                 Отметьте свое настроение, чтобы добавить первый элемент в вашу
                 коллекцию!
+              </p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Подсказка при перемещении в пустую комнату */}
+        {elements.length === 0 && isElementMoving && (
+          <motion.div
+            className="pointer-events-none absolute inset-0 flex items-center justify-center"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+          >
+            <div className="rounded-2xl bg-blue-50/90 px-8 py-6 text-center shadow-xl backdrop-blur-sm">
+              <div className="mb-3 text-6xl">📦</div>
+              <h3 className="mb-2 text-lg font-semibold text-blue-900">
+                Выберите место для элемента
+              </h3>
+              <p className="text-sm text-blue-700">
+                Нажмите на любой пустой слот на полках
               </p>
             </div>
           </motion.div>

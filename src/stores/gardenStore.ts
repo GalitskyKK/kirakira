@@ -45,6 +45,9 @@ interface GardenActions {
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
 
+  // Room navigation
+  setCurrentRoomIndex: (roomIndex: number) => void
+
   // Utility actions
   canUnlockToday: () => boolean
   getElementsCount: () => number
@@ -63,6 +66,7 @@ export const useGardenStore = create<GardenStore>()(
     viewMode: ViewMode.OVERVIEW,
     selectedElement: null,
     lastSyncTime: 0,
+    currentRoomIndex: 0, // Начинаем с первой комнаты
 
     // Actions
     loadGarden: () => {
@@ -578,6 +582,11 @@ export const useGardenStore = create<GardenStore>()(
 
     setLoading: (loading: boolean) => {
       set({ isLoading: loading })
+    },
+
+    setCurrentRoomIndex: (roomIndex: number) => {
+      console.log('🏠 Switching to room:', roomIndex)
+      set({ currentRoomIndex: roomIndex })
     },
 
     setError: (error: string | null) => {
