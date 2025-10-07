@@ -16,6 +16,7 @@ import type {
 } from '@/types/api'
 import { calculateMoodStats } from '@/utils/moodMapping'
 import { saveMoodHistory, loadMoodHistory } from '@/utils/storage'
+import { getLocalDateString, parseLocalDate } from '@/utils/dateHelpers'
 
 interface MoodActions {
   // Mood management
@@ -89,11 +90,9 @@ export const useMoodStore = create<MoodStore>()(
 
         const todaysMood =
           storedHistory.find(entry => {
-            // 🔧 ИСПРАВЛЕНИЕ: Правильно сравниваем даты с учетом часовых поясов
-            const entryDateStr = new Date(entry.date)
-              .toISOString()
-              .split('T')[0] // YYYY-MM-DD
-            const todayStr = today.toISOString().split('T')[0] // YYYY-MM-DD
+            // 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Используем ЛОКАЛЬНУЮ дату (UTC+5 и др)
+            const entryDateStr = getLocalDateString(new Date(entry.date))
+            const todayStr = getLocalDateString(today)
 
             return entryDateStr === todayStr
           }) ?? null
@@ -207,7 +206,10 @@ export const useMoodStore = create<MoodStore>()(
                 (serverMood: DatabaseMoodEntry) => ({
                   id: `mood_${serverMood.id || Date.now()}`,
                   userId: currentUser.id,
-                  date: new Date(serverMood.mood_date || serverMood.created_at),
+                  // 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Парсим mood_date как ЛОКАЛЬНУЮ дату
+                  date: serverMood.mood_date
+                    ? parseLocalDate(serverMood.mood_date)
+                    : new Date(serverMood.created_at),
                   mood: serverMood.mood,
                   intensity: serverMood.intensity || 2, // Из БД или по умолчанию
                   note: serverMood.note || undefined,
@@ -224,8 +226,17 @@ export const useMoodStore = create<MoodStore>()(
 
               const todayFromServer =
                 convertedMoods.find((entry: MoodEntry) => {
-                  const entryDateStr = entry.date.toISOString().split('T')[0]
-                  const todayStr = today.toISOString().split('T')[0]
+                  // 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Используем ЛОКАЛЬНУЮ дату
+                  const entryDateStr = getLocalDateString(entry.date)
+                  const todayStr = getLocalDateString(today)
+
+                  console.log('🔍 Mood sync - date comparison:', {
+                    entryDate: entry.date.toISOString(),
+                    entryDateStr,
+                    todayStr,
+                    matches: entryDateStr === todayStr,
+                  })
+
                   return entryDateStr === todayStr
                 }) || null
 

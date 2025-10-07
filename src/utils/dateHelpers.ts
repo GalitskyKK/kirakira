@@ -19,6 +19,57 @@ import {
 import { ru } from 'date-fns/locale'
 
 /**
+ * 🔧 КРИТИЧЕСКАЯ ФУНКЦИЯ: Получает локальную дату в формате YYYY-MM-DD
+ * БЕЗ конвертации в UTC (для корректной работы с часовыми поясами)
+ *
+ * Использует локальное время пользователя, не зависит от UTC
+ */
+export function getLocalDateString(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/**
+ * 🔧 КРИТИЧЕСКАЯ ФУНКЦИЯ: Создает Date объект из строки YYYY-MM-DD
+ * интерпретируя её как ЛОКАЛЬНУЮ дату, а не UTC
+ *
+ * Например:
+ * - "2025-10-06" → Date объект на 6 октября 00:00:00 по ЛОКАЛЬНОМУ времени
+ *
+ * Если использовать new Date("2025-10-06"), то создается UTC полночь,
+ * что для UTC+5 будет 05:00 утра, и getDate() вернет правильный день.
+ * НО для отрицательных часовых поясов (например UTC-5) это будет предыдущий день!
+ */
+export function parseLocalDate(dateString: string): Date {
+  // Добавляем T00:00:00 без Z в конце → интерпретируется как локальное время
+  // Альтернатива: парсим вручную
+  const parts = dateString.split('-').map(Number)
+  const year = parts[0]
+  const month = parts[1]
+  const day = parts[2]
+
+  if (
+    year === undefined ||
+    month === undefined ||
+    day === undefined ||
+    year === 0 ||
+    month === 0 ||
+    day === 0 ||
+    Number.isNaN(year) ||
+    Number.isNaN(month) ||
+    Number.isNaN(day)
+  ) {
+    console.warn('Invalid date string:', dateString)
+    return new Date(dateString) // Fallback к стандартному парсингу
+  }
+
+  // Создаем дату в локальном часовом поясе (месяц 0-indexed)
+  return new Date(year, month - 1, day, 0, 0, 0, 0)
+}
+
+/**
  * Formats date for display in the app
  */
 export function formatDate(
@@ -83,15 +134,17 @@ export function getRelativeTimeString(date: Date | string): string {
 /**
  * Checks if it's time for daily check-in
  * Uses the same date comparison logic as todaysMood to ensure consistency
+ *
+ * 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Использует ЛОКАЛЬНУЮ дату пользователя,
+ * а не UTC, чтобы корректно работать с часовыми поясами
  */
 export function isTimeForCheckin(lastCheckin: Date | null): boolean {
   if (lastCheckin === null) return true
 
-  // 🔧 ИСПРАВЛЕНИЕ: Используем ту же логику сравнения строк дат что и в todaysMood
-  // Это обеспечивает корректную работу с часовыми поясами
+  // Используем ЛОКАЛЬНУЮ дату для корректной работы во всех часовых поясах
   const today = new Date()
-  const entryDateStr = lastCheckin.toISOString().split('T')[0] // YYYY-MM-DD
-  const todayStr = today.toISOString().split('T')[0] // YYYY-MM-DD
+  const entryDateStr = getLocalDateString(lastCheckin)
+  const todayStr = getLocalDateString(today)
 
   console.log('🕐 isTimeForCheckin check:', {
     lastCheckin: lastCheckin.toISOString(),
