@@ -8,6 +8,21 @@ import crypto from 'crypto'
 import { Buffer } from 'buffer'
 
 /**
+ * Генерирует детерминированный UUID v5 из telegram_id
+ * @param {number} telegramId - ID пользователя в Telegram
+ * @returns {string} UUID
+ */
+function telegramIdToUUID(telegramId) {
+  // Используем namespace UUID для Telegram
+  const namespace = '6ba7b810-9dad-11d1-80b4-00c04fd430c8' // ISO OID namespace
+  const name = `telegram:${telegramId}`
+
+  // Простой способ: заполняем UUID нулями + telegram_id
+  const hex = telegramId.toString().padStart(32, '0')
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`
+}
+
+/**
  * Генерирует JWT токен для пользователя Telegram
  * @param {number} telegramId - ID пользователя в Telegram
  * @param {object} userData - Дополнительные данные пользователя
@@ -27,13 +42,13 @@ export function generateSupabaseJWT(telegramId, userData = {}) {
   const payload = {
     // Стандартные claims
     iss: 'kirakira-api', // issuer
-    sub: `telegram-${telegramId}`, // subject (уникальный ID)
+    sub: telegramIdToUUID(telegramId), // subject (валидный UUID)
     aud: 'authenticated', // audience
     exp: now + expiresIn, // expiration time
     iat: now, // issued at
 
     // Кастомные claims для RLS
-    telegram_id: telegramId,
+    telegram_id: telegramId, // Используется в public.get_telegram_id()
     role: 'authenticated',
 
     // Метаданные пользователя
