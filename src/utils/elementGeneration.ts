@@ -504,7 +504,7 @@ function generatePosition(
   let attempts = 0
 
   const SHELVES_PER_ROOM = 4
-  const MAX_POSITIONS_PER_SHELF = 5 // ИСПРАВЛЕНО: 5 позиций (соответствует ShelfView)
+  const MAX_POSITIONS_PER_SHELF = 4 // ИСПРАВЛЕНО: 5 позиций (соответствует ShelfView)
 
   console.log('🎯 Generating position for new element (Multi-room system):', {
     existingPositionsCount: existingPositions.length,
