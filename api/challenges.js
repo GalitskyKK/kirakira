@@ -60,15 +60,8 @@ async function handleList(req, res) {
     console.log('📞 Fetching active challenges directly...')
     const { data: challenges, error: challengesError } = await supabase
       .from('challenges')
-      .select(
-        `
-        *,
-        participant_count:challenge_participants(count)
-      `
-      )
-      .eq('status', 'active')
-      .lte('start_date', new Date().toISOString())
-      .gte('end_date', new Date().toISOString())
+      .select('*')
+      .in('status', ['active', 'draft'])
 
     console.log('📦 Challenges response:', {
       challengesCount: challenges?.length || 0,
