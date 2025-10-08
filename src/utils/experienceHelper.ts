@@ -5,6 +5,7 @@
 
 import { EXPERIENCE_REWARDS } from './achievements'
 import type { StandardApiResponse } from '@/types/api'
+import { authenticatedFetch } from '@/utils/apiClient'
 
 type ExperienceReason =
   | 'mood_entry'
@@ -58,15 +59,18 @@ export async function addExperience({
       `🏆 Adding ${points} XP to user ${telegramId} for ${reason} (fallback)`
     )
 
-    const response = await fetch('/api/profile?action=add_experience', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        telegramId,
-        experiencePoints: points,
-        reason: `${reason}: ${details}`.trim(),
-      }),
-    })
+    const response = await authenticatedFetch(
+      '/api/profile?action=add_experience',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          telegramId,
+          experiencePoints: points,
+          reason: `${reason}: ${details}`.trim(),
+        }),
+      }
+    )
 
     if (!response.ok) {
       console.warn(`❌ Failed to add experience: ${response.status}`)

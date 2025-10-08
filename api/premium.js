@@ -156,12 +156,15 @@ async function activatePremiumFeature(
   }
 }
 
+// Импортируем middleware аутентификации
+import { withAuth, verifyTelegramId } from './_auth.js'
+
 /**
- * API handler для активации премиум функций
+ * Защищенный API handler для активации премиум функций
  * @param {Request} req - Vercel Functions request object
  * @param {Response} res - Vercel Functions response object
  */
-export default async function handler(req, res) {
+async function protectedHandler(req, res) {
   // Проверяем метод запроса
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -179,6 +182,14 @@ export default async function handler(req, res) {
 
     if (!featureId || typeof featureId !== 'string') {
       return res.status(400).json({ error: 'featureId (string) is required' })
+    }
+
+    // 🔐 Проверяем что пользователь активирует функции для себя
+    if (!verifyTelegramId(telegramUserId, req.auth.telegramId)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden: You can only activate features for yourself',
+      })
     }
 
     // Проверяем валидность премиум функции
@@ -223,3 +234,6 @@ export default async function handler(req, res) {
     })
   }
 }
+
+// Экспортируем защищенный handler
+export default withAuth(protectedHandler)

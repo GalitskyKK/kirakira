@@ -1505,6 +1505,24 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
+  // 🔐 КРИТИЧНО: Проверяем секретный токен вебхука
+  const secretToken = req.headers['x-telegram-bot-api-secret-token']
+  const EXPECTED_TOKEN = process.env.TELEGRAM_WEBHOOK_SECRET
+
+  if (EXPECTED_TOKEN && secretToken !== EXPECTED_TOKEN) {
+    console.warn('⚠️ Invalid webhook secret token received')
+    console.warn(
+      `Expected: ${EXPECTED_TOKEN ? '[SET]' : '[NOT SET]'}, Received: ${secretToken ? '[SET]' : '[NOT SET]'}`
+    )
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+
+  if (!EXPECTED_TOKEN) {
+    console.warn(
+      '⚠️ TELEGRAM_WEBHOOK_SECRET not configured - webhook is not secure!'
+    )
+  }
+
   try {
     const update = req.body
 

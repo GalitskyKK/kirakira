@@ -9,6 +9,7 @@ import type {
   StandardApiResponse,
   ProfileApiGetProfileResponse,
 } from '@/types/api'
+import { authenticatedFetch } from '@/utils/apiClient'
 
 interface StreakDebugInfo {
   frontend: {
@@ -77,7 +78,7 @@ export function StreakDebugger() {
           console.log(
             `🔍 Fetching backend stats for telegramId: ${telegramIdToUse}`
           )
-          const response = await fetch(
+          const response = await authenticatedFetch(
             `/api/profile?action=get_profile&telegramId=${telegramIdToUse}`
           )
 
@@ -129,7 +130,7 @@ export function StreakDebugger() {
           console.log(
             `🔍 Fetching mood history for telegramId: ${telegramIdToUse}`
           )
-          const historyResponse = await fetch(
+          const historyResponse = await authenticatedFetch(
             `/api/mood?action=history&telegramId=${telegramIdToUse}`
           )
 

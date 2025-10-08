@@ -14,6 +14,7 @@ import type {
   Garden,
 } from '@/types'
 import { ViewMode, SeasonalVariant } from '@/types'
+import { authenticatedFetch } from '@/utils/apiClient'
 
 // Типы для данных друга и его сада
 interface FriendInfo {
@@ -83,7 +84,7 @@ export function FriendGardenView({
         `🌱 Loading friend garden: viewer=${currentUser.telegramId}, friend=${friendTelegramId}`
       )
 
-      const response = await fetch(
+      const response = await authenticatedFetch(
         `/api/garden?action=view-friend-garden&viewerTelegramId=${currentUser.telegramId}&friendTelegramId=${friendTelegramId}`
       )
 

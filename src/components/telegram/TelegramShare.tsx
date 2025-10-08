@@ -4,6 +4,7 @@ import { Share2, Camera, Heart, Copy, MessageCircle } from 'lucide-react'
 import { useTelegram } from '@/hooks'
 import { Button, Card } from '@/components/ui'
 import type { Garden, MoodEntry } from '@/types'
+import { authenticatedFetch } from '@/utils/apiClient'
 
 interface TelegramShareProps {
   garden: Garden | null
@@ -86,15 +87,18 @@ export function TelegramShare({
 
       if (currentUser?.telegramId) {
         try {
-          const response = await fetch('/api/profile?action=add_experience', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              telegramId: currentUser.telegramId,
-              experiencePoints: 25, // EXPERIENCE_REWARDS.SHARE_GARDEN
-              reason: 'share_garden: text description shared',
-            }),
-          })
+          const response = await authenticatedFetch(
+            '/api/profile?action=add_experience',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                telegramId: currentUser.telegramId,
+                experiencePoints: 25, // EXPERIENCE_REWARDS.SHARE_GARDEN
+                reason: 'share_garden: text description shared',
+              }),
+            }
+          )
 
           if (response.ok) {
             console.log('🏆 Added XP for sharing garden text')
@@ -185,7 +189,7 @@ export function TelegramShare({
         'shareToStory' in webApp &&
         typeof webApp.shareToStory === 'function'
       ) {
-        (webApp as any).shareToStory(lastSharedImage)
+        ;(webApp as any).shareToStory(lastSharedImage)
       } else {
         showAlert('Stories не поддерживаются в данной версии Telegram')
       }

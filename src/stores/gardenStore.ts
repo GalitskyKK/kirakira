@@ -27,6 +27,7 @@ import {
   getElementColor as getElementColorFromUtils,
   getElementScale,
 } from '@/utils/elementNames'
+import { authenticatedFetch } from '@/utils/apiClient'
 
 interface GardenActions {
   // Garden management
@@ -129,7 +130,7 @@ export const useGardenStore = create<GardenStore>()(
         set({ lastSyncTime: now })
 
         // Получаем актуальные данные пользователя с сервера
-        const response = await fetch(
+        const response = await authenticatedFetch(
           `/api/profile?action=get_profile&telegramId=${currentUser.telegramId}`
         )
 
@@ -163,7 +164,7 @@ export const useGardenStore = create<GardenStore>()(
           }
 
           // 🌱 Загружаем полную историю элементов сада с сервера
-          const historyResponse = await fetch(
+          const historyResponse = await authenticatedFetch(
             `/api/garden?action=history&telegramId=${currentUser.telegramId}`
           )
 
@@ -422,28 +423,31 @@ export const useGardenStore = create<GardenStore>()(
             const currentUser = userStore.currentUser
 
             if (currentUser?.telegramId) {
-              const response = await fetch('/api/garden?action=add-element', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  telegramId: currentUser.telegramId,
-                  element: {
-                    type: newElement.type,
-                    position: newElement.position,
-                    unlockDate: newElement.unlockDate.toISOString(),
-                    moodInfluence: mood,
-                    rarity: newElement.rarity,
-                  },
-                  telegramUserData: {
-                    userId: currentUser.id,
-                    firstName: currentUser.firstName,
-                    lastName: currentUser.lastName,
-                    username: currentUser.username,
-                    languageCode: currentUser.preferences.language || 'ru',
-                    photoUrl: currentUser.photoUrl,
-                  },
-                }),
-              })
+              const response = await authenticatedFetch(
+                '/api/garden?action=add-element',
+                {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    telegramId: currentUser.telegramId,
+                    element: {
+                      type: newElement.type,
+                      position: newElement.position,
+                      unlockDate: newElement.unlockDate.toISOString(),
+                      moodInfluence: mood,
+                      rarity: newElement.rarity,
+                    },
+                    telegramUserData: {
+                      userId: currentUser.id,
+                      firstName: currentUser.firstName,
+                      lastName: currentUser.lastName,
+                      username: currentUser.username,
+                      languageCode: currentUser.preferences.language || 'ru',
+                      photoUrl: currentUser.photoUrl,
+                    },
+                  }),
+                }
+              )
 
               if (!response.ok) {
                 console.warn(
@@ -531,7 +535,7 @@ export const useGardenStore = create<GardenStore>()(
 
           if (currentUser?.telegramId) {
             try {
-              const response = await fetch(
+              const response = await authenticatedFetch(
                 '/api/garden?action=update-position',
                 {
                   method: 'POST',

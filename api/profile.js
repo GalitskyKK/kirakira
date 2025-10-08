@@ -304,24 +304,47 @@ async function addExperience(telegramId, experiencePoints) {
   }
 }
 
+// Импортируем middleware аутентификации
+import { withAuth, verifyTelegramId } from './_auth.js'
+
 /**
- * Главная функция обработки API запросов
+ * Функция для получения Supabase клиента (нужна для внутренних операций)
  */
-export default async function handler(req, res) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader(
-    'Access-Control-Allow-Methods',
-    'GET, POST, PUT, DELETE, OPTIONS'
+async function getSupabaseClient() {
+  const { createClient } = await import('@supabase/supabase-js')
+  return createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
   )
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+}
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end()
-  }
-
+/**
+ * Защищенная функция обработки API запросов
+ */
+async function protectedHandler(req, res) {
   try {
     const { action } = req.query
+
+    // Для большинства действий проверяем что пользователь работает со своими данными
+    const requestedTelegramId = req.query.telegramId || req.body.telegramId
+    const authenticatedTelegramId = req.auth.telegramId
+
+    // Исключения: get_friend_profile разрешает просмотр профилей друзей
+    const allowedActionsWithDifferentId = ['get_friend_profile']
+
+    if (
+      requestedTelegramId &&
+      !allowedActionsWithDifferentId.includes(action)
+    ) {
+      if (!verifyTelegramId(requestedTelegramId, authenticatedTelegramId)) {
+        return res.status(403).json({
+          success: false,
+          error: 'Forbidden: You can only access your own data',
+        })
+      }
+    }
+
+    const supabase = await getSupabaseClient()
 
     switch (action) {
       case 'get_profile': {
@@ -800,6 +823,57 @@ export default async function handler(req, res) {
         }
       }
 
+      // ⚠️ Административное действие - требует специальной защиты
+      case 'update_all_user_stats': {
+        if (req.method !== 'POST') {
+          return res
+            .status(405)
+            .json({ success: false, error: 'Method not allowed' })
+        }
+
+        // 🔐 Административное действие - проверяем внутренний ключ или IP
+        const adminKey = req.headers['x-admin-key']
+        const EXPECTED_ADMIN_KEY = process.env.ADMIN_API_KEY
+
+        if (!EXPECTED_ADMIN_KEY || adminKey !== EXPECTED_ADMIN_KEY) {
+          console.warn('⚠️ Unauthorized attempt to call administrative API')
+          return res.status(403).json({
+            success: false,
+            error:
+              'Forbidden: Administrative action requires special authorization',
+          })
+        }
+
+        try {
+          // Вызываем функцию массового пересчета статистики
+          const { data, error } = await supabase.rpc('update_all_user_stats')
+
+          if (error) {
+            console.error('Error updating all user stats:', error)
+            return res.status(500).json({
+              success: false,
+              error: 'Failed to update all user stats',
+              details: error.message,
+            })
+          }
+
+          return res.status(200).json({
+            success: true,
+            data: {
+              message: 'All user stats updated successfully',
+              results: data,
+            },
+          })
+        } catch (err) {
+          console.error('Bulk stats update error:', err)
+          return res.status(500).json({
+            success: false,
+            error: 'Failed to update all user stats',
+            details: err.message,
+          })
+        }
+      }
+
       default:
         return res.status(400).json({ success: false, error: 'Invalid action' })
     }
@@ -815,3 +889,6 @@ export default async function handler(req, res) {
     })
   }
 }
+
+// Экспортируем защищенный handler
+export default withAuth(protectedHandler)

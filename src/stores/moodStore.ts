@@ -17,6 +17,7 @@ import type {
 import { calculateMoodStats } from '@/utils/moodMapping'
 import { saveMoodHistory, loadMoodHistory } from '@/utils/storage'
 import { getLocalDateString, parseLocalDate } from '@/utils/dateHelpers'
+import { authenticatedFetch } from '@/utils/apiClient'
 
 interface MoodActions {
   // Mood management
@@ -152,7 +153,7 @@ export const useMoodStore = create<MoodStore>()(
 
         // Получаем актуальные данные пользователя с сервера
         console.log(`📡 Fetching user profile for ${currentUser.telegramId}...`)
-        const response = await fetch(
+        const response = await authenticatedFetch(
           `/api/profile?action=get_profile&telegramId=${currentUser.telegramId}`
         )
 
@@ -180,7 +181,7 @@ export const useMoodStore = create<MoodStore>()(
           console.log(
             `📖 Fetching mood history for ${currentUser.telegramId}...`
           )
-          const historyResponse = await fetch(
+          const historyResponse = await authenticatedFetch(
             `/api/mood?action=history&telegramId=${currentUser.telegramId}`
           )
 
@@ -317,25 +318,28 @@ export const useMoodStore = create<MoodStore>()(
         if (localSuccess) {
           // 📡 ОТПРАВЛЯЕМ НА СЕРВЕР для синхронизации между устройствами
           try {
-            const response = await fetch('/api/mood?action=record', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                telegramUserId: currentUser.telegramId,
-                mood,
-                intensity,
-                note,
-                date: newEntry.date.toISOString(),
-                telegramUserData: {
-                  userId: currentUser.id,
-                  firstName: currentUser.firstName,
-                  lastName: currentUser.lastName,
-                  username: currentUser.username,
-                  languageCode: currentUser.preferences.language || 'ru',
-                  photoUrl: currentUser.photoUrl,
-                },
-              }),
-            })
+            const response = await authenticatedFetch(
+              '/api/mood?action=record',
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  telegramUserId: currentUser.telegramId,
+                  mood,
+                  intensity,
+                  note,
+                  date: newEntry.date.toISOString(),
+                  telegramUserData: {
+                    userId: currentUser.id,
+                    firstName: currentUser.firstName,
+                    lastName: currentUser.lastName,
+                    username: currentUser.username,
+                    languageCode: currentUser.preferences.language || 'ru',
+                    photoUrl: currentUser.photoUrl,
+                  },
+                }),
+              }
+            )
 
             if (!response.ok) {
               console.warn('⚠️ Failed to sync mood to server:', response.status)

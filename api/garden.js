@@ -479,16 +479,12 @@ async function handleViewFriendGarden(req, res) {
 // ===============================================
 // 🎯 ГЛАВНЫЙ ОБРАБОТЧИК - Роутинг по действиям
 // ===============================================
-export default async function handler(req, res) {
-  // Устанавливаем CORS заголовки
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end()
-  }
+// Импортируем middleware аутентификации
+import { withAuth, verifyTelegramId } from './_auth.js'
 
+// Защищенный handler с аутентификацией
+async function protectedHandler(req, res) {
   try {
     // Получаем действие из query параметров
     const { action } = req.query
@@ -500,6 +496,24 @@ export default async function handler(req, res) {
       })
     }
 
+    // 🔐 Проверяем что пользователь работает со своими данными
+    // Исключение: view-friend-garden позволяет просмотр садов друзей
+    const requestedTelegramId =
+      req.query.telegramId || req.body.telegramId || req.query.viewerTelegramId
+    const allowedActionsWithDifferentId = ['view-friend-garden']
+
+    if (
+      requestedTelegramId &&
+      !allowedActionsWithDifferentId.includes(action)
+    ) {
+      if (!verifyTelegramId(requestedTelegramId, req.auth.telegramId)) {
+        return res.status(403).json({
+          success: false,
+          error: 'Forbidden: You can only access your own data',
+        })
+      }
+    }
+
     // Роутинг по действиям
     switch (action) {
       case 'add-element':
@@ -509,6 +523,16 @@ export default async function handler(req, res) {
       case 'update-position':
         return await handleUpdatePosition(req, res)
       case 'view-friend-garden':
+        // Проверяем что viewerTelegramId совпадает с аутентифицированным пользователем
+        if (
+          req.query.viewerTelegramId &&
+          !verifyTelegramId(req.query.viewerTelegramId, req.auth.telegramId)
+        ) {
+          return res.status(403).json({
+            success: false,
+            error: 'Forbidden: Invalid viewer credentials',
+          })
+        }
         return await handleViewFriendGarden(req, res)
       default:
         return res.status(400).json({
@@ -524,3 +548,6 @@ export default async function handler(req, res) {
     })
   }
 }
+
+// Экспортируем защищенный handler
+export default withAuth(protectedHandler)

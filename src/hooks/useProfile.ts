@@ -8,6 +8,7 @@ import type {
   ProfileApiAddExperienceResponse,
   DatabaseAchievement,
 } from '@/types/api'
+import { authenticatedFetch } from '@/utils/apiClient'
 
 interface ExperienceResult {
   experience: number
@@ -34,7 +35,7 @@ export function useProfile() {
       setError(null)
 
       try {
-        const response = await fetch(
+        const response = await authenticatedFetch(
           `/api/profile?action=get_profile&telegramId=${telegramId || currentUser!.telegramId}`
         )
 
@@ -77,14 +78,17 @@ export function useProfile() {
       setError(null)
 
       try {
-        const response = await fetch('/api/profile?action=update_privacy', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            telegramId: currentUser.telegramId,
-            privacySettings,
-          }),
-        })
+        const response = await authenticatedFetch(
+          '/api/profile?action=update_privacy',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              telegramId: currentUser.telegramId,
+              privacySettings,
+            }),
+          }
+        )
 
         if (!response.ok) {
           throw new Error(`Failed to update privacy: ${response.status}`)
@@ -128,15 +132,18 @@ export function useProfile() {
       setError(null)
 
       try {
-        const response = await fetch('/api/profile?action=add_experience', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            telegramId: currentUser.telegramId,
-            experiencePoints,
-            reason,
-          }),
-        })
+        const response = await authenticatedFetch(
+          '/api/profile?action=add_experience',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              telegramId: currentUser.telegramId,
+              experiencePoints,
+              reason,
+            }),
+          }
+        )
 
         if (!response.ok) {
           throw new Error(`Failed to add experience: ${response.status}`)
@@ -183,7 +190,7 @@ export function useProfile() {
       setError(null)
 
       try {
-        const response = await fetch(
+        const response = await authenticatedFetch(
           `/api/profile?action=get_friend_profile&telegramId=${currentUser.telegramId}&friendTelegramId=${friendTelegramId}`
         )
 

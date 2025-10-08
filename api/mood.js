@@ -286,16 +286,12 @@ async function handleHistory(req, res) {
 // ===============================================
 // 🎯 ГЛАВНЫЙ ОБРАБОТЧИК - Роутинг по действиям
 // ===============================================
-export default async function handler(req, res) {
-  // Устанавливаем CORS заголовки
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end()
-  }
+// Импортируем middleware аутентификации
+import { withAuth, verifyTelegramId } from './_auth.js'
 
+// Защищенный handler с аутентификацией
+async function protectedHandler(req, res) {
   try {
     // Получаем действие из query параметров
     const { action } = req.query
@@ -304,6 +300,19 @@ export default async function handler(req, res) {
       return res.status(400).json({
         success: false,
         error: 'Missing required parameter: action',
+      })
+    }
+
+    // 🔐 Проверяем что пользователь работает со своими данными
+    const requestedTelegramId = req.query.telegramId || req.body.telegramUserId
+
+    if (
+      requestedTelegramId &&
+      !verifyTelegramId(requestedTelegramId, req.auth.telegramId)
+    ) {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden: You can only access your own data',
       })
     }
 
@@ -327,3 +336,6 @@ export default async function handler(req, res) {
     })
   }
 }
+
+// Экспортируем защищенный handler
+export default withAuth(protectedHandler)

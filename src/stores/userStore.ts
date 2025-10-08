@@ -22,6 +22,7 @@ import {
   isOnboardingCompleted,
 } from '@/utils/storage'
 import { telegramStorage } from '@/utils/telegramStorage'
+import { authenticatedFetch } from '@/utils/apiClient'
 
 interface TelegramUserData {
   telegramId: number
@@ -586,13 +587,16 @@ export const useUserStore = create<UserStore>()(
         let response: Response
         if (userData) {
           console.log('📤 Sending user data to API:', userData)
-          response = await fetch(`/api/profile?action=get_profile`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ telegramId, userData }),
-          })
+          response = await authenticatedFetch(
+            `/api/profile?action=get_profile`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ telegramId, userData }),
+            }
+          )
         } else {
-          response = await fetch(
+          response = await authenticatedFetch(
             `/api/profile?action=get_profile&telegramId=${telegramId}`
           )
         }
@@ -737,15 +741,18 @@ export const useUserStore = create<UserStore>()(
         )
 
         // Отправляем запрос на сервер
-        const response = await fetch('/api/profile?action=add_experience', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            telegramId: currentUser.telegramId,
-            experiencePoints,
-            reason,
-          }),
-        })
+        const response = await authenticatedFetch(
+          '/api/profile?action=add_experience',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              telegramId: currentUser.telegramId,
+              experiencePoints,
+              reason,
+            }),
+          }
+        )
 
         if (!response.ok) {
           throw new Error(`Failed to add experience: ${response.status}`)

@@ -5,6 +5,7 @@ import type {
   ThemeParams,
   TelegramEventType,
 } from '@/types/telegram'
+import { authenticatedFetch } from '@/utils/apiClient'
 
 /**
  * Хук для работы с Telegram Mini Apps API
@@ -179,15 +180,18 @@ export function useTelegram() {
         // 🏆 НАЧИСЛЯЕМ ОПЫТ ЗА ШЕРИНГ САДА
         if (user?.telegramId) {
           try {
-            const response = await fetch('/api/profile?action=add_experience', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                telegramId: user.telegramId,
-                experiencePoints: 25, // EXPERIENCE_REWARDS.SHARE_GARDEN
-                reason: 'share_garden: garden screenshot shared',
-              }),
-            })
+            const response = await authenticatedFetch(
+              '/api/profile?action=add_experience',
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  telegramId: user.telegramId,
+                  experiencePoints: 25, // EXPERIENCE_REWARDS.SHARE_GARDEN
+                  reason: 'share_garden: garden screenshot shared',
+                }),
+              }
+            )
 
             if (response.ok) {
               console.log('🏆 Added XP for sharing garden')

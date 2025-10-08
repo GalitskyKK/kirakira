@@ -16,6 +16,7 @@ import type {
   ChallengeMetric,
   UserChallengeStats,
 } from '@/types/challenges'
+import { authenticatedFetch } from '@/utils/apiClient'
 
 interface ChallengeStore {
   // State
@@ -79,7 +80,7 @@ export const useChallengeStore = create<ChallengeStore>()(
       set({ isLoading: true, error: null })
 
       try {
-        const response = await fetch(
+        const response = await authenticatedFetch(
           `/api/challenges?action=list&telegramId=${telegramId}`
         )
         const result = (await response.json()) as ChallengeListResponse
@@ -174,7 +175,7 @@ export const useChallengeStore = create<ChallengeStore>()(
         const apiUrl = `/api/challenges?action=details&challengeId=${challengeId}&telegramId=${telegramId}`
         console.log('🚀 STORE: Fetching URL:', apiUrl)
 
-        const response = await fetch(apiUrl)
+        const response = await authenticatedFetch(apiUrl)
 
         console.log('🚀 STORE: Response received:', {
           status: response.status,
@@ -280,16 +281,19 @@ export const useChallengeStore = create<ChallengeStore>()(
       set({ isLoading: true, error: null })
 
       try {
-        const response = await fetch('/api/challenges?action=join', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            challengeId,
-            telegramId,
-          }),
-        })
+        const response = await authenticatedFetch(
+          '/api/challenges?action=join',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              challengeId,
+              telegramId,
+            }),
+          }
+        )
 
         const result: JoinChallengeResponse = await response.json()
 
@@ -343,18 +347,21 @@ export const useChallengeStore = create<ChallengeStore>()(
       value: number
     ) => {
       try {
-        const response = await fetch('/api/challenges?action=update_progress', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            challengeId,
-            telegramId,
-            metric,
-            value,
-          }),
-        })
+        const response = await authenticatedFetch(
+          '/api/challenges?action=update_progress',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              challengeId,
+              telegramId,
+              metric,
+              value,
+            }),
+          }
+        )
 
         const result: ChallengeProgressResponse = await response.json()
 
@@ -413,7 +420,7 @@ export const useChallengeStore = create<ChallengeStore>()(
         const apiUrl = `/api/challenges?action=details&challengeId=${challengeId}&telegramId=${telegramId}`
         console.log('🔄 STORE: Fetching leaderboard from:', apiUrl)
 
-        const response = await fetch(apiUrl)
+        const response = await authenticatedFetch(apiUrl)
 
         console.log('🔄 STORE: Leaderboard response:', {
           status: response.status,

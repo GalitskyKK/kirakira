@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { useTelegram } from './useTelegram'
+import { authenticatedFetch } from '@/utils/apiClient'
 
 interface PhotoUpdateResult {
   success: boolean
@@ -41,14 +42,17 @@ export function useUserPhotos() {
       try {
         setIsUpdatingPhoto(true)
 
-        const response = await fetch('/api/user?action=update-photo', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            telegramId: user.telegramId,
-            forceUpdate,
-          }),
-        })
+        const response = await authenticatedFetch(
+          '/api/user?action=update-photo',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              telegramId: user.telegramId,
+              forceUpdate,
+            }),
+          }
+        )
 
         const result = await response.json()
 
@@ -92,13 +96,16 @@ export function useUserPhotos() {
       try {
         setIsUpdatingFriendsPhotos(true)
 
-        const response = await fetch('/api/friends?action=update-photos', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            telegramId: user.telegramId,
-          }),
-        })
+        const response = await authenticatedFetch(
+          '/api/friends?action=update-photos',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              telegramId: user.telegramId,
+            }),
+          }
+        )
 
         const result = await response.json()
 

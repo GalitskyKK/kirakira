@@ -977,19 +977,12 @@ async function awardExperience(
 // ===============================================
 // ОСНОВНОЙ ОБРАБОТЧИК
 // ===============================================
-export default async function handler(req, res) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader(
-    'Access-Control-Allow-Methods',
-    'GET, POST, PUT, DELETE, OPTIONS'
-  )
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end()
-  }
+// Импортируем middleware аутентификации
+import { withAuth, verifyTelegramId } from './_auth.js'
 
+// Защищенный handler с аутентификацией
+async function protectedHandler(req, res) {
   try {
     const { action } = req.query
     console.log(
@@ -998,6 +991,19 @@ export default async function handler(req, res) {
       'Method:',
       req.method
     )
+
+    // 🔐 Проверяем что пользователь работает со своими данными
+    const requestedTelegramId = req.query.telegramId || req.body.telegramId
+
+    if (
+      requestedTelegramId &&
+      !verifyTelegramId(requestedTelegramId, req.auth.telegramId)
+    ) {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden: You can only access your own data',
+      })
+    }
 
     switch (action) {
       case 'list':
@@ -1022,3 +1028,6 @@ export default async function handler(req, res) {
     })
   }
 }
+
+// Экспортируем защищенный handler
+export default withAuth(protectedHandler)

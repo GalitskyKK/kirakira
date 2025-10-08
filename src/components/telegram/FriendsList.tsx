@@ -19,6 +19,7 @@ import { useTelegram, useDeepLink, useUserPhotos } from '@/hooks'
 import { Button, Card, UserAvatar } from '@/components/ui'
 import { FriendGardenView } from '@/components/garden'
 import type { User } from '@/types'
+import { authenticatedFetch } from '@/utils/apiClient'
 
 // API response types
 interface FriendsListResponse {
@@ -120,7 +121,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
     if (!currentUser?.telegramId || currentUser.telegramId === 0) return
 
     try {
-      const response = await fetch(
+      const response = await authenticatedFetch(
         `/api/friends?action=list&telegramId=${currentUser.telegramId}&type=all`
       )
       const result = (await response.json()) as FriendsListResponse
@@ -186,7 +187,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
 
       try {
         setIsSearching(true)
-        const response = await fetch(
+        const response = await authenticatedFetch(
           `/api/friends?action=search&referralCode=${searchQuery}&searcherTelegramId=${currentUser.telegramId}`
         )
         const result = (await response.json()) as SearchResponse
@@ -216,14 +217,17 @@ export function FriendsList({ currentUser }: FriendsListProps) {
 
       try {
         hapticFeedback('medium')
-        const response = await fetch('/api/friends?action=send-request', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            requesterTelegramId: currentUser.telegramId,
-            addresseeTelegramId: targetTelegramId,
-          }),
-        })
+        const response = await authenticatedFetch(
+          '/api/friends?action=send-request',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              requesterTelegramId: currentUser.telegramId,
+              addresseeTelegramId: targetTelegramId,
+            }),
+          }
+        )
 
         const result = (await response.json()) as FriendActionResponse
 
@@ -251,15 +255,18 @@ export function FriendsList({ currentUser }: FriendsListProps) {
 
       try {
         hapticFeedback('medium')
-        const response = await fetch('/api/friends?action=respond-request', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            telegramId: currentUser.telegramId,
-            requesterTelegramId,
-            action,
-          }),
-        })
+        const response = await authenticatedFetch(
+          '/api/friends?action=respond-request',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              telegramId: currentUser.telegramId,
+              requesterTelegramId,
+              action,
+            }),
+          }
+        )
 
         const result = (await response.json()) as FriendActionResponse
 
