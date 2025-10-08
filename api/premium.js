@@ -9,12 +9,14 @@
  * @param {number} telegramUserId - ID пользователя в Telegram
  * @param {string} featureId - ID премиум функции
  * @param {string} transactionId - ID транзакции (опционально)
+ * @param {string} jwt - JWT токен для RLS (опционально)
  * @returns {Promise<boolean>} Успешность активации
  */
 async function activatePremiumFeature(
   telegramUserId,
   featureId,
-  transactionId = null
+  transactionId = null,
+  jwt = null
 ) {
   try {
     console.log(
@@ -26,16 +28,32 @@ async function activatePremiumFeature(
       }
     )
 
-    // 🗄️ SUPABASE для всех окружений
-    if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    // 🔒 Получаем Supabase клиент с JWT
+    if (process.env.SUPABASE_URL) {
       try {
-        // Динамический импорт для совместимости
-        const { createClient } = await import('@supabase/supabase-js')
+        let supabase
 
-        const supabase = createClient(
-          process.env.SUPABASE_URL,
-          process.env.SUPABASE_SERVICE_ROLE_KEY
-        )
+        // ✅ ПРИОРИТЕТ: Используем JWT для RLS-защищенных запросов
+        if (jwt) {
+          const { createAuthenticatedSupabaseClient } = await import(
+            './_jwt.js'
+          )
+          console.log(
+            '✅ Using JWT-authenticated Supabase client (RLS enabled)'
+          )
+          supabase = await createAuthenticatedSupabaseClient(jwt)
+        } else {
+          // ⚠️ FALLBACK: SERVICE_ROLE_KEY для админских операций
+          if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+            throw new Error('Supabase credentials not configured')
+          }
+          console.warn('⚠️ Using SERVICE_ROLE_KEY (bypasses RLS)')
+          const { createClient } = await import('@supabase/supabase-js')
+          supabase = createClient(
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY
+          )
+        }
 
         // Подготавливаем запись об активации
         const activationRecord = {
@@ -205,8 +223,13 @@ async function protectedHandler(req, res) {
       `Processing premium activation request for user ${telegramUserId}, feature: ${featureId}`
     )
 
-    // Активируем премиум функцию
-    const activated = await activatePremiumFeature(telegramUserId, featureId)
+    // Активируем премиум функцию с JWT
+    const activated = await activatePremiumFeature(
+      telegramUserId,
+      featureId,
+      null,
+      req.auth?.jwt
+    )
 
     if (!activated) {
       return res.status(500).json({

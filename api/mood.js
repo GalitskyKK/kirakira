@@ -3,12 +3,30 @@
  * Включает: record, history
  */
 
-// Общая функция для инициализации Supabase
-async function getSupabaseClient() {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error('Supabase environment variables not configured')
+// 🔒 Функция для инициализации Supabase с JWT (RLS-защищенный)
+async function getSupabaseClient(jwt = null) {
+  if (!process.env.SUPABASE_URL) {
+    throw new Error('SUPABASE_URL not configured')
   }
 
+  // ✅ ПРИОРИТЕТ: Используем JWT для RLS-защищенных запросов
+  if (jwt) {
+    try {
+      const { createAuthenticatedSupabaseClient } = await import('./_jwt.js')
+      console.log('✅ Using JWT-authenticated Supabase client (RLS enabled)')
+      return await createAuthenticatedSupabaseClient(jwt)
+    } catch (error) {
+      console.error('❌ Failed to create JWT client:', error)
+      // Fallback на SERVICE_ROLE_KEY ниже
+    }
+  }
+
+  // ⚠️ FALLBACK: SERVICE_ROLE_KEY (минует RLS, использовать только для admin операций)
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Supabase credentials not configured')
+  }
+
+  console.warn('⚠️ Using SERVICE_ROLE_KEY (bypasses RLS) - migrate to JWT!')
   const { createClient } = await import('@supabase/supabase-js')
   return createClient(
     process.env.SUPABASE_URL,
@@ -66,7 +84,8 @@ async function handleRecord(req, res) {
       intensity,
     })
 
-    const supabase = await getSupabaseClient()
+    // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
+    const supabase = await getSupabaseClient(req.auth?.jwt)
 
     // 🔥 АВТОМАТИЧЕСКИ СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ ЕСЛИ ЕГО НЕТ
     if (telegramUserData) {
@@ -234,7 +253,8 @@ async function handleHistory(req, res) {
 
     console.log(`📖 Loading mood history from Supabase for user ${telegramId}`)
 
-    const supabase = await getSupabaseClient()
+    // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
+    const supabase = await getSupabaseClient(req.auth?.jwt)
 
     // Строим запрос
     let query = supabase

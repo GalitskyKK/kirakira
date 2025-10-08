@@ -60,9 +60,10 @@ export function validateTelegramInitData(initData, botToken) {
 /**
  * Middleware для защиты API эндпоинтов
  * Проверяет Authorization header с Telegram initData
+ * И генерирует JWT токен для работы с Supabase RLS
  *
  * @param {Request} req - Vercel Functions request
- * @returns {{ authorized: boolean, telegramId: number | null, userData: object | null }} Результат авторизации
+ * @returns {{ authorized: boolean, telegramId: number | null, userData: object | null, jwt: string | null }} Результат авторизации
  */
 export async function authenticateTelegramUser(req) {
   try {
@@ -71,7 +72,7 @@ export async function authenticateTelegramUser(req) {
 
     if (!authHeader || !authHeader.startsWith('tma ')) {
       console.warn('⚠️ Missing or invalid Authorization header')
-      return { authorized: false, telegramId: null, userData: null }
+      return { authorized: false, telegramId: null, userData: null, jwt: null }
     }
 
     // Извлекаем initData
@@ -82,7 +83,7 @@ export async function authenticateTelegramUser(req) {
 
     if (!BOT_TOKEN) {
       console.error('❌ TELEGRAM_BOT_TOKEN not configured')
-      return { authorized: false, telegramId: null, userData: null }
+      return { authorized: false, telegramId: null, userData: null, jwt: null }
     }
 
     // Валидируем initData
@@ -90,7 +91,22 @@ export async function authenticateTelegramUser(req) {
 
     if (!isValid || !user || !user.id) {
       console.warn('⚠️ Invalid Telegram initData')
-      return { authorized: false, telegramId: null, userData: null }
+      return { authorized: false, telegramId: null, userData: null, jwt: null }
+    }
+
+    // Генерируем JWT токен для Supabase RLS
+    let jwt = null
+    try {
+      const { generateSupabaseJWT } = await import('./_jwt.js')
+      jwt = generateSupabaseJWT(user.id, {
+        firstName: user.first_name,
+        lastName: user.last_name,
+        username: user.username,
+      })
+      console.log(`🔑 Generated JWT for user ${user.id}`)
+    } catch (jwtError) {
+      console.error('⚠️ JWT generation failed:', jwtError)
+      // Не критично - продолжаем без JWT (используется SERVICE_ROLE_KEY fallback)
     }
 
     // Успешная авторизация
@@ -109,10 +125,11 @@ export async function authenticateTelegramUser(req) {
         languageCode: user.language_code,
         photoUrl: user.photo_url,
       },
+      jwt,
     }
   } catch (error) {
     console.error('❌ Authentication error:', error)
-    return { authorized: false, telegramId: null, userData: null }
+    return { authorized: false, telegramId: null, userData: null, jwt: null }
   }
 }
 
@@ -125,13 +142,21 @@ export async function authenticateTelegramUser(req) {
  */
 export function withAuth(handler) {
   return async (req, res) => {
-    // CORS headers (устанавливаем до проверки авторизации)
-    res.setHeader('Access-Control-Allow-Origin', '*')
+    // 🔒 CORS headers - строгая политика (устанавливаем до проверки авторизации)
+    const allowedOrigin =
+      process.env.VITE_APP_URL || 'https://kirakira-theta.vercel.app'
+
+    res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
     res.setHeader(
       'Access-Control-Allow-Methods',
       'GET, POST, PUT, DELETE, OPTIONS'
     )
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Authorization, X-Admin-Key'
+    )
+    res.setHeader('Access-Control-Allow-Credentials', 'true')
+    res.setHeader('Access-Control-Max-Age', '86400')
 
     // Обрабатываем OPTIONS запрос
     if (req.method === 'OPTIONS') {

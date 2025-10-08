@@ -3,12 +3,30 @@
  * Включает: stats, update-photo
  */
 
-// Общая функция для инициализации Supabase
-async function getSupabaseClient() {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error('Supabase environment variables not configured')
+// 🔒 Функция для инициализации Supabase с JWT (RLS-защищенный)
+async function getSupabaseClient(jwt = null) {
+  if (!process.env.SUPABASE_URL) {
+    throw new Error('SUPABASE_URL not configured')
   }
 
+  // ✅ ПРИОРИТЕТ: Используем JWT для RLS-защищенных запросов
+  if (jwt) {
+    try {
+      const { createAuthenticatedSupabaseClient } = await import('./_jwt.js')
+      console.log('✅ Using JWT-authenticated Supabase client (RLS enabled)')
+      return await createAuthenticatedSupabaseClient(jwt)
+    } catch (error) {
+      console.error('❌ Failed to create JWT client:', error)
+      // Fallback на SERVICE_ROLE_KEY ниже
+    }
+  }
+
+  // ⚠️ FALLBACK: SERVICE_ROLE_KEY (минует RLS, использовать только для admin операций)
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Supabase credentials not configured')
+  }
+
+  console.warn('⚠️ Using SERVICE_ROLE_KEY (bypasses RLS) - migrate to JWT!')
   const { createClient } = await import('@supabase/supabase-js')
   return createClient(
     process.env.SUPABASE_URL,
@@ -76,9 +94,9 @@ async function getTelegramUserPhoto(telegramId) {
 /**
  * Получает данные пользователя из Supabase по telegramId
  */
-async function getUserDataFromSupabase(telegramId) {
+async function getUserDataFromSupabase(telegramId, jwt = null) {
   try {
-    const supabase = await getSupabaseClient()
+    const supabase = await getSupabaseClient(jwt)
 
     // Получаем основные данные пользователя
     const { data: userData, error: userError } = await supabase
@@ -322,7 +340,8 @@ async function handleStats(req, res) {
     // Получаем данные из базы если не переданы
     if (!userDataParsed) {
       console.log(`Getting real user data by telegramId: ${telegramId}`)
-      userDataParsed = await getUserDataFromSupabase(telegramId)
+      // 🔑 Используем JWT для RLS-защищенного запроса
+      userDataParsed = await getUserDataFromSupabase(telegramId, req.auth?.jwt)
     }
 
     let stats
@@ -388,8 +407,10 @@ async function handleUpdatePhoto(req, res) {
       })
     }
 
+    // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+
     // Проверяем существует ли пользователь и есть ли у него уже фото
-    const supabase = await getSupabaseClient()
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('telegram_id, photo_url, updated_at')

@@ -63,10 +63,14 @@ const MINI_APP_URL =
 
 /**
  * Получает всех активных пользователей для уведомлений
+ *
+ * ⚠️ АДМИНИСТРАТИВНАЯ ОПЕРАЦИЯ: Использует SERVICE_ROLE_KEY
+ * Это правильно для CRON задач, которые работают от имени системы
  */
 async function getActiveUsers() {
   try {
     const { createClient } = await import('@supabase/supabase-js')
+    // ✅ SERVICE_ROLE_KEY правильно для CRON задач (минует RLS намеренно)
     const supabase = createClient(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY

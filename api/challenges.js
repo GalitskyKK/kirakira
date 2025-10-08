@@ -5,15 +5,33 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-// Инициализация Supabase клиента
-async function getSupabaseClient() {
+// 🔒 Инициализация Supabase клиента с JWT (RLS-защищенный)
+async function getSupabaseClient(jwt = null) {
   const supabaseUrl = process.env.SUPABASE_URL
-  const supabaseKey = process.env.SUPABASE_ANON_KEY
 
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Missing Supabase configuration')
+  if (!supabaseUrl) {
+    throw new Error('SUPABASE_URL not configured')
   }
 
+  // ✅ ПРИОРИТЕТ: Используем JWT для RLS-защищенных запросов
+  if (jwt) {
+    try {
+      const { createAuthenticatedSupabaseClient } = await import('./_jwt.js')
+      console.log('✅ Using JWT-authenticated Supabase client (RLS enabled)')
+      return await createAuthenticatedSupabaseClient(jwt)
+    } catch (error) {
+      console.error('❌ Failed to create JWT client:', error)
+      // Fallback на ANON_KEY ниже
+    }
+  }
+
+  // ⚠️ FALLBACK: ANON_KEY (для challenges - публичные данные)
+  const supabaseKey = process.env.SUPABASE_ANON_KEY
+  if (!supabaseKey) {
+    throw new Error('SUPABASE_ANON_KEY not configured')
+  }
+
+  console.log('⚠️ Using ANON_KEY for challenges (public data)')
   return createClient(supabaseUrl, supabaseKey)
 }
 
@@ -35,7 +53,8 @@ async function handleList(req, res) {
       })
     }
 
-    const supabase = await getSupabaseClient()
+    // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
+    const supabase = await getSupabaseClient(req.auth?.jwt)
 
     // Получаем активные челленджи
     console.log('📞 Calling get_active_challenges() function...')
@@ -240,7 +259,8 @@ async function handleDetails(req, res) {
       })
     }
 
-    const supabase = await getSupabaseClient()
+    // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
+    const supabase = await getSupabaseClient(req.auth?.jwt)
 
     // Получаем детали челленджа
     const { data: challenge, error: challengeError } = await supabase
@@ -417,7 +437,8 @@ async function handleJoin(req, res) {
       })
     }
 
-    const supabase = await getSupabaseClient()
+    // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
+    const supabase = await getSupabaseClient(req.auth?.jwt)
 
     // Проверяем существование челленджа
     const { data: challenge, error: challengeError } = await supabase
@@ -595,7 +616,8 @@ async function handleUpdateProgress(req, res) {
       })
     }
 
-    const supabase = await getSupabaseClient()
+    // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
+    const supabase = await getSupabaseClient(req.auth?.jwt)
 
     // Получаем участие пользователя
     const { data: participation, error: participationError } = await supabase
