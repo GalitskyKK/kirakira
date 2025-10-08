@@ -56,11 +56,19 @@ async function handleList(req, res) {
     // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
     const supabase = await getSupabaseClient(req.auth?.jwt)
 
-    // Получаем активные челленджи
-    console.log('📞 Calling get_active_challenges() function...')
-    const { data: challenges, error: challengesError } = await supabase.rpc(
-      'get_active_challenges'
-    )
+    // Получаем активные челленджи (прямой запрос вместо RPC)
+    console.log('📞 Fetching active challenges directly...')
+    const { data: challenges, error: challengesError } = await supabase
+      .from('challenges')
+      .select(
+        `
+        *,
+        participant_count:challenge_participants(count)
+      `
+      )
+      .eq('status', 'active')
+      .lte('start_date', new Date().toISOString())
+      .gte('end_date', new Date().toISOString())
 
     console.log('📦 Challenges response:', {
       challengesCount: challenges?.length || 0,
