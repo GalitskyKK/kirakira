@@ -115,14 +115,14 @@ export function ProfileHeader({ user, stats }: ProfileHeaderProps) {
           </div>
 
           {/* Actions - Desktop only, стекаются в колонку на мобилке */}
-          <div className="ml-2 flex flex-shrink-0 flex-col space-y-1">
+          {/* <div className="ml-2 flex flex-shrink-0 flex-col space-y-1">
             <button className="whitespace-nowrap rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
               ⚙️ Настройки
             </button>
             <button className="whitespace-nowrap rounded-lg bg-garden-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-garden-600">
               📤 Поделиться
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* Bottom row: Level, Progress, Stats */}
