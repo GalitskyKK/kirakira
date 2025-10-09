@@ -15,6 +15,13 @@ import type {
 } from '@/types'
 import { ViewMode, SeasonalVariant } from '@/types'
 import { authenticatedFetch } from '@/utils/apiClient'
+import {
+  getElementName,
+  getElementDescription,
+  getElementEmoji as getElementEmojiFromUtils,
+  getElementColor,
+  getElementScale,
+} from '@/utils/elementNames'
 
 // Типы для данных друга и его сада
 interface FriendInfo {
@@ -65,8 +72,9 @@ export function FriendGardenView({
   )
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedElement, setSelectedElement] =
-    useState<FriendGardenElement | null>(null)
+  const [selectedElement, setSelectedElement] = useState<GardenElement | null>(
+    null
+  )
 
   // 📡 Загрузка данных сада друга
   const loadFriendGarden = useCallback(async () => {
@@ -115,32 +123,53 @@ export function FriendGardenView({
   }, [loadFriendGarden])
 
   // 🎨 Конвертируем элементы друга в формат для рендерера
+  // 🔑 ВАЖНО: Используем те же функции генерации, что и для собственного сада
   const convertedElements: GardenElement[] =
-    friendGarden?.gardenElements.map(element => ({
-      id: element.id,
-      type: element.type,
-      position: element.position,
-      unlockDate: new Date(element.unlockDate),
-      moodInfluence: element.moodInfluence,
-      rarity: element.rarity,
-      // Добавляем недостающие поля для совместимости с GardenElement
-      name: `${element.type}`,
-      description: `Элемент сада (${element.rarity})`,
-      emoji: getElementEmoji(element.type),
-      color: getRarityColor(element.rarity),
-    })) || []
+    friendGarden?.gardenElements.map(element => {
+      // Используем element.id как seed для детерминированной генерации
+      const characteristicsSeed = element.id
+
+      // Генерируем характеристики на основе element.id (как в gardenStore)
+      const name = getElementName(
+        element.type,
+        element.rarity,
+        characteristicsSeed
+      )
+      const description = getElementDescription(
+        element.type,
+        element.rarity,
+        name
+      )
+      const emoji = getElementEmojiFromUtils(element.type)
+      const color = getElementColor(
+        element.type,
+        element.moodInfluence,
+        characteristicsSeed
+      )
+      const scale = getElementScale(characteristicsSeed)
+
+      return {
+        id: element.id,
+        type: element.type,
+        position: element.position,
+        unlockDate: new Date(element.unlockDate),
+        moodInfluence: element.moodInfluence,
+        rarity: element.rarity,
+        name,
+        description,
+        emoji,
+        color,
+        scale,
+      }
+    }) || []
 
   // Обработчик выбора элемента (только для просмотра информации)
   const handleElementSelect = useCallback(
     (element: GardenElement | null) => {
-      const friendElement = element
-        ? friendGarden?.gardenElements.find(fe => fe.id === element.id) || null
-        : null
-
-      setSelectedElement(friendElement)
+      setSelectedElement(element)
       hapticFeedback('light')
     },
-    [friendGarden?.gardenElements, hapticFeedback]
+    [hapticFeedback]
   )
 
   // 🔄 Состояние загрузки
@@ -315,15 +344,11 @@ export function FriendGardenView({
             <Card className="p-4">
               <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="text-2xl">
-                    {getElementEmoji(selectedElement.type)}
-                  </div>
+                  <div className="text-2xl">{selectedElement.emoji}</div>
                   <div>
-                    <h4 className="font-semibold capitalize">
-                      {selectedElement.type.replace('_', ' ')}
-                    </h4>
-                    <p className="text-sm capitalize text-gray-600">
-                      Редкость: {selectedElement.rarity}
+                    <h4 className="font-semibold">{selectedElement.name}</h4>
+                    <p className="text-sm text-gray-600">
+                      {selectedElement.description}
                     </p>
                   </div>
                 </div>
@@ -337,9 +362,7 @@ export function FriendGardenView({
                     </span>
                   </div>
                   <div className="mt-1">
-                    {new Date(selectedElement.unlockDate).toLocaleDateString(
-                      'ru'
-                    )}
+                    {selectedElement.unlockDate.toLocaleDateString('ru')}
                   </div>
                 </div>
               </div>
@@ -373,35 +396,4 @@ export function FriendGardenView({
       )}
     </div>
   )
-}
-
-// 🎨 Вспомогательные функции для отображения
-function getElementEmoji(type: ElementType): string {
-  const emojiMap: Record<ElementType, string> = {
-    flower: '🌸',
-    tree: '🌳',
-    stone: '🪨',
-    water: '💧',
-    grass: '🌿',
-    mushroom: '🍄',
-    crystal: '💎',
-    decoration: '✨',
-    rainbow_flower: '🌈',
-    glowing_crystal: '🔮',
-    mystic_mushroom: '🍄‍🟫',
-    aurora_tree: '🌲',
-    starlight_decoration: '⭐',
-  }
-  return emojiMap[type] || '🌱'
-}
-
-function getRarityColor(rarity: RarityLevel): string {
-  const colorMap: Record<RarityLevel, string> = {
-    common: '#9CA3AF',
-    uncommon: '#10B981',
-    rare: '#3B82F6',
-    epic: '#8B5CF6',
-    legendary: '#F59E0B',
-  }
-  return colorMap[rarity] || '#9CA3AF'
 }
