@@ -21,19 +21,7 @@ if (import.meta.env.DEV) {
   })
 }
 
-// PWA registration
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js')
-      .then(registration => {
-        console.log('SW registered: ', registration)
-      })
-      .catch(registrationError => {
-        console.log('SW registration failed: ', registrationError)
-      })
-  })
-}
+// PWA registration теперь обрабатывается через virtual:pwa-register в UpdatePrompt компоненте
 
 // Get root element
 const rootElement = document.getElementById('root')

@@ -14,6 +14,7 @@ import { ProfilePage } from '@/pages/ProfilePage'
 // ShowcasePage импортируется условно только в DEV режиме
 import { LoadingSpinner } from '@/components/ui'
 import { lazy, Suspense } from 'react'
+import { UpdatePrompt } from '@/components/ui/UpdatePrompt'
 
 // Динамический импорт dev страниц только в DEV режиме
 const ShowcasePage = import.meta.env.DEV
@@ -488,6 +489,9 @@ function App() {
           </Routes>
         </AnimatePresence>
       </div>
+
+      {/* PWA Update Prompt */}
+      <UpdatePrompt />
     </Router>
   )
 }

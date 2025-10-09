@@ -166,7 +166,7 @@ export const ShelfElement = memo(function ShelfElement({
         }
         // Очищаем таймер после выполнения
         longPressTimerRef.current = null
-      }, 500) // 500ms долгое нажатие
+      }, 1000) // 500ms долгое нажатие
     } else {
       console.log('Long press ignored:', {
         hasOnLongPress: !!onLongPress,

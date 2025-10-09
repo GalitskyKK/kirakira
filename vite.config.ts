@@ -8,11 +8,12 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate', // Изменено с 'prompt' для автоматического обновления
+      registerType: 'prompt', // Показываем уведомление при наличии обновления
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       devOptions: {
         enabled: true, // Для тестирования в разработке
       },
+      injectRegister: 'auto', // Автоматическая инъекция регистрации SW
       manifest: {
         name: 'KiraKira - Digital Emotional Garden',
         short_name: 'KiraKira',
@@ -47,8 +48,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,avif}'],
         // Очистка старых кэшей при обновлении
         cleanupOutdatedCaches: true,
-        // Пропуск ожидания и немедленная активация нового SW
-        skipWaiting: true,
+        // НЕ пропускаем ожидание - даем пользователю контроль через prompt
+        skipWaiting: false,
         clientsClaim: true,
         runtimeCaching: [
           {
