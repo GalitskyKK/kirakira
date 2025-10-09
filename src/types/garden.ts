@@ -108,6 +108,6 @@ export const ELEMENT_SIZE = 40 // pixels
 
 // Константы для системы комнат
 export const SHELVES_PER_ROOM = 4 // 4 полки в комнате
-export const MAX_POSITIONS_PER_SHELF = 5 // До 5 позиций на полке (соответствует ShelfView)
-export const ELEMENTS_PER_ROOM = SHELVES_PER_ROOM * MAX_POSITIONS_PER_SHELF // 20 элементов на комнату
+export const MAX_POSITIONS_PER_SHELF = 4 // До 5 позиций на полке (соответствует ShelfView)
+export const ELEMENTS_PER_ROOM = SHELVES_PER_ROOM * MAX_POSITIONS_PER_SHELF // 16 элементов на комнату
 export const ROOM_TRANSITION_DURATION = 0.5 // Длительность анимации перехода (секунды)

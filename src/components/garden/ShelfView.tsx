@@ -17,7 +17,7 @@ interface ShelfViewProps {
 
 // Responsive constants - optimized to fit shelf width
 const SHELF_COUNT = 4
-const ELEMENTS_PER_SHELF_DESKTOP = 5 // Desktop: 5 elements fit comfortably
+const ELEMENTS_PER_SHELF_DESKTOP = 4 // Desktop: 5 elements fit comfortably
 const ELEMENTS_PER_SHELF_MOBILE = 4 // Mobile: 4 elements fit screen
 const SHELF_HEIGHT_DESKTOP = 140 // Desktop: taller shelves
 const SHELF_HEIGHT_MOBILE = 120 // Mobile: shorter shelves
