@@ -196,10 +196,10 @@ function App() {
           {/* Дружелюбное приветствие для Telegram пользователей в продакшене */}
           {isTelegramEnv && telegramUser && !isDevelopment && (
             <div className="mt-4 rounded-lg bg-blue-100/50 p-3">
-              <p className="text-sm text-[var(--tg-hint-color,#666666)]">
+              <p className="text-sm text-[var(--tg-hint-color,#666666)] dark:text-gray-100">
                 👋 Добро пожаловать, {telegramUser.firstName}!
               </p>
-              <p className="mt-1 text-xs text-[var(--tg-hint-color,#666666)]">
+              <p className="mt-1 text-xs text-[var(--tg-hint-color,#666666)] dark:text-gray-100">
                 🔄 Подготавливаем ваш персональный сад
               </p>
             </div>
