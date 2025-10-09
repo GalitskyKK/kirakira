@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt', // Изменено с 'autoUpdate' для контроля обновлений
+      registerType: 'autoUpdate', // Изменено с 'prompt' для автоматического обновления
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       devOptions: {
         enabled: true, // Для тестирования в разработке
