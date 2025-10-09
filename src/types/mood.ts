@@ -66,7 +66,7 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
   },
   stress: {
     color: '#ef4444',
-    emoji: '😰',
+    emoji: '😵‍💫',
     label: 'Стресс',
     description: 'Чувствую напряжение и беспокойство',
     elementTypes: [
@@ -78,7 +78,7 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
   },
   sadness: {
     color: '#3b82f6',
-    emoji: '😢',
+    emoji: '😔',
     label: 'Грусть',
     description: 'Ощущаю печаль или меланхолию',
     elementTypes: [

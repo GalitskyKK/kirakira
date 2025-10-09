@@ -190,8 +190,8 @@ _После первых записей настроений здесь появ
   const moodEmojis = {
     радость: '😊',
     спокойствие: '😌',
-    стресс: '😰',
-    грусть: '😢',
+    стресс: '😵‍💫',
+    грусть: '😔',
     гнев: '😠',
     тревога: '😰',
     энергия: '⚡',
@@ -648,8 +648,8 @@ async function handleCommand(message) {
                   { text: '😌 Спокойствие', callback_data: 'mood_calm' },
                 ],
                 [
-                  { text: '😰 Стресс', callback_data: 'mood_stress' },
-                  { text: '😢 Грусть', callback_data: 'mood_sadness' },
+                  { text: '😵‍💫 Стресс', callback_data: 'mood_stress' },
+                  { text: '😔 Грусть', callback_data: 'mood_sadness' },
                 ],
                 [
                   { text: '😠 Гнев', callback_data: 'mood_anger' },
@@ -834,8 +834,8 @@ async function handleCallbackQuery(callbackQuery) {
                 { text: '😌 Спокойствие', callback_data: 'mood_calm' },
               ],
               [
-                { text: '😰 Стресс', callback_data: 'mood_stress' },
-                { text: '😢 Грусть', callback_data: 'mood_sadness' },
+                { text: '😵‍💫 Стресс', callback_data: 'mood_stress' },
+                { text: '😔 Грусть', callback_data: 'mood_sadness' },
               ],
               [
                 { text: '😠 Гнев', callback_data: 'mood_anger' },
