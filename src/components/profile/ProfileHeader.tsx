@@ -103,11 +103,11 @@ export function ProfileHeader({ user, stats }: ProfileHeaderProps) {
 
             {/* Name & Username */}
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-xl font-bold text-gray-900 sm:text-2xl">
+              <h1 className="truncate text-xl font-bold text-gray-900 sm:text-2xl dark:text-gray-100">
                 {displayName}
               </h1>
               {username !== null && (
-                <p className="truncate text-base text-garden-600 sm:text-lg">
+                <p className="truncate text-base text-garden-600 sm:text-lg dark:text-garden-100">
                   {username}
                 </p>
               )}

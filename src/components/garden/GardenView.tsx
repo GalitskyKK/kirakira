@@ -181,7 +181,7 @@ export function GardenView({ className }: GardenViewProps) {
               <div className="border-b border-gray-200 p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                       Мой Сад
                     </h2>
                     <p className="text-sm text-gray-600">
@@ -220,8 +220,8 @@ export function GardenView({ className }: GardenViewProps) {
                           className={clsx(
                             'rounded-lg px-3 py-1.5 text-sm transition-colors',
                             viewMode === 'overview'
-                              ? 'bg-garden-100 text-garden-700'
-                              : 'text-gray-600 hover:bg-gray-100'
+                              ? 'bg-garden-100 text-garden-700 dark:bg-garden-700 dark:text-garden-100'
+                              : 'text-gray-600 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700'
                           )}
                         >
                           Обзор

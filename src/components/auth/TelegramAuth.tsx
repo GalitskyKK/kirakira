@@ -79,7 +79,7 @@ export function TelegramAuth({ onSuccess, onError }: TelegramAuthProps) {
     return (
       <Card className="p-6 text-center">
         <div className="mb-4 text-6xl">🎉</div>
-        <h2 className="mb-2 text-xl font-bold text-gray-800">
+        <h2 className="mb-2 text-xl font-bold text-gray-800 dark:text-gray-100">
           Добро пожаловать, {telegramUser.firstName}!
         </h2>
         <p className="mb-4 text-gray-600">
