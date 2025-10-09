@@ -425,7 +425,7 @@ export function getElementEmoji(type: ElementType): string {
 }
 
 /**
- * Получает цвет элемента на основе типа, настроения и seed с вариациями
+ * Получает цвет элемента на основе типа, настроения и seed с вариациям
  */
 export function getElementColor(
   type: ElementType,
