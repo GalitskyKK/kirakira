@@ -97,7 +97,7 @@ export function useElementGeneration() {
 
     // Shelf system constants
     const SHELF_COUNT = 4 // 4 shelves (y: 0-3)
-    const MAX_POSITIONS_PER_SHELF = 10 // Up to 10 positions per shelf (x: 0-9)
+    const MAX_POSITIONS_PER_SHELF = 4 // Up to 10 positions per shelf (x: 0-9)
 
     // Start from top shelf, left to right, then move to next shelf
     for (let y = 0; y < SHELF_COUNT; y++) {
