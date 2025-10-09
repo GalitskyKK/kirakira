@@ -188,7 +188,7 @@ export const useGardenStore = create<GardenStore>()(
               const serverElements = historyResult.data.gardenElements
 
               // Конвертируем серверные данные в формат приложения с правильными цветами
-              // 🔧 ИСПРАВЛЕНИЕ: используем UUID напрямую без префикса для совместимости с базой данных
+              // 🔧 ИСПРАВЛЕНИЕ: используем element.id как единый seed для всех характеристик
               const convertedElements = serverElements.map(
                 (serverElement: DatabaseGardenElement) => {
                   // Получаем правильные данные элемента на основе типа и настроения
@@ -197,11 +197,17 @@ export const useGardenStore = create<GardenStore>()(
                   const elementType = serverElement.element_type as ElementType
                   const rarity = serverElement.rarity as RarityLevel
 
-                  // Создаем seed для детерминированного выбора характеристик
-                  const seed = `${serverElement.id}-${serverElement.unlock_date}`
+                  // 🔑 КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: используем serverElement.id как единый seed
+                  // Это обеспечивает совпадение с локальной генерацией
+                  const characteristicsSeed =
+                    serverElement.id || `temp_${Date.now()}`
 
-                  // Получаем название, описание, эмодзи, цвет и масштаб из справочника
-                  const name = getElementName(elementType, rarity, seed)
+                  // 🎨 Генерируем все характеристики детерминированно на основе element.id
+                  const name = getElementName(
+                    elementType,
+                    rarity,
+                    characteristicsSeed
+                  )
                   const description = getElementDescription(
                     elementType,
                     rarity,
@@ -211,12 +217,22 @@ export const useGardenStore = create<GardenStore>()(
                   const color = getElementColorFromUtils(
                     elementType,
                     moodInfluence,
-                    seed
+                    characteristicsSeed
                   )
-                  const scale = getElementScale(seed)
+                  const scale = getElementScale(characteristicsSeed)
+
+                  console.log('🔄 Synced element from server:', {
+                    id: characteristicsSeed,
+                    seed: characteristicsSeed,
+                    type: elementType,
+                    rarity,
+                    name,
+                    color,
+                    scale,
+                  })
 
                   return {
-                    id: serverElement.id || `temp_${Date.now()}`, // UUID без префикса
+                    id: characteristicsSeed, // UUID без префикса
                     type: elementType,
                     position: {
                       x: serverElement.position_x,
@@ -407,70 +423,129 @@ export const useGardenStore = create<GardenStore>()(
           return null
         }
 
-        // Update garden with new element
-        const updatedGarden: Garden = {
+        // 📡 ОТПРАВЛЯЕМ ЭЛЕМЕНТ НА СЕРВЕР СНАЧАЛА для получения серверного UUID
+        let finalElement = newElement
+
+        try {
+          const userStore = useUserStore.getState()
+          const currentUser = userStore.currentUser
+
+          if (currentUser?.telegramId) {
+            const response = await authenticatedFetch(
+              '/api/garden?action=add-element',
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  telegramId: currentUser.telegramId,
+                  element: {
+                    type: newElement.type,
+                    position: newElement.position,
+                    unlockDate: newElement.unlockDate.toISOString(),
+                    moodInfluence: mood,
+                    rarity: newElement.rarity,
+                  },
+                  telegramUserData: {
+                    userId: currentUser.id,
+                    firstName: currentUser.firstName,
+                    lastName: currentUser.lastName,
+                    username: currentUser.username,
+                    languageCode: currentUser.preferences.language || 'ru',
+                    photoUrl: currentUser.photoUrl,
+                  },
+                }),
+              }
+            )
+
+            if (response.ok) {
+              const serverResult =
+                (await response.json()) as StandardApiResponse<{
+                  id: string
+                  element_type: string
+                  rarity: string
+                  [key: string]: unknown
+                }>
+
+              // 🔑 КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Используем серверный UUID для пересчета характеристик
+              if (serverResult.success && serverResult.data?.id) {
+                const serverUUID = serverResult.data.id
+
+                console.log(
+                  '🔄 Recalculating element characteristics with server UUID:',
+                  serverUUID
+                )
+
+                // Пересчитываем характеристики на основе серверного UUID
+                const name = getElementName(
+                  newElement.type,
+                  newElement.rarity,
+                  serverUUID
+                )
+                const description = getElementDescription(
+                  newElement.type,
+                  newElement.rarity,
+                  name
+                )
+                const emoji = getElementEmojiFromUtils(newElement.type)
+                const color = getElementColorFromUtils(
+                  newElement.type,
+                  mood,
+                  serverUUID
+                )
+                const scale = getElementScale(serverUUID)
+
+                // Создаем финальный элемент с серверным UUID и пересчитанными характеристиками
+                finalElement = {
+                  ...newElement,
+                  id: serverUUID,
+                  name,
+                  description,
+                  emoji,
+                  color,
+                  scale,
+                }
+
+                console.log('✅ Garden element synced with server UUID:', {
+                  serverUUID,
+                  name,
+                  color,
+                  scale,
+                })
+              } else {
+                console.warn(
+                  '⚠️ Server response missing element ID, using local element'
+                )
+              }
+            } else {
+              console.warn(
+                '⚠️ Failed to sync garden element to server:',
+                response.status
+              )
+            }
+          }
+        } catch (serverError) {
+          console.warn(
+            '⚠️ Server sync failed, using local element:',
+            serverError
+          )
+        }
+
+        // Обновляем сад с финальным элементом (с серверным UUID если успешно)
+        const finalGarden: Garden = {
           ...currentGarden,
-          elements: [...currentGarden.elements, newElement],
+          elements: [...currentGarden.elements, finalElement],
           lastVisited: new Date(),
         }
 
-        const localSuccess = saveGarden(updatedGarden)
+        const localSuccess = saveGarden(finalGarden)
 
         if (localSuccess) {
-          // 📡 ОТПРАВЛЯЕМ ЭЛЕМЕНТ НА СЕРВЕР для синхронизации между устройствами
-          try {
-            const userStore = useUserStore.getState()
-            const currentUser = userStore.currentUser
-
-            if (currentUser?.telegramId) {
-              const response = await authenticatedFetch(
-                '/api/garden?action=add-element',
-                {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    telegramId: currentUser.telegramId,
-                    element: {
-                      type: newElement.type,
-                      position: newElement.position,
-                      unlockDate: newElement.unlockDate.toISOString(),
-                      moodInfluence: mood,
-                      rarity: newElement.rarity,
-                    },
-                    telegramUserData: {
-                      userId: currentUser.id,
-                      firstName: currentUser.firstName,
-                      lastName: currentUser.lastName,
-                      username: currentUser.username,
-                      languageCode: currentUser.preferences.language || 'ru',
-                      photoUrl: currentUser.photoUrl,
-                    },
-                  }),
-                }
-              )
-
-              if (!response.ok) {
-                console.warn(
-                  '⚠️ Failed to sync garden element to server:',
-                  response.status
-                )
-              } else {
-                console.log('✅ Garden element synced to server successfully')
-              }
-            }
-          } catch (serverError) {
-            console.warn(
-              '⚠️ Server sync failed, but local save succeeded:',
-              serverError
-            )
-          }
-
           set({
-            currentGarden: updatedGarden,
+            currentGarden: finalGarden,
             isLoading: false,
-            selectedElement: newElement, // Auto-select new element
+            selectedElement: finalElement, // Auto-select new element
           })
-          return newElement
+          return finalElement
         } else {
           throw new Error('Failed to save new element locally')
         }

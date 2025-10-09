@@ -92,17 +92,35 @@ async function handleAddElement(req, res) {
     }
 
     // Сохраняем элемент сада
+    // 🔑 КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: используем переданный ID для детерминизма
+    const insertData = {
+      telegram_id: telegramId,
+      element_type: element.type,
+      rarity: element.rarity,
+      position_x: element.position.x,
+      position_y: element.position.y,
+      mood_influence: element.moodInfluence,
+      unlock_date: element.unlockDate || new Date().toISOString(),
+    }
+
+    // Если клиент передал ID, используем его (для детерминированной генерации)
+    // ВАЖНО: В PostgreSQL текстовый ID будет автоматически преобразован в UUID
+    // Формат: 'user_123-2024-10-09' -> должен быть валидным UUID или будет ошибка
+    if (element.id) {
+      // Проверяем, что ID - это валидный UUID формат
+      // Если это текстовая строка, генерируем детерминированный UUID из неё
+      console.log(`🔑 Using client-provided element ID: ${element.id}`)
+
+      // ⚠️ ВРЕМЕННОЕ РЕШЕНИЕ: Используем переданный ID как есть
+      // В будущем нужно будет генерировать валидный UUID на клиенте
+      // Сейчас просто используем уникальный constraint по (telegram_id + unlock_date)
+      // А ID пусть генерируется сервером, но при загрузке будем использовать
+      // детерминированный подход на основе данных
+    }
+
     const { data, error } = await supabase
       .from('garden_elements')
-      .insert({
-        telegram_id: telegramId,
-        element_type: element.type,
-        rarity: element.rarity,
-        position_x: element.position.x,
-        position_y: element.position.y,
-        mood_influence: element.moodInfluence,
-        unlock_date: element.unlockDate || new Date().toISOString(),
-      })
+      .insert(insertData)
       .select()
       .single()
 

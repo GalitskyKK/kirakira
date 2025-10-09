@@ -19,6 +19,13 @@ import {
   ELEMENT_TEMPLATES,
   PREMIUM_ELEMENT_TYPES,
 } from '@/utils/elementGeneration'
+import {
+  getElementName,
+  getElementDescription,
+  getElementEmoji,
+  getElementColor,
+} from '@/utils/elementNames'
+import type { MoodType } from '@/types'
 
 // Проверка dev режима - показывать только в разработке
 if (!import.meta.env.DEV) {
@@ -96,13 +103,35 @@ const createAllElements = () => {
   }> = []
 
   // Добавляем базовые элементы
-  ELEMENT_TEMPLATES.forEach(template => {
+  ELEMENT_TEMPLATES.forEach((template, index) => {
+    // Генерируем детерминированный seed для showcase
+    const showcaseSeed = `showcase-${template.type}-${template.rarity}-${index}`
+
+    // Генерируем характеристики на основе seed
+    const name = getElementName(template.type, template.rarity, showcaseSeed)
+    const description = getElementDescription(
+      template.type,
+      template.rarity,
+      name
+    )
+    const emoji = getElementEmoji(template.type)
+    const baseColor = getElementColor(
+      template.type,
+      'joy' as MoodType,
+      showcaseSeed
+    )
+
     const baseElement = {
-      ...template,
+      type: template.type,
+      name,
+      description,
+      emoji,
+      baseColor,
+      rarity: template.rarity,
       component: getElementComponent(template.type),
       isPremium: PREMIUM_ELEMENT_TYPES.has(template.type),
       moods: MOOD_MAPPING[template.type] || ['Универсальный'],
-      fullName: template.name,
+      fullName: name,
     }
     elements.push(baseElement)
 
@@ -111,8 +140,8 @@ const createAllElements = () => {
       const seasonalElement = {
         ...baseElement,
         season,
-        fullName: `${template.name} (${getSeasonName(season)})`,
-        description: `${template.description} - ${getSeasonName(season)} вариант`,
+        fullName: `${name} (${getSeasonName(season)})`,
+        description: `${description} - ${getSeasonName(season)} вариант`,
       }
       elements.push(seasonalElement)
     })

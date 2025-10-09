@@ -2,314 +2,88 @@ import { addDays, differenceInDays, format } from 'date-fns'
 import type { GardenElement, MoodType, Position2D } from '@/types'
 import { ElementType, RarityLevel, SeasonalVariant, MOOD_CONFIG } from '@/types'
 import { premiumUtils } from '@/stores'
+import {
+  getElementName,
+  getElementDescription,
+  getElementEmoji,
+  getElementColor,
+  getElementScale,
+} from './elementNames'
 
+/**
+ * Упрощенный шаблон элемента без фиксированных имен/описаний
+ * Имена и характеристики генерируются детерминированно на основе seed (element.id)
+ */
 interface ElementTemplate {
   readonly type: ElementType
-  readonly name: string
-  readonly description: string
-  readonly emoji: string
-  readonly baseColor: string
   readonly rarity: RarityLevel
 }
 
-// Element templates with rarity distribution
+/**
+ * Element templates with rarity distribution
+ * Теперь хранятся только тип и редкость
+ * Имя, цвет, описание и эмодзи генерируются через elementNames.ts
+ */
 const ELEMENT_TEMPLATES: readonly ElementTemplate[] = [
   // Common flowers (for Joy)
-  {
-    type: ElementType.FLOWER,
-    name: 'Ромашка',
-    description: 'Простой белый цветок',
-    emoji: '🌼',
-    baseColor: '#ffffff',
-    rarity: RarityLevel.COMMON,
-  },
-  {
-    type: ElementType.FLOWER,
-    name: 'Тюльпан',
-    description: 'Яркий весенний цветок',
-    emoji: '🌷',
-    baseColor: '#ff69b4',
-    rarity: RarityLevel.COMMON,
-  },
-  {
-    type: ElementType.FLOWER,
-    name: 'Незабудка',
-    description: 'Нежный голубой цветок',
-    emoji: '🌸',
-    baseColor: '#93c5fd',
-    rarity: RarityLevel.COMMON,
-  },
+  { type: ElementType.FLOWER, rarity: RarityLevel.COMMON },
+  { type: ElementType.FLOWER, rarity: RarityLevel.COMMON },
+  { type: ElementType.FLOWER, rarity: RarityLevel.COMMON },
 
-  // Common elements for other moods
-  {
-    type: ElementType.GRASS,
-    name: 'Трава',
-    description: 'Свежая зеленая трава',
-    emoji: '🌱',
-    baseColor: '#22c55e',
-    rarity: RarityLevel.COMMON,
-  },
-  {
-    type: ElementType.GRASS,
-    name: 'Мох',
-    description: 'Мягкий зеленый мох',
-    emoji: '🍀',
-    baseColor: '#16a34a',
-    rarity: RarityLevel.COMMON,
-  },
+  // Common grass (for Calm)
+  { type: ElementType.GRASS, rarity: RarityLevel.COMMON },
+  { type: ElementType.GRASS, rarity: RarityLevel.COMMON },
 
-  {
-    type: ElementType.MUSHROOM,
-    name: 'Грибок',
-    description: 'Маленький лесной гриб',
-    emoji: '🍄',
-    baseColor: '#8b4513',
-    rarity: RarityLevel.COMMON,
-  },
-  {
-    type: ElementType.MUSHROOM,
-    name: 'Поганка',
-    description: 'Загадочный темный гриб',
-    emoji: '🍄‍🟫',
-    baseColor: '#6b7280',
-    rarity: RarityLevel.COMMON,
-  },
+  // Common mushrooms (for Sadness)
+  { type: ElementType.MUSHROOM, rarity: RarityLevel.COMMON },
+  { type: ElementType.MUSHROOM, rarity: RarityLevel.COMMON },
 
-  // Decorative elements (for Joy/Anxiety)
-  {
-    type: ElementType.DECORATION,
-    name: 'Бабочка',
-    description: 'Красочная бабочка',
-    emoji: '🦋',
-    baseColor: '#f59e0b',
-    rarity: RarityLevel.COMMON,
-  },
-  {
-    type: ElementType.DECORATION,
-    name: 'Светлячок',
-    description: 'Мерцающий светлячок',
-    emoji: '✨',
-    baseColor: '#fbbf24',
-    rarity: RarityLevel.COMMON,
-  },
+  // Common decorations (for Joy/Anxiety)
+  { type: ElementType.DECORATION, rarity: RarityLevel.COMMON },
+  { type: ElementType.DECORATION, rarity: RarityLevel.COMMON },
 
   // Uncommon elements (30% chance)
-  {
-    type: ElementType.FLOWER,
-    name: 'Роза',
-    description: 'Ароматная красная роза',
-    emoji: '🌹',
-    baseColor: '#dc2626',
-    rarity: RarityLevel.UNCOMMON,
-  },
-  {
-    type: ElementType.TREE,
-    name: 'Саженец',
-    description: 'Молодое деревце',
-    emoji: '🌿',
-    baseColor: '#16a34a',
-    rarity: RarityLevel.UNCOMMON,
-  },
-  {
-    type: ElementType.STONE,
-    name: 'Камень',
-    description: 'Гладкий речной камень',
-    emoji: '🪨',
-    baseColor: '#6b7280',
-    rarity: RarityLevel.UNCOMMON,
-  },
-  {
-    type: ElementType.STONE,
-    name: 'Галька',
-    description: 'Округлая морская галька',
-    emoji: '🥌',
-    baseColor: '#9ca3af',
-    rarity: RarityLevel.UNCOMMON,
-  },
+  { type: ElementType.FLOWER, rarity: RarityLevel.UNCOMMON },
+  { type: ElementType.TREE, rarity: RarityLevel.UNCOMMON },
+  { type: ElementType.STONE, rarity: RarityLevel.UNCOMMON },
+  { type: ElementType.STONE, rarity: RarityLevel.UNCOMMON },
 
   // Water elements (for Calm)
-  {
-    type: ElementType.WATER,
-    name: 'Капля',
-    description: 'Чистая дождевая капля',
-    emoji: '💧',
-    baseColor: '#3b82f6',
-    rarity: RarityLevel.COMMON,
-  },
-  {
-    type: ElementType.WATER,
-    name: 'Лужа',
-    description: 'Небольшая водная лужица',
-    emoji: '🌊',
-    baseColor: '#06b6d4',
-    rarity: RarityLevel.COMMON,
-  },
-  {
-    type: ElementType.WATER,
-    name: 'Источник',
-    description: 'Чистый горный источник',
-    emoji: '⛲',
-    baseColor: '#0ea5e9',
-    rarity: RarityLevel.UNCOMMON,
-  },
+  { type: ElementType.WATER, rarity: RarityLevel.COMMON },
+  { type: ElementType.WATER, rarity: RarityLevel.COMMON },
+  { type: ElementType.WATER, rarity: RarityLevel.UNCOMMON },
 
   // More stone elements for Stress/Anger
-  {
-    type: ElementType.STONE,
-    name: 'Булыжник',
-    description: 'Прочный серый камень',
-    emoji: '⚫',
-    baseColor: '#4b5563',
-    rarity: RarityLevel.COMMON,
-  },
+  { type: ElementType.STONE, rarity: RarityLevel.COMMON },
 
   // More crystal elements for Stress/Anger
-  {
-    type: ElementType.CRYSTAL,
-    name: 'Кварц',
-    description: 'Прозрачный кристалл',
-    emoji: '🔹',
-    baseColor: '#e5e7eb',
-    rarity: RarityLevel.UNCOMMON,
-  },
+  { type: ElementType.CRYSTAL, rarity: RarityLevel.UNCOMMON },
 
   // Tree elements for Calm
-  {
-    type: ElementType.TREE,
-    name: 'Росток',
-    description: 'Маленький зеленый росток',
-    emoji: '🌱',
-    baseColor: '#22c55e',
-    rarity: RarityLevel.COMMON,
-  },
-  {
-    type: ElementType.TREE,
-    name: 'Веточка',
-    description: 'Тонкая зеленая веточка',
-    emoji: '🌿',
-    baseColor: '#16a34a',
-    rarity: RarityLevel.COMMON,
-  },
+  { type: ElementType.TREE, rarity: RarityLevel.COMMON },
+  { type: ElementType.TREE, rarity: RarityLevel.COMMON },
 
   // Rare elements (15% chance)
-  {
-    type: ElementType.FLOWER,
-    name: 'Подсолнух',
-    description: 'Солнечный подсолнух',
-    emoji: '🌻',
-    baseColor: '#fbbf24',
-    rarity: RarityLevel.RARE,
-  },
-  {
-    type: ElementType.TREE,
-    name: 'Дерево',
-    description: 'Взрослое дерево',
-    emoji: '🌳',
-    baseColor: '#15803d',
-    rarity: RarityLevel.RARE,
-  },
-  {
-    type: ElementType.WATER,
-    name: 'Ручеек',
-    description: 'Тихий водный поток',
-    emoji: '💧',
-    baseColor: '#06b6d4',
-    rarity: RarityLevel.RARE,
-  },
+  { type: ElementType.FLOWER, rarity: RarityLevel.RARE },
+  { type: ElementType.TREE, rarity: RarityLevel.RARE },
+  { type: ElementType.WATER, rarity: RarityLevel.RARE },
 
   // Epic elements (4% chance)
-  {
-    type: ElementType.FLOWER,
-    name: 'Орхидея',
-    description: 'Экзотическая орхидея',
-    emoji: '🌺',
-    baseColor: '#a855f7',
-    rarity: RarityLevel.EPIC,
-  },
-  {
-    type: ElementType.CRYSTAL,
-    name: 'Кристалл',
-    description: 'Магический кристалл',
-    emoji: '💎',
-    baseColor: '#3b82f6',
-    rarity: RarityLevel.EPIC,
-  },
-  {
-    type: ElementType.CRYSTAL,
-    name: 'Аметист',
-    description: 'Фиолетовый кристалл спокойствия',
-    emoji: '🔮',
-    baseColor: '#8b5cf6',
-    rarity: RarityLevel.EPIC,
-  },
-  {
-    type: ElementType.MUSHROOM,
-    name: 'Мухомор',
-    description: 'Ядовитый красный гриб',
-    emoji: '🍄',
-    baseColor: '#dc2626',
-    rarity: RarityLevel.EPIC,
-  },
+  { type: ElementType.FLOWER, rarity: RarityLevel.EPIC },
+  { type: ElementType.CRYSTAL, rarity: RarityLevel.EPIC },
+  { type: ElementType.CRYSTAL, rarity: RarityLevel.EPIC },
+  { type: ElementType.MUSHROOM, rarity: RarityLevel.EPIC },
 
   // Legendary elements (1% chance)
-  {
-    type: ElementType.TREE,
-    name: 'Древо Жизни',
-    description: 'Мистическое древо',
-    emoji: '🌲',
-    baseColor: '#059669',
-    rarity: RarityLevel.LEGENDARY,
-  },
-  {
-    type: ElementType.DECORATION,
-    name: 'Звездная Пыль',
-    description: 'Магическая звездная пыль',
-    emoji: '✨',
-    baseColor: '#fbbf24',
-    rarity: RarityLevel.LEGENDARY,
-  },
+  { type: ElementType.TREE, rarity: RarityLevel.LEGENDARY },
+  { type: ElementType.DECORATION, rarity: RarityLevel.LEGENDARY },
 
   // ПРЕМИУМ ЭЛЕМЕНТЫ (доступны только с премиум подпиской)
-  {
-    type: ElementType.RAINBOW_FLOWER,
-    name: 'Радужный Цветок',
-    description: 'Переливающийся всеми цветами радуги цветок',
-    emoji: '🌈',
-    baseColor: '#ff69b4',
-    rarity: RarityLevel.LEGENDARY,
-  },
-  {
-    type: ElementType.GLOWING_CRYSTAL,
-    name: 'Светящийся Кристалл',
-    description: 'Мистический кристалл с внутренним светом',
-    emoji: '💫',
-    baseColor: '#6366f1',
-    rarity: RarityLevel.LEGENDARY,
-  },
-  {
-    type: ElementType.MYSTIC_MUSHROOM,
-    name: 'Мистический Гриб',
-    description: 'Волшебный гриб с магическими спорами',
-    emoji: '🔮',
-    baseColor: '#8b5cf6',
-    rarity: RarityLevel.LEGENDARY,
-  },
-  {
-    type: ElementType.AURORA_TREE,
-    name: 'Дерево Авроры',
-    description: 'Дерево, светящееся северным сиянием',
-    emoji: '🌲',
-    baseColor: '#10b981',
-    rarity: RarityLevel.LEGENDARY,
-  },
-  {
-    type: ElementType.STARLIGHT_DECORATION,
-    name: 'Звездное Украшение',
-    description: 'Декорация из чистого звездного света',
-    emoji: '⭐',
-    baseColor: '#fbbf24',
-    rarity: RarityLevel.LEGENDARY,
-  },
+  { type: ElementType.RAINBOW_FLOWER, rarity: RarityLevel.LEGENDARY },
+  { type: ElementType.GLOWING_CRYSTAL, rarity: RarityLevel.LEGENDARY },
+  { type: ElementType.MYSTIC_MUSHROOM, rarity: RarityLevel.LEGENDARY },
+  { type: ElementType.AURORA_TREE, rarity: RarityLevel.LEGENDARY },
+  { type: ElementType.STARLIGHT_DECORATION, rarity: RarityLevel.LEGENDARY },
 ] as const
 
 // Экспортируем все элементы для showcase
@@ -479,7 +253,7 @@ function selectElementTemplate(
 
   // Debug logging (remove in production)
   console.log(
-    `Mood: ${mood}, UsePreferred: ${usePreferred}, FilteredCount: ${filteredTemplates.length}, SelectedRarity: ${selectedRarity}, AvailableCount: ${availableTemplates.length}, Selected: ${selectedTemplate.name} (${selectedTemplate.type})`
+    `Mood: ${mood}, UsePreferred: ${usePreferred}, FilteredCount: ${filteredTemplates.length}, SelectedRarity: ${selectedRarity}, AvailableCount: ${availableTemplates.length}, Selected: ${selectedTemplate.type} (${selectedTemplate.rarity})`
   )
 
   return selectedTemplate
@@ -600,26 +374,8 @@ function generatePosition(
 }
 
 /**
- * Adjusts element color based on mood and season
- */
-function adjustElementColor(
-  baseColor: string,
-  mood: MoodType,
-  _season: SeasonalVariant,
-  random: SeededRandom
-): string {
-  const moodConfig = MOOD_CONFIG[mood] || MOOD_CONFIG.joy // Fallback to joy if invalid mood
-  const moodInfluence = 0.3
-
-  // Simple color blending (in a real app, you'd use a proper color library)
-  // For now, return the mood color with some randomness
-  const colors = [baseColor, moodConfig.color]
-  const colorIndex = random.next() < moodInfluence ? 1 : 0
-  return colors[colorIndex]!
-}
-
-/**
  * Generates a daily garden element based on user data and mood
+ * ОБНОВЛЕНО: использует element.id как seed для детерминированной генерации всех характеристик
  */
 export function generateDailyElement(
   userId: string,
@@ -631,15 +387,15 @@ export function generateDailyElement(
   // Calculate day offset from registration
   const dayOffset = differenceInDays(currentDate, registrationDate)
 
-  // Generate deterministic seed
-  const seed = generateSeed(registrationDate, dayOffset)
-  const random = new SeededRandom(seed)
+  // Generate deterministic seed for template selection
+  const templateSeed = generateSeed(registrationDate, dayOffset)
+  const random = new SeededRandom(templateSeed)
 
   // Get mood configuration and bonuses
   const moodConfig = MOOD_CONFIG[mood] || MOOD_CONFIG.joy // Fallback to joy if invalid mood
   const rarityBonus = moodConfig.rarityBonus
 
-  // Select element template
+  // Select element template (только тип и редкость)
   const template = selectElementTemplate(random, mood, rarityBonus)
 
   // Generate position
@@ -648,23 +404,50 @@ export function generateDailyElement(
   // Determine season
   const season = getCurrentSeason(currentDate)
 
-  // Adjust color based on mood and season
-  const color = adjustElementColor(template.baseColor, mood, season, random)
+  // 🔑 КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Создаем element.id как единый seed для всех характеристик
+  const elementId = `${userId}-${format(currentDate, 'yyyy-MM-dd')}`
+  const characteristicsSeed = elementId // Используем ID как seed
+
+  // 🎨 Генерируем все характеристики детерминированно на основе element.id
+  const name = getElementName(
+    template.type,
+    template.rarity,
+    characteristicsSeed
+  )
+  const description = getElementDescription(
+    template.type,
+    template.rarity,
+    name
+  )
+  const emoji = getElementEmoji(template.type)
+  const color = getElementColor(template.type, mood, characteristicsSeed)
+  const scale = getElementScale(characteristicsSeed)
 
   // Create element
   const element: GardenElement = {
-    id: `${userId}-${format(currentDate, 'yyyy-MM-dd')}`,
+    id: elementId,
     type: template.type,
     position,
     unlockDate: currentDate,
     moodInfluence: mood,
     rarity: template.rarity,
     seasonalVariant: season,
-    name: template.name,
-    description: template.description,
-    emoji: template.emoji,
+    name,
+    description,
+    emoji,
     color,
+    scale,
   }
+
+  console.log('🌱 Generated element with deterministic seed:', {
+    id: elementId,
+    seed: characteristicsSeed,
+    type: template.type,
+    rarity: template.rarity,
+    name,
+    color,
+    scale,
+  })
 
   return element
 }
