@@ -193,7 +193,7 @@ function App() {
             </div>
           )}
 
-          {/* Дружелюбное приветствие для Telegram пользователей в продакшене */}
+          {/* Дружелюбное приветствие для Telegram пользователей в проде */}
           {isTelegramEnv && telegramUser && !isDevelopment && (
             <div className="mt-4 rounded-lg bg-blue-100/50 p-3">
               <p className="text-sm text-[var(--tg-hint-color,#666666)] dark:text-gray-100">
