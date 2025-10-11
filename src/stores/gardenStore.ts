@@ -18,6 +18,7 @@ import { useUserStore } from './userStore'
 import {
   generateDailyElement,
   canUnlockTodaysElement,
+  getCurrentSeason,
 } from '@/utils/elementGeneration'
 import { saveGarden, loadGarden } from '@/utils/storage'
 import {
@@ -229,7 +230,13 @@ export const useGardenStore = create<GardenStore>()(
                     name,
                     color,
                     scale,
+                    seasonalVariant: serverElement.seasonal_variant,
                   })
+
+                  // 🍂 Используем сезон из БД или определяем по дате разблокировки
+                  const seasonalVariant = serverElement.seasonal_variant
+                    ? (serverElement.seasonal_variant as SeasonalVariant)
+                    : getCurrentSeason(new Date(serverElement.unlock_date))
 
                   return {
                     id: characteristicsSeed, // UUID без префикса
@@ -241,6 +248,7 @@ export const useGardenStore = create<GardenStore>()(
                     unlockDate: new Date(serverElement.unlock_date),
                     moodInfluence,
                     rarity,
+                    seasonalVariant, // 🍂 Сохраняем сезон из БД или вычисляем
                     name,
                     description,
                     emoji,

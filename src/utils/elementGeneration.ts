@@ -145,7 +145,7 @@ class SeededRandom {
 /**
  * Determines the current season based on date
  */
-function getCurrentSeason(date: Date): SeasonalVariant {
+export function getCurrentSeason(date: Date): SeasonalVariant {
   const month = date.getMonth() + 1 // 1-12
 
   if (month >= 3 && month <= 5) return SeasonalVariant.SPRING

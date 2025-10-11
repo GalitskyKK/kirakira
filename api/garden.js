@@ -101,6 +101,7 @@ async function handleAddElement(req, res) {
       position_y: element.position.y,
       mood_influence: element.moodInfluence,
       unlock_date: element.unlockDate || new Date().toISOString(),
+      seasonal_variant: element.seasonalVariant || null, // 🍂 Сохраняем сезонный вариант
     }
 
     // Если клиент передал ID, используем его (для детерминированной генерации)

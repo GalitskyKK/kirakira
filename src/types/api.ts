@@ -151,6 +151,7 @@ export interface DatabaseGardenElement {
   readonly position_y: number
   readonly mood_influence?: string
   readonly unlock_date: string
+  readonly seasonal_variant?: string // 🍂 Сезонный вариант: spring, summer, autumn, winter
   readonly created_at: string
   readonly updated_at: string
 }
