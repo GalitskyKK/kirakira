@@ -6,6 +6,22 @@ import {
   calculateExperienceFromStats,
 } from '@/utils/achievements'
 import { useMoodTracking, useGardenState } from '@/hooks'
+
+/**
+ * Получает классы цветов градиента в зависимости от уровня
+ */
+function getLevelGradientClasses(level: number): string {
+  const gradients: Record<number, string> = {
+    1: 'from-green-400 to-emerald-500', // Новичок - свежий зеленый
+    2: 'from-yellow-400 to-orange-400', // Любитель - теплый желто-оранжевый
+    3: 'from-blue-400 to-cyan-500', // Садовник - спокойный сине-голубой
+    4: 'from-purple-400 to-pink-500', // Эксперт - элегантный фиолетово-розовый
+    5: 'from-orange-500 to-red-500', // Мастер - мощный оранжево-красный
+    6: 'from-pink-500 to-purple-600', // Гуру - величественный розово-фиолетовый
+  }
+
+  return gradients[level] ?? 'from-gray-400 to-gray-500' // fallback
+}
 interface ProfileHeaderProps {
   readonly user: User
   readonly stats?:
@@ -103,11 +119,11 @@ export function ProfileHeader({ user, stats }: ProfileHeaderProps) {
 
             {/* Name & Username */}
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-xl font-bold text-gray-900 sm:text-2xl dark:text-gray-100">
+              <h1 className="truncate text-xl font-bold text-gray-900 dark:text-gray-100 sm:text-2xl">
                 {displayName}
               </h1>
               {username !== null && (
-                <p className="truncate text-base text-garden-600 sm:text-lg dark:text-garden-100">
+                <p className="truncate text-base text-garden-600 dark:text-garden-100 sm:text-lg">
                   {username}
                 </p>
               )}
@@ -129,12 +145,14 @@ export function ProfileHeader({ user, stats }: ProfileHeaderProps) {
         <div className="space-y-3">
           {/* Level Badge */}
           <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex items-center rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 px-3 py-1.5 text-sm font-medium text-white shadow-sm">
+            <div
+              className={`inline-flex items-center rounded-full bg-gradient-to-r ${getLevelGradientClasses(levelInfo.currentLevel.level)} px-3 py-1.5 text-sm font-medium text-white shadow-sm`}
+            >
               <span className="mr-1.5">{levelInfo.currentLevel.emoji}</span>
               <span className="hidden sm:inline">
                 {levelInfo.currentLevel.name}
               </span>
-              <span className="sm:hidden">Садовник</span>
+              <span className="sm:hidden">{levelInfo.currentLevel.name}</span>
               <span className="ml-1.5 rounded-full bg-white/20 px-2 py-0.5 text-xs dark:bg-black/20">
                 Ур. {levelInfo.currentLevel.level}
               </span>
@@ -166,7 +184,7 @@ export function ProfileHeader({ user, stats }: ProfileHeaderProps) {
               </div>
               <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
                 <div
-                  className="h-2 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 transition-all duration-500"
+                  className={`h-2 rounded-full bg-gradient-to-r ${getLevelGradientClasses(levelInfo.currentLevel.level)} transition-all duration-500`}
                   style={{ width: `${levelInfo.progress}%` }}
                 />
               </div>
