@@ -452,6 +452,9 @@ export const useGardenStore = create<GardenStore>()(
                     unlockDate: newElement.unlockDate.toISOString(),
                     moodInfluence: mood,
                     rarity: newElement.rarity,
+                    seasonalVariant:
+                      newElement.seasonalVariant ??
+                      getCurrentSeason(newElement.unlockDate),
                   },
                   telegramUserData: {
                     userId: currentUser.id,

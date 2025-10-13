@@ -17,6 +17,7 @@ import { loadGarden, saveGarden } from '@/utils/storage'
 import {
   generateDailyElement,
   canUnlockTodaysElement,
+  getCurrentSeason,
 } from '@/utils/elementGeneration'
 
 /**
@@ -228,6 +229,9 @@ export function useGardenState() {
             unlockDate: newElement.unlockDate.toISOString(),
             moodInfluence: mood,
             rarity: newElement.rarity,
+            seasonalVariant:
+              newElement.seasonalVariant ??
+              getCurrentSeason(newElement.unlockDate),
           },
           telegramUserData,
         })

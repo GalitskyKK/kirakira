@@ -51,6 +51,7 @@ export interface AddElementRequest {
     readonly unlockDate: string
     readonly moodInfluence: MoodType
     readonly rarity: RarityLevel
+    readonly seasonalVariant: SeasonalVariant
   }
   readonly telegramUserData: {
     readonly userId: string
