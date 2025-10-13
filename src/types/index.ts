@@ -6,6 +6,7 @@ export type * from './api'
 export type * from './telegram'
 export type * from './initialization'
 export type * from './challenges'
+export type * from './currency'
 
 // Re-export enums and constants (can't use "export type *" for these)
 export {

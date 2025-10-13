@@ -17,6 +17,7 @@ import { getMoodDisplayProps, getRecommendedMood } from '@/utils/moodMapping'
 import { getTimeUntilNextCheckin } from '@/utils/dateHelpers'
 import { calculateMoodStats } from '@/utils/moodMapping'
 import { loadMoodHistory, saveMoodHistory } from '@/utils/storage'
+import { awardMoodRewards } from '@/utils/currencyRewards'
 
 /**
  * Хук для отслеживания настроения
@@ -155,6 +156,20 @@ export function useMoodTracking() {
         const entry = await addMoodMutation.mutateAsync(moodRequest)
 
         console.log('✅ Mood checked in successfully')
+
+        // 💰 Начисляем валюту за запись настроения
+        const isFirstToday = !todaysMood
+        const currencyResult = await awardMoodRewards(
+          currentUser.telegramId,
+          isFirstToday
+        )
+
+        if (currencyResult.success) {
+          console.log(
+            `💰 Awarded ${currencyResult.sprouts} sprouts for mood check-in`
+          )
+        }
+
         return entry
       } catch (error) {
         console.error('❌ Failed to check in mood:', error)

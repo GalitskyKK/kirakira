@@ -399,3 +399,73 @@ export interface FriendApiRespondRequestRequest {
   readonly requestId: string
   readonly response: 'accept' | 'decline'
 }
+
+// ===========================================
+// 💰 CURRENCY API TYPES (/api/currency)
+// ===========================================
+
+export interface CurrencyApiBalanceResponse {
+  readonly telegramId: number
+  readonly sprouts: number
+  readonly gems: number
+  readonly totalSproutsEarned: number
+  readonly totalGemsEarned: number
+  readonly totalSproutsSpent: number
+  readonly totalGemsSpent: number
+  readonly createdAt: string
+  readonly lastUpdated: string
+}
+
+export interface CurrencyApiEarnRequest {
+  readonly telegramId: number
+  readonly currencyType: 'sprouts' | 'gems'
+  readonly amount: number
+  readonly reason: string
+  readonly description?: string
+  readonly metadata?: Record<string, unknown>
+}
+
+export interface CurrencyApiEarnResponse {
+  readonly newBalance: number
+  readonly transactionId: string
+  readonly currencyType: 'sprouts' | 'gems'
+  readonly amount: number
+  readonly reason: string
+}
+
+export interface CurrencyApiSpendRequest {
+  readonly telegramId: number
+  readonly currencyType: 'sprouts' | 'gems'
+  readonly amount: number
+  readonly reason: string
+  readonly description?: string
+  readonly metadata?: Record<string, unknown>
+}
+
+export interface CurrencyApiSpendResponse {
+  readonly newBalance: number
+  readonly transactionId: string
+  readonly currencyType: 'sprouts' | 'gems'
+  readonly amount: number
+  readonly reason: string
+}
+
+export interface CurrencyApiTransactionResponse {
+  readonly transactions: readonly {
+    readonly id: string
+    readonly telegramId: number
+    readonly transactionType: string
+    readonly currencyType: string
+    readonly amount: number
+    readonly balanceBefore: number
+    readonly balanceAfter: number
+    readonly reason: string
+    readonly description?: string
+    readonly metadata?: Record<string, unknown>
+    readonly relatedUserId?: number
+    readonly createdAt: string
+  }[]
+  readonly total: number
+  readonly limit: number
+  readonly offset: number
+}

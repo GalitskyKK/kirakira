@@ -19,6 +19,7 @@ import {
   canUnlockTodaysElement,
   getCurrentSeason,
 } from '@/utils/elementGeneration'
+import { awardElementSprouts } from '@/utils/currencyRewards'
 
 /**
  * Хук для управления состоянием сада
@@ -238,6 +239,20 @@ export function useGardenState() {
 
         if (result) {
           console.log('✅ Element unlocked successfully')
+
+          // 💰 Начисляем валюту за получение элемента
+          const currencyResult = await awardElementSprouts(
+            currentUser.telegramId,
+            result.element.rarity,
+            result.element.id
+          )
+
+          if (currencyResult.success) {
+            console.log(
+              `💰 Awarded ${currencyResult.amount} sprouts for ${result.element.rarity} element`
+            )
+          }
+
           return result.element
         }
 

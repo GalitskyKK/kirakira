@@ -3,6 +3,7 @@ export { useGardenStore } from './gardenStore'
 export { useMoodStore } from './moodStore'
 export { useUserStore } from './userStore'
 export { usePremiumStore, premiumUtils } from './premiumStore'
+export { useCurrencyStore } from './currencyStore'
 
 // Store initialization function with static imports to avoid chunk splitting warnings
 import { useUserStore } from './userStore'

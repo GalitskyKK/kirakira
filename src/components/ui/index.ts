@@ -14,3 +14,13 @@ export { UserAvatar, UserAvatarGroup } from './UserAvatar'
 export { Toast } from './Toast'
 export type { ToastProps, ToastType } from './Toast'
 export { UpdatePrompt } from './UpdatePrompt'
+export { CurrencyDisplay, SingleCurrencyDisplay } from './CurrencyDisplay'
+export {
+  CurrencyAnimation,
+  MiniCurrencyAnimation,
+  useCurrencyAnimation,
+} from './CurrencyAnimation'
+export {
+  TransactionHistory,
+  CompactTransactionHistory,
+} from './TransactionHistory'

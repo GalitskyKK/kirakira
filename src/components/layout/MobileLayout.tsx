@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MobileTabNavigation } from './MobileTabNavigation'
 import { GardenView } from '@/components/garden'
 import { MoodCheckin, MoodStats } from '@/components/mood'
 import { TelegramCommunity } from '@/components/telegram'
-import { TelegramStatus } from '@/components/ui'
+import { TelegramStatus, CurrencyDisplay } from '@/components/ui'
 import { ProfilePage } from '@/pages/ProfilePage'
 import { useGardenState, useMoodTracking } from '@/hooks'
+import { useCurrencyStore } from '@/stores/currencyStore'
+import { useUserStore } from '@/stores'
 
 const tabVariants = {
   enter: (direction: number) => ({
@@ -29,10 +31,18 @@ export function MobileLayout() {
   const [activeTab, setActiveTab] = useState('mood')
   const { garden, gardenStats } = useGardenState()
   const { canCheckinToday, moodHistory } = useMoodTracking()
-  // Removed currentUser as it's not used in this component
+  const { currentUser } = useUserStore()
+  const { loadCurrency } = useCurrencyStore()
 
   const tabIndex = TABS.indexOf(activeTab)
   const [direction, setDirection] = useState(0)
+
+  // Загружаем баланс валюты при монтировании
+  useEffect(() => {
+    if (currentUser?.telegramId) {
+      void loadCurrency(currentUser.telegramId)
+    }
+  }, [currentUser?.telegramId, loadCurrency])
 
   const handleTabChange = (newTab: string) => {
     const newIndex = TABS.indexOf(newTab)
@@ -55,6 +65,15 @@ export function MobileLayout() {
                   ? 'Настроение отмечено'
                   : 'Как дела сегодня?'}
               </p>
+
+              {/* Currency Display */}
+              <div className="mt-3 flex justify-center">
+                <CurrencyDisplay
+                  size="md"
+                  showAnimation={false}
+                  variant="compact"
+                />
+              </div>
             </div>
 
             {/* Mood Check-in */}
