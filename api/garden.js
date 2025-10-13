@@ -147,51 +147,65 @@ async function handleAddElement(req, res) {
       console.log('✅ User stats updated after adding garden element')
     }
 
-    // 🏆 НАЧИСЛЯЕМ ОПЫТ ЗА НОВОЕ РАСТЕНИЕ
+    // 🏆 НАЧИСЛЯЕМ ОПЫТ ЗА НОВОЕ РАСТЕНИЕ (JWT-аутентифицированный RPC)
     try {
-      // Базовый опыт за растение
-      const addPlantResponse = await fetch(
-        `${process.env.VITE_APP_URL || 'https://kirakira-theta.vercel.app'}/api/profile?action=add_experience`,
+      // ✅ БЕЗОПАСНО: Используем RPC с тем же JWT-клиентом (соблюдает RLS)
+
+      // Базовый опыт за растение (15 XP)
+      const { data: plantXP, error: plantXPError } = await supabase.rpc(
+        'add_user_experience',
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            telegramId,
-            experiencePoints: 15, // EXPERIENCE_REWARDS.NEW_PLANT
-            reason: `garden_element: ${element.type} (${element.rarity})`,
-          }),
+          p_telegram_id: telegramId,
+          p_experience_points: 15, // EXPERIENCE_REWARDS.NEW_PLANT
         }
       )
 
-      // Дополнительный опыт за редкие элементы
+      if (plantXPError) {
+        console.error(`❌ CRITICAL: Failed to add XP for garden element:`, {
+          error: plantXPError,
+          telegram_id: telegramId,
+          element_type: element.type,
+          rarity: element.rarity,
+        })
+      } else {
+        console.log(
+          `🏆 Added 15 XP for new garden element: ${element.type}`,
+          plantXP?.[0] || plantXP
+        )
+      }
+
+      // Дополнительный опыт за редкие элементы (50 XP)
       const rareTypes = ['rare', 'epic', 'legendary']
       if (rareTypes.includes(element.rarity?.toLowerCase())) {
-        const addRareResponse = await fetch(
-          `${process.env.VITE_APP_URL || 'https://kirakira-theta.vercel.app'}/api/profile?action=add_experience`,
+        const { data: rareXP, error: rareXPError } = await supabase.rpc(
+          'add_user_experience',
           {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              telegramId,
-              experiencePoints: 50, // EXPERIENCE_REWARDS.RARE_PLANT
-              reason: `rare_element: ${element.type} (${element.rarity})`,
-            }),
+            p_telegram_id: telegramId,
+            p_experience_points: 50, // EXPERIENCE_REWARDS.RARE_PLANT
           }
         )
 
-        if (addRareResponse.ok) {
+        if (rareXPError) {
+          console.error(`❌ CRITICAL: Failed to add rare element bonus XP:`, {
+            error: rareXPError,
+            telegram_id: telegramId,
+            element_type: element.type,
+            rarity: element.rarity,
+          })
+        } else {
           console.log(
-            `🏆 Added rare element bonus XP for ${element.rarity} ${element.type}`
+            `🏆 Added 50 XP rare element bonus for ${element.rarity} ${element.type}`,
+            rareXP?.[0] || rareXP
           )
         }
       }
-
-      if (addPlantResponse.ok) {
-        console.log(`🏆 Added XP for new garden element: ${element.type}`)
-      }
     } catch (xpError) {
-      console.warn('⚠️ Failed to add XP for garden element:', xpError)
-      // Не критично, продолжаем
+      console.error('❌ CRITICAL: Exception in XP addition:', {
+        exception: xpError,
+        telegram_id: telegramId,
+        message: xpError?.message,
+      })
+      // Не критично для пользователя, но требует внимания разработчика
     }
 
     res.status(200).json({

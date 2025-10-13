@@ -172,7 +172,7 @@ async function handleRecord(req, res) {
       // Не критично, продолжаем
     }
 
-    // 🏆 НАЧИСЛЯЕМ ОПЫТ ЗА ЗАПИСЬ НАСТРОЕНИЯ
+    // 🏆 НАЧИСЛЯЕМ ОПЫТ ЗА ЗАПИСЬ НАСТРОЕНИЯ (JWT-аутентифицированный RPC)
     try {
       // Проверяем первая ли это запись за день
       const today = formattedDate
@@ -183,31 +183,38 @@ async function handleRecord(req, res) {
         .eq('mood_date', today)
 
       const isFirstToday = !todayEntries || todayEntries.length <= 1
+      const experiencePoints = isFirstToday ? 20 : 10 // FIRST_MOOD_OF_DAY : DAILY_MOOD
 
-      // Базовый опыт за запись настроения
-      const addMoodResponse = await fetch(
-        `${process.env.VITE_APP_URL || 'https://kirakira-theta.vercel.app'}/api/profile?action=add_experience`,
+      // ✅ БЕЗОПАСНО: Используем RPC с тем же JWT-клиентом (соблюдает RLS)
+      const { data: xpResult, error: xpError } = await supabase.rpc(
+        'add_user_experience',
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            telegramId: telegramUserId,
-            experiencePoints: isFirstToday ? 20 : 10, // FIRST_MOOD_OF_DAY : DAILY_MOOD
-            reason: isFirstToday
-              ? `first_mood_today: ${mood}`
-              : `mood_entry: ${mood}`,
-          }),
+          p_telegram_id: telegramUserId,
+          p_experience_points: experiencePoints,
         }
       )
 
-      if (addMoodResponse.ok) {
+      if (xpError) {
+        console.error('❌ CRITICAL: Failed to add XP for mood entry:', {
+          error: xpError,
+          telegram_id: telegramUserId,
+          experience_points: experiencePoints,
+          is_first_today: isFirstToday,
+        })
+        // Логируем ошибку, но не прерываем выполнение (настроение уже сохранено)
+      } else {
         console.log(
-          `🏆 Added XP for mood entry: ${mood} (${isFirstToday ? 'first today' : 'additional'})`
+          `🏆 Added ${experiencePoints} XP for mood entry: ${mood} (${isFirstToday ? 'first today' : 'additional'})`,
+          xpResult?.[0] || xpResult
         )
       }
     } catch (xpError) {
-      console.warn('⚠️ Failed to add XP for mood entry:', xpError)
-      // Не критично, продолжаем
+      console.error('❌ CRITICAL: Exception in XP addition:', {
+        exception: xpError,
+        telegram_id: telegramUserId,
+        message: xpError?.message,
+      })
+      // Не критично для пользователя, но требует внимания разработчика
     }
 
     res.status(200).json({
