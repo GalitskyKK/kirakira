@@ -1,0 +1,30 @@
+/**
+ * 🔄 V2 Hooks - Новые хуки с разделением клиентского и серверного состояния
+ * Используют React Query для серверных данных и Zustand для UI состояния
+ */
+
+// Основные хуки приложения (v2)
+export { useGardenState } from './useGardenState.v2'
+export { useMoodTracking } from './useMoodTracking.v2'
+export { useProfile, useFriendProfileData } from './useProfile.v2'
+
+// React Query хуки для прямого использования
+export * from './queries'
+
+// Старые хуки (для обратной совместимости)
+export { useGardenState as useGardenStateOld } from './useGardenState'
+export { useMoodTracking as useMoodTrackingOld } from './useMoodTracking'
+export { useProfile as useProfileOld } from './useProfile'
+
+// Другие хуки
+export { useTelegramSync } from './useTelegramSync'
+export { useTelegram } from './useTelegram'
+export { useTelegramStorage } from './useTelegramStorage'
+export { useStoresSync } from './useStoresSync'
+export { useAppInitialization } from './useAppInitialization'
+export { useDeepLink } from './useDeepLink'
+export { useElementGeneration } from './useElementGeneration'
+export { useGardenRooms } from './useGardenRooms'
+export { useLocalStorage } from './useLocalStorage'
+export { useUserPhotos } from './useUserPhotos'
+export { useChallengeIntegration } from './useChallengeIntegration'

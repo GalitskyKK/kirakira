@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useUserStore, useGardenStore, useMoodStore } from '@/stores'
-import { useProfile } from '@/hooks/useProfile'
+import { useProfile } from '@/hooks/useProfile.v2'
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { ProfileStats } from '@/components/profile/ProfileStats'
 import { ProfileAchievements } from '@/components/profile/ProfileAchievements'

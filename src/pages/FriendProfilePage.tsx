@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Lock, Eye, Users } from 'lucide-react'
 import { LoadingSpinner, UserAvatar } from '@/components/ui'
-import { useProfile } from '@/hooks/useProfile'
+import { useFriendProfileData } from '@/hooks/useProfile.v2'
 import { GARDENER_LEVELS } from '@/utils/achievements'
 import type {
   DatabaseUser,
@@ -53,34 +53,51 @@ interface FriendProfileData {
 export default function FriendProfilePage() {
   const { friendTelegramId } = useParams<{ friendTelegramId: string }>()
   const navigate = useNavigate()
-  const { loadFriendProfile, isLoading, error } = useProfile()
-  const [profileData, setProfileData] = useState<FriendProfileData | null>(null)
+
+  // Используем новый v2 хук с автоматической загрузкой
+  const friendTelegramIdNum = friendTelegramId
+    ? parseInt(friendTelegramId)
+    : undefined
+  const { friendProfile, isLoading, error } =
+    useFriendProfileData(friendTelegramIdNum)
 
   useEffect(() => {
     if (!friendTelegramId) {
       navigate('/')
       return
     }
+  }, [friendTelegramId, navigate])
 
-    const loadData = async () => {
-      const data = await loadFriendProfile(parseInt(friendTelegramId))
-      if (data) {
-        // 🔍 ОТЛАДКА: Логируем полученные данные друга
-        console.log('🔍 Friend Profile Data Received:', {
-          friendTelegramId,
-          hasUser: !!data.user,
-          hasStats: !!data.stats,
-          registrationDate: data.user?.registration_date,
-          statsData: data.stats,
-          userData: data.user,
-        })
-
-        setProfileData(data as FriendProfileData)
+  // Конвертируем данные в нужный формат
+  const profileData: FriendProfileData | null = friendProfile
+    ? {
+        user: friendProfile.user,
+        stats: friendProfile.stats,
+        achievements: friendProfile.achievements,
+        privacy: {
+          showProfile:
+            friendProfile.user.privacy_settings?.['showProfile'] ?? true,
+          shareGarden:
+            friendProfile.user.privacy_settings?.['shareGarden'] ?? true,
+          shareAchievements:
+            friendProfile.user.privacy_settings?.['shareAchievements'] ?? true,
+        },
       }
-    }
+    : null
 
-    void loadData()
-  }, [friendTelegramId, loadFriendProfile, navigate])
+  useEffect(() => {
+    if (profileData) {
+      // 🔍 ОТЛАДКА: Логируем полученные данные друга
+      console.log('🔍 Friend Profile Data Received:', {
+        friendTelegramId,
+        hasUser: !!profileData.user,
+        hasStats: !!profileData.stats,
+        registrationDate: profileData.user?.registration_date,
+        statsData: profileData.stats,
+        userData: profileData.user,
+      })
+    }
+  }, [friendTelegramId, profileData])
 
   if (isLoading) {
     return (
