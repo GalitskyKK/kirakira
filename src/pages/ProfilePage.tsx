@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useUserStore, useGardenStore, useMoodStore } from '@/stores'
 import { useProfile } from '@/hooks/useProfile.v2'
@@ -8,95 +7,21 @@ import { ProfileAchievements } from '@/components/profile/ProfileAchievements'
 import { ProfilePrivacySettings } from '@/components/profile/ProfilePrivacySettings'
 import { LoadingSpinner } from '@/components/ui'
 
-interface ProfileData {
-  user: {
-    user_id?: string
-    telegram_id?: number
-    username?: string
-    first_name?: string
-    last_name?: string
-    photo_url?: string
-    registration_date?: string
-    current_streak?: number
-    longest_streak?: number
-    total_days?: number
-    rare_elements_found?: number
-    gardens_shared?: number
-    // 🔥 ИСПРАВЛЕНИЕ: Добавляем поля experience и level
-    experience?: number
-    level?: number
-    privacy_settings?: {
-      showProfile?: boolean
-      shareGarden?: boolean
-      shareAchievements?: boolean
-      allowFriendRequests?: boolean
-      cloudSync?: boolean
-    }
-  }
-  stats?: {
-    totalMoodEntries?: number
-    currentStreak?: number
-    longestStreak?: number
-    totalElements?: number
-    rareElementsFound?: number
-    totalDays?: number
-    gardensShared?: number
-    experience?: number
-    level?: number
-  }
-  achievements?: Array<{
-    achievement_id: string
-    is_unlocked: boolean
-    progress: number
-    unlocked_at: string | null
-    achievements: {
-      name: string
-      emoji: string
-      rarity: string
-      category: string
-      description: string
-    }
-  }>
-}
-
 export function ProfilePage() {
   // Основные хуки приложения
   const { currentUser, isLoading: userLoading } = useUserStore()
   const { currentGarden, getElementsCount } = useGardenStore()
   const { getMoodStats } = useMoodStore()
+
+  // ✅ Новый v2 хук - автоматическая загрузка данных через React Query
   const {
+    profile: profileData,
     isLoading: profileLoading,
     error: profileError,
-    loadProfile,
   } = useProfile()
 
-  // Состояние для данных профиля
-  const [_profileData, setProfileData] = useState<ProfileData | null>(null)
-  const [loadingProfile, setLoadingProfile] = useState(false)
-
-  // Загружаем профиль при монтировании
-  useEffect(() => {
-    const loadData = async () => {
-      if (currentUser?.telegramId && loadProfile) {
-        setLoadingProfile(true)
-        try {
-          const data = await loadProfile()
-          if (data) {
-            setProfileData(data as any) // TODO: Fix type compatibility
-          }
-        } catch (error) {
-          console.error('❌ Ошибка загрузки профиля:', error)
-        } finally {
-          setLoadingProfile(false)
-        }
-      }
-    }
-
-    void loadData()
-  }, [currentUser?.telegramId, loadProfile])
-
   // Показываем спиннер во время загрузки
-  if (userLoading || profileLoading || loadingProfile) {
+  if (userLoading || profileLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <LoadingSpinner size="lg" />
@@ -165,7 +90,7 @@ export function ProfilePage() {
   const totalElements = getElementsCount ? getElementsCount() : 0
 
   // Создаем объединенные данные пользователя из API и локального стора
-  const apiUser = _profileData?.user
+  const apiUser = profileData?.user
   const renderUser = {
     // Базовые поля - приоритет данным из API
     id: apiUser?.user_id ?? currentUser?.id ?? '',
@@ -198,12 +123,13 @@ export function ProfilePage() {
     // Настройки из API или fallback
     preferences: {
       privacy: {
-        showProfile: apiUser?.privacy_settings?.showProfile ?? true,
-        shareGarden: apiUser?.privacy_settings?.shareGarden ?? true,
-        shareAchievements: apiUser?.privacy_settings?.shareAchievements ?? true,
+        showProfile: apiUser?.privacy_settings?.['showProfile'] ?? true,
+        shareGarden: apiUser?.privacy_settings?.['shareGarden'] ?? true,
+        shareAchievements:
+          apiUser?.privacy_settings?.['shareAchievements'] ?? true,
         allowFriendRequests:
-          apiUser?.privacy_settings?.allowFriendRequests ?? true,
-        cloudSync: apiUser?.privacy_settings?.cloudSync ?? false,
+          apiUser?.privacy_settings?.['allowFriendRequests'] ?? true,
+        cloudSync: apiUser?.privacy_settings?.['cloudSync'] ?? false,
         dataCollection:
           currentUser?.preferences?.privacy?.dataCollection ?? false,
         analytics: currentUser?.preferences?.privacy?.analytics ?? false,
@@ -224,7 +150,7 @@ export function ProfilePage() {
       transition={{ duration: 0.3 }}
     >
       {/* Заголовок профиля */}
-      <ProfileHeader user={renderUser} stats={_profileData?.stats} />
+      <ProfileHeader user={renderUser} stats={profileData?.stats} />
 
       {/* Статистика */}
       <ProfileStats
