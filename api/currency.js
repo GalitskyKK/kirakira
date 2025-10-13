@@ -9,35 +9,35 @@
  * - transactions: История транзакций
  */
 
-// 🔒 Функция для инициализации Supabase с JWT (RLS-защищенный)
-async function getSupabaseClient(jwt = null) {
-  if (!process.env.SUPABASE_URL) {
-    throw new Error('SUPABASE_URL not configured')
-  }
-
-  // ✅ ПРИОРИТЕТ: Используем JWT для RLS-защищенных запросов
-  if (jwt) {
-    try {
-      const { createAuthenticatedSupabaseClient } = await import('./_jwt.js')
-      console.log('✅ Using JWT-authenticated Supabase client (RLS enabled)')
-      return await createAuthenticatedSupabaseClient(jwt)
-    } catch (error) {
-      console.error('❌ Failed to create JWT client:', error)
-      // Fallback на SERVICE_ROLE_KEY ниже
-    }
-  }
-
-  // ⚠️ FALLBACK: SERVICE_ROLE_KEY (минует RLS, использовать только для admin операций)
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+// 🔒 Функция для инициализации Supabase (SERVICE_ROLE)
+async function getSupabaseClient() {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error('Supabase credentials not configured')
   }
 
-  console.warn('⚠️ Using SERVICE_ROLE_KEY (bypasses RLS) - migrate to JWT!')
   const { createClient } = await import('@supabase/supabase-js')
   return createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
   )
+}
+
+// 🔒 Валидация telegram_id из JWT
+async function validateTelegramId(req, expectedTelegramId) {
+  try {
+    const jwt = req.headers.authorization?.split(' ')[1]
+    if (!jwt) return false
+
+    const { verifySupabaseJWT } = await import('./_jwt.js')
+    const payload = verifySupabaseJWT(jwt)
+
+    if (!payload) return false
+
+    return payload.telegram_id === expectedTelegramId
+  } catch (error) {
+    console.error('❌ JWT validation error:', error)
+    return false
+  }
 }
 
 // ===============================================
@@ -81,8 +81,16 @@ async function handleEarn(req, res) {
       })
     }
 
-    const jwt = req.headers.authorization?.split(' ')[1]
-    const supabase = await getSupabaseClient(jwt)
+    // Валидация JWT
+    const isValid = await validateTelegramId(req, telegramId)
+    if (!isValid) {
+      return res.status(403).json({
+        success: false,
+        error: 'Unauthorized: Invalid or missing JWT token',
+      })
+    }
+
+    const supabase = await getSupabaseClient()
 
     console.log(
       `💰 Earning ${amount} ${currencyType} for user ${telegramId}: ${reason}`
@@ -170,8 +178,16 @@ async function handleSpend(req, res) {
       })
     }
 
-    const jwt = req.headers.authorization?.split(' ')[1]
-    const supabase = await getSupabaseClient(jwt)
+    // Валидация JWT
+    const isValid = await validateTelegramId(req, telegramId)
+    if (!isValid) {
+      return res.status(403).json({
+        success: false,
+        error: 'Unauthorized: Invalid or missing JWT token',
+      })
+    }
+
+    const supabase = await getSupabaseClient()
 
     console.log(
       `💸 Spending ${amount} ${currencyType} for user ${telegramId}: ${reason}`
@@ -245,8 +261,16 @@ async function handleBalance(req, res) {
       })
     }
 
-    const jwt = req.headers.authorization?.split(' ')[1]
-    const supabase = await getSupabaseClient(jwt)
+    // Валидация JWT
+    const isValid = await validateTelegramId(req, telegramId)
+    if (!isValid) {
+      return res.status(403).json({
+        success: false,
+        error: 'Unauthorized: Invalid or missing JWT token',
+      })
+    }
+
+    const supabase = await getSupabaseClient()
 
     console.log(`📊 Getting balance for user ${telegramId}`)
 
@@ -355,8 +379,16 @@ async function handleTransactions(req, res) {
       })
     }
 
-    const jwt = req.headers.authorization?.split(' ')[1]
-    const supabase = await getSupabaseClient(jwt)
+    // Валидация JWT
+    const isValid = await validateTelegramId(req, telegramId)
+    if (!isValid) {
+      return res.status(403).json({
+        success: false,
+        error: 'Unauthorized: Invalid or missing JWT token',
+      })
+    }
+
+    const supabase = await getSupabaseClient()
 
     console.log(`📜 Getting transactions for user ${telegramId}`)
 
