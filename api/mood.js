@@ -207,6 +207,34 @@ async function handleRecord(req, res) {
           `🏆 Added ${experiencePoints} XP for mood entry: ${mood} (${isFirstToday ? 'first today' : 'additional'})`,
           xpResult?.[0] || xpResult
         )
+
+        // 🎉 Если был level up, возвращаем информацию об этом (Этап 2)
+        const xpData = xpResult?.[0]
+        if (xpData?.level_up) {
+          res.status(200).json({
+            success: true,
+            data: {
+              id: data?.[0]?.id,
+              saved: true,
+              storage: 'supabase',
+              mood: mood,
+              date: formattedDate,
+              intensity: intensity,
+              note: note,
+              message: 'Mood recorded successfully',
+              // 🆕 Информация о level up
+              levelUp: {
+                leveledUp: true,
+                newLevel: xpData.new_level,
+                newExperience: xpData.new_experience,
+                sproutReward: xpData.sprout_reward || 0,
+                gemReward: xpData.gem_reward || 0,
+                specialUnlock: xpData.special_unlock || null,
+              },
+            },
+          })
+          return
+        }
       }
     } catch (xpError) {
       console.error('❌ CRITICAL: Exception in XP addition:', {

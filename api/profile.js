@@ -509,7 +509,14 @@ async function protectedHandler(req, res) {
         return res.status(200).json({
           success: true,
           data: {
-            experience: experienceResult,
+            experience: experienceResult.new_experience,
+            level: experienceResult.new_level,
+            leveledUp: experienceResult.level_up || false,
+            // 🆕 Награды за level up (Этап 2)
+            sproutReward: experienceResult.sprout_reward || 0,
+            gemReward: experienceResult.gem_reward || 0,
+            specialUnlock: experienceResult.special_unlock || null,
+            // Достижения
             newAchievements: achievementUpdates.filter(a => a.newly_unlocked),
             reason: reason || 'Unknown',
           },
@@ -574,7 +581,11 @@ async function protectedHandler(req, res) {
             newExperience: data[0]?.new_experience || totalCalculatedExperience,
             oldLevel: stats.level || 1,
             newLevel: data[0]?.new_level || 1,
-            levelUp: data[0]?.level_up || false,
+            leveledUp: data[0]?.level_up || false,
+            // 🆕 Награды за level up (Этап 2)
+            sproutReward: data[0]?.sprout_reward || 0,
+            gemReward: data[0]?.gem_reward || 0,
+            specialUnlock: data[0]?.special_unlock || null,
             calculation: {
               fromMoods: experienceFromMoods,
               fromElements: experienceFromElements,
