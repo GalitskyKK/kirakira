@@ -40,7 +40,7 @@ export async function getStreakFreezes(
       success: boolean
       data: StreakFreezeData
       error?: string
-    }>(`/user?action=get-streak-freezes&telegramId=${telegramId}`)
+    }>(`/api/user?action=get-streak-freezes&telegramId=${telegramId}`)
 
     if (!response.success || !response.data) {
       throw new Error(response.error ?? 'Failed to fetch streak freezes')
@@ -64,7 +64,7 @@ export async function useStreakFreeze(
       success: boolean
       data: UseStreakFreezeResponse
       error?: string
-    }>('/user?action=use-streak-freeze', params)
+    }>('/api/user?action=use-streak-freeze', params)
 
     if (!response.success || !response.data) {
       throw new Error(response.error ?? 'Failed to use streak freeze')
