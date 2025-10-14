@@ -6,6 +6,7 @@ import { Button, Card } from '@/components/ui'
 import { MOOD_CONFIG } from '@/types/mood'
 import { PlantRenderer } from '@/components/garden/plants'
 import type { GardenElement } from '@/types'
+import { ElementUpgradeManager } from './ElementUpgradeManager'
 
 interface ElementDetailsProps {
   element: GardenElement
@@ -240,6 +241,11 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
             )}
           </div>
         </Card>
+
+        {/* Upgrade Button */}
+        <div className="flex justify-center">
+          <ElementUpgradeManager element={element} />
+        </div>
 
         {/* Care Tips */}
         <Card padding="sm" variant="glass">
