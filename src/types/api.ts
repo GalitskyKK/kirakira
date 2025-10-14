@@ -113,6 +113,9 @@ export interface DatabaseUser {
   readonly experience: number
   readonly level: number
   readonly privacy_settings: Record<string, boolean>
+  // 🧊 Система заморозок стрика (НОВОЕ)
+  readonly streak_freezes?: number
+  readonly auto_freezes?: number
 }
 
 export interface DatabaseUserStats {

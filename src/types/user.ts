@@ -63,6 +63,9 @@ export interface UserStats {
   readonly gardensShared: number
   readonly firstVisit: Date
   readonly lastVisit: Date
+  // 🧊 Система заморозок стрика
+  readonly streakFreezes: number // Обычные заморозки
+  readonly autoFreezes: number // Автоматические заморозки (1-2 раза)
 }
 
 export interface UserState {
@@ -101,6 +104,21 @@ export interface GardenerLevel {
   readonly minExperience: number
   readonly maxExperience: number
   readonly benefits: readonly string[]
+  // 💰 Награды за достижение уровня
+  readonly sproutReward?: number
+  readonly gemReward?: number
+  readonly streakFreezeReward?: number // Награда заморозками стрика
+  readonly autoFreezeReward?: number // Награда авто-заморозкой
+  // 📈 Постоянные бонусы
+  readonly rarityBonus: number // Бонус к шансу редких элементов (%)
+  readonly experienceBonus: number // Бонус к получаемому опыту (%)
+  // 🏠 Игровые возможности
+  readonly rooms: number // Количество доступных комнат
+  readonly totalSlots: number // Всего слотов (rooms × 16)
+  readonly freeRearrangesPerDay?: number // Бесплатных перестановок в день
+  readonly maxStreakFreezes?: number // Максимальное накопление заморозок
+  // 🎨 Особые разблокировки
+  readonly specialUnlock?: string
 }
 
 export interface ProfileStats {

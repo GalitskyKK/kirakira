@@ -395,13 +395,18 @@ export const useGardenStore = create<GardenStore>()(
           positions: existingPositions.map(p => `(${p.x},${p.y})`).join(', '),
         })
 
+        // ✨ НОВОЕ: Получаем опыт пользователя для rarityBonus
+        const currentUser = useUserStore.getState().currentUser
+        const userExperience = currentUser?.experience ?? 0
+
         // Generate new element
         const newElement = generateDailyElement(
           currentGarden.userId,
           new Date(currentGarden.createdAt), // Registration date approximation
           new Date(),
           mood,
-          existingPositions
+          existingPositions,
+          userExperience // НОВОЕ: передаём опыт для rarityBonus
         )
 
         console.log('🌱 Generated new element:', {

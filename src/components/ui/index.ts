@@ -24,3 +24,5 @@ export {
   TransactionHistory,
   CompactTransactionHistory,
 } from './TransactionHistory'
+export { StreakFreezeIndicator } from './StreakFreezeIndicator'
+export { StreakFreezeModal } from './StreakFreezeModal'

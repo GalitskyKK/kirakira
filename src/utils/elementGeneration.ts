@@ -9,6 +9,7 @@ import {
   getElementColor,
   getElementScale,
 } from './elementNames'
+import { calculateGardenerLevel } from './achievements'
 
 /**
  * Упрощенный шаблон элемента без фиксированных имен/описаний
@@ -156,11 +157,17 @@ export function getCurrentSeason(date: Date): SeasonalVariant {
 
 /**
  * Selects a random element template based on rarity weights and mood influence
+ *
+ * @param random - Seeded random generator
+ * @param mood - User's mood type
+ * @param moodRarityBonus - Rarity bonus from mood (0-1)
+ * @param levelRarityBonus - Rarity bonus from user level (0-100%) НОВОЕ
  */
 function selectElementTemplate(
   random: SeededRandom,
   mood: MoodType,
-  rarityBonus: number = 0
+  moodRarityBonus: number = 0,
+  levelRarityBonus: number = 0 // НОВОЕ: бонус от уровня пользователя
 ): ElementTemplate {
   // Apply mood influence to filter preferred element types
   const moodConfig = MOOD_CONFIG[mood] || MOOD_CONFIG.joy // Fallback to joy if invalid mood
@@ -194,11 +201,16 @@ function selectElementTemplate(
 
   const usePreferred = true // Always true now
 
-  // Apply rarity bonus
+  // ✨ НОВОЕ: Объединяем бонусы от настроения и уровня
+  // moodRarityBonus: от 0 до 1 (из MOOD_CONFIG)
+  // levelRarityBonus: от 0 до 100% (из уровня пользователя)
+  const totalRarityBonus = moodRarityBonus + levelRarityBonus / 100
+
+  // Apply combined rarity bonus
   const adjustedWeights = Object.entries(RARITY_WEIGHTS).reduce(
     (acc, [rarity, weight]) => {
       const rarityKey = rarity as RarityLevel
-      acc[rarityKey] = weight + rarityBonus * weight
+      acc[rarityKey] = weight + totalRarityBonus * weight
       return acc
     },
     {} as Record<RarityLevel, number>
@@ -376,13 +388,15 @@ function generatePosition(
 /**
  * Generates a daily garden element based on user data and mood
  * ОБНОВЛЕНО: использует element.id как seed для детерминированной генерации всех характеристик
+ * ДОБАВЛЕНО: rarityBonus от уровня пользователя
  */
 export function generateDailyElement(
   userId: string,
   registrationDate: Date,
   currentDate: Date,
   mood: MoodType,
-  existingPositions: readonly Position2D[] = []
+  existingPositions: readonly Position2D[] = [],
+  userExperience: number = 0 // НОВОЕ: опыт пользователя для расчёта rarityBonus
 ): GardenElement {
   // Calculate day offset from registration
   const dayOffset = differenceInDays(currentDate, registrationDate)
@@ -393,10 +407,19 @@ export function generateDailyElement(
 
   // Get mood configuration and bonuses
   const moodConfig = MOOD_CONFIG[mood] || MOOD_CONFIG.joy // Fallback to joy if invalid mood
-  const rarityBonus = moodConfig.rarityBonus
+  const moodRarityBonus = moodConfig.rarityBonus
+
+  // ✨ НОВОЕ: Получаем rarityBonus от уровня пользователя
+  const userLevel = calculateGardenerLevel(userExperience)
+  const levelRarityBonus = userLevel.rarityBonus
 
   // Select element template (только тип и редкость)
-  const template = selectElementTemplate(random, mood, rarityBonus)
+  const template = selectElementTemplate(
+    random,
+    mood,
+    moodRarityBonus,
+    levelRarityBonus
+  )
 
   // Generate position
   const position = generatePosition(random, existingPositions)

@@ -118,6 +118,10 @@ export function ProfilePage() {
       totalElements: totalElements,
       firstVisit: currentUser?.stats?.firstVisit ?? new Date(),
       lastVisit: currentUser?.stats?.lastVisit ?? new Date(),
+      streakFreezes:
+        apiUser?.streak_freezes ?? currentUser?.stats?.streakFreezes ?? 0,
+      autoFreezes:
+        apiUser?.auto_freezes ?? currentUser?.stats?.autoFreezes ?? 0,
     },
 
     // Настройки из API или fallback

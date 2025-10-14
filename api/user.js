@@ -490,6 +490,171 @@ async function handleUpdatePhoto(req, res) {
 // Импортируем middleware аутентификации
 import { withAuth, verifyTelegramId } from './_auth.js'
 
+/**
+ * 🧊 Использовать заморозку стрика
+ * POST /api/user?action=use-streak-freeze
+ */
+async function handleUseStreakFreeze(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' })
+  }
+
+  try {
+    const { telegramId, freezeType = 'manual', missedDays = 1 } = req.body
+
+    if (!telegramId) {
+      return res
+        .status(400)
+        .json({ success: false, error: 'Missing telegramId' })
+    }
+
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+
+    console.log(
+      `🧊 Using streak freeze for user ${telegramId}, type: ${freezeType}, missed days: ${missedDays}`
+    )
+
+    // Получаем текущие заморозки пользователя
+    const { data: user, error: fetchError } = await supabase
+      .from('users')
+      .select('streak_freezes, auto_freezes, current_streak')
+      .eq('telegram_id', telegramId)
+      .single()
+
+    if (fetchError || !user) {
+      console.error('Error fetching user:', fetchError)
+      return res.status(404).json({ success: false, error: 'User not found' })
+    }
+
+    // Проверяем тип заморозки
+    if (freezeType === 'auto') {
+      if (user.auto_freezes < 1) {
+        return res.status(400).json({
+          success: false,
+          error: 'No auto-freezes available',
+          available: { manual: user.streak_freezes, auto: user.auto_freezes },
+        })
+      }
+    } else {
+      // manual freeze
+      if (user.streak_freezes < missedDays) {
+        return res.status(400).json({
+          success: false,
+          error: `Not enough freezes. Need: ${missedDays}, have: ${user.streak_freezes}`,
+          available: { manual: user.streak_freezes, auto: user.auto_freezes },
+        })
+      }
+    }
+
+    // Применяем заморозку
+    const updates = {}
+    if (freezeType === 'auto') {
+      updates.auto_freezes = user.auto_freezes - 1
+    } else {
+      updates.streak_freezes = user.streak_freezes - missedDays
+    }
+
+    const { data: updated, error: updateError } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('telegram_id', telegramId)
+      .select('streak_freezes, auto_freezes, current_streak')
+      .single()
+
+    if (updateError) {
+      console.error('Error updating freezes:', updateError)
+      return res
+        .status(500)
+        .json({ success: false, error: 'Failed to use streak freeze' })
+    }
+
+    console.log(
+      `✅ Streak freeze used successfully. Remaining: manual=${updated.streak_freezes}, auto=${updated.auto_freezes}`
+    )
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        freezeType,
+        missedDays,
+        remaining: {
+          manual: updated.streak_freezes,
+          auto: updated.auto_freezes,
+        },
+        currentStreak: updated.current_streak,
+      },
+    })
+  } catch (error) {
+    console.error('Error in handleUseStreakFreeze:', error)
+    return res
+      .status(500)
+      .json({ success: false, error: 'Internal server error' })
+  }
+}
+
+/**
+ * 🧊 Получить количество заморозок стрика
+ * GET /api/user?action=get-streak-freezes&telegramId=123
+ */
+async function handleGetStreakFreezes(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' })
+  }
+
+  try {
+    const telegramId = parseInt(req.query.telegramId)
+
+    if (!telegramId) {
+      return res
+        .status(400)
+        .json({ success: false, error: 'Missing telegramId' })
+    }
+
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+
+    console.log(`🧊 Getting streak freezes for user ${telegramId}`)
+
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('streak_freezes, auto_freezes, level')
+      .eq('telegram_id', telegramId)
+      .single()
+
+    if (error || !user) {
+      console.error('Error fetching user:', error)
+      return res.status(404).json({ success: false, error: 'User not found' })
+    }
+
+    // Получаем максимальное накопление из уровня (из БД)
+    const { data: levelData } = await supabase
+      .from('gardener_levels')
+      .select('max_streak_freezes')
+      .eq('level', user.level || 1)
+      .single()
+
+    const maxFreezes = levelData?.max_streak_freezes || 3
+
+    console.log(
+      `✅ Freezes: manual=${user.streak_freezes}, auto=${user.auto_freezes}, max=${maxFreezes}`
+    )
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        manual: user.streak_freezes,
+        auto: user.auto_freezes,
+        max: maxFreezes,
+        canAccumulate: user.streak_freezes < maxFreezes,
+      },
+    })
+  } catch (error) {
+    console.error('Error in handleGetStreakFreezes:', error)
+    return res
+      .status(500)
+      .json({ success: false, error: 'Internal server error' })
+  }
+}
+
 // Защищенный handler с аутентификацией
 async function protectedHandler(req, res) {
   try {
@@ -522,10 +687,14 @@ async function protectedHandler(req, res) {
         return await handleStats(req, res)
       case 'update-photo':
         return await handleUpdatePhoto(req, res)
+      case 'use-streak-freeze':
+        return await handleUseStreakFreeze(req, res)
+      case 'get-streak-freezes':
+        return await handleGetStreakFreezes(req, res)
       default:
         return res.status(400).json({
           success: false,
-          error: `Unknown action: ${action}. Available actions: stats, update-photo`,
+          error: `Unknown action: ${action}. Available actions: stats, update-photo, use-streak-freeze, get-streak-freezes`,
         })
     }
   } catch (error) {

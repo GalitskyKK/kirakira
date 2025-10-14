@@ -116,6 +116,8 @@ function createDefaultStats(): UserStats {
     gardensShared: 0,
     firstVisit: now,
     lastVisit: now,
+    streakFreezes: 0,
+    autoFreezes: 0,
   }
 }
 

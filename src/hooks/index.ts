@@ -25,5 +25,6 @@ export {
   useChallengeGardenIntegration,
   useChallengeMoodIntegration,
 } from './useChallengeIntegration'
+export { useStreakFreeze } from './useStreakFreeze'
 
 // Additional utility hooks can be added here

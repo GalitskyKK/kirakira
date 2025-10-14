@@ -51,7 +51,8 @@ export function useElementGeneration() {
           currentUser.registrationDate,
           new Date(),
           mood,
-          existingPositions
+          existingPositions,
+          currentUser.experience ?? 0 // НОВОЕ: передаём опыт для rarityBonus
         )
 
         return element
@@ -75,7 +76,8 @@ export function useElementGeneration() {
           currentUser.registrationDate,
           date,
           mood,
-          []
+          [],
+          currentUser.experience ?? 0 // НОВОЕ: передаём опыт для rarityBonus
         )
 
         return element

@@ -195,7 +195,8 @@ export function useGardenState() {
           new Date(currentGarden.createdAt),
           new Date(),
           mood,
-          existingPositions
+          existingPositions,
+          currentUser?.experience ?? 0 // НОВОЕ: передаём опыт для rarityBonus
         )
 
         // Отправляем на сервер через mutation

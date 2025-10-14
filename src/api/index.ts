@@ -17,3 +17,6 @@ export * from './profileService'
 
 // Challenge Service
 export * from './challengeService'
+
+// Streak Freeze Service
+export * from './streakFreezeService'

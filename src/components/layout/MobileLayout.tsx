@@ -4,9 +4,15 @@ import { MobileTabNavigation } from './MobileTabNavigation'
 import { GardenView } from '@/components/garden'
 import { MoodCheckin, MoodStats } from '@/components/mood'
 import { TelegramCommunity } from '@/components/telegram'
-import { TelegramStatus, CurrencyDisplay } from '@/components/ui'
+import {
+  TelegramStatus,
+  CurrencyDisplay,
+  StreakFreezeIndicator,
+  StreakFreezeModal,
+} from '@/components/ui'
 import { ProfilePage } from '@/pages/ProfilePage'
 import { useGardenState, useMoodTracking } from '@/hooks'
+import { useStreakFreeze } from '@/hooks/useStreakFreeze'
 import { useCurrencyStore } from '@/stores/currencyStore'
 import { useUserStore } from '@/stores'
 
@@ -34,6 +40,18 @@ export function MobileLayout() {
   const { currentUser } = useUserStore()
   const { loadCurrency } = useCurrencyStore()
 
+  // 🧊 Заморозки стрика
+  const {
+    freezeData,
+    missedDays,
+    showModal,
+    isLoading: freezeLoading,
+    autoUsedMessage,
+    useFreeze,
+    checkMissedDays,
+    closeModal,
+  } = useStreakFreeze()
+
   const tabIndex = TABS.indexOf(activeTab)
   const [direction, setDirection] = useState(0)
 
@@ -43,6 +61,11 @@ export function MobileLayout() {
       void loadCurrency(currentUser.telegramId)
     }
   }, [currentUser?.telegramId, loadCurrency])
+
+  // 🧊 Проверка пропущенных дней при монтировании
+  useEffect(() => {
+    void checkMissedDays()
+  }, [checkMissedDays])
 
   const handleTabChange = (newTab: string) => {
     const newIndex = TABS.indexOf(newTab)
@@ -66,14 +89,36 @@ export function MobileLayout() {
                   : 'Как дела сегодня?'}
               </p>
 
-              {/* Currency Display */}
-              <div className="mt-3 flex justify-center">
+              {/* Currency Display + Streak Freezes */}
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
                 <CurrencyDisplay
                   size="md"
                   showAnimation={false}
                   variant="compact"
                 />
+
+                {/* 🧊 Заморозки стрика */}
+                {freezeData &&
+                  (freezeData.manual > 0 || freezeData.auto > 0) && (
+                    <StreakFreezeIndicator
+                      manual={freezeData.manual}
+                      auto={freezeData.auto}
+                      max={freezeData.max}
+                    />
+                  )}
               </div>
+
+              {/* Сообщение об авто-использовании заморозки */}
+              {autoUsedMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mt-2 text-center text-xs text-cyan-400"
+                >
+                  {autoUsedMessage}
+                </motion.div>
+              )}
             </div>
 
             {/* Mood Check-in */}
@@ -261,6 +306,22 @@ export function MobileLayout() {
         activeTab={activeTab}
         onTabChange={handleTabChange}
       />
+
+      {/* 🧊 Модалка заморозки стрика */}
+      {freezeData && (
+        <StreakFreezeModal
+          isOpen={showModal}
+          onClose={closeModal}
+          missedDays={missedDays}
+          currentStreak={currentUser?.stats.currentStreak ?? 0}
+          availableFreezes={{
+            manual: freezeData.manual,
+            auto: freezeData.auto,
+          }}
+          onUseFreeze={useFreeze}
+          isLoading={freezeLoading}
+        />
+      )}
     </div>
   )
 }
