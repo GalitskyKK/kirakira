@@ -532,6 +532,157 @@ async function handleViewFriendGarden(req, res) {
 }
 
 // ===============================================
+// ⬆️ ACTION: UPGRADE-ELEMENT - Улучшение элемента сада
+// ===============================================
+async function handleUpgradeElement(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  try {
+    const { telegramId, elementId, useFree = false } = req.body
+
+    // Валидация входных данных
+    if (!telegramId || !elementId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameters: telegramId, elementId',
+      })
+    }
+
+    console.log(
+      `⬆️ Upgrading element ${elementId} for user ${telegramId} (useFree: ${useFree})`
+    )
+
+    // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+
+    // Вызываем PostgreSQL функцию для улучшения элемента
+    const { data, error } = await supabase.rpc('upgrade_garden_element', {
+      p_element_id: elementId,
+      p_telegram_id: telegramId,
+      p_use_free_upgrade: useFree,
+    })
+
+    if (error) {
+      console.error('Supabase upgrade element failed:', error)
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to upgrade element',
+      })
+    }
+
+    // Проверяем результат функции
+    if (!data.success) {
+      console.log(`⚠️ Upgrade failed: ${data.error}`)
+      return res.status(400).json({
+        success: false,
+        error: data.error || 'Upgrade failed',
+      })
+    }
+
+    console.log(`✅ Element upgrade result:`, data)
+
+    res.status(200).json({
+      success: true,
+      data: {
+        upgraded: data.upgraded,
+        newRarity: data.newRarity,
+        xpReward: data.xpReward,
+        progressBonus: data.progressBonus,
+        failedAttempts: data.failedAttempts,
+        cost: data.cost,
+        usedFree: data.usedFree,
+        message: data.upgraded
+          ? 'Element upgraded successfully'
+          : 'Upgrade failed, progress increased',
+      },
+    })
+  } catch (error) {
+    console.error('Garden upgrade-element error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    })
+  }
+}
+
+// ===============================================
+// 📊 ACTION: UPGRADE-INFO - Получение информации об улучшении
+// ===============================================
+async function handleUpgradeInfo(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  try {
+    const { telegramId, elementId } = req.query
+
+    // Валидация входных данных
+    if (!telegramId || !elementId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameters: telegramId, elementId',
+      })
+    }
+
+    console.log(
+      `📊 Getting upgrade info for element ${elementId} of user ${telegramId}`
+    )
+
+    // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+
+    // Вызываем PostgreSQL функцию для получения информации
+    const { data, error } = await supabase.rpc('get_element_upgrade_info', {
+      p_element_id: elementId,
+      p_telegram_id: telegramId,
+    })
+
+    if (error) {
+      console.error('Supabase get upgrade info failed:', error)
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to get upgrade info',
+      })
+    }
+
+    // Проверяем результат функции
+    if (!data.success) {
+      console.log(`⚠️ Get upgrade info failed: ${data.error}`)
+      return res.status(400).json({
+        success: false,
+        error: data.error || 'Failed to get upgrade info',
+      })
+    }
+
+    console.log(`✅ Upgrade info retrieved:`, data)
+
+    res.status(200).json({
+      success: true,
+      data: {
+        id: data.id,
+        elementId: data.elementId,
+        telegramId: data.telegramId,
+        originalRarity: data.originalRarity,
+        currentRarity: data.currentRarity,
+        upgradeCount: data.upgradeCount || 0,
+        failedAttempts: data.failedAttempts || 0,
+        progressBonus: data.progressBonus || 0,
+        lastUpgradeAt: data.lastUpgradeAt,
+        createdAt: data.createdAt,
+      },
+    })
+  } catch (error) {
+    console.error('Garden upgrade-info error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    })
+  }
+}
+
+// ===============================================
 // 🎯 ГЛАВНЫЙ ОБРАБОТЧИК - Роутинг по действиям
 // ===============================================
 
@@ -589,10 +740,14 @@ async function protectedHandler(req, res) {
           })
         }
         return await handleViewFriendGarden(req, res)
+      case 'upgrade-element':
+        return await handleUpgradeElement(req, res)
+      case 'upgrade-info':
+        return await handleUpgradeInfo(req, res)
       default:
         return res.status(400).json({
           success: false,
-          error: `Unknown action: ${action}. Available actions: add-element, history, update-position, view-friend-garden`,
+          error: `Unknown action: ${action}. Available actions: add-element, history, update-position, view-friend-garden, upgrade-element, upgrade-info`,
         })
     }
   } catch (error) {

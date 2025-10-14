@@ -111,3 +111,117 @@ export const SHELVES_PER_ROOM = 4 // 4 полки в комнате
 export const MAX_POSITIONS_PER_SHELF = 4 // До 5 позиций на полке (соответствует ShelfView)
 export const ELEMENTS_PER_ROOM = SHELVES_PER_ROOM * MAX_POSITIONS_PER_SHELF // 16 элементов на комнату
 export const ROOM_TRANSITION_DURATION = 0.5 // Длительность анимации перехода (секунды)
+
+// ===============================================
+// ⬆️ СИСТЕМА УЛУЧШЕНИЯ ЭЛЕМЕНТОВ
+// ===============================================
+
+/**
+ * Информация об улучшении элемента
+ */
+export interface ElementUpgrade {
+  readonly id: string
+  readonly elementId: string
+  readonly telegramId: number
+  readonly originalRarity: RarityLevel
+  readonly currentRarity: RarityLevel
+  readonly upgradeCount: number
+  readonly failedAttempts: number
+  readonly progressBonus: number
+  readonly lastUpgradeAt: Date
+  readonly createdAt: Date
+}
+
+/**
+ * Результат попытки улучшения
+ */
+export interface UpgradeResult {
+  readonly success: boolean
+  readonly upgraded: boolean
+  readonly newRarity?: RarityLevel
+  readonly xpReward?: number
+  readonly progressBonus?: number
+  readonly failedAttempts?: number
+  readonly cost: number
+  readonly usedFree: boolean
+  readonly error?: string
+}
+
+/**
+ * Стоимость улучшения для каждой редкости (в ростках)
+ */
+export const UPGRADE_COSTS: Record<RarityLevel, number> = {
+  [RarityLevel.COMMON]: 100,
+  [RarityLevel.UNCOMMON]: 300,
+  [RarityLevel.RARE]: 800,
+  [RarityLevel.EPIC]: 2000,
+  [RarityLevel.LEGENDARY]: 0, // Нельзя улучшить legendary
+}
+
+/**
+ * Награды опытом за успешное улучшение
+ */
+export const UPGRADE_XP_REWARDS: Record<RarityLevel, number> = {
+  [RarityLevel.COMMON]: 20,
+  [RarityLevel.UNCOMMON]: 50,
+  [RarityLevel.RARE]: 120,
+  [RarityLevel.EPIC]: 300,
+  [RarityLevel.LEGENDARY]: 0,
+}
+
+/**
+ * Базовые шансы успеха улучшения (%)
+ */
+export const UPGRADE_SUCCESS_RATES: Record<RarityLevel, number> = {
+  [RarityLevel.COMMON]: 90,
+  [RarityLevel.UNCOMMON]: 75,
+  [RarityLevel.RARE]: 60,
+  [RarityLevel.EPIC]: 50,
+  [RarityLevel.LEGENDARY]: 0,
+}
+
+/**
+ * Премиум элементы, которые нельзя улучшать
+ */
+export const PREMIUM_ELEMENT_TYPES = new Set([
+  ElementType.RAINBOW_FLOWER,
+  ElementType.GLOWING_CRYSTAL,
+  ElementType.MYSTIC_MUSHROOM,
+  ElementType.AURORA_TREE,
+  ElementType.STARLIGHT_DECORATION,
+])
+
+/**
+ * Получить следующую редкость для улучшения
+ */
+export function getNextRarity(currentRarity: RarityLevel): RarityLevel | null {
+  switch (currentRarity) {
+    case RarityLevel.COMMON:
+      return RarityLevel.UNCOMMON
+    case RarityLevel.UNCOMMON:
+      return RarityLevel.RARE
+    case RarityLevel.RARE:
+      return RarityLevel.EPIC
+    case RarityLevel.EPIC:
+      return RarityLevel.LEGENDARY
+    case RarityLevel.LEGENDARY:
+      return null
+  }
+}
+
+/**
+ * Проверить, можно ли улучшить элемент
+ */
+export function canUpgradeElement(element: GardenElement): boolean {
+  // Нельзя улучшать премиум элементы
+  if (PREMIUM_ELEMENT_TYPES.has(element.type)) {
+    return false
+  }
+
+  // Нельзя улучшать legendary
+  if (element.rarity === RarityLevel.LEGENDARY) {
+    return false
+  }
+
+  return true
+}

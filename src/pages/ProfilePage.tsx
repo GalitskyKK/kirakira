@@ -122,6 +122,8 @@ export function ProfilePage() {
         apiUser?.streak_freezes ?? currentUser?.stats?.streakFreezes ?? 0,
       autoFreezes:
         apiUser?.auto_freezes ?? currentUser?.stats?.autoFreezes ?? 0,
+      freeUpgrades:
+        apiUser?.free_upgrades ?? currentUser?.stats?.freeUpgrades ?? 0,
     },
 
     // Настройки из API или fallback

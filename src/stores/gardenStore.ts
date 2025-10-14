@@ -29,6 +29,10 @@ import {
   getElementScale,
 } from '@/utils/elementNames'
 import { authenticatedFetch } from '@/utils/apiClient'
+import {
+  upgradeElement as upgradeElementAPI,
+  getElementUpgradeInfo as getElementUpgradeInfoAPI,
+} from '@/api/gardenService'
 
 interface GardenActions {
   // Garden management
@@ -41,6 +45,22 @@ interface GardenActions {
   syncGarden: (forceSync?: boolean) => Promise<void>
   moveElement: (elementId: string, newPosition: Position2D) => Promise<void>
   selectElement: (element: GardenElement | null) => void
+
+  // Element upgrade management
+  upgradeElement: (
+    elementId: string,
+    useFree?: boolean
+  ) => Promise<{
+    success: boolean
+    upgraded: boolean
+    newRarity?: RarityLevel
+    error?: string
+  }>
+  getElementUpgradeInfo: (elementId: string) => Promise<{
+    progressBonus: number
+    failedAttempts: number
+    upgradeCount: number
+  } | null>
 
   // View management
   setViewMode: (mode: ViewMode) => void
@@ -710,6 +730,145 @@ export const useGardenStore = create<GardenStore>()(
       return currentGarden.elements.reduce((latest, current) =>
         current.unlockDate > latest.unlockDate ? current : latest
       )
+    },
+
+    // ===============================================
+    // ⬆️ UPGRADE ELEMENT ACTIONS
+    // ===============================================
+
+    upgradeElement: async (
+      elementId: string,
+      useFree: boolean = false
+    ): Promise<{
+      success: boolean
+      upgraded: boolean
+      newRarity?: RarityLevel
+      error?: string
+    }> => {
+      const { currentGarden } = get()
+      const currentUser = useUserStore.getState().currentUser
+
+      if (!currentGarden || !currentUser?.telegramId) {
+        return {
+          success: false,
+          upgraded: false,
+          error: 'No garden or user found',
+        }
+      }
+
+      try {
+        set({ isLoading: true, error: null })
+
+        console.log(
+          `⬆️ Upgrading element ${elementId} (useFree: ${useFree}) for user ${currentUser.telegramId}`
+        )
+
+        // Вызываем API для улучшения
+        const apiResult = await upgradeElementAPI(
+          currentUser.telegramId,
+          elementId,
+          useFree
+        )
+
+        if (apiResult === null || apiResult === undefined) {
+          throw new Error('No result from upgrade API')
+        }
+
+        // Если улучшение успешно, обновляем элемент в store
+        if (apiResult.upgraded === true && apiResult.newRarity !== undefined) {
+          const newRarity: RarityLevel = apiResult.newRarity
+          const updatedElements = currentGarden.elements.map(el =>
+            el.id === elementId
+              ? {
+                  ...el,
+                  rarity: newRarity,
+                  // Обновляем имя и цвет для новой редкости
+                  name: getElementName(el.type, newRarity, el.id),
+                  description: getElementDescription(
+                    el.type,
+                    newRarity,
+                    getElementName(el.type, newRarity, el.id)
+                  ),
+                  color: getElementColorFromUtils(
+                    el.type,
+                    el.moodInfluence,
+                    el.id
+                  ),
+                }
+              : el
+          )
+
+          set({
+            currentGarden: {
+              ...currentGarden,
+              elements: updatedElements,
+            },
+            isLoading: false,
+          })
+
+          console.log(`✅ Element upgraded successfully to ${newRarity}`)
+        } else {
+          console.log(`⚠️ Upgrade failed, progress increased by 25%`)
+          set({ isLoading: false })
+        }
+
+        const resultNewRarity: RarityLevel | undefined = apiResult.newRarity
+        return {
+          success: true,
+          upgraded: apiResult.upgraded,
+          ...(resultNewRarity !== undefined && { newRarity: resultNewRarity }),
+        }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to upgrade element'
+        console.error('❌ Upgrade element error:', errorMessage)
+        set({ error: errorMessage, isLoading: false })
+
+        return {
+          success: false,
+          upgraded: false,
+          error: errorMessage,
+        }
+      }
+    },
+
+    getElementUpgradeInfo: async (
+      elementId: string
+    ): Promise<{
+      progressBonus: number
+      failedAttempts: number
+      upgradeCount: number
+    } | null> => {
+      const currentUser = useUserStore.getState().currentUser
+
+      if (!currentUser?.telegramId) {
+        console.warn('No user found for upgrade info')
+        return null
+      }
+
+      try {
+        const apiInfo = await getElementUpgradeInfoAPI(
+          currentUser.telegramId,
+          elementId
+        )
+
+        if (apiInfo === null || apiInfo === undefined) {
+          return {
+            progressBonus: 0,
+            failedAttempts: 0,
+            upgradeCount: 0,
+          }
+        }
+
+        return {
+          progressBonus: apiInfo.progressBonus,
+          failedAttempts: apiInfo.failedAttempts,
+          upgradeCount: apiInfo.upgradeCount,
+        }
+      } catch (error) {
+        console.error('Failed to get upgrade info:', error)
+        return null
+      }
     },
 
     clearGarden: () => {

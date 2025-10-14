@@ -116,6 +116,7 @@ export interface DatabaseUser {
   // 🧊 Система заморозок стрика (НОВОЕ)
   readonly streak_freezes?: number
   readonly auto_freezes?: number
+  readonly free_upgrades?: number
 }
 
 export interface DatabaseUserStats {
@@ -203,6 +204,8 @@ export interface ProfileApiAddExperienceResponse {
   readonly experience: number
   readonly level: number
   readonly leveledUp?: boolean
+  readonly oldLevel?: number
+  readonly freeUpgradesEarned?: number
   readonly message?: string
 }
 

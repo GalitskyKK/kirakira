@@ -13,6 +13,7 @@ interface LevelUpModalProps {
   readonly newLevel: GardenerLevel
   readonly sproutReward?: number
   readonly gemReward?: number
+  readonly freeUpgradesReward?: number
   readonly specialUnlock?: string
 }
 
@@ -23,6 +24,7 @@ export function LevelUpModal({
   newLevel,
   sproutReward = 0,
   gemReward = 0,
+  freeUpgradesReward = 0,
   specialUnlock,
 }: LevelUpModalProps) {
   if (!isOpen) return null
@@ -138,7 +140,7 @@ export function LevelUpModal({
             </motion.div>
 
             {/* Rewards */}
-            {(sproutReward > 0 || gemReward > 0) && (
+            {(sproutReward > 0 || gemReward > 0 || freeUpgradesReward > 0) && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -148,7 +150,7 @@ export function LevelUpModal({
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
                   Награды
                 </h3>
-                <div className="flex items-center justify-center gap-4">
+                <div className="flex flex-wrap items-center justify-center gap-4">
                   {sproutReward > 0 && (
                     <motion.div
                       whileHover={{ scale: 1.1 }}
@@ -168,6 +170,17 @@ export function LevelUpModal({
                       <span className="text-2xl">💎</span>
                       <span className="font-bold text-blue-700 dark:text-blue-400">
                         +{gemReward}
+                      </span>
+                    </motion.div>
+                  )}
+                  {freeUpgradesReward > 0 && (
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      className="flex items-center gap-2 rounded-full bg-purple-100 px-4 py-2 dark:bg-purple-900/30"
+                    >
+                      <span className="text-2xl">⬆️</span>
+                      <span className="font-bold text-purple-700 dark:text-purple-400">
+                        +{freeUpgradesReward} улучшение
                       </span>
                     </motion.div>
                   )}

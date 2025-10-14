@@ -320,3 +320,122 @@ export async function syncGarden(telegramId: number): Promise<{
     throw error
   }
 }
+
+// ============================================
+// ⬆️ API ФУНКЦИИ ДЛЯ УЛУЧШЕНИЯ ЭЛЕМЕНТОВ
+// ============================================
+
+export interface UpgradeElementRequest {
+  readonly telegramId: number
+  readonly elementId: string
+  readonly useFree: boolean
+}
+
+export interface UpgradeElementResponse {
+  readonly success: boolean
+  readonly data?: {
+    readonly upgraded: boolean
+    readonly newRarity?: RarityLevel
+    readonly xpReward?: number
+    readonly progressBonus?: number
+    readonly failedAttempts?: number
+    readonly cost: number
+    readonly usedFree: boolean
+    readonly message?: string
+  }
+  readonly error?: string
+}
+
+export interface ElementUpgradeInfo {
+  readonly id: string
+  readonly elementId: string
+  readonly telegramId: number
+  readonly originalRarity: RarityLevel
+  readonly currentRarity: RarityLevel
+  readonly upgradeCount: number
+  readonly failedAttempts: number
+  readonly progressBonus: number
+  readonly lastUpgradeAt: Date
+  readonly createdAt: Date
+}
+
+export interface GetUpgradeInfoResponse {
+  readonly success: boolean
+  readonly data?: ElementUpgradeInfo
+  readonly error?: string
+}
+
+/**
+ * Улучшить элемент сада
+ */
+export async function upgradeElement(
+  telegramId: number,
+  elementId: string,
+  useFree: boolean = false
+): Promise<UpgradeElementResponse['data']> {
+  try {
+    const request: UpgradeElementRequest = {
+      telegramId,
+      elementId,
+      useFree,
+    }
+
+    const response = await authenticatedFetch(
+      '/api/garden?action=upgrade-element',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(`Failed to upgrade element: ${response.status}`)
+    }
+
+    const result = (await response.json()) as UpgradeElementResponse
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to upgrade element')
+    }
+
+    return result.data!
+  } catch (error) {
+    console.error('Failed to upgrade element:', error)
+    throw error
+  }
+}
+
+/**
+ * Получить информацию об улучшении элемента
+ */
+export async function getElementUpgradeInfo(
+  telegramId: number,
+  elementId: string
+): Promise<ElementUpgradeInfo | null> {
+  try {
+    const response = await authenticatedFetch(
+      `/api/garden?action=upgrade-info&telegramId=${telegramId}&elementId=${elementId}`
+    )
+
+    if (!response.ok) {
+      throw new Error(`Failed to get upgrade info: ${response.status}`)
+    }
+
+    const result = (await response.json()) as GetUpgradeInfoResponse
+
+    if (!result.success || !result.data) {
+      return null
+    }
+
+    // Конвертируем даты
+    return {
+      ...result.data,
+      lastUpgradeAt: new Date(result.data.lastUpgradeAt),
+      createdAt: new Date(result.data.createdAt),
+    }
+  } catch (error) {
+    console.error('Failed to get upgrade info:', error)
+    throw error
+  }
+}

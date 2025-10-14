@@ -118,6 +118,7 @@ function createDefaultStats(): UserStats {
     lastVisit: now,
     streakFreezes: 0,
     autoFreezes: 0,
+    freeUpgrades: 0,
   }
 }
 

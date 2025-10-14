@@ -74,6 +74,7 @@ function createDefaultStats(): UserStats {
     lastVisit: now,
     streakFreezes: 0,
     autoFreezes: 0,
+    freeUpgrades: 0,
   }
 }
 
@@ -146,6 +147,9 @@ export function convertServerUserToClient(
           : serverUser.gardens_shared !== undefined
             ? serverUser.gardens_shared
             : 0,
+      streakFreezes: serverUser.streak_freezes ?? 0,
+      autoFreezes: serverUser.auto_freezes ?? 0,
+      freeUpgrades: serverUser.free_upgrades ?? 0,
     },
     isAnonymous: false,
   }
