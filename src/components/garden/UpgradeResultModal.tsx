@@ -113,11 +113,11 @@ export function UpgradeResultModal({
 
         {/* Modal */}
         <motion.div
-          initial={{ scale: 0.8, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.8, opacity: 0, y: 20 }}
-          transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-          className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-800"
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          className="relative z-10 max-h-[80vh] w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-800"
         >
           {/* Конфетти для legendary */}
           {showConfetti && (
@@ -157,152 +157,77 @@ export function UpgradeResultModal({
           )}
 
           {/* Результат */}
-          <div className="p-8 text-center">
+          <div className="max-h-[calc(80vh-40px)] overflow-y-auto p-6 text-center">
             {success && newRarity ? (
               <>
                 {/* Успех */}
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{
-                    type: 'spring',
-                    damping: 15,
-                    stiffness: 300,
-                    delay: 0.2,
-                  }}
-                >
-                  <CheckCircle className="mx-auto h-20 w-20 text-green-500" />
-                </motion.div>
+                <CheckCircle className="mx-auto h-16 w-16 text-green-500" />
 
-                <motion.h3
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="mt-4 text-2xl font-bold text-gray-800 dark:text-white"
-                >
-                  Улучшение успешно!
-                </motion.h3>
+                <h3 className="mt-3 text-xl font-bold text-gray-800 dark:text-white">
+                  Успешно!
+                </h3>
 
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                  className="mt-6"
-                >
-                  {/* Иконка элемента с эффектом */}
-                  <motion.div
-                    animate={{
-                      scale: [1, 1.2, 1],
-                      rotate: [0, 10, -10, 0],
-                    }}
-                    transition={{
-                      duration: 0.8,
-                      repeat: Infinity,
-                      repeatDelay: 2,
-                    }}
-                    className="mb-4 text-6xl"
-                  >
-                    {element.emoji}
-                  </motion.div>
-
+                <div className="mt-4">
+                  <div className="mb-2 text-4xl">{element.emoji}</div>
                   <div
-                    className={`text-lg font-bold ${getRarityColor(newRarity)}`}
+                    className={`text-base font-bold ${getRarityColor(newRarity)}`}
                   >
                     {getRarityLabel(newRarity)}
                   </div>
-                </motion.div>
+                </div>
 
                 {/* Награды */}
                 {xpReward > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="mt-6 flex items-center justify-center gap-2 rounded-full bg-yellow-100 px-6 py-3 dark:bg-yellow-900/30"
-                  >
-                    <Sparkles className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                    <span className="font-bold text-yellow-700 dark:text-yellow-300">
+                  <div className="mt-4 flex items-center justify-center gap-2 rounded-full bg-yellow-100 px-4 py-2 dark:bg-yellow-900/30">
+                    <Sparkles className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                    <span className="text-sm font-bold text-yellow-700 dark:text-yellow-300">
                       +{xpReward} XP
                     </span>
-                  </motion.div>
+                  </div>
                 )}
               </>
             ) : (
               <>
                 {/* Неудача */}
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{
-                    type: 'spring',
-                    damping: 15,
-                    stiffness: 300,
-                    delay: 0.2,
-                  }}
-                >
-                  <XCircle className="mx-auto h-20 w-20 text-orange-500" />
-                </motion.div>
+                <XCircle className="mx-auto h-16 w-16 text-orange-500" />
 
-                <motion.h3
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="mt-4 text-2xl font-bold text-gray-800 dark:text-white"
-                >
-                  Не получилось...
-                </motion.h3>
+                <h3 className="mt-3 text-xl font-bold text-gray-800 dark:text-white">
+                  Не получилось
+                </h3>
 
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                  className="mt-2 text-sm text-gray-600 dark:text-gray-400"
-                >
-                  Не расстраивайтесь! Прогресс сохранен.
-                </motion.p>
+                <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                  Прогресс сохранен!
+                </p>
 
                 {/* Прогресс */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                  className="mt-6 rounded-lg bg-purple-100 p-4 dark:bg-purple-900/30"
-                >
-                  <div className="mb-2 text-sm font-medium text-purple-700 dark:text-purple-300">
+                <div className="mt-4 rounded-lg bg-purple-100 p-3 dark:bg-purple-900/30">
+                  <div className="mb-1 text-xs font-medium text-purple-700 dark:text-purple-300">
                     Прогресс увеличен
                   </div>
-                  <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                     +25%
                   </div>
-                  <div className="mt-2 text-xs text-purple-600 dark:text-purple-400">
-                    Следующая попытка: {progressBonus}% шанс
+                  <div className="mt-1 text-xs text-purple-600 dark:text-purple-400">
+                    Следующий шанс: {progressBonus}%
                   </div>
-                </motion.div>
+                </div>
 
                 {/* Мотивация */}
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.6 }}
-                  className="mt-4 text-sm text-gray-500 dark:text-gray-400"
-                >
+                <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
                   {failedAttempts >= 3
-                    ? '🔥 Еще одна попытка и успех гарантирован!'
-                    : '💪 Попробуйте еще раз!'}
-                </motion.p>
+                    ? '🔥 Еще попытка = успех!'
+                    : '💪 Попробуй еще!'}
+                </p>
               </>
             )}
 
             {/* Кнопка закрытия */}
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.7 }}
+            <button
               onClick={onClose}
-              className="mt-6 w-full rounded-lg bg-gray-200 px-6 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+              className="mt-4 w-full rounded-xl bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
             >
               Закрыть
-            </motion.button>
+            </button>
           </div>
         </motion.div>
       </div>
