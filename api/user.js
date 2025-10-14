@@ -626,13 +626,17 @@ async function handleGetStreakFreezes(req, res) {
     }
 
     // Получаем максимальное накопление из уровня (из БД)
-    const { data: levelData } = await supabase
+    const { data: levelData, error: levelError } = await supabase
       .from('gardener_levels')
       .select('max_streak_freezes')
       .eq('level', user.level || 1)
       .single()
 
-    const maxFreezes = levelData?.max_streak_freezes || 3
+    if (levelError) {
+      console.warn('Could not fetch level data, using default:', levelError)
+    }
+
+    const maxFreezes = levelData?.max_streak_freezes ?? 3
 
     console.log(
       `✅ Freezes: manual=${user.streak_freezes}, auto=${user.auto_freezes}, max=${maxFreezes}`

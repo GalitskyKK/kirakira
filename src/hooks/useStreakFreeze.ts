@@ -32,10 +32,21 @@ export function useStreakFreeze() {
       setFreezeData(data)
     } catch (error) {
       console.error('Failed to load streak freezes:', error)
+      // Fallback: используем данные из currentUser.stats
+      setFreezeData({
+        manual: currentUser.stats.streakFreezes ?? 0,
+        auto: currentUser.stats.autoFreezes ?? 0,
+        max: 3, // default для уровня 1
+        canAccumulate: true,
+      })
     } finally {
       setIsLoading(false)
     }
-  }, [currentUser?.telegramId])
+  }, [
+    currentUser?.telegramId,
+    currentUser?.stats.streakFreezes,
+    currentUser?.stats.autoFreezes,
+  ])
 
   // Использовать заморозку
   const useFreeze = useCallback(
