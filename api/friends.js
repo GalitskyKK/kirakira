@@ -459,19 +459,30 @@ async function handleSearch(req, res) {
       const searchPattern = `%${cleanQuery.toLowerCase()}%`
 
       console.log(
-        `🔍 Global user search: query="${query}", cleanQuery="${cleanQuery}", page=${pageNum}, limit=${limitNum}`
+        `🔍 Global user search: query="${query}", cleanQuery="${cleanQuery}", searchPattern="${searchPattern}", page=${pageNum}, limit=${limitNum}`
       )
 
       // Поиск пользователей по username или firstName
-      const { data: users, error: searchError } = await supabase
+      // Supabase OR с ILIKE - используем * вместо % для wildcards
+      let query_builder = supabase
         .from('users')
         .select(
           'telegram_id, first_name, last_name, username, photo_url, level, total_elements, current_streak, registration_date, privacy_settings'
         )
         .neq('telegram_id', parseInt(searcherTelegramId))
-        .or(`username.ilike.${searchPattern},first_name.ilike.${searchPattern}`)
+
+      // Применяем OR фильтр для username и first_name
+      // В Supabase PostgREST wildcards используют *, а не %
+      query_builder = query_builder.or(
+        `username.ilike.*${cleanQuery}*,first_name.ilike.*${cleanQuery}*`
+      )
+
+      const { data: users, error: searchError } = await query_builder
         .order('username', { ascending: true, nullsFirst: false })
         .range(offset, offset + limitNum)
+
+      console.log('🔍 Supabase query error:', searchError)
+      console.log('🔍 Raw search results:', users)
 
       if (searchError) {
         console.error('User search error:', searchError)
@@ -481,7 +492,7 @@ async function handleSearch(req, res) {
         })
       }
 
-      console.log(`🔍 Raw search results: ${users?.length || 0} users found`)
+      console.log(`🔍 Found ${users?.length || 0} users in raw results`)
 
       // Фильтруем пользователей с учетом privacy settings
       const visibleUsers = (users || []).filter(user => {
