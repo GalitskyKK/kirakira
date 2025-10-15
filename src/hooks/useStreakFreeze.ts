@@ -199,6 +199,8 @@ export function useStreakFreeze() {
       if (recommendedType === 'auto') {
         // Автоматически используем авто-заморозку
         await useFreeze('auto')
+        // После автозаморозки не нужно сбрасывать hasProcessedMissedDays
+        // так как useFreeze уже это делает
       } else {
         // Показываем модалку для ручного выбора
         setShowModal(true)
