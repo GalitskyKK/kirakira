@@ -645,7 +645,8 @@ async function protectedHandler(req, res) {
         // Получаем данные друга
         const friend = await ensureUser(parseInt(friendTelegramId))
 
-        // Настройки приватности уже проверены выше
+        // Получаем настройки приватности друга
+        const privacySettings = friend.privacy_settings || {}
 
         // Обновляем достижения друга (чтобы они были актуальными)
         await checkAndUpdateAchievements(friend.telegram_id)
