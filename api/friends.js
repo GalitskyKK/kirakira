@@ -462,6 +462,17 @@ async function handleSearch(req, res) {
         `🔍 Global user search: query="${query}", cleanQuery="${cleanQuery}", searchPattern="${searchPattern}", page=${pageNum}, limit=${limitNum}`
       )
 
+      // Тестовый запрос - проверим есть ли вообще пользователи в базе
+      const testQuery = await supabase
+        .from('users')
+        .select('telegram_id, username, first_name')
+        .limit(5)
+
+      console.log('🔍 Test query - all users (first 5):', {
+        error: testQuery.error,
+        data: testQuery.data,
+      })
+
       // Поиск пользователей по username или firstName
       // Используем отдельные запросы и объединяем результаты
       const usernameQuery = supabase
@@ -488,6 +499,18 @@ async function handleSearch(req, res) {
           nullsFirst: false,
         }),
       ])
+
+      console.log('🔍 Username search result:', {
+        error: usernameResult.error,
+        dataLength: usernameResult.data?.length || 0,
+        data: usernameResult.data?.slice(0, 2), // Показываем первые 2 результата для отладки
+      })
+
+      console.log('🔍 First name search result:', {
+        error: firstNameResult.error,
+        dataLength: firstNameResult.data?.length || 0,
+        data: firstNameResult.data?.slice(0, 2), // Показываем первые 2 результата для отладки
+      })
 
       if (usernameResult.error) {
         console.error('Username search error:', usernameResult.error)
