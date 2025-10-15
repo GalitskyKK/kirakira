@@ -56,6 +56,11 @@ export function useStreakFreeze() {
       if (!currentUser?.telegramId || missedDays === 0) return
 
       try {
+        console.log('🧊 Starting freeze usage:', {
+          freezeType,
+          missedDays,
+          userId: currentUser.telegramId,
+        })
         setIsLoading(true)
 
         const result = await useStreakFreezeAPI({
@@ -74,6 +79,19 @@ export function useStreakFreeze() {
           }
         })
 
+        // Обновляем стрик в userStore
+        const { updateStats } = useUserStore.getState()
+        await updateStats({
+          currentStreak: result.currentStreak,
+        })
+
+        // Обновляем lastCheckin в moodStore, чтобы предотвратить повторную проверку
+        // Устанавливаем на вчерашний день, чтобы пользователь мог отметить настроение сегодня
+        const { setLastCheckin } = useMoodStore.getState()
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1)
+        setLastCheckin(yesterday)
+
         // Закрываем модалку и сбрасываем состояние
         setShowModal(false)
         setMissedDays(0)
@@ -85,7 +103,19 @@ export function useStreakFreeze() {
             `Автоматически использована заморозка! Стрик сохранён (${result.currentStreak} дней) 🧊`
           )
           setTimeout(() => setAutoUsedMessage(null), 5000)
+        } else {
+          setAutoUsedMessage(
+            `Заморозка использована! Стрик сохранён (${result.currentStreak} дней) 🧊`
+          )
+          setTimeout(() => setAutoUsedMessage(null), 5000)
         }
+
+        console.log('✅ Freeze used successfully:', {
+          freezeType,
+          result,
+          lastCheckinUpdated: true,
+          modalClosed: true,
+        })
 
         // Не возвращаем result, чтобы соответствовать типу Promise<void>
       } catch (error) {

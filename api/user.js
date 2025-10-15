@@ -554,6 +554,10 @@ async function handleUseStreakFreeze(req, res) {
       updates.streak_freezes = user.streak_freezes - missedDays
     }
 
+    // Восстанавливаем стрик - устанавливаем его равным количеству пропущенных дней + 1
+    // Это означает, что пользователь "не пропускал" дни благодаря заморозке
+    updates.current_streak = missedDays + 1
+
     const { data: updated, error: updateError } = await supabase
       .from('users')
       .update(updates)
@@ -569,7 +573,7 @@ async function handleUseStreakFreeze(req, res) {
     }
 
     console.log(
-      `✅ Streak freeze used successfully. Remaining: manual=${updated.streak_freezes}, auto=${updated.auto_freezes}`
+      `✅ Streak freeze used successfully. Remaining: manual=${updated.streak_freezes}, auto=${updated.auto_freezes}, current_streak=${updated.current_streak}`
     )
 
     return res.status(200).json({
