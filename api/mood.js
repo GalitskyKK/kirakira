@@ -164,6 +164,8 @@ async function handleRecord(req, res) {
       .update({
         last_visit_date: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        // 🔥 СИНХРОНИЗАЦИЯ: Обновляем дату последней отметки для стрика
+        streak_last_checkin: formattedDate,
       })
       .eq('telegram_id', telegramUserId)
 

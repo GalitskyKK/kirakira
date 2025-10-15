@@ -561,6 +561,11 @@ async function handleUseStreakFreeze(req, res) {
       updates.streak_freezes = user.streak_freezes - missedDays
     }
 
+    // 🔥 СИНХРОНИЗАЦИЯ: Обновляем дату последней отметки на ВЧЕРАШНИЙ день
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    updates.streak_last_checkin = yesterday.toISOString().split('T')[0]
+
     // 🔥 ИСПРАВЛЕНИЕ: Заморозка НЕ должна изменять текущий стрик.
     // Она лишь "заполняет" пропущенные дни. Стрик будет увеличен,
     // когда пользователь отметит настроение за СЕГОДНЯ.
@@ -627,12 +632,18 @@ async function handleResetStreak(req, res) {
 
     console.log(`🔄 Resetting streak for user ${telegramId}`)
 
+    // 🔥 СИНХРОНИЗАЦИЯ: Устанавливаем дату последней отметки на ВЧЕРА,
+    // чтобы пользователь мог сразу начать новый стрик сегодня.
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+
     // Сбрасываем стрик в базе данных
     const { data: updated, error: updateError } = await supabase
       .from('users')
       .update({
         current_streak: 0,
         updated_at: new Date().toISOString(),
+        streak_last_checkin: yesterday.toISOString().split('T')[0],
       })
       .eq('telegram_id', telegramId)
       .select('current_streak, longest_streak')
@@ -732,6 +743,88 @@ async function handleGetStreakFreezes(req, res) {
   }
 }
 
+/**
+ * 🔥 НОВЫЙ ЭНДПОИНТ: Проверка состояния стрика
+ * GET /api/user?action=check-streak&telegramId=123
+ */
+async function handleCheckStreak(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' })
+  }
+
+  try {
+    const telegramId = parseInt(req.query.telegramId)
+    if (!telegramId) {
+      return res
+        .status(400)
+        .json({ success: false, error: 'Missing telegramId' })
+    }
+
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+    console.log(`🧐 Checking streak status for user ${telegramId}`)
+
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('current_streak, streak_last_checkin')
+      .eq('telegram_id', telegramId)
+      .single()
+
+    if (error || !user) {
+      return res.status(404).json({ success: false, error: 'User not found' })
+    }
+
+    // --- Логика расчета пропущенных дней ---
+    const lastCheckin = user.streak_last_checkin
+      ? new Date(user.streak_last_checkin)
+      : null
+    let missedDays = 0
+
+    if (lastCheckin) {
+      lastCheckin.setUTCHours(0, 0, 0, 0)
+      const today = new Date()
+      today.setUTCHours(0, 0, 0, 0)
+      const diffTime = today.getTime() - lastCheckin.getTime()
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+      if (diffDays > 1) {
+        missedDays = diffDays - 1
+      }
+    } else if (user.current_streak > 0) {
+      // Если есть стрик, но нет даты - значит что-то не так, считаем 1 день пропущенным
+      missedDays = 1
+    }
+    // -----------------------------------------
+
+    console.log(
+      ` streak status for user ${telegramId}: missedDays=${missedDays}, currentStreak=${user.current_streak}`
+    )
+
+    // --- Определяем состояние стрика ---
+    let streakState = 'ok' // ok, at_risk, broken
+    if (missedDays > 0 && user.current_streak > 0) {
+      streakState = missedDays > 7 ? 'broken' : 'at_risk'
+    } else if (missedDays > 0 && user.current_streak === 0) {
+      streakState = 'ok' // Стрик уже сброшен, все в порядке
+    }
+    // -----------------------------------
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        missedDays,
+        currentStreak: user.current_streak,
+        streakState, // 'ok', 'at_risk', 'broken'
+        lastCheckin: user.streak_last_checkin,
+      },
+    })
+  } catch (error) {
+    console.error('Error in handleCheckStreak:', error)
+    return res
+      .status(500)
+      .json({ success: false, error: 'Internal server error' })
+  }
+}
+
 // Защищенный handler с аутентификацией
 async function protectedHandler(req, res) {
   try {
@@ -770,10 +863,12 @@ async function protectedHandler(req, res) {
         return await handleGetStreakFreezes(req, res)
       case 'reset-streak':
         return await handleResetStreak(req, res)
+      case 'check-streak': // 🔥 НОВЫЙ ЭНДПОИНТ
+        return await handleCheckStreak(req, res)
       default:
         return res.status(400).json({
           success: false,
-          error: `Unknown action: ${action}. Available actions: stats, update-photo, use-streak-freeze, get-streak-freezes, reset-streak`,
+          error: `Unknown action: ${action}. Available actions: stats, update-photo, use-streak-freeze, get-streak-freezes, reset-streak, check-streak`,
         })
     }
   } catch (error) {
