@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react'
-import { useUserStore, useGardenStore, useMoodStore } from '@/stores'
+import { useUserSync, useGardenSync } from '@/hooks/index.v2'
+import { useTodaysMood } from '@/hooks/queries/useMoodQueries'
 import {
   generateDailyElement,
   canUnlockTodaysElement,
@@ -12,9 +13,18 @@ import type { GardenElement, MoodType, Position2D } from '@/types'
  * Hook for element generation logic and preview
  */
 export function useElementGeneration() {
-  const { currentUser } = useUserStore()
-  const { currentGarden, getLatestElement } = useGardenStore()
-  const { todaysMood } = useMoodStore()
+  // Получаем данные через React Query
+  const { data: userData } = useUserSync(undefined, false)
+  const { data: gardenData } = useGardenSync(undefined, false)
+  const { data: todaysMoodData } = useTodaysMood(undefined, undefined, false)
+
+  const currentUser = userData?.user
+  const currentGarden = gardenData
+  const todaysMood = todaysMoodData?.mood
+
+  // Вспомогательная функция для получения последнего элемента
+  const getLatestElement = () =>
+    currentGarden?.elements[currentGarden.elements.length - 1] ?? null
 
   // Check if user can unlock today's element
   const canUnlock = useMemo(() => {

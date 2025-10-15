@@ -14,7 +14,7 @@ import { ProfilePage } from '@/pages/ProfilePage'
 import { useGardenState, useMoodTracking } from '@/hooks'
 import { useStreakFreeze } from '@/hooks/useStreakFreeze'
 import { useCurrencyStore } from '@/stores/currencyStore'
-import { useUserStore } from '@/stores'
+import { useUserSync } from '@/hooks/index.v2'
 
 const tabVariants = {
   enter: (direction: number) => ({
@@ -37,7 +37,9 @@ export function MobileLayout() {
   const [activeTab, setActiveTab] = useState('mood')
   const { garden, gardenStats } = useGardenState()
   const { canCheckinToday, moodHistory } = useMoodTracking()
-  const { currentUser } = useUserStore()
+  // Получаем данные пользователя через React Query
+  const { data: userData } = useUserSync(undefined, false)
+  const currentUser = userData?.user
   const { loadCurrency } = useCurrencyStore()
 
   // 🧊 Заморозки стрика

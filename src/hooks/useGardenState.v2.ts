@@ -11,7 +11,7 @@ import {
   useAddGardenElement,
   useUpdateElementPosition,
 } from '@/hooks/queries'
-import { useUserStore } from '@/stores'
+import { useUserSync } from '@/hooks/index.v2'
 import type { MoodType, Position2D, GardenElement } from '@/types'
 import { loadGarden, saveGarden } from '@/utils/storage'
 import {
@@ -26,7 +26,9 @@ import { awardElementSprouts } from '@/utils/currencyRewards'
  * Объединяет серверное состояние (React Query) и клиентское состояние (Zustand)
  */
 export function useGardenState() {
-  const { currentUser } = useUserStore()
+  // Получаем данные пользователя через React Query
+  const { data: userData } = useUserSync(undefined, false)
+  const currentUser = userData?.user
   const telegramId = currentUser?.telegramId
 
   // Серверное состояние через React Query

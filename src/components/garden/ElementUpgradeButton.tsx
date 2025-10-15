@@ -12,7 +12,7 @@ import {
   UPGRADE_SUCCESS_RATES,
 } from '@/types/garden'
 import { useCurrencyStore } from '@/stores'
-import { useUserStore } from '@/stores'
+import { useUserSync } from '@/hooks/index.v2'
 import { TrendingUp, Sparkles } from 'lucide-react'
 
 interface ElementUpgradeButtonProps {
@@ -31,7 +31,10 @@ export function ElementUpgradeButton({
   isLoading = false,
 }: ElementUpgradeButtonProps) {
   const { userCurrency } = useCurrencyStore()
-  const { currentUser } = useUserStore()
+
+  // Получаем данные пользователя через React Query
+  const { data: userData } = useUserSync(undefined, false)
+  const currentUser = userData?.user
 
   // Проверяем, можно ли улучшить элемент
   if (!canUpgradeElement(element)) {

@@ -18,11 +18,15 @@ interface GardenClientState {
   readonly viewMode: ViewMode
   readonly selectedElement: GardenElement | null
   readonly currentRoomIndex: number
+  readonly isLoading: boolean
+  readonly error: string | null
 
   // Actions для UI состояния
   setViewMode: (mode: ViewMode) => void
   selectElement: (element: GardenElement | null) => void
   setCurrentRoomIndex: (roomIndex: number) => void
+  setLoading: (loading: boolean) => void
+  setError: (error: string | null) => void
 
   // Утилиты
   clearSelection: () => void
@@ -38,6 +42,8 @@ export const useGardenClientStore = create<GardenClientState>()(
     viewMode: ViewMode.OVERVIEW,
     selectedElement: null,
     currentRoomIndex: 0,
+    isLoading: false,
+    error: null,
 
     // Actions
     setViewMode: (mode: ViewMode) => {
@@ -53,6 +59,14 @@ export const useGardenClientStore = create<GardenClientState>()(
     setCurrentRoomIndex: (roomIndex: number) => {
       console.log('🏠 Garden: Switching to room:', roomIndex)
       set({ currentRoomIndex: roomIndex })
+    },
+
+    setLoading: (loading: boolean) => {
+      set({ isLoading: loading })
+    },
+
+    setError: (error: string | null) => {
+      set({ error })
     },
 
     clearSelection: () => {

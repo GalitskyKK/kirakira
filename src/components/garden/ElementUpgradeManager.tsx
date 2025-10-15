@@ -3,11 +3,14 @@
  * Управляет процессом улучшения элемента (кнопка + модальные окна)
  */
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import type { GardenElement, RarityLevel } from '@/types/garden'
-import { useGardenStore } from '@/stores'
 import { useCurrencyStore } from '@/stores'
-import { useUserStore } from '@/stores'
+import {
+  useUserSync,
+  useElementUpgradeInfo,
+  useUpgradeElement,
+} from '@/hooks/index.v2'
 import { ElementUpgradeButton } from './ElementUpgradeButton'
 import { UpgradeConfirmModal } from './UpgradeConfirmModal'
 import { UpgradeResultModal } from './UpgradeResultModal'
@@ -17,9 +20,19 @@ interface ElementUpgradeManagerProps {
 }
 
 export function ElementUpgradeManager({ element }: ElementUpgradeManagerProps) {
-  const { upgradeElement, getElementUpgradeInfo } = useGardenStore()
   const { userCurrency } = useCurrencyStore()
-  const { currentUser } = useUserStore()
+
+  // Получаем данные пользователя через React Query
+  const { data: userData } = useUserSync(undefined, false)
+  const currentUser = userData?.user
+
+  // React Query хуки для upgrade функций
+  const { data: upgradeInfo } = useElementUpgradeInfo(
+    currentUser?.telegramId,
+    element.id,
+    !!currentUser?.telegramId
+  )
+  const upgradeElementMutation = useUpgradeElement()
 
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [showResultModal, setShowResultModal] = useState(false)
@@ -30,22 +43,11 @@ export function ElementUpgradeManager({ element }: ElementUpgradeManagerProps) {
     progressBonus?: number
     failedAttempts?: number
   } | null>(null)
-  const [progressBonus, setProgressBonus] = useState(0)
-  const [failedAttempts, setFailedAttempts] = useState(0)
   const [isUpgrading, setIsUpgrading] = useState(false)
 
-  // Загружаем информацию об улучшении элемента
-  useEffect(() => {
-    async function loadUpgradeInfo() {
-      const info = await getElementUpgradeInfo(element.id)
-      if (info !== null && info !== undefined) {
-        setProgressBonus(info.progressBonus)
-        setFailedAttempts(info.failedAttempts)
-      }
-    }
-
-    void loadUpgradeInfo()
-  }, [element.id, getElementUpgradeInfo])
+  // Получаем данные из React Query
+  const progressBonus = upgradeInfo?.progressBonus ?? 0
+  const failedAttempts = upgradeInfo?.failedAttempts ?? 0
 
   const handleOpenConfirm = () => {
     setShowConfirmModal(true)
@@ -56,59 +58,51 @@ export function ElementUpgradeManager({ element }: ElementUpgradeManagerProps) {
   }
 
   const handleConfirmUpgrade = async (useFree: boolean) => {
+    if (!currentUser?.telegramId) return
+
     setShowConfirmModal(false)
     setIsUpgrading(true)
 
     try {
-      // Выполняем улучшение
-      const result = await upgradeElement(element.id, useFree)
+      // Выполняем улучшение через React Query
+      const result = await upgradeElementMutation.mutateAsync({
+        telegramId: currentUser.telegramId,
+        elementId: element.id,
+        useFree,
+      })
 
-      if (result.success) {
-        // 🔄 СИНХРОНИЗИРУЕМ ВАЛЮТУ ПОСЛЕ УЛУЧШЕНИЯ
-        // Это критично для предотвращения повторных улучшений с устаревшим балансом
-        try {
-          const { loadCurrency } = useCurrencyStore.getState()
-          if (currentUser?.telegramId) {
-            await loadCurrency(currentUser.telegramId)
-            console.log('✅ Currency synced after element upgrade')
-          }
-        } catch (error) {
-          console.warn('⚠️ Failed to sync currency after upgrade:', error)
-        }
+      // 🔄 СИНХРОНИЗИРУЕМ ВАЛЮТУ ПОСЛЕ УЛУЧШЕНИЯ
+      try {
+        const { loadCurrency } = useCurrencyStore.getState()
+        await loadCurrency(currentUser.telegramId)
+        console.log('✅ Currency synced after element upgrade')
+      } catch (error) {
+        console.warn('⚠️ Failed to sync currency after upgrade:', error)
+      }
 
-        // Обновляем прогресс бонус для следующей попытки
-        const newInfo = await getElementUpgradeInfo(element.id)
-        if (newInfo !== null && newInfo !== undefined) {
-          setProgressBonus(newInfo.progressBonus)
-          setFailedAttempts(newInfo.failedAttempts)
-        }
-
+      if (result) {
         setUpgradeResult({
           success: result.upgraded,
           ...(result.newRarity !== undefined && {
             newRarity: result.newRarity,
           }),
-          ...(result.upgraded && { xpReward: 20 }), // TODO: получать из API
-          ...(newInfo !== null &&
-            newInfo !== undefined && {
-              progressBonus: newInfo.progressBonus,
-              failedAttempts: newInfo.failedAttempts,
-            }),
+          ...(result.upgraded && { xpReward: result.xpReward }),
+          progressBonus: result.progressBonus ?? 0,
+          failedAttempts: result.failedAttempts ?? 0,
         })
         setShowResultModal(true)
 
         // 🎉 ИНФОРМАЦИЯ ОБНОВЛЯЕТСЯ ПРЯМО НА СТРАНИЦЕ ЭЛЕМЕНТА
-        // Больше не закрываем модалку, так как ElementDetails автоматически обновляется
         if (result.upgraded) {
           console.log('✅ Element details will be updated automatically')
         }
-      } else {
-        // Ошибка API
-        setUpgradeResult({
-          success: false,
-        })
-        setShowResultModal(true)
       }
+    } catch (error) {
+      console.error('Failed to upgrade element:', error)
+      setUpgradeResult({
+        success: false,
+      })
+      setShowResultModal(true)
     } finally {
       setIsUpgrading(false)
     }

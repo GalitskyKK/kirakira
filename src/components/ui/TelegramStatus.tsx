@@ -1,10 +1,14 @@
 import { motion } from 'framer-motion'
 import { useTelegram } from '@/hooks'
-import { useUserStore } from '@/stores'
+import { useUserSync } from '@/hooks/index.v2'
 
 export function TelegramStatus() {
   const { isTelegramEnv, user: telegramUser } = useTelegram()
-  const { currentUser } = useUserStore()
+  const { data: userData } = useUserSync(
+    telegramUser?.telegramId,
+    telegramUser?.telegramId != null
+  )
+  const currentUser = userData?.user
 
   if (!isTelegramEnv) return null
 

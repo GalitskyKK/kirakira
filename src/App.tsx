@@ -6,7 +6,7 @@ import {
   Navigate,
 } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useUserStore } from '@/stores'
+import { useUserClientStore, useUserSync } from '@/hooks/index.v2'
 import { HomePage } from '@/pages/HomePage'
 import { OnboardingPage } from '@/pages/OnboardingPage'
 import { AuthPage } from '@/pages/AuthPage'
@@ -61,12 +61,8 @@ function App() {
   const isTelegramEnv = !!window.Telegram?.WebApp
 
   // ✅ ВСЕ ХУКИ ДОЛЖНЫ БЫТЬ ВЫЗВАНЫ ДО ЛЮБОГО УСЛОВНОГО ВОЗВРАТА
-  const {
-    currentUser,
-    hasCompletedOnboarding,
-    isAuthenticated,
-    isLoading: userStoreLoading,
-  } = useUserStore()
+  const { hasCompletedOnboarding, isLoading: userStoreLoading } =
+    useUserClientStore()
 
   const [showAuth, setShowAuth] = useState(false)
 
@@ -76,6 +72,15 @@ function App() {
     isTelegramEnv: _isTelegramEnv, // уже объявлено выше
     isReady: telegramReady,
   } = useTelegram()
+
+  // Получаем данные пользователя через React Query
+  const { data: userData, isLoading: userLoading } = useUserSync(
+    telegramUser?.telegramId,
+    telegramUser?.telegramId != null
+  )
+
+  const currentUser = userData?.user
+  const isAuthenticated = !!currentUser
 
   const { colorScheme } = useTelegramTheme()
 
@@ -126,7 +131,7 @@ function App() {
   // Handle onboarding completion
   const handleOnboardingComplete = () => {
     // Обновляем состояние в userStore без reload
-    const { completeOnboarding } = useUserStore.getState()
+    const { completeOnboarding } = useUserClientStore.getState()
     completeOnboarding()
 
     if (isDevelopment) {
@@ -135,7 +140,7 @@ function App() {
   }
 
   // Show loading state during initialization
-  if (initState.isLoading || userStoreLoading) {
+  if (initState.isLoading || userStoreLoading || userLoading) {
     // 🔍 ОТЛАДКА ЭКРАНА ЗАГРУЗКИ (только в dev режиме)
     if (isDevelopment) {
       console.log('🔍 РЕНДЕРИМ ЭКРАН ЗАГРУЗКИ:', {
@@ -143,6 +148,7 @@ function App() {
         initLoading: initState.isLoading,
         initProgress: initState.progress,
         userStoreLoading,
+        userLoading,
         isTelegramEnv,
         telegramReady,
         telegramUser: !!telegramUser,
@@ -217,7 +223,10 @@ function App() {
                   Init: {initState.isLoading ? '⏳ Инициализация' : '✅ Готов'}
                 </div>
                 <div>
-                  Loading: {userStoreLoading ? '⏳ Загрузка' : '✅ Загружен'}
+                  Loading:{' '}
+                  {userStoreLoading || userLoading
+                    ? '⏳ Загрузка'
+                    : '✅ Загружен'}
                 </div>
               </div>
 

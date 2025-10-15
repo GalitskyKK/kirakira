@@ -8,6 +8,8 @@ import {
   syncUserFromSupabase,
   updatePrivacySettings,
   updateUserPhoto,
+  addUserExperience,
+  clearUserData,
 } from '@/api'
 import type { User } from '@/types'
 
@@ -20,6 +22,8 @@ export const userKeys = {
   sync: (telegramId: number) => [...userKeys.all, 'sync', telegramId] as const,
   profile: (telegramId: number) =>
     [...userKeys.all, 'profile', telegramId] as const,
+  experience: (telegramId: number) =>
+    [...userKeys.all, 'experience', telegramId] as const,
 }
 
 // ============================================
@@ -134,6 +138,62 @@ export function useUpdateUserPhoto() {
         )
       }
       console.error('❌ Failed to update user photo:', error)
+    },
+  })
+}
+
+/**
+ * Хук для добавления опыта пользователю
+ */
+export function useAddUserExperience() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      telegramId,
+      experiencePoints,
+      reason,
+    }: {
+      telegramId: number
+      experiencePoints: number
+      reason: string
+    }) => addUserExperience(telegramId, experiencePoints, reason),
+    onSuccess: (result, variables) => {
+      // Инвалидируем queries для перезагрузки данных
+      queryClient.invalidateQueries({
+        queryKey: userKeys.sync(variables.telegramId),
+      })
+      queryClient.invalidateQueries({
+        queryKey: userKeys.profile(variables.telegramId),
+      })
+
+      console.log('✅ User experience added successfully:', result)
+    },
+    onError: error => {
+      console.error('❌ Failed to add user experience:', error)
+    },
+  })
+}
+
+/**
+ * Хук для очистки данных пользователя
+ */
+export function useClearUserData() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ telegramId }: { telegramId: number }) =>
+      clearUserData(telegramId),
+    onSuccess: _result => {
+      // Инвалидируем все queries пользователя
+      queryClient.invalidateQueries({
+        queryKey: userKeys.all,
+      })
+
+      console.log('✅ User data cleared successfully')
+    },
+    onError: error => {
+      console.error('❌ Failed to clear user data:', error)
     },
   })
 }

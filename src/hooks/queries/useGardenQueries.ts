@@ -9,6 +9,8 @@ import {
   getGardenHistory,
   addGardenElement,
   updateElementPosition,
+  upgradeElement,
+  getElementUpgradeInfo,
   type AddElementRequest,
   type UpdatePositionRequest,
 } from '@/api'
@@ -25,6 +27,8 @@ export const gardenKeys = {
     [...gardenKeys.all, 'sync', telegramId] as const,
   history: (telegramId: number) =>
     [...gardenKeys.all, 'history', telegramId] as const,
+  upgradeInfo: (telegramId: number, elementId: string) =>
+    [...gardenKeys.all, 'upgradeInfo', telegramId, elementId] as const,
 }
 
 // ============================================
@@ -219,6 +223,67 @@ export function useUpdateElementPosition() {
       queryClient.invalidateQueries({
         queryKey: gardenKeys.sync(request.telegramId),
       })
+    },
+  })
+}
+
+/**
+ * Хук для получения информации об улучшении элемента
+ */
+export function useElementUpgradeInfo(
+  telegramId: number | undefined,
+  elementId: string | undefined,
+  enabled = true
+) {
+  return useQuery({
+    queryKey: gardenKeys.upgradeInfo(telegramId ?? 0, elementId ?? ''),
+    queryFn: async () => {
+      if (!telegramId || !elementId) {
+        throw new Error('Telegram ID and Element ID are required')
+      }
+      return getElementUpgradeInfo(telegramId, elementId)
+    },
+    enabled: enabled && !!telegramId && !!elementId,
+    staleTime: 1000 * 60 * 2, // 2 минуты
+    gcTime: 1000 * 60 * 10, // 10 минут в кеше
+  })
+}
+
+/**
+ * Хук для улучшения элемента сада
+ */
+export function useUpgradeElement() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      telegramId,
+      elementId,
+      useFree = false,
+    }: {
+      telegramId: number
+      elementId: string
+      useFree?: boolean
+    }) => upgradeElement(telegramId, elementId, useFree),
+    onSuccess: (result, variables) => {
+      // Инвалидируем queries для перезагрузки данных
+      queryClient.invalidateQueries({
+        queryKey: gardenKeys.sync(variables.telegramId),
+      })
+      queryClient.invalidateQueries({
+        queryKey: gardenKeys.history(variables.telegramId),
+      })
+      queryClient.invalidateQueries({
+        queryKey: gardenKeys.upgradeInfo(
+          variables.telegramId,
+          variables.elementId
+        ),
+      })
+
+      console.log('✅ Element upgrade completed:', result)
+    },
+    onError: error => {
+      console.error('❌ Failed to upgrade element:', error)
     },
   })
 }

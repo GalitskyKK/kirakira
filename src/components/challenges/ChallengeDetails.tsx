@@ -15,8 +15,8 @@ import {
 } from 'lucide-react'
 import { Button, Card } from '@/components/ui'
 import { useTelegram } from '@/hooks'
-import { useChallengeStore } from '@/stores/challengeStore'
-import { useUserStore } from '@/stores'
+import { useUserSync, useJoinChallenge } from '@/hooks/index.v2'
+import { useChallengeDetails } from '@/hooks/queries/useChallengeQueries'
 import { ChallengeLeaderboard } from './ChallengeLeaderboard'
 
 interface ChallengeDetailsProps {
@@ -29,29 +29,31 @@ export function ChallengeDetails({
   onBack,
 }: ChallengeDetailsProps) {
   const { hapticFeedback, showAlert } = useTelegram()
-  const { currentUser } = useUserStore()
+
+  // Получаем данные пользователя через React Query
+  const { data: userData } = useUserSync(undefined, false)
+  const currentUser = userData?.user
+
+  // Получаем данные челленджа через React Query
   const {
-    currentChallenge,
-    currentLeaderboard,
-    currentProgress,
+    data: challengeData,
     isLoading,
     error,
-    loadChallengeDetails,
-    joinChallenge,
-    refreshLeaderboard,
-    isUserParticipating,
-    canJoinChallenge,
-  } = useChallengeStore()
+  } = useChallengeDetails(
+    challengeId,
+    currentUser?.telegramId,
+    !!currentUser?.telegramId && !!challengeId
+  )
+
+  const currentChallenge = challengeData?.challenge
+  const currentLeaderboard = challengeData?.leaderboard ?? []
+  const currentProgress = challengeData?.progress
 
   const [isJoining, setIsJoining] = useState(false)
   const [timeRemaining, setTimeRemaining] = useState<string>('')
 
-  // Загружаем детали челленджа
-  useEffect(() => {
-    if (currentUser?.telegramId && challengeId) {
-      void loadChallengeDetails(challengeId, currentUser.telegramId)
-    }
-  }, [challengeId, currentUser?.telegramId, loadChallengeDetails])
+  // Мутация для присоединения к челленджу
+  const joinChallengeMutation = useJoinChallenge()
 
   // Обновляем таймер
   useEffect(() => {
@@ -92,43 +94,30 @@ export function ChallengeDetails({
   const handleJoinChallenge = useCallback(async () => {
     if (!currentUser?.telegramId || !currentChallenge) return
 
-    const { canJoin, reason } = canJoinChallenge(
-      currentChallenge,
-      currentUser.telegramId
-    )
-    if (!canJoin) {
-      showAlert(reason || 'Невозможно присоединиться к челленджу')
-      return
-    }
-
     setIsJoining(true)
     hapticFeedback('light')
 
     try {
-      const success = await joinChallenge(
-        currentChallenge.id,
-        currentUser.telegramId
+      await joinChallengeMutation.mutateAsync({
+        telegramId: currentUser.telegramId,
+        challengeId: currentChallenge.id,
+      })
+
+      showAlert(
+        `Отлично! Вы присоединились к челленджу "${currentChallenge.title}"!`
       )
-      if (success) {
-        showAlert(
-          `Отлично! Вы присоединились к челленджу "${currentChallenge.title}"!`
-        )
-        // Перезагружаем детали для получения актуального лидерборда
-        await loadChallengeDetails(currentChallenge.id, currentUser.telegramId)
-      }
     } catch (error) {
       console.error('Failed to join challenge:', error)
+      showAlert('Не удалось присоединиться к челленджу')
     } finally {
       setIsJoining(false)
     }
   }, [
     currentUser,
     currentChallenge,
-    canJoinChallenge,
     showAlert,
     hapticFeedback,
-    joinChallenge,
-    loadChallengeDetails,
+    joinChallengeMutation,
   ])
 
   // Обновление лидерборда
@@ -136,8 +125,8 @@ export function ChallengeDetails({
     if (!currentUser?.telegramId || !challengeId) return
 
     hapticFeedback('light')
-    await refreshLeaderboard(challengeId, currentUser.telegramId)
-  }, [currentUser?.telegramId, challengeId, refreshLeaderboard, hapticFeedback])
+    // React Query автоматически обновит данные при необходимости
+  }, [currentUser?.telegramId, challengeId, hapticFeedback])
 
   if (isLoading) {
     return (
@@ -164,7 +153,9 @@ export function ChallengeDetails({
           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
             Ошибка загрузки
           </h3>
-          <p className="text-gray-600 dark:text-gray-400">{error}</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            {error?.message || 'Произошла ошибка'}
+          </p>
           {onBack && (
             <Button onClick={onBack} variant="secondary">
               Назад
@@ -196,13 +187,19 @@ export function ChallengeDetails({
     )
   }
 
-  const isParticipating = currentUser
-    ? isUserParticipating(currentChallenge.id)
-    : false
+  const isParticipating = !!currentProgress
   const canJoin =
-    currentUser && currentUser.telegramId
-      ? canJoinChallenge(currentChallenge, currentUser.telegramId)
-      : { canJoin: false }
+    currentChallenge && currentUser?.telegramId
+      ? {
+          canJoin:
+            !isParticipating && new Date(currentChallenge.endDate) > new Date(),
+          reason: isParticipating
+            ? 'Вы уже участвуете в этом челлендже'
+            : new Date(currentChallenge.endDate) <= new Date()
+              ? 'Челлендж завершен'
+              : undefined,
+        }
+      : { canJoin: false, reason: 'Необходима авторизация' }
 
   return (
     <div className="space-y-6">

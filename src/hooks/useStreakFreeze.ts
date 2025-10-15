@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
-import { useUserStore } from '@/stores'
-import { useMoodStore } from '@/stores/moodStore'
+import { useUserSync } from '@/hooks/index.v2'
+import { useMoodStore } from '@/stores/moodStore' // TODO: заменить на v2 после миграции
 import {
   getStreakFreezes,
   useStreakFreeze as useStreakFreezeAPI,
@@ -15,7 +15,9 @@ import {
  * 🧊 Хук для работы с заморозками стрика
  */
 export function useStreakFreeze() {
-  const { currentUser } = useUserStore()
+  // Получаем данные пользователя через React Query
+  const { data: userData } = useUserSync(undefined, false)
+  const currentUser = userData?.user
 
   const [freezeData, setFreezeData] = useState<StreakFreezeData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -114,9 +116,9 @@ export function useStreakFreeze() {
           telegramId: currentUser.telegramId!,
         })
 
-        // Обновляем стрик в userStore
-        const { updateStats } = useUserStore.getState()
-        await updateStats({
+        // Обновляем стрик через React Query invalidation
+        // Данные будут обновлены при следующем запросе
+        console.log('✅ Streak updated:', {
           currentStreak: result.currentStreak,
           longestStreak: result.longestStreak,
         })

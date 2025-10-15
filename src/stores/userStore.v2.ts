@@ -17,12 +17,16 @@ interface UserClientState {
   readonly hasCompletedOnboarding: boolean
   readonly isAuthModalOpen: boolean
   readonly selectedTab: string
+  readonly isLoading: boolean
+  readonly error: string | null
 
   // Actions для UI состояния
   completeOnboarding: () => void
   checkOnboardingStatus: () => boolean
   setAuthModalOpen: (isOpen: boolean) => void
   setSelectedTab: (tab: string) => void
+  setLoading: (loading: boolean) => void
+  setError: (error: string | null) => void
 }
 
 // ============================================
@@ -35,6 +39,8 @@ export const useUserClientStore = create<UserClientState>()(
     hasCompletedOnboarding: isOnboardingCompleted(),
     isAuthModalOpen: false,
     selectedTab: 'profile',
+    isLoading: false,
+    error: null,
 
     // Actions
     completeOnboarding: () => {
@@ -55,6 +61,14 @@ export const useUserClientStore = create<UserClientState>()(
     setSelectedTab: (tab: string) => {
       console.log('📑 User: Setting selected tab:', tab)
       set({ selectedTab: tab })
+    },
+
+    setLoading: (loading: boolean) => {
+      set({ isLoading: loading })
+    },
+
+    setError: (error: string | null) => {
+      set({ error })
     },
   }))
 )

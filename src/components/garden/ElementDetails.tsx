@@ -7,7 +7,7 @@ import { MOOD_CONFIG } from '@/types/mood'
 import { PlantRenderer } from '@/components/garden/plants'
 import type { GardenElement } from '@/types'
 import { ElementUpgradeManager } from './ElementUpgradeManager'
-import { useGardenStore } from '@/stores'
+import { useGardenSync } from '@/hooks/index.v2'
 import { useEffect, useState } from 'react'
 
 interface ElementDetailsProps {
@@ -16,14 +16,16 @@ interface ElementDetailsProps {
 }
 
 export function ElementDetails({ element, onBack }: ElementDetailsProps) {
-  const { currentGarden } = useGardenStore()
   const [currentElement, setCurrentElement] = useState(element)
   const [isUpgrading, setIsUpgrading] = useState(false)
 
-  // 🔄 ОБНОВЛЯЕМ ЭЛЕМЕНТ ПРИ ИЗМЕНЕНИЯХ В STORE
+  // Получаем данные сада через React Query
+  const { data: gardenData } = useGardenSync(undefined, false) // Не включаем автоматическую загрузку
+
+  // 🔄 ОБНОВЛЯЕМ ЭЛЕМЕНТ ПРИ ИЗМЕНЕНИЯХ В САДЕ
   useEffect(() => {
-    if (currentGarden) {
-      const updatedElement = currentGarden.elements.find(
+    if (gardenData?.elements) {
+      const updatedElement = gardenData.elements.find(
         el => el.id === element.id
       )
       if (updatedElement && updatedElement.rarity !== currentElement.rarity) {
@@ -38,10 +40,12 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
         }, 500) // Небольшая задержка для анимации
       }
     }
-  }, [currentGarden, element.id, currentElement.rarity])
+  }, [gardenData?.elements, element.id, currentElement.rarity])
 
   const moodConfig =
-    MOOD_CONFIG[currentElement.moodInfluence] || MOOD_CONFIG.joy // Fallback to joy if invalid mood
+    currentElement.moodInfluence in MOOD_CONFIG
+      ? MOOD_CONFIG[currentElement.moodInfluence]
+      : MOOD_CONFIG.joy // Fallback to joy if invalid mood
 
   const rarityLabels: Record<string, string> = {
     common: 'Обычный',
@@ -190,7 +194,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
           </Card>
 
           {/* Seasonal Variant */}
-          {currentElement.seasonalVariant && (
+          {currentElement.seasonalVariant != null && (
             <Card padding="sm">
               <div className="flex items-center space-x-3">
                 <div className="rounded-lg bg-green-100 p-2">
@@ -256,7 +260,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
               </div>
             </motion.div>
 
-            {currentElement.seasonalVariant && (
+            {currentElement.seasonalVariant != null && (
               <motion.div
                 className="flex items-start space-x-2"
                 initial={{ opacity: 0, x: -10 }}

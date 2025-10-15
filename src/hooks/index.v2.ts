@@ -8,6 +8,25 @@ export { useGardenState } from './useGardenState.v2'
 export { useMoodTracking } from './useMoodTracking.v2'
 export { useProfile, useFriendProfileData } from './useProfile.v2'
 
+// Store v2 хуки
+export {
+  useUserClientStore,
+  useOnboardingStatus,
+  useAuthModalState,
+} from '@/stores/userStore.v2'
+export {
+  useGardenClientStore,
+  useGardenViewMode,
+  useSelectedElement,
+  useCurrentRoomIndex,
+} from '@/stores/gardenStore.v2'
+export {
+  useChallengeClientStore,
+  useCurrentChallenge,
+  useChallengeLoading,
+  useChallengeError,
+} from '@/stores/challengeStore.v2'
+
 // React Query хуки для прямого использования
 export * from './queries'
 

@@ -288,3 +288,93 @@ export async function updateUserPhoto(
     throw error
   }
 }
+
+/**
+ * Добавляет опыт пользователю
+ */
+export async function addUserExperience(
+  telegramId: number,
+  experiencePoints: number,
+  reason: string
+): Promise<{
+  success: boolean
+  data?: {
+    experience: number
+    level: number
+    leveledUp?: boolean
+    sproutReward?: number
+    gemReward?: number
+    specialUnlock?: string | null
+    newAchievements?: any[]
+    reason: string
+  }
+  error?: string
+}> {
+  try {
+    const response = await authenticatedFetch(
+      '/api/profile?action=add_experience',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          telegramId,
+          experiencePoints,
+          reason,
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(`Failed to add experience: ${response.status}`)
+    }
+
+    const result = (await response.json()) as StandardApiResponse<{
+      experience: number
+      level: number
+      leveledUp: boolean
+      sproutReward: number
+      gemReward: number
+      specialUnlock: string | null
+      newAchievements: any[]
+      reason: string
+    }>
+
+    return {
+      success: result.success,
+      ...(result.data && { data: result.data }),
+      ...(result.error && { error: result.error }),
+    }
+  } catch (error) {
+    console.error('Failed to add user experience:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
+/**
+ * Очищает данные пользователя
+ */
+export async function clearUserData(telegramId: number): Promise<boolean> {
+  try {
+    const response = await authenticatedFetch('/api/user?action=clear_data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        telegramId,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to clear user data: ${response.status}`)
+    }
+
+    const result = (await response.json()) as StandardApiResponse
+
+    return result.success
+  } catch (error) {
+    console.error('Failed to clear user data:', error)
+    throw error
+  }
+}

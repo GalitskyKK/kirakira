@@ -1,11 +1,12 @@
 /**
  * 🏆 Challenge Client State Store (v2 - Refactored)
  * Хранит ТОЛЬКО клиентское UI состояние челленджей
- * Серверное состояние (челленджи, участие) управляется через React Query
+ * Серверное состояние (челленджи, лидерборды, прогресс) управляется через React Query
  */
 
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
+import type { Challenge } from '@/types/challenges'
 
 // ============================================
 // ТИПЫ СОСТОЯНИЯ
@@ -13,19 +14,17 @@ import { subscribeWithSelector } from 'zustand/middleware'
 
 interface ChallengeClientState {
   // UI состояние
-  readonly selectedChallengeId: string | null
-  readonly isJoinModalOpen: boolean
-  readonly selectedFilter: 'all' | 'active' | 'completed' | 'mine'
-  readonly sortBy: 'startDate' | 'endDate' | 'participants' | 'progress'
+  readonly currentChallenge: Challenge | null
+  readonly isLoading: boolean
+  readonly error: string | null
 
   // Actions для UI состояния
-  selectChallenge: (challengeId: string | null) => void
-  setJoinModalOpen: (isOpen: boolean) => void
-  setSelectedFilter: (filter: 'all' | 'active' | 'completed' | 'mine') => void
-  setSortBy: (
-    sortBy: 'startDate' | 'endDate' | 'participants' | 'progress'
-  ) => void
-  clearSelection: () => void
+  setCurrentChallenge: (challenge: Challenge | null) => void
+  setLoading: (loading: boolean) => void
+  setError: (error: string | null) => void
+
+  // Утилиты
+  clearCurrentChallenge: () => void
 }
 
 // ============================================
@@ -35,57 +34,51 @@ interface ChallengeClientState {
 export const useChallengeClientStore = create<ChallengeClientState>()(
   subscribeWithSelector(set => ({
     // Начальное состояние
-    selectedChallengeId: null,
-    isJoinModalOpen: false,
-    selectedFilter: 'all',
-    sortBy: 'startDate',
+    currentChallenge: null,
+    isLoading: false,
+    error: null,
 
     // Actions
-    selectChallenge: (challengeId: string | null) => {
-      console.log('🎯 Challenge: Selecting challenge:', challengeId)
-      set({ selectedChallengeId: challengeId })
+    setCurrentChallenge: (challenge: Challenge | null) => {
+      console.log(
+        '🏆 Challenge: Setting current challenge:',
+        challenge?.id ?? 'none'
+      )
+      set({ currentChallenge: challenge })
     },
 
-    setJoinModalOpen: (isOpen: boolean) => {
-      console.log('🚪 Challenge: Setting join modal:', isOpen)
-      set({ isJoinModalOpen: isOpen })
+    setLoading: (loading: boolean) => {
+      set({ isLoading: loading })
     },
 
-    setSelectedFilter: (filter: 'all' | 'active' | 'completed' | 'mine') => {
-      console.log('🔍 Challenge: Setting filter:', filter)
-      set({ selectedFilter: filter })
+    setError: (error: string | null) => {
+      set({ error })
     },
 
-    setSortBy: (
-      sortBy: 'startDate' | 'endDate' | 'participants' | 'progress'
-    ) => {
-      console.log('📊 Challenge: Setting sort by:', sortBy)
-      set({ sortBy: sortBy })
-    },
-
-    clearSelection: () => {
-      console.log('🧹 Challenge: Clearing selection')
-      set({
-        selectedChallengeId: null,
-        isJoinModalOpen: false,
-      })
+    clearCurrentChallenge: () => {
+      console.log('🧹 Challenge: Clearing current challenge')
+      set({ currentChallenge: null })
     },
   }))
 )
 
 /**
- * Хук для получения выбранного челленджа
+ * Хук для получения только current challenge
  */
-export function useSelectedChallenge() {
-  return useChallengeClientStore(state => state.selectedChallengeId)
+export function useCurrentChallenge() {
+  return useChallengeClientStore(state => state.currentChallenge)
 }
 
 /**
- * Хук для получения фильтров челленджей
+ * Хук для получения только loading state
  */
-export function useChallengeFilters() {
-  return useChallengeClientStore(state => ({
-    filter: state.selectedFilter,
-    sortBy: state.sortBy,
-  }))
+export function useChallengeLoading() {
+  return useChallengeClientStore(state => state.isLoading)
+}
+
+/**
+ * Хук для получения только error state
+ */
+export function useChallengeError() {
+  return useChallengeClientStore(state => state.error)
 }

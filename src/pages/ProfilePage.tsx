@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { useUserStore, useGardenStore, useMoodStore } from '@/stores'
+import { useUserSync, useGardenSync } from '@/hooks/index.v2'
 import { useProfile } from '@/hooks/useProfile.v2'
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { ProfileStats } from '@/components/profile/ProfileStats'
@@ -8,10 +8,15 @@ import { ProfilePrivacySettings } from '@/components/profile/ProfilePrivacySetti
 import { LoadingSpinner } from '@/components/ui'
 
 export function ProfilePage() {
-  // Основные хуки приложения
-  const { currentUser, isLoading: userLoading } = useUserStore()
-  const { currentGarden, getElementsCount } = useGardenStore()
-  const { getMoodStats } = useMoodStore()
+  // ✅ Получаем данные через React Query v2 хуки
+  const { data: userData, isLoading: userLoading } = useUserSync(
+    undefined,
+    false
+  )
+  const { data: gardenData } = useGardenSync(undefined, false)
+
+  const currentUser = userData?.user
+  const currentGarden = gardenData
 
   // ✅ Новый v2 хук - автоматическая загрузка данных через React Query
   const {
@@ -19,6 +24,9 @@ export function ProfilePage() {
     isLoading: profileLoading,
     error: profileError,
   } = useProfile()
+
+  // Вспомогательная функция для подсчета элементов
+  const getElementsCount = () => currentGarden?.elements.length ?? 0
 
   // Показываем спиннер во время загрузки
   if (userLoading || profileLoading) {
@@ -47,7 +55,7 @@ export function ProfilePage() {
   }
 
   // Показываем ошибку если есть проблемы с загрузкой
-  if (profileError) {
+  if (profileError != null) {
     return (
       <div className="p-6">
         <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/30">
@@ -67,27 +75,25 @@ export function ProfilePage() {
   }
 
   // Готовим данные для компонентов с защитой от undefined
-  const moodStats = getMoodStats
-    ? getMoodStats()
-    : {
-        totalEntries: 0,
-        currentStreak: 0,
-        longestStreak: 0,
-        mostFrequentMood: null,
-        averageIntensity: 0,
-        moodDistribution: {
-          joy: 0,
-          calm: 0,
-          stress: 0,
-          sadness: 0,
-          anger: 0,
-          anxiety: 0,
-        },
-        weeklyTrend: [],
-        monthlyTrend: [],
-      }
+  const moodStats = {
+    totalEntries: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    mostFrequentMood: null,
+    averageIntensity: 0,
+    moodDistribution: {
+      joy: 0,
+      calm: 0,
+      stress: 0,
+      sadness: 0,
+      anger: 0,
+      anxiety: 0,
+    },
+    weeklyTrend: [],
+    monthlyTrend: [],
+  }
 
-  const totalElements = getElementsCount ? getElementsCount() : 0
+  const totalElements = getElementsCount()
 
   // Создаем объединенные данные пользователя из API и локального стора
   const apiUser = profileData?.user
@@ -99,9 +105,10 @@ export function ProfilePage() {
     lastName: apiUser?.last_name ?? currentUser?.lastName ?? '',
     username: apiUser?.username ?? currentUser?.username ?? '',
     photoUrl: apiUser?.photo_url ?? currentUser?.photoUrl ?? '',
-    registrationDate: apiUser?.registration_date
-      ? new Date(apiUser.registration_date)
-      : (currentUser?.registrationDate ?? new Date()),
+    registrationDate:
+      apiUser?.registration_date != null
+        ? new Date(apiUser.registration_date)
+        : (currentUser?.registrationDate ?? new Date()),
     isAnonymous: currentUser?.isAnonymous ?? false,
 
     // 🔥 ИСПРАВЛЕНИЕ: Добавляем поля experience и level из API или currentUser (с fallback значениями)
@@ -161,7 +168,7 @@ export function ProfilePage() {
       {/* Статистика */}
       <ProfileStats
         user={renderUser}
-        garden={currentGarden}
+        garden={null}
         moodStats={moodStats}
         totalElements={totalElements}
       />
