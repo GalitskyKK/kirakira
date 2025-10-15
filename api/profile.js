@@ -612,7 +612,7 @@ async function protectedHandler(req, res) {
           })
         }
 
-        // Проверяем, что пользователи - друзья
+        // Проверяем, что пользователи - друзья (если профиль приватный)
         const { data: friendship, error: friendshipError } = await supabase
           .from('friendships')
           .select('*')
@@ -622,23 +622,30 @@ async function protectedHandler(req, res) {
           .eq('status', 'accepted')
           .single()
 
+        // Если не друзья, проверим настройки приватности
         if (friendshipError || !friendship) {
-          return res.status(403).json({
-            success: false,
-            error: 'Not friends or friendship not found',
-          })
+          // Получаем данные друга для проверки приватности
+          const friend = await ensureUser(parseInt(friendTelegramId))
+          const privacySettings = friend.privacy_settings || {}
+
+          // Если профиль приватный - требуем дружбу
+          if (!privacySettings.showProfile) {
+            return res.status(403).json({
+              success: false,
+              error: 'Профиль недоступен или пользователь не в друзьях',
+            })
+          }
+
+          // Если профиль публичный - разрешаем просмотр
+          console.log(
+            `✅ Public profile access granted for user ${friendTelegramId}`
+          )
         }
 
         // Получаем данные друга
         const friend = await ensureUser(parseInt(friendTelegramId))
 
-        // Проверяем настройки приватности друга
-        const privacySettings = friend.privacy_settings || {}
-        if (!privacySettings.showProfile) {
-          return res
-            .status(403)
-            .json({ success: false, error: 'Profile is private' })
-        }
+        // Настройки приватности уже проверены выше
 
         // Обновляем достижения друга (чтобы они были актуальными)
         await checkAndUpdateAchievements(friend.telegram_id)
