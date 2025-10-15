@@ -83,11 +83,13 @@ export function useStreakFreeze() {
           currentStreak: result.currentStreak,
         })
 
-        // Обновляем lastCheckin в moodStore, чтобы предотвратить повторную проверку
-        // Устанавливаем на сегодня, чтобы "сбросить" пропущенные дни
+        // 🔥 ИСПРАВЛЕНИЕ: Обновляем lastCheckin на ВЧЕРАШНИЙ день.
+        // Это симулирует успешную отметку за пропущенный день и
+        // позволяет пользователю отметиться за СЕГОДНЯ.
         const { setLastCheckin } = useMoodStore.getState()
-        const today = new Date()
-        setLastCheckin(today)
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1)
+        setLastCheckin(yesterday)
 
         // Закрываем модалку и сбрасываем состояние
         setShowModal(false)
@@ -150,11 +152,13 @@ export function useStreakFreeze() {
           longestStreak: result.longestStreak,
         })
 
-        // Обновляем lastCheckin в moodStore, чтобы предотвратить повторную проверку
-        // Устанавливаем на сегодня, чтобы "сбросить" пропущенные дни
+        // 🔥 ИСПРАВЛЕНИЕ: Обновляем lastCheckin на ВЧЕРАШНИЙ день.
+        // Это позволяет пользователю сразу начать новый стрик,
+        // отметив настроение за СЕГОДНЯ.
         const { setLastCheckin } = useMoodStore.getState()
-        const today = new Date()
-        setLastCheckin(today)
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1)
+        setLastCheckin(yesterday)
 
         // Закрываем модалку и сбрасываем состояние
         setShowModal(false)
