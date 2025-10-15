@@ -462,8 +462,17 @@ async function handleSearch(req, res) {
         `🔍 Global user search: query="${query}", cleanQuery="${cleanQuery}", searchPattern="${searchPattern}", page=${pageNum}, limit=${limitNum}`
       )
 
+      // 🔑 ПРОБЛЕМА: JWT-клиент видит только друзей из-за RLS
+      // Для глобального поиска используем SERVICE_ROLE_KEY
+      console.log('🔍 Creating service role client for global search...')
+      const { createClient } = await import('@supabase/supabase-js')
+      const serviceSupabase = createClient(
+        process.env.SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      )
+
       // Тестовый запрос - проверим есть ли вообще пользователи в базе
-      const testQuery = await supabase
+      const testQuery = await serviceSupabase
         .from('users')
         .select('telegram_id, username, first_name')
         .limit(5)
@@ -475,7 +484,7 @@ async function handleSearch(req, res) {
 
       // Поиск пользователей по username или firstName
       // Используем отдельные запросы и объединяем результаты
-      const usernameQuery = supabase
+      const usernameQuery = serviceSupabase
         .from('users')
         .select(
           'telegram_id, first_name, last_name, username, photo_url, level, total_elements, current_streak, registration_date, privacy_settings'
@@ -483,7 +492,7 @@ async function handleSearch(req, res) {
         .neq('telegram_id', parseInt(searcherTelegramId))
         .ilike('username', `%${cleanQuery}%`)
 
-      const firstNameQuery = supabase
+      const firstNameQuery = serviceSupabase
         .from('users')
         .select(
           'telegram_id, first_name, last_name, username, photo_url, level, total_elements, current_streak, registration_date, privacy_settings'
@@ -571,6 +580,7 @@ async function handleSearch(req, res) {
       })
 
       // Проверяем отношения для каждого найденного пользователя
+      // Используем JWT-клиент для проверки дружбы (личные данные)
       const usersWithRelations = await Promise.all(
         visibleUsers.map(async user => {
           // Проверяем существующие отношения
