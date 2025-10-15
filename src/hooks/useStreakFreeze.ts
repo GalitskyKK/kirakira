@@ -3,7 +3,7 @@ import { useUserStore } from '@/stores'
 import { useMoodStore } from '@/stores/moodStore'
 import {
   getStreakFreezes,
-  useStreakFreeze as useStreakFreezeAPI,
+  useStreakFreezeAPI,
   resetStreak as resetStreakAPI,
   checkMissedDays,
   canRecoverStreak,
@@ -50,17 +50,15 @@ export function useStreakFreeze() {
     currentUser?.stats.autoFreezes,
   ])
 
-  // Использовать заморозку
-  const useFreeze = useCallback(
+  // Функция для использования заморозки (внутренняя)
+  const performFreeze = useCallback(
     async (freezeType: 'auto' | 'manual') => {
-      if (!currentUser?.telegramId || missedDays === 0) return
+      if (!currentUser?.telegramId) return
 
       try {
-        console.log('🧊 Starting freeze usage:', {
-          freezeType,
-          missedDays,
-          userId: currentUser.telegramId,
-        })
+        console.log(
+          `🧊 Using ${freezeType} freeze for user ${currentUser.telegramId}`
+        )
         setIsLoading(true)
 
         const result = await useStreakFreezeAPI({
@@ -86,11 +84,10 @@ export function useStreakFreeze() {
         })
 
         // Обновляем lastCheckin в moodStore, чтобы предотвратить повторную проверку
-        // Устанавливаем на вчерашний день, чтобы пользователь мог отметить настроение сегодня
+        // Устанавливаем на сегодня, чтобы "сбросить" пропущенные дни
         const { setLastCheckin } = useMoodStore.getState()
-        const yesterday = new Date()
-        yesterday.setDate(yesterday.getDate() - 1)
-        setLastCheckin(yesterday)
+        const today = new Date()
+        setLastCheckin(today)
 
         // Закрываем модалку и сбрасываем состояние
         setShowModal(false)
@@ -98,34 +95,36 @@ export function useStreakFreeze() {
         setHasProcessedMissedDays(false)
 
         // Показываем сообщение об успехе
-        if (freezeType === 'auto') {
+        if (freezeType === 'manual') {
           setAutoUsedMessage(
-            `Автоматически использована заморозка! Стрик сохранён (${result.currentStreak} дней) 🧊`
-          )
-          setTimeout(() => setAutoUsedMessage(null), 5000)
-        } else {
-          setAutoUsedMessage(
-            `Заморозка использована! Стрик сохранён (${result.currentStreak} дней) 🧊`
+            `Использована заморозка! Стрик восстановлен до ${result.currentStreak} дней 🧊`
           )
           setTimeout(() => setAutoUsedMessage(null), 5000)
         }
 
-        console.log('✅ Freeze used successfully:', {
-          freezeType,
-          result,
-          lastCheckinUpdated: true,
-          modalClosed: true,
-        })
-
-        // Не возвращаем result, чтобы соответствовать типу Promise<void>
+        console.log(
+          `✅ ${freezeType} freeze used successfully. New streak: ${result.currentStreak}`
+        )
       } catch (error) {
-        console.error('Failed to use streak freeze:', error)
-        throw error
+        console.error(`❌ Error using ${freezeType} freeze:`, error)
+        setAutoUsedMessage(
+          `Ошибка при использовании заморозки: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`
+        )
+        setTimeout(() => setAutoUsedMessage(null), 5000)
       } finally {
         setIsLoading(false)
       }
     },
     [currentUser?.telegramId, missedDays]
+  )
+
+  // Использовать заморозку
+  const useFreeze = useCallback(
+    async (freezeType: 'auto' | 'manual') => {
+      if (!currentUser?.telegramId || missedDays === 0) return
+      await performFreeze(freezeType)
+    },
+    [currentUser?.telegramId, missedDays, performFreeze]
   )
 
   // Сбросить стрик (без использования заморозок)
@@ -152,11 +151,10 @@ export function useStreakFreeze() {
         })
 
         // Обновляем lastCheckin в moodStore, чтобы предотвратить повторную проверку
-        // Устанавливаем на вчерашний день, чтобы пользователь мог отметить настроение сегодня
+        // Устанавливаем на сегодня, чтобы "сбросить" пропущенные дни
         const { setLastCheckin } = useMoodStore.getState()
-        const yesterday = new Date()
-        yesterday.setDate(yesterday.getDate() - 1)
-        setLastCheckin(yesterday)
+        const today = new Date()
+        setLastCheckin(today)
 
         // Закрываем модалку и сбрасываем состояние
         setShowModal(false)
@@ -186,6 +184,27 @@ export function useStreakFreeze() {
     const { lastCheckin } = useMoodStore.getState()
     const missed = checkMissedDays(lastCheckin)
 
+    console.log('🔍 Checking missed days:', {
+      lastCheckin: lastCheckin?.toISOString(),
+      missed,
+      hasProcessedMissedDays,
+      currentStreak: currentUser?.stats?.currentStreak,
+    })
+
+    // Если у пользователя есть активный стрик, не показывать модалку заморозки
+    if (currentUser?.stats?.currentStreak > 0) {
+      console.log('🔍 User has active streak, skipping freeze modal')
+      setHasProcessedMissedDays(true)
+      return
+    }
+
+    // Если стрик уже сброшен (currentStreak = 0), не показывать модалку заморозки
+    if (currentUser?.stats?.currentStreak === 0 && missed > 0) {
+      console.log('🔍 Streak already reset, skipping freeze modal')
+      setHasProcessedMissedDays(true)
+      return
+    }
+
     if (missed > 0 && canRecoverStreak(missed)) {
       setMissedDays(missed)
       setHasProcessedMissedDays(true)
@@ -198,9 +217,10 @@ export function useStreakFreeze() {
 
       if (recommendedType === 'auto') {
         // Автоматически используем авто-заморозку
-        await useFreeze('auto')
+        // Вызываем функцию напрямую, а не хук
+        await performFreeze('auto')
         // После автозаморозки не нужно сбрасывать hasProcessedMissedDays
-        // так как useFreeze уже это делает
+        // так как performFreeze уже это делает
       } else {
         // Показываем модалку для ручного выбора
         setShowModal(true)
@@ -236,7 +256,8 @@ export function useStreakFreeze() {
     setShowModal,
     closeModal: () => {
       setShowModal(false)
-      setHasProcessedMissedDays(false)
+      // НЕ сбрасываем hasProcessedMissedDays при закрытии модалки
+      // чтобы предотвратить повторное открытие
     },
   }
 }

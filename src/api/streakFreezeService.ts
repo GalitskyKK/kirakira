@@ -68,7 +68,7 @@ export async function getStreakFreezes(
 /**
  * Использовать заморозку стрика
  */
-export async function useStreakFreeze(
+export async function useStreakFreezeAPI(
   params: UseStreakFreezeParams
 ): Promise<UseStreakFreezeResponse> {
   try {
