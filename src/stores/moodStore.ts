@@ -47,6 +47,7 @@ interface MoodActions {
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
   clearMoodHistory: () => void
+  setLastCheckin: (date: Date) => void
 }
 
 type MoodStore = MoodState & MoodActions
@@ -512,6 +513,10 @@ export const useMoodStore = create<MoodStore>()(
         lastCheckin: null,
         error: null,
       })
+    },
+
+    setLastCheckin: (date: Date) => {
+      set({ lastCheckin: date })
     },
   }))
 )

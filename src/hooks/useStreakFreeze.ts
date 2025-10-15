@@ -22,6 +22,7 @@ export function useStreakFreeze() {
   const [showModal, setShowModal] = useState(false)
   const [missedDays, setMissedDays] = useState(0)
   const [autoUsedMessage, setAutoUsedMessage] = useState<string | null>(null)
+  const [hasProcessedMissedDays, setHasProcessedMissedDays] = useState(false)
 
   // Загрузка заморозок
   const loadFreezes = useCallback(async () => {
@@ -73,9 +74,10 @@ export function useStreakFreeze() {
           }
         })
 
-        // Закрываем модалку
+        // Закрываем модалку и сбрасываем состояние
         setShowModal(false)
         setMissedDays(0)
+        setHasProcessedMissedDays(false)
 
         // Показываем сообщение об успехе
         if (freezeType === 'auto') {
@@ -102,6 +104,10 @@ export function useStreakFreeze() {
 
     const performReset = async () => {
       try {
+        console.log(
+          '🔄 Starting streak reset for user:',
+          currentUser.telegramId
+        )
         setIsLoading(true)
 
         const result = await resetStreakAPI({
@@ -115,9 +121,17 @@ export function useStreakFreeze() {
           longestStreak: result.longestStreak,
         })
 
-        // Закрываем модалку
+        // Обновляем lastCheckin в moodStore, чтобы предотвратить повторную проверку
+        // Устанавливаем на вчерашний день, чтобы пользователь мог отметить настроение сегодня
+        const { setLastCheckin } = useMoodStore.getState()
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1)
+        setLastCheckin(yesterday)
+
+        // Закрываем модалку и сбрасываем состояние
         setShowModal(false)
         setMissedDays(0)
+        setHasProcessedMissedDays(false)
 
         // Показываем сообщение об успехе
         setAutoUsedMessage(`Стрик сброшен! Начинаем новую серию 🌱`)
@@ -137,20 +151,19 @@ export function useStreakFreeze() {
 
   // Проверка пропущенных дней при монтировании
   const checkAndHandleMissedDays = useCallback(async () => {
-    if (!currentUser?.telegramId) return
+    if (!currentUser?.telegramId || hasProcessedMissedDays) return
 
     const { lastCheckin } = useMoodStore.getState()
     const missed = checkMissedDays(lastCheckin)
 
     if (missed > 0 && canRecoverStreak(missed)) {
       setMissedDays(missed)
+      setHasProcessedMissedDays(true)
 
       // Загружаем заморозки
-      await loadFreezes()
+      const freezes = await getStreakFreezes(currentUser.telegramId)
+      setFreezeData(freezes)
 
-      // Проверяем можно ли использовать авто-заморозку
-      const freezes =
-        freezeData ?? (await getStreakFreezes(currentUser.telegramId))
       const recommendedType = getRecommendedFreezeType(missed, freezes)
 
       if (recommendedType === 'auto') {
@@ -163,14 +176,17 @@ export function useStreakFreeze() {
     } else if (missed > 7) {
       // Стрик потерян безвозвратно
       setMissedDays(missed)
+      setHasProcessedMissedDays(true)
       setShowModal(true)
     }
-  }, [currentUser?.telegramId, loadFreezes, freezeData, useFreeze])
+  }, [currentUser?.telegramId, useFreeze, hasProcessedMissedDays])
 
   // Автоматическая проверка при загрузке
   useEffect(() => {
-    void loadFreezes()
-  }, [loadFreezes])
+    if (currentUser?.telegramId && !hasProcessedMissedDays) {
+      void loadFreezes()
+    }
+  }, [currentUser?.telegramId, hasProcessedMissedDays, loadFreezes])
 
   return {
     // Данные
@@ -186,6 +202,9 @@ export function useStreakFreeze() {
     resetStreak,
     checkMissedDays: checkAndHandleMissedDays,
     setShowModal,
-    closeModal: () => setShowModal(false),
+    closeModal: () => {
+      setShowModal(false)
+      setHasProcessedMissedDays(false)
+    },
   }
 }
