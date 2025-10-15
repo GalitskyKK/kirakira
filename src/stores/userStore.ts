@@ -693,6 +693,10 @@ export const useUserStore = create<UserStore>()(
                 : serverUser.gardens_shared !== undefined
                   ? serverUser.gardens_shared
                   : 0,
+            // 🔥 ИСПРАВЛЕНИЕ: Добавляем обработку freeUpgrades из БД
+            streakFreezes: serverUser.streak_freezes ?? 0,
+            autoFreezes: serverUser.auto_freezes ?? 0,
+            freeUpgrades: serverUser.free_upgrades ?? 0,
           },
           // 🔥 ПРИОРИТЕТ БД: Используем данные из БД, fallback только если undefined/null
           experience:

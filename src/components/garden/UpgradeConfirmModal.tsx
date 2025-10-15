@@ -214,7 +214,23 @@ export function UpgradeConfirmModal({
 
             {/* Стоимость */}
             <div className="rounded-lg border-2 border-dashed border-gray-300 p-3 dark:border-gray-600">
-              {hasFreeUpgrades ? (
+              {hasFreeUpgrades && canAffordSprouts ? (
+                <div className="text-center">
+                  <div className="mb-2 text-sm text-gray-600 dark:text-gray-400">
+                    Выберите способ улучшения:
+                  </div>
+                  <div className="flex justify-center gap-4">
+                    <div className="flex items-center gap-1 text-lg font-bold text-purple-600 dark:text-purple-400">
+                      <Sparkles className="h-5 w-5" />
+                      <span>Бесплатно</span>
+                    </div>
+                    <div className="text-gray-400">или</div>
+                    <div className="flex items-center gap-1 text-lg font-bold text-green-600 dark:text-green-400">
+                      <span>{cost}🌿</span>
+                    </div>
+                  </div>
+                </div>
+              ) : hasFreeUpgrades ? (
                 <div className="flex items-center justify-center gap-2 text-lg font-bold text-purple-600 dark:text-purple-400">
                   <Sparkles className="h-5 w-5" />
                   <span>Бесплатно</span>
@@ -245,27 +261,49 @@ export function UpgradeConfirmModal({
             )}
 
             {/* Кнопки действий */}
-            <div className="flex gap-2">
+            <div className="space-y-2">
+              {/* Кнопки выбора способа улучшения */}
+              {hasFreeUpgrades && canAffordSprouts && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => onConfirm(true)}
+                    className="flex-1 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 px-3 py-2 text-sm font-bold text-white transition-all hover:from-purple-600 hover:to-indigo-700"
+                  >
+                    ✨ Бесплатно
+                  </button>
+                  <button
+                    onClick={() => onConfirm(false)}
+                    className="flex-1 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-2 text-sm font-bold text-white transition-all hover:from-green-600 hover:to-emerald-700"
+                  >
+                    🌿 За {cost} ростков
+                  </button>
+                </div>
+              )}
+
+              {/* Обычная кнопка улучшения */}
+              {(!hasFreeUpgrades || !canAffordSprouts) && (
+                <button
+                  onClick={() => onConfirm(hasFreeUpgrades)}
+                  disabled={!canUpgrade}
+                  className={`
+                    w-full rounded-xl px-3 py-2 text-sm font-bold text-white transition-all
+                    ${
+                      canUpgrade
+                        ? 'bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600'
+                        : 'cursor-not-allowed bg-gray-400 opacity-50'
+                    }
+                  `}
+                >
+                  {hasFreeUpgrades ? '✨ Улучшить' : 'Улучшить'}
+                </button>
+              )}
+
+              {/* Кнопка отмены */}
               <button
                 onClick={onClose}
-                className="flex-1 rounded-xl border-2 border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                className="w-full rounded-xl border-2 border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
               >
                 Отмена
-              </button>
-
-              <button
-                onClick={() => onConfirm(hasFreeUpgrades)}
-                disabled={!canUpgrade}
-                className={`
-                  flex-1 rounded-xl px-3 py-2 text-sm font-bold text-white transition-all
-                  ${
-                    canUpgrade
-                      ? 'bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600'
-                      : 'cursor-not-allowed bg-gray-400 opacity-50'
-                  }
-                `}
-              >
-                {hasFreeUpgrades ? '✨ Улучшить' : 'Улучшить'}
               </button>
             </div>
           </div>
