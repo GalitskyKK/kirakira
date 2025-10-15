@@ -145,80 +145,22 @@ function computeStatsFromUserData(userData) {
     const { user, moods = [], garden = {} } = userData
     const gardenElements = garden.elements || []
 
-    // Вычисляем streak настроений - ИСПРАВЛЕННАЯ ЛОГИКА
-    let currentStreak = user.current_streak || 0 // Используем стрик из БД как базовый
-    let longestStreak = 0
+    // 🔥 V3 ЛОГИКА: Стрик управляется на бэкенде через streak_last_checkin
+    // Эта функция просто возвращает значения из БД, не пересчитывая их
+    const currentStreak = user.current_streak || 0
+    let longestStreak = user.longest_streak || 0
     let tempStreak = 0
 
+    console.log(
+      `📊 STREAK [V3]: Using server-managed streak from DB: current=${currentStreak}, longest=${longestStreak}`
+    )
+
+    // Вычисляем самый длинный streak из истории (для статистики)
     if (moods.length > 0) {
       const sortedMoods = moods.sort(
         (a, b) => new Date(b.mood_date) - new Date(a.mood_date)
       )
 
-      console.log(
-        `🔍 STREAK DEBUG: Анализ ${sortedMoods.length} записей настроений, текущий стрик из БД: ${currentStreak}`
-      )
-
-      // Проверяем текущий streak - ИСПРАВЛЕННАЯ ЛОГИКА
-      const today = new Date()
-      today.setUTCHours(0, 0, 0, 0) // Используем UTC для корректного сравнения дат
-
-      // Проверяем есть ли запись за сегодня или вчера для активного стрика
-      const lastMoodDate = new Date(sortedMoods[0].mood_date)
-      lastMoodDate.setUTCHours(0, 0, 0, 0)
-
-      const daysSinceLastMood = Math.floor(
-        (today - lastMoodDate) / (1000 * 60 * 60 * 24)
-      )
-      console.log(
-        `🔍 STREAK DEBUG: Последняя запись ${lastMoodDate.toISOString().split('T')[0]}, дней назад: ${daysSinceLastMood}`
-      )
-
-      // Стрик активен если последняя запись была сегодня или вчера
-      if (daysSinceLastMood <= 1) {
-        // Если стрик из БД больше 0, используем его (возможно установлен заморозкой)
-        if (currentStreak > 0) {
-          console.log(
-            `🔍 STREAK DEBUG: Используем стрик из БД: ${currentStreak} (возможно установлен заморозкой)`
-          )
-        } else {
-          currentStreak = 1
-          console.log(`🔍 STREAK DEBUG: Стрик активен, начинаем с 1`)
-
-          // Считаем последовательные дни назад
-          for (let i = 1; i < sortedMoods.length; i++) {
-            const currentMoodDate = new Date(sortedMoods[i - 1].mood_date)
-            const prevMoodDate = new Date(sortedMoods[i].mood_date)
-
-            currentMoodDate.setUTCHours(0, 0, 0, 0)
-            prevMoodDate.setUTCHours(0, 0, 0, 0)
-
-            const daysDiff = Math.floor(
-              (currentMoodDate - prevMoodDate) / (1000 * 60 * 60 * 24)
-            )
-            console.log(
-              `🔍 STREAK DEBUG: Сравниваем ${currentMoodDate.toISOString().split('T')[0]} и ${prevMoodDate.toISOString().split('T')[0]}, разница: ${daysDiff} дней`
-            )
-
-            if (daysDiff === 1) {
-              currentStreak++
-              console.log(`🔍 STREAK DEBUG: Стрик увеличен до ${currentStreak}`)
-            } else {
-              console.log(
-                `🔍 STREAK DEBUG: Стрик прерван, разница ${daysDiff} дней`
-              )
-              break
-            }
-          }
-        }
-      } else {
-        console.log(
-          `🔍 STREAK DEBUG: Стрик неактивен, последняя запись ${daysSinceLastMood} дней назад`
-        )
-        currentStreak = 0
-      }
-
-      // Вычисляем самый длинный streak
       tempStreak = 1
       for (let i = 1; i < sortedMoods.length; i++) {
         const prevDate = new Date(sortedMoods[i - 1].mood_date)
