@@ -48,6 +48,7 @@ export function MobileLayout() {
     isLoading: freezeLoading,
     autoUsedMessage,
     useFreeze,
+    resetStreak,
     checkMissedDays,
     closeModal,
   } = useStreakFreeze()
@@ -57,7 +58,7 @@ export function MobileLayout() {
 
   // Загружаем баланс валюты при монтировании
   useEffect(() => {
-    if (currentUser?.telegramId) {
+    if (currentUser?.telegramId != null) {
       void loadCurrency(currentUser.telegramId)
     }
   }, [currentUser?.telegramId, loadCurrency])
@@ -109,7 +110,7 @@ export function MobileLayout() {
               </div>
 
               {/* Сообщение об авто-использовании заморозки */}
-              {autoUsedMessage && (
+              {autoUsedMessage != null && autoUsedMessage.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -319,6 +320,7 @@ export function MobileLayout() {
             auto: freezeData.auto,
           }}
           onUseFreeze={useFreeze}
+          onResetStreak={resetStreak as (() => Promise<void>) | undefined}
           isLoading={freezeLoading}
         />
       )}

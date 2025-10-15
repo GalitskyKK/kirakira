@@ -29,6 +29,18 @@ export interface UseStreakFreezeResponse {
   readonly error?: string
 }
 
+export interface ResetStreakParams {
+  readonly telegramId: number
+}
+
+export interface ResetStreakResponse {
+  readonly success: boolean
+  readonly currentStreak: number
+  readonly longestStreak: number
+  readonly message: string
+  readonly error?: string
+}
+
 /**
  * Получить количество заморозок стрика
  */
@@ -73,6 +85,30 @@ export async function useStreakFreeze(
     return response.data
   } catch (error) {
     console.error('Error using streak freeze:', error)
+    throw error
+  }
+}
+
+/**
+ * Сбросить стрик (без использования заморозок)
+ */
+export async function resetStreak(
+  params: ResetStreakParams
+): Promise<ResetStreakResponse> {
+  try {
+    const response = await apiPost<{
+      success: boolean
+      data: ResetStreakResponse
+      error?: string
+    }>('/api/user?action=reset-streak', params)
+
+    if (!response.success || !response.data) {
+      throw new Error(response.error ?? 'Failed to reset streak')
+    }
+
+    return response.data
+  } catch (error) {
+    console.error('Error resetting streak:', error)
     throw error
   }
 }

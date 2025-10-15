@@ -17,6 +17,7 @@ interface StreakFreezeModalProps {
     readonly auto: number
   }
   readonly onUseFreeze: (freezeType: 'auto' | 'manual') => Promise<void>
+  readonly onResetStreak?: (() => Promise<void>) | undefined
   readonly onBuyFreeze?: () => void
   readonly isLoading?: boolean
 }
@@ -28,6 +29,7 @@ export function StreakFreezeModal({
   currentStreak,
   availableFreezes,
   onUseFreeze,
+  onResetStreak,
   onBuyFreeze,
   isLoading = false,
 }: StreakFreezeModalProps) {
@@ -215,7 +217,7 @@ export function StreakFreezeModal({
               {/* Авто-заморозка (приоритет) */}
               {hasAuto && missedDays === 1 && (
                 <Button
-                  onClick={() => onUseFreeze('auto')}
+                  onClick={() => void onUseFreeze('auto')}
                   disabled={isLoading}
                   fullWidth
                   className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
@@ -234,7 +236,7 @@ export function StreakFreezeModal({
               {/* Обычная заморозка */}
               {hasEnoughManual && (
                 <Button
-                  onClick={() => onUseFreeze('manual')}
+                  onClick={() => void onUseFreeze('manual')}
                   disabled={isLoading}
                   fullWidth
                   variant={hasAuto ? 'secondary' : 'primary'}
@@ -273,10 +275,21 @@ export function StreakFreezeModal({
 
               {/* Сбросить стрик */}
               <Button
-                onClick={onClose}
+                onClick={
+                  hasEnoughManual || hasAuto
+                    ? onClose
+                    : onResetStreak
+                      ? () => void onResetStreak()
+                      : onClose
+                }
                 disabled={isLoading}
                 fullWidth
                 variant="ghost"
+                className={
+                  !hasEnoughManual && !hasAuto && onResetStreak
+                    ? 'border border-red-500/50 text-red-400 hover:bg-red-500/10'
+                    : ''
+                }
               >
                 {hasEnoughManual || hasAuto ? 'Отмена' : 'Сбросить стрик'}
               </Button>

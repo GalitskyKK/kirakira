@@ -4,6 +4,7 @@ import { useMoodStore } from '@/stores/moodStore'
 import {
   getStreakFreezes,
   useStreakFreeze as useStreakFreezeAPI,
+  resetStreak as resetStreakAPI,
   checkMissedDays,
   canRecoverStreak,
   getRecommendedFreezeType,
@@ -95,6 +96,45 @@ export function useStreakFreeze() {
     [currentUser?.telegramId, missedDays]
   )
 
+  // Сбросить стрик (без использования заморозок)
+  const resetStreak = useCallback((): Promise<void> => {
+    if (!currentUser?.telegramId) return Promise.resolve()
+
+    const performReset = async () => {
+      try {
+        setIsLoading(true)
+
+        const result = await resetStreakAPI({
+          telegramId: currentUser.telegramId!,
+        })
+
+        // Обновляем стрик в userStore
+        const { updateStats } = useUserStore.getState()
+        await updateStats({
+          currentStreak: result.currentStreak,
+          longestStreak: result.longestStreak,
+        })
+
+        // Закрываем модалку
+        setShowModal(false)
+        setMissedDays(0)
+
+        // Показываем сообщение об успехе
+        setAutoUsedMessage(`Стрик сброшен! Начинаем новую серию 🌱`)
+        setTimeout(() => setAutoUsedMessage(null), 5000)
+
+        console.log('✅ Streak reset successfully:', result)
+      } catch (error) {
+        console.error('Failed to reset streak:', error)
+        throw error
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    return performReset()
+  }, [currentUser?.telegramId])
+
   // Проверка пропущенных дней при монтировании
   const checkAndHandleMissedDays = useCallback(async () => {
     if (!currentUser?.telegramId) return
@@ -143,6 +183,7 @@ export function useStreakFreeze() {
     // Действия
     loadFreezes,
     useFreeze,
+    resetStreak,
     checkMissedDays: checkAndHandleMissedDays,
     setShowModal,
     closeModal: () => setShowModal(false),

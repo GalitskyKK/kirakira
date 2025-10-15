@@ -593,6 +593,66 @@ async function handleUseStreakFreeze(req, res) {
 }
 
 /**
+ * 🔄 Сбросить стрик (без использования заморозок)
+ * POST /api/user?action=reset-streak
+ */
+async function handleResetStreak(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' })
+  }
+
+  try {
+    const { telegramId } = req.body
+
+    if (!telegramId) {
+      return res
+        .status(400)
+        .json({ success: false, error: 'Missing telegramId' })
+    }
+
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+
+    console.log(`🔄 Resetting streak for user ${telegramId}`)
+
+    // Сбрасываем стрик в базе данных
+    const { data: updated, error: updateError } = await supabase
+      .from('users')
+      .update({
+        current_streak: 0,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('telegram_id', telegramId)
+      .select('current_streak, longest_streak')
+      .single()
+
+    if (updateError) {
+      console.error('Error resetting streak:', updateError)
+      return res
+        .status(500)
+        .json({ success: false, error: 'Failed to reset streak' })
+    }
+
+    console.log(
+      `✅ Streak reset successfully. New streak: ${updated.current_streak}, longest streak: ${updated.longest_streak}`
+    )
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        currentStreak: updated.current_streak,
+        longestStreak: updated.longest_streak,
+        message: 'Streak reset successfully',
+      },
+    })
+  } catch (error) {
+    console.error('Error in handleResetStreak:', error)
+    return res
+      .status(500)
+      .json({ success: false, error: 'Internal server error' })
+  }
+}
+
+/**
  * 🧊 Получить количество заморозок стрика
  * GET /api/user?action=get-streak-freezes&telegramId=123
  */
@@ -695,10 +755,12 @@ async function protectedHandler(req, res) {
         return await handleUseStreakFreeze(req, res)
       case 'get-streak-freezes':
         return await handleGetStreakFreezes(req, res)
+      case 'reset-streak':
+        return await handleResetStreak(req, res)
       default:
         return res.status(400).json({
           success: false,
-          error: `Unknown action: ${action}. Available actions: stats, update-photo, use-streak-freeze, get-streak-freezes`,
+          error: `Unknown action: ${action}. Available actions: stats, update-photo, use-streak-freeze, get-streak-freezes, reset-streak`,
         })
     }
   } catch (error) {
