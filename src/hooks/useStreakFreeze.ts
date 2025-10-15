@@ -3,7 +3,7 @@ import { useUserStore } from '@/stores'
 import { useMoodStore } from '@/stores/moodStore'
 import {
   getStreakFreezes,
-  useStreakFreezeAPI,
+  applyStreakFreeze,
   resetStreak as resetStreakAPI,
   checkMissedDays,
   canRecoverStreak,
@@ -61,7 +61,7 @@ export function useStreakFreeze() {
         )
         setIsLoading(true)
 
-        const result = await useStreakFreezeAPI({
+        const result = await applyStreakFreeze({
           telegramId: currentUser.telegramId,
           freezeType,
           missedDays,
@@ -92,7 +92,7 @@ export function useStreakFreeze() {
         // Закрываем модалку и сбрасываем состояние
         setShowModal(false)
         setMissedDays(0)
-        setHasProcessedMissedDays(false)
+        // НЕ сбрасываем hasProcessedMissedDays - пользователь уже обработал пропущенные дни
 
         // Показываем сообщение об успехе
         if (freezeType === 'manual') {
@@ -159,7 +159,7 @@ export function useStreakFreeze() {
         // Закрываем модалку и сбрасываем состояние
         setShowModal(false)
         setMissedDays(0)
-        setHasProcessedMissedDays(false)
+        // НЕ сбрасываем hasProcessedMissedDays - пользователь уже обработал пропущенные дни
 
         // Показываем сообщение об успехе
         setAutoUsedMessage(`Стрик сброшен! Начинаем новую серию 🌱`)
@@ -191,20 +191,24 @@ export function useStreakFreeze() {
       currentStreak: currentUser?.stats?.currentStreak,
     })
 
-    // Если у пользователя есть активный стрик, не показывать модалку заморозки
-    if (currentUser?.stats?.currentStreak > 0) {
-      console.log('🔍 User has active streak, skipping freeze modal')
+    // Если нет пропущенных дней - всё ОК
+    if (missed === 0) {
+      console.log('✅ No missed days, user is up to date')
       setHasProcessedMissedDays(true)
       return
     }
 
-    // Если стрик уже сброшен (currentStreak = 0), не показывать модалку заморозки
+    // Если стрик уже сброшен (currentStreak = 0) и есть пропущенные дни
+    // значит стрик уже потерян, не показываем модалку
     if (currentUser?.stats?.currentStreak === 0 && missed > 0) {
-      console.log('🔍 Streak already reset, skipping freeze modal')
+      console.log(
+        '🔍 Streak already reset (currentStreak = 0), skipping freeze modal'
+      )
       setHasProcessedMissedDays(true)
       return
     }
 
+    // Если есть пропущенные дни И можно восстановить стрик
     if (missed > 0 && canRecoverStreak(missed)) {
       setMissedDays(missed)
       setHasProcessedMissedDays(true)
@@ -236,9 +240,19 @@ export function useStreakFreeze() {
   // Автоматическая проверка при загрузке
   useEffect(() => {
     if (currentUser?.telegramId && !hasProcessedMissedDays) {
+      console.log(
+        '🔄 Initializing streak freeze check for user:',
+        currentUser.telegramId
+      )
       void loadFreezes()
+      void checkAndHandleMissedDays()
     }
-  }, [currentUser?.telegramId, hasProcessedMissedDays, loadFreezes])
+  }, [
+    currentUser?.telegramId,
+    hasProcessedMissedDays,
+    loadFreezes,
+    checkAndHandleMissedDays,
+  ])
 
   return {
     // Данные
