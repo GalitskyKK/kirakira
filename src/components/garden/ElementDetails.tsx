@@ -7,6 +7,8 @@ import { MOOD_CONFIG } from '@/types/mood'
 import { PlantRenderer } from '@/components/garden/plants'
 import type { GardenElement } from '@/types'
 import { ElementUpgradeManager } from './ElementUpgradeManager'
+import { useGardenStore } from '@/stores'
+import { useEffect, useState } from 'react'
 
 interface ElementDetailsProps {
   element: GardenElement
@@ -14,7 +16,32 @@ interface ElementDetailsProps {
 }
 
 export function ElementDetails({ element, onBack }: ElementDetailsProps) {
-  const moodConfig = MOOD_CONFIG[element.moodInfluence] || MOOD_CONFIG.joy // Fallback to joy if invalid mood
+  const { currentGarden } = useGardenStore()
+  const [currentElement, setCurrentElement] = useState(element)
+  const [isUpgrading, setIsUpgrading] = useState(false)
+
+  // 🔄 ОБНОВЛЯЕМ ЭЛЕМЕНТ ПРИ ИЗМЕНЕНИЯХ В STORE
+  useEffect(() => {
+    if (currentGarden) {
+      const updatedElement = currentGarden.elements.find(
+        el => el.id === element.id
+      )
+      if (updatedElement && updatedElement.rarity !== currentElement.rarity) {
+        setIsUpgrading(true)
+        setTimeout(() => {
+          setCurrentElement(updatedElement)
+          setIsUpgrading(false)
+          console.log(
+            '✅ Element details updated with new rarity:',
+            updatedElement.rarity
+          )
+        }, 500) // Небольшая задержка для анимации
+      }
+    }
+  }, [currentGarden, element.id, currentElement.rarity])
+
+  const moodConfig =
+    MOOD_CONFIG[currentElement.moodInfluence] || MOOD_CONFIG.joy // Fallback to joy if invalid mood
 
   const rarityLabels: Record<string, string> = {
     common: 'Обычный',
@@ -87,24 +114,28 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
             }}
           >
             <div className="relative drop-shadow-lg">
-              <PlantRenderer element={element} size={120} />
+              <PlantRenderer element={currentElement} size={120} />
             </div>
           </motion.div>
 
           <h3 className="mb-2 text-2xl font-bold text-gray-900">
-            {element.name}
+            {currentElement.name}
           </h3>
 
-          <p className="mb-4 text-gray-600">{element.description}</p>
+          <p className="mb-4 text-gray-600">{currentElement.description}</p>
 
           <div className="flex justify-center space-x-2">
-            <span
-              className={`rounded-full px-2 py-1 text-xs font-medium ${getRarityColor(element.rarity)}`}
+            <motion.span
+              key={currentElement.rarity} // Принудительное пересоздание компонента при изменении редкости
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              className={`rounded-full px-2 py-1 text-xs font-medium ${getRarityColor(currentElement.rarity)} ${isUpgrading ? 'animate-pulse' : ''}`}
             >
-              {rarityLabels[element.rarity] ?? element.rarity}
-            </span>
+              {rarityLabels[currentElement.rarity] ?? currentElement.rarity}
+            </motion.span>
             <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-              {typeLabels[element.type] ?? element.type}
+              {typeLabels[currentElement.type] ?? currentElement.type}
             </span>
           </div>
         </Card>
@@ -122,10 +153,12 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
                   Дата появления
                 </p>
                 <p className="text-xs text-gray-600">
-                  {format(element.unlockDate, 'dd MMMM yyyy', { locale: ru })}
+                  {format(currentElement.unlockDate, 'dd MMMM yyyy', {
+                    locale: ru,
+                  })}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {formatDistanceToNow(element.unlockDate, {
+                  {formatDistanceToNow(currentElement.unlockDate, {
                     locale: ru,
                     addSuffix: true,
                   })}
@@ -157,7 +190,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
           </Card>
 
           {/* Seasonal Variant */}
-          {element.seasonalVariant && (
+          {currentElement.seasonalVariant && (
             <Card padding="sm">
               <div className="flex items-center space-x-3">
                 <div className="rounded-lg bg-green-100 p-2">
@@ -166,8 +199,8 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">Сезон</p>
                   <p className="text-xs text-gray-600">
-                    {seasonLabels[element.seasonalVariant] ??
-                      element.seasonalVariant}
+                    {seasonLabels[currentElement.seasonalVariant] ??
+                      currentElement.seasonalVariant}
                   </p>
                 </div>
               </div>
@@ -181,7 +214,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
                 Позиция в саду
               </p>
               <p className="text-xs text-gray-600">
-                ({element.position.x}, {element.position.y})
+                ({currentElement.position.x}, {currentElement.position.y})
               </p>
             </div>
           </Card>
@@ -203,7 +236,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
               <div>
                 <p className="font-medium">Растение выросло</p>
                 <p className="text-gray-500">
-                  {format(element.unlockDate, 'dd MMM yyyy, HH:mm', {
+                  {format(currentElement.unlockDate, 'dd MMM yyyy, HH:mm', {
                     locale: ru,
                   })}
                 </p>
@@ -223,7 +256,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
               </div>
             </motion.div>
 
-            {element.seasonalVariant && (
+            {currentElement.seasonalVariant && (
               <motion.div
                 className="flex items-start space-x-2"
                 initial={{ opacity: 0, x: -10 }}
@@ -234,7 +267,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
                 <div>
                   <p className="font-medium">Сезонный вариант</p>
                   <p className="text-gray-500">
-                    {seasonLabels[element.seasonalVariant]}
+                    {seasonLabels[currentElement.seasonalVariant]}
                   </p>
                 </div>
               </motion.div>
@@ -244,7 +277,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
 
         {/* Upgrade Button */}
         <div className="flex justify-center">
-          <ElementUpgradeManager element={element} />
+          <ElementUpgradeManager element={currentElement} />
         </div>
 
         {/* Care Tips */}
