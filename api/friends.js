@@ -453,10 +453,13 @@ async function handleSearch(req, res) {
       const pageNum = parseInt(page)
       const limitNum = parseInt(limit)
       const offset = (pageNum - 1) * limitNum
-      const searchPattern = `%${query.toLowerCase().trim()}%`
+
+      // Убираем @ из запроса если он есть
+      const cleanQuery = query.trim().replace(/^@/, '')
+      const searchPattern = `%${cleanQuery.toLowerCase()}%`
 
       console.log(
-        `🔍 Global user search: query="${query}", page=${pageNum}, limit=${limitNum}`
+        `🔍 Global user search: query="${query}", cleanQuery="${cleanQuery}", page=${pageNum}, limit=${limitNum}`
       )
 
       // Поиск пользователей по username или firstName
@@ -478,9 +481,30 @@ async function handleSearch(req, res) {
         })
       }
 
+      console.log(`🔍 Raw search results: ${users?.length || 0} users found`)
+
       // Фильтруем пользователей с учетом privacy settings
       const visibleUsers = (users || []).filter(user => {
-        const showProfile = user.privacy_settings?.showProfile ?? true
+        // privacy_settings может быть строкой или объектом
+        let privacySettings = user.privacy_settings
+
+        // Если это строка - парсим JSON
+        if (typeof privacySettings === 'string') {
+          try {
+            privacySettings = JSON.parse(privacySettings)
+          } catch (e) {
+            console.error(
+              'Failed to parse privacy_settings for user:',
+              user.telegram_id
+            )
+            privacySettings = {}
+          }
+        }
+
+        const showProfile = privacySettings?.showProfile ?? true
+        console.log(
+          `🔍 User ${user.telegram_id} (${user.username || user.first_name}): showProfile=${showProfile}`
+        )
         return showProfile
       })
 
@@ -501,6 +525,16 @@ async function handleSearch(req, res) {
             relationshipStatus = friendship.status
           }
 
+          // Парсим privacy_settings если это строка
+          let privacySettings = user.privacy_settings
+          if (typeof privacySettings === 'string') {
+            try {
+              privacySettings = JSON.parse(privacySettings)
+            } catch (e) {
+              privacySettings = {}
+            }
+          }
+
           return {
             telegram_id: user.telegram_id,
             first_name: user.first_name,
@@ -512,7 +546,7 @@ async function handleSearch(req, res) {
             total_elements: user.total_elements,
             current_streak: user.current_streak,
             relationshipStatus,
-            privacy_settings: user.privacy_settings,
+            privacy_settings: privacySettings,
           }
         })
       )
