@@ -491,7 +491,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
       <Card className="p-6 text-center">
         <Users className="mx-auto mb-4 h-12 w-12 text-blue-500" />
         <h3 className="mb-2 text-lg font-semibold">Друзья</h3>
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-400">
           Функции друзей доступны только в Telegram Mini App
         </p>
       </Card>
@@ -511,7 +511,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
           {/* <Users className="mx-auto h-16 w-16 text-blue-500" /> */}
         </motion.div>
         <h2 className="text-lg font-semibold">Друзья</h2>
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-400">
           Добавляйте друзей и поддерживайте друг друга
         </p>
       </div>
@@ -591,7 +591,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                 <Card className="p-6 text-center">
                   <Users className="mx-auto mb-3 h-8 w-8 text-gray-400" />
                   <h4 className="mb-2 font-medium">Пока нет друзей</h4>
-                  <p className="mb-4 text-sm text-gray-600">
+                  <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
                     Пригласите друзей присоединиться к KiraKira!
                   </p>
                   <Button

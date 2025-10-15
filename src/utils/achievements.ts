@@ -213,16 +213,12 @@ export function calculateAchievements(
  */
 export function calculateGardenerLevel(experience: number): GardenerLevel {
   for (let i = LEVELS_DATA.length - 1; i >= 0; i--) {
-    const level = LEVELS_DATA[i]
-    if (level && experience >= level.minExperience) {
+    const level = LEVELS_DATA[i]!
+    if (experience >= level.minExperience) {
       return level
     }
   }
-  const firstLevel = LEVELS_DATA[0]
-  if (!firstLevel) {
-    throw new Error('No levels available')
-  }
-  return firstLevel // Новичок по умолчанию
+  return LEVELS_DATA[0]! // Новичок по умолчанию
 }
 
 /**
@@ -238,9 +234,7 @@ export function calculateLevelProgress(experience: number): {
   const nextLevelIndex =
     LEVELS_DATA.findIndex(l => l.level === currentLevel.level) + 1
   const nextLevel =
-    nextLevelIndex < LEVELS_DATA.length
-      ? (LEVELS_DATA[nextLevelIndex] ?? null)
-      : null
+    nextLevelIndex < LEVELS_DATA.length ? LEVELS_DATA[nextLevelIndex]! : null
 
   if (!nextLevel) {
     return {
@@ -303,47 +297,6 @@ export function calculateExperienceFromStats(
 }
 
 /**
- * Синхронизирует уровень пользователя с его опытом
- * Возвращает правильный уровень на основе опыта
- */
-export function synchronizeUserLevel(
-  user: User,
-  moodStats: MoodStats,
-  totalElements: number
-): {
-  experience: number
-  level: number
-  levelInfo: {
-    currentLevel: GardenerLevel
-    nextLevel: GardenerLevel | null
-    progress: number
-    experienceToNext: number
-  }
-} {
-  // Используем опыт из пользователя если доступен, иначе рассчитываем
-  const experience =
-    user.experience ??
-    calculateExperienceFromStats(user, moodStats, totalElements)
-
-  const levelInfo = calculateLevelProgress(experience)
-  const actualLevel = levelInfo.currentLevel.level
-  const userLevel = user.level ?? 0
-
-  // Если уровни не совпадают, логируем предупреждение
-  if (userLevel !== actualLevel) {
-    console.warn(
-      `⚠️ Синхронизация уровня: пользователь имеет уровень ${userLevel}, но опыт ${experience} соответствует уровню ${actualLevel}. Используем рассчитанный уровень.`
-    )
-  }
-
-  return {
-    experience,
-    level: actualLevel,
-    levelInfo,
-  }
-}
-
-/**
  * Создает summary профиля для отображения
  */
 export function createProfileSummary(
@@ -352,18 +305,18 @@ export function createProfileSummary(
   totalElements: number
 ) {
   const achievements = calculateAchievements(user, moodStats, totalElements)
-  const { experience, level, levelInfo } = synchronizeUserLevel(
+  const experience = calculateExperienceFromStats(
     user,
     moodStats,
     totalElements
   )
+  const levelInfo = calculateLevelProgress(experience)
 
   return {
     achievements,
     unlockedAchievements: achievements.filter(a => a.isUnlocked).length,
     totalAchievements: achievements.length,
     experience,
-    level,
     levelInfo,
     stats: {
       daysSinceRegistration: Math.floor(

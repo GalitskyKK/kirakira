@@ -118,7 +118,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
               className={clsx(
                 'relative z-10 w-full',
                 sizeClasses[size],
-                'rounded-2xl bg-white shadow-2xl',
+                'rounded-2xl bg-white shadow-2xl dark:bg-gray-800',
                 'max-h-[90vh] overflow-hidden',
                 'mx-4',
                 className
@@ -130,9 +130,9 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
             >
               {/* Header */}
               {(title ?? showCloseButton) && (
-                <div className="flex items-center justify-between border-b border-gray-200 p-4">
+                <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
                   {title && (
-                    <h2 className="text-lg font-semibold text-gray-900">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                       {title}
                     </h2>
                   )}
@@ -140,8 +140,8 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
                     <button
                       onClick={onClose}
                       className={clsx(
-                        'rounded-lg p-1 text-gray-400',
-                        'hover:bg-gray-100 hover:text-gray-600',
+                        'rounded-lg p-1 text-gray-400 dark:text-gray-500',
+                        'hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300',
                         'focus:outline-none focus:ring-2 focus:ring-garden-500',
                         'transition-colors duration-200',
                         !title && 'ml-auto'
@@ -179,8 +179,8 @@ export function ModalHeader({ children, className }: ModalHeaderProps) {
   return (
     <div
       className={clsx(
-        'border-b border-gray-200 px-4 py-3',
-        'font-semibold text-gray-900',
+        'border-b border-gray-200 px-4 py-3 dark:border-gray-700',
+        'font-semibold text-gray-900 dark:text-gray-100',
         className
       )}
     >
@@ -207,8 +207,8 @@ export function ModalFooter({ children, className }: ModalFooterProps) {
   return (
     <div
       className={clsx(
-        'border-t border-gray-200 px-4 py-3',
-        'flex justify-end space-x-2 bg-gray-50',
+        'border-t border-gray-200 px-4 py-3 dark:border-gray-700',
+        'flex justify-end space-x-2 bg-gray-50 dark:bg-gray-800',
         className
       )}
     >

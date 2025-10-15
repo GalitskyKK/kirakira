@@ -105,7 +105,7 @@ export class ErrorBoundary extends React.Component<
           className={`min-h-screen p-4 ${
             isTelegramEnv
               ? 'bg-[var(--tg-bg-color,#ffffff)] text-[var(--tg-text-color,#000000)]'
-              : 'bg-gradient-to-br from-red-50 to-orange-50 text-gray-900'
+              : 'bg-gradient-to-br from-red-50 to-orange-50 text-gray-900 dark:from-red-900/20 dark:to-orange-900/20 dark:text-gray-100'
           }`}
         >
           <div className="mx-auto max-w-md">

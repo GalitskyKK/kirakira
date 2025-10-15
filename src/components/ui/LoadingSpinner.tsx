@@ -7,10 +7,10 @@ interface LoadingSpinnerProps {
   className?: string
 }
 
-export function LoadingSpinner({ 
-  size = 'md', 
+export function LoadingSpinner({
+  size = 'md',
   color = 'primary',
-  className 
+  className,
 }: LoadingSpinnerProps) {
   const sizeClasses = {
     sm: 'w-4 h-4',
@@ -40,7 +40,7 @@ export function LoadingSpinner({
       }}
     >
       <svg
-        className="w-full h-full"
+        className="h-full w-full"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -62,20 +62,20 @@ interface LoadingOverlayProps {
   message?: string
 }
 
-export function LoadingOverlay({ 
-  isLoading, 
-  children, 
-  message = 'Загрузка...' 
+export function LoadingOverlay({
+  isLoading,
+  children,
+  message = 'Загрузка...',
 }: LoadingOverlayProps) {
   return (
     <div className="relative">
       {children}
-      
+
       {isLoading && (
         <motion.div
           className={clsx(
             'absolute inset-0 z-10',
-            'bg-white/80 backdrop-blur-sm',
+            'bg-white/80 backdrop-blur-sm dark:bg-gray-900/80',
             'flex flex-col items-center justify-center',
             'rounded-2xl'
           )}
@@ -87,7 +87,7 @@ export function LoadingOverlay({
           <LoadingSpinner size="lg" />
           {message && (
             <motion.p
-              className="mt-3 text-sm text-gray-600 font-medium"
+              className="mt-3 text-sm font-medium text-gray-600 dark:text-gray-400"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -109,11 +109,11 @@ interface SkeletonProps {
   height?: string | number
 }
 
-export function Skeleton({ 
-  className, 
+export function Skeleton({
+  className,
   variant = 'rectangular',
   width,
-  height 
+  height,
 }: SkeletonProps) {
   const variantClasses = {
     text: 'h-4 rounded',
@@ -122,14 +122,22 @@ export function Skeleton({
   }
 
   const style = {
-    width: width ? (typeof width === 'number' ? `${width}px` : width) : undefined,
-    height: height ? (typeof height === 'number' ? `${height}px` : height) : undefined,
+    width: width
+      ? typeof width === 'number'
+        ? `${width}px`
+        : width
+      : undefined,
+    height: height
+      ? typeof height === 'number'
+        ? `${height}px`
+        : height
+      : undefined,
   }
 
   return (
     <motion.div
       className={clsx(
-        'bg-gray-200',
+        'bg-gray-200 dark:bg-gray-700',
         variantClasses[variant],
         className
       )}
@@ -165,11 +173,7 @@ export function GardenSkeleton() {
   return (
     <div className="grid grid-cols-5 gap-2 p-4">
       {Array.from({ length: 25 }, (_, i) => (
-        <Skeleton
-          key={i}
-          variant="rectangular"
-          className="aspect-square"
-        />
+        <Skeleton key={i} variant="rectangular" className="aspect-square" />
       ))}
     </div>
   )

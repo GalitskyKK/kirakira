@@ -56,7 +56,7 @@ export function TelegramDiagnostic() {
 
   const bgClass = isTelegramEnv
     ? 'bg-[var(--tg-bg-color,#ffffff)] text-[var(--tg-text-color,#000000)]'
-    : 'bg-gray-50 text-gray-900'
+    : 'bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100'
 
   return (
     <div className={`min-h-screen p-4 ${bgClass}`}>

@@ -1,7 +1,10 @@
 import { motion } from 'framer-motion'
 import { User } from '@/types'
 import { UserAvatar } from '@/components/ui'
-import { synchronizeUserLevel } from '@/utils/achievements'
+import {
+  calculateLevelProgress,
+  calculateExperienceFromStats,
+} from '@/utils/achievements'
 import { useMoodTracking, useGardenState } from '@/hooks'
 
 /**
@@ -65,12 +68,13 @@ export function ProfileHeader({ user, stats }: ProfileHeaderProps) {
 
   const totalElements = getElementsCount?.() ?? 0
 
-  // Синхронизируем уровень пользователя с его опытом
-  const { experience, levelInfo } = synchronizeUserLevel(
-    user,
-    safeMoodStats,
-    totalElements
-  )
+  // Используем опыт из пользователя если доступен, иначе рассчитываем
+  const experience =
+    user.experience ??
+    calculateExperienceFromStats(user, safeMoodStats, totalElements)
+
+  // Рассчитываем информацию об уровне
+  const levelInfo = calculateLevelProgress(experience)
 
   // 🔥 ИСПРАВЛЕНИЕ: Используем данные с сервера для подсчета дней
   // Приоритет: серверные данные > локальный расчет > fallback
