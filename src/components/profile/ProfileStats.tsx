@@ -1,9 +1,6 @@
 import { motion } from 'framer-motion'
 import { User, Garden, MoodStats } from '@/types'
-import {
-  calculateLevelProgress,
-  calculateExperienceFromStats,
-} from '@/utils/achievements'
+import { synchronizeUserLevel } from '@/utils/achievements'
 
 interface ProfileStatsProps {
   readonly user: User
@@ -54,7 +51,7 @@ function StatCard({
           {value}
         </div>
         <div className="text-sm font-medium">{label}</div>
-        {subtitle && (
+        {subtitle != null && subtitle !== '' && (
           <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             {subtitle}
           </div>
@@ -71,7 +68,7 @@ export function ProfileStats({
   totalElements,
 }: ProfileStatsProps) {
   // Защита от undefined - создаем fallback значения
-  const safeMoodStats = moodStats || {
+  const safeMoodStats = moodStats ?? {
     totalEntries: 0,
     currentStreak: 0,
     longestStreak: 0,
@@ -89,7 +86,7 @@ export function ProfileStats({
     monthlyTrend: [],
   }
 
-  const safeUserStats = user?.stats || {
+  const safeUserStats = user?.stats ?? {
     currentStreak: 0,
     longestStreak: 0,
     totalDays: 0,
@@ -102,13 +99,8 @@ export function ProfileStats({
   const totalDays = safeUserStats.totalDays
   const rareElements = safeUserStats.rareElementsFound
 
-  // Calculate level progress for the progress bar
-  const experience = calculateExperienceFromStats(
-    user,
-    safeMoodStats,
-    totalElements
-  )
-  const levelInfo = calculateLevelProgress(experience)
+  // Синхронизируем уровень пользователя с его опытом
+  const { levelInfo } = synchronizeUserLevel(user, safeMoodStats, totalElements)
 
   return (
     <motion.div
