@@ -8,6 +8,7 @@ import type { GardenElement, RarityLevel } from '@/types/garden'
 import { useGardenStore } from '@/stores'
 import { useCurrencyStore } from '@/stores'
 import { useUserStore } from '@/stores'
+import { useGardenState } from '@/hooks/useGardenState.v2'
 import { ElementUpgradeButton } from './ElementUpgradeButton'
 import { UpgradeConfirmModal } from './UpgradeConfirmModal'
 import { UpgradeResultModal } from './UpgradeResultModal'
@@ -20,6 +21,7 @@ export function ElementUpgradeManager({ element }: ElementUpgradeManagerProps) {
   const { upgradeElement, getElementUpgradeInfo } = useGardenStore()
   const { userCurrency } = useCurrencyStore()
   const { currentUser } = useUserStore()
+  const { selectElement } = useGardenState()
 
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [showResultModal, setShowResultModal] = useState(false)
@@ -96,6 +98,13 @@ export function ElementUpgradeManager({ element }: ElementUpgradeManagerProps) {
             }),
         })
         setShowResultModal(true)
+
+        // 🎉 ЗАКРЫВАЕМ МОДАЛКУ ЭЛЕМЕНТА ПОСЛЕ УСПЕШНОГО УЛУЧШЕНИЯ
+        // Это обеспечивает правильное отображение новой редкости при повторном открытии
+        if (result.upgraded) {
+          selectElement(null)
+          console.log('✅ Element modal closed after successful upgrade')
+        }
       } else {
         // Ошибка API
         setUpgradeResult({

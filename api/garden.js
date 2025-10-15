@@ -583,6 +583,18 @@ async function handleUpgradeElement(req, res) {
 
     console.log(`✅ Element upgrade result:`, data)
 
+    // 🔍 ДЕТАЛЬНОЕ ЛОГИРОВАНИЕ ДЛЯ ОТЛАДКИ failed_attempts
+    console.log('🔍 Upgrade details:', {
+      elementId,
+      telegramId,
+      upgraded: data.upgraded,
+      newRarity: data.newRarity,
+      progressBonus: data.progressBonus,
+      failedAttempts: data.failedAttempts,
+      cost: data.cost,
+      usedFree: data.usedFree,
+    })
+
     res.status(200).json({
       success: true,
       data: {
