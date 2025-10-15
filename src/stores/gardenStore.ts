@@ -774,6 +774,20 @@ export const useGardenStore = create<GardenStore>()(
           throw new Error('No result from upgrade API')
         }
 
+        // 💰 ОБНОВЛЯЕМ БАЛАНС ВАЛЮТЫ ПОСЛЕ УЛУЧШЕНИЯ
+        // Это предотвращает race conditions и обеспечивает актуальный баланс
+        try {
+          const { useCurrencyStore } = await import('@/stores/currencyStore')
+          const currencyStore = useCurrencyStore.getState()
+          await currencyStore.loadCurrency(currentUser.telegramId)
+          console.log('✅ Currency balance synced after upgrade')
+        } catch (currencyError) {
+          console.warn(
+            '⚠️ Failed to sync currency after upgrade:',
+            currencyError
+          )
+        }
+
         // Если улучшение успешно, обновляем элемент в store
         if (apiResult.upgraded === true && apiResult.newRarity !== undefined) {
           const newRarity: RarityLevel = apiResult.newRarity

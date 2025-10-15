@@ -32,6 +32,7 @@ export function ElementUpgradeManager({ element }: ElementUpgradeManagerProps) {
   } | null>(null)
   const [progressBonus, setProgressBonus] = useState(0)
   const [failedAttempts, setFailedAttempts] = useState(0)
+  const [isUpgrading, setIsUpgrading] = useState(false)
 
   // Загружаем информацию об улучшении элемента
   useEffect(() => {
@@ -56,35 +57,54 @@ export function ElementUpgradeManager({ element }: ElementUpgradeManagerProps) {
 
   const handleConfirmUpgrade = async (useFree: boolean) => {
     setShowConfirmModal(false)
+    setIsUpgrading(true)
 
-    // Выполняем улучшение
-    const result = await upgradeElement(element.id, useFree)
+    try {
+      // Выполняем улучшение
+      const result = await upgradeElement(element.id, useFree)
 
-    if (result.success) {
-      // Обновляем прогресс бонус для следующей попытки
-      const newInfo = await getElementUpgradeInfo(element.id)
-      if (newInfo !== null && newInfo !== undefined) {
-        setProgressBonus(newInfo.progressBonus)
-        setFailedAttempts(newInfo.failedAttempts)
-      }
+      if (result.success) {
+        // 🔄 СИНХРОНИЗИРУЕМ ВАЛЮТУ ПОСЛЕ УЛУЧШЕНИЯ
+        // Это критично для предотвращения повторных улучшений с устаревшим балансом
+        try {
+          const { loadCurrency } = useCurrencyStore.getState()
+          if (currentUser?.telegramId) {
+            await loadCurrency(currentUser.telegramId)
+            console.log('✅ Currency synced after element upgrade')
+          }
+        } catch (error) {
+          console.warn('⚠️ Failed to sync currency after upgrade:', error)
+        }
 
-      setUpgradeResult({
-        success: result.upgraded,
-        ...(result.newRarity !== undefined && { newRarity: result.newRarity }),
-        ...(result.upgraded && { xpReward: 20 }), // TODO: получать из API
-        ...(newInfo !== null &&
-          newInfo !== undefined && {
-            progressBonus: newInfo.progressBonus,
-            failedAttempts: newInfo.failedAttempts,
+        // Обновляем прогресс бонус для следующей попытки
+        const newInfo = await getElementUpgradeInfo(element.id)
+        if (newInfo !== null && newInfo !== undefined) {
+          setProgressBonus(newInfo.progressBonus)
+          setFailedAttempts(newInfo.failedAttempts)
+        }
+
+        setUpgradeResult({
+          success: result.upgraded,
+          ...(result.newRarity !== undefined && {
+            newRarity: result.newRarity,
           }),
-      })
-      setShowResultModal(true)
-    } else {
-      // Ошибка API
-      setUpgradeResult({
-        success: false,
-      })
-      setShowResultModal(true)
+          ...(result.upgraded && { xpReward: 20 }), // TODO: получать из API
+          ...(newInfo !== null &&
+            newInfo !== undefined && {
+              progressBonus: newInfo.progressBonus,
+              failedAttempts: newInfo.failedAttempts,
+            }),
+        })
+        setShowResultModal(true)
+      } else {
+        // Ошибка API
+        setUpgradeResult({
+          success: false,
+        })
+        setShowResultModal(true)
+      }
+    } finally {
+      setIsUpgrading(false)
     }
   }
 
@@ -99,6 +119,7 @@ export function ElementUpgradeManager({ element }: ElementUpgradeManagerProps) {
         element={element}
         progressBonus={progressBonus}
         onUpgrade={handleOpenConfirm}
+        isLoading={isUpgrading}
       />
 
       <UpgradeConfirmModal
@@ -110,6 +131,7 @@ export function ElementUpgradeManager({ element }: ElementUpgradeManagerProps) {
         failedAttempts={failedAttempts}
         hasFreeUpgrades={(currentUser?.stats?.freeUpgrades ?? 0) > 0}
         currentSprouts={userCurrency?.sprouts ?? 0}
+        isLoading={isUpgrading}
       />
 
       {upgradeResult !== null && upgradeResult !== undefined && (

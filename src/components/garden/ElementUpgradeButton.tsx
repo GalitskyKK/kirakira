@@ -20,6 +20,7 @@ interface ElementUpgradeButtonProps {
   readonly progressBonus?: number
   readonly onUpgrade: () => void
   readonly disabled?: boolean
+  readonly isLoading?: boolean
 }
 
 export function ElementUpgradeButton({
@@ -27,6 +28,7 @@ export function ElementUpgradeButton({
   progressBonus = 0,
   onUpgrade,
   disabled = false,
+  isLoading = false,
 }: ElementUpgradeButtonProps) {
   const { userCurrency } = useCurrencyStore()
   const { currentUser } = useUserStore()
@@ -49,7 +51,7 @@ export function ElementUpgradeButton({
 
   // Проверяем возможность улучшения
   const canUpgrade = hasFreeUpgrades || canAffordSprouts
-  const isDisabled = disabled || !canUpgrade
+  const isDisabled = disabled || !canUpgrade || isLoading
 
   return (
     <Button
@@ -68,13 +70,21 @@ export function ElementUpgradeButton({
     >
       <span className="flex items-center gap-2">
         <span>
-          {hasFreeUpgrades ? 'Улучшить бесплатно' : `Улучшить за ${cost}🌿`}
+          {isLoading
+            ? 'Улучшение...'
+            : hasFreeUpgrades
+              ? 'Улучшить бесплатно'
+              : `Улучшить за ${cost}🌿`}
         </span>
-        <span className="text-xs opacity-75">({totalSuccessRate}%)</span>
-        {progressBonus > 0 && (
-          <span className="rounded bg-white/20 px-1.5 py-0.5 text-xs font-bold">
-            +{progressBonus}%
-          </span>
+        {!isLoading && (
+          <>
+            <span className="text-xs opacity-75">({totalSuccessRate}%)</span>
+            {progressBonus > 0 && (
+              <span className="rounded bg-white/20 px-1.5 py-0.5 text-xs font-bold">
+                +{progressBonus}%
+              </span>
+            )}
+          </>
         )}
       </span>
     </Button>

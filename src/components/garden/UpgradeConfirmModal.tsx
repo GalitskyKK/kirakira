@@ -22,6 +22,7 @@ interface UpgradeConfirmModalProps {
   readonly failedAttempts?: number
   readonly hasFreeUpgrades: boolean
   readonly currentSprouts: number
+  readonly isLoading?: boolean
 }
 
 export function UpgradeConfirmModal({
@@ -33,6 +34,7 @@ export function UpgradeConfirmModal({
   failedAttempts = 0,
   hasFreeUpgrades,
   currentSprouts,
+  isLoading = false,
 }: UpgradeConfirmModalProps) {
   if (!isOpen) return null
 
@@ -267,15 +269,17 @@ export function UpgradeConfirmModal({
                 <div className="flex gap-2">
                   <button
                     onClick={() => onConfirm(true)}
-                    className="flex-1 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 px-3 py-2 text-sm font-bold text-white transition-all hover:from-purple-600 hover:to-indigo-700"
+                    disabled={isLoading}
+                    className="flex-1 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 px-3 py-2 text-sm font-bold text-white transition-all hover:from-purple-600 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    ✨ Бесплатно
+                    {isLoading ? 'Улучшение...' : '✨ Бесплатно'}
                   </button>
                   <button
                     onClick={() => onConfirm(false)}
-                    className="flex-1 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-2 text-sm font-bold text-white transition-all hover:from-green-600 hover:to-emerald-700"
+                    disabled={isLoading}
+                    className="flex-1 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-2 text-sm font-bold text-white transition-all hover:from-green-600 hover:to-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    🌿 За {cost} ростков
+                    {isLoading ? 'Улучшение...' : `🌿 За ${cost} ростков`}
                   </button>
                 </div>
               )}
@@ -284,7 +288,7 @@ export function UpgradeConfirmModal({
               {(!hasFreeUpgrades || !canAffordSprouts) && (
                 <button
                   onClick={() => onConfirm(hasFreeUpgrades)}
-                  disabled={!canUpgrade}
+                  disabled={!canUpgrade || isLoading}
                   className={`
                     w-full rounded-xl px-3 py-2 text-sm font-bold text-white transition-all
                     ${
@@ -294,7 +298,11 @@ export function UpgradeConfirmModal({
                     }
                   `}
                 >
-                  {hasFreeUpgrades ? '✨ Улучшить' : 'Улучшить'}
+                  {isLoading
+                    ? 'Улучшение...'
+                    : hasFreeUpgrades
+                      ? '✨ Улучшить'
+                      : 'Улучшить'}
                 </button>
               )}
 
