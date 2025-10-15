@@ -463,36 +463,64 @@ async function handleSearch(req, res) {
       )
 
       // Поиск пользователей по username или firstName
-      // Supabase OR с ILIKE - используем * вместо % для wildcards
-      let query_builder = supabase
+      // Используем отдельные запросы и объединяем результаты
+      const usernameQuery = supabase
         .from('users')
         .select(
           'telegram_id, first_name, last_name, username, photo_url, level, total_elements, current_streak, registration_date, privacy_settings'
         )
         .neq('telegram_id', parseInt(searcherTelegramId))
+        .ilike('username', `%${cleanQuery}%`)
 
-      // Применяем OR фильтр для username и first_name
-      // В Supabase PostgREST wildcards используют *, а не %
-      query_builder = query_builder.or(
-        `username.ilike.*${cleanQuery}*,first_name.ilike.*${cleanQuery}*`
-      )
+      const firstNameQuery = supabase
+        .from('users')
+        .select(
+          'telegram_id, first_name, last_name, username, photo_url, level, total_elements, current_streak, registration_date, privacy_settings'
+        )
+        .neq('telegram_id', parseInt(searcherTelegramId))
+        .ilike('first_name', `%${cleanQuery}%`)
 
-      const { data: users, error: searchError } = await query_builder
-        .order('username', { ascending: true, nullsFirst: false })
-        .range(offset, offset + limitNum)
+      // Выполняем оба запроса параллельно
+      const [usernameResult, firstNameResult] = await Promise.all([
+        usernameQuery.order('username', { ascending: true, nullsFirst: false }),
+        firstNameQuery.order('first_name', {
+          ascending: true,
+          nullsFirst: false,
+        }),
+      ])
 
-      console.log('🔍 Supabase query error:', searchError)
-      console.log('🔍 Raw search results:', users)
-
-      if (searchError) {
-        console.error('User search error:', searchError)
+      if (usernameResult.error) {
+        console.error('Username search error:', usernameResult.error)
         return res.status(500).json({
           success: false,
-          error: 'Ошибка поиска пользователей',
+          error: 'Ошибка поиска по username',
         })
       }
 
-      console.log(`🔍 Found ${users?.length || 0} users in raw results`)
+      if (firstNameResult.error) {
+        console.error('First name search error:', firstNameResult.error)
+        return res.status(500).json({
+          success: false,
+          error: 'Ошибка поиска по имени',
+        })
+      }
+
+      // Объединяем результаты и убираем дубликаты
+      const allUsers = [
+        ...(usernameResult.data || []),
+        ...(firstNameResult.data || []),
+      ]
+      const uniqueUsers = allUsers.filter(
+        (user, index, self) =>
+          index === self.findIndex(u => u.telegram_id === user.telegram_id)
+      )
+
+      // Применяем пагинацию к объединенному результату
+      const users = uniqueUsers.slice(offset, offset + limitNum)
+
+      console.log(
+        `🔍 Found ${uniqueUsers.length} total users, returning ${users.length} users`
+      )
 
       // Фильтруем пользователей с учетом privacy settings
       const visibleUsers = (users || []).filter(user => {

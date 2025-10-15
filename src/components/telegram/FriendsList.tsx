@@ -1150,9 +1150,10 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                           <h4 className="font-semibold">
                             {(searchResult.user.username ?? '').length > 0
                               ? `@${searchResult.user.username}`
-                              : (searchResult.user.firstName ?? 'Пользователь')}
+                              : `${searchResult.user.firstName ?? ''} ${searchResult.user.lastName ?? ''}`.trim() ||
+                                'Пользователь'}
                           </h4>
-                          {!(searchResult.user.username ?? '').length &&
+                          {(searchResult.user.username ?? '').length > 0 &&
                             (searchResult.user.firstName ?? '').length > 0 && (
                               <span className="text-xs text-gray-500">
                                 {searchResult.user.firstName}{' '}
