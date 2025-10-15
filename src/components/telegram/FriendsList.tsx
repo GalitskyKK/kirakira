@@ -14,11 +14,16 @@ import {
   Plus,
   TreePine,
   User as UserIcon,
+  ChevronDown,
 } from 'lucide-react'
 import { useTelegram, useDeepLink, useUserPhotos } from '@/hooks'
 import { Button, Card, UserAvatar } from '@/components/ui'
 import { FriendGardenView } from '@/components/garden'
 import type { User } from '@/types'
+import type {
+  FriendApiSearchUser,
+  FriendApiSearchUsersResponse,
+} from '@/types/api'
 import { authenticatedFetch } from '@/utils/apiClient'
 
 // API response types
@@ -106,6 +111,15 @@ export function FriendsList({ currentUser }: FriendsListProps) {
   const [referralSearchQuery, setReferralSearchQuery] = useState('')
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null)
   const [isSearching, setIsSearching] = useState(false)
+
+  // Глобальный поиск пользователей
+  const [globalSearchQuery, setGlobalSearchQuery] = useState('')
+  const [globalSearchResults, setGlobalSearchResults] = useState<
+    FriendApiSearchUser[]
+  >([])
+  const [searchPage, setSearchPage] = useState(1)
+  const [hasMoreResults, setHasMoreResults] = useState(false)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [activeView, setActiveView] = useState<
     'friends' | 'find' | 'invites' | 'requests'
   >('friends')
@@ -209,6 +223,76 @@ export function FriendsList({ currentUser }: FriendsListProps) {
     },
     [referralSearchQuery, currentUser?.telegramId, showAlert, hapticFeedback]
   )
+
+  // Глобальный поиск пользователей
+  const handleGlobalUserSearch = useCallback(
+    async (query: string, page = 1) => {
+      if (!query.trim() || query.length < 2) {
+        showAlert('Введите минимум 2 символа для поиска')
+        return
+      }
+
+      if (!currentUser?.telegramId) {
+        showAlert('Необходима авторизация')
+        return
+      }
+
+      try {
+        setIsSearching(true)
+        const response = await authenticatedFetch(
+          `/api/friends?action=search&query=${encodeURIComponent(query)}&searcherTelegramId=${currentUser.telegramId}&page=${page}&limit=10`
+        )
+        const result = (await response.json()) as {
+          success: boolean
+          data?: FriendApiSearchUsersResponse
+          error?: string
+        }
+
+        if (result.success && result.data) {
+          if (page === 1) {
+            setGlobalSearchResults(result.data.users as FriendApiSearchUser[])
+          } else {
+            setGlobalSearchResults(prev => [
+              ...prev,
+              ...((result.data?.users as FriendApiSearchUser[]) || []),
+            ])
+          }
+          setHasMoreResults(result.data.hasMore)
+          setSearchPage(page)
+          hapticFeedback('light')
+        } else {
+          if (page === 1) {
+            setGlobalSearchResults([])
+          }
+          showAlert(result.error ?? 'Пользователи не найдены')
+        }
+      } catch (error) {
+        console.error('Global search error:', error)
+        showAlert('Ошибка поиска пользователей')
+        if (page === 1) {
+          setGlobalSearchResults([])
+        }
+      } finally {
+        setIsSearching(false)
+        setIsLoadingMore(false)
+      }
+    },
+    [currentUser?.telegramId, showAlert, hapticFeedback]
+  )
+
+  // Загрузить еще результатов
+  const handleLoadMore = useCallback(() => {
+    if (!isLoadingMore && hasMoreResults) {
+      setIsLoadingMore(true)
+      void handleGlobalUserSearch(globalSearchQuery, searchPage + 1)
+    }
+  }, [
+    isLoadingMore,
+    hasMoreResults,
+    globalSearchQuery,
+    searchPage,
+    handleGlobalUserSearch,
+  ])
 
   // Отправить запрос дружбы
   const handleSendFriendRequest = useCallback(
@@ -837,6 +921,178 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                 Добавляйте друзей разными способами
               </p>
             </div>
+
+            {/* Глобальный поиск пользователей */}
+            <Card className="p-4">
+              <div className="space-y-4">
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0 rounded-lg bg-green-100 p-3 dark:bg-green-900/30">
+                    <Users className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-medium">Поиск пользователей</h4>
+                    <p className="text-sm text-gray-600">
+                      Найдите друзей по имени или @username
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    placeholder="Введите имя или @username..."
+                    value={globalSearchQuery}
+                    onChange={e => setGlobalSearchQuery(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        void handleGlobalUserSearch(globalSearchQuery, 1)
+                      }
+                    }}
+                    className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                  />
+                  <Button
+                    onClick={() => {
+                      void handleGlobalUserSearch(globalSearchQuery, 1)
+                    }}
+                    disabled={
+                      isSearching || globalSearchQuery.trim().length < 2
+                    }
+                    className="bg-green-500 hover:bg-green-600"
+                  >
+                    {isSearching ? 'Поиск...' : 'Найти'}
+                  </Button>
+                </div>
+
+                {/* Результаты глобального поиска */}
+                {globalSearchResults.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-3 border-t pt-4"
+                  >
+                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Найдено: {globalSearchResults.length}
+                      {hasMoreResults && '+'}
+                    </div>
+
+                    {globalSearchResults.map((user, index) => {
+                      const displayName = user.username
+                        ? `@${user.username}`
+                        : `${user.first_name} ${user.last_name ?? ''}`.trim()
+                      const canAddFriend = user.relationshipStatus === 'none'
+                      const isPending = user.relationshipStatus === 'pending'
+                      const isFriend = user.relationshipStatus === 'accepted'
+
+                      return (
+                        <motion.div
+                          key={user.telegram_id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          className="rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <UserAvatar
+                              photoUrl={user.photo_url}
+                              name={displayName}
+                              username={user.username}
+                              size="md"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center space-x-2">
+                                <h4 className="truncate font-semibold text-gray-900 dark:text-gray-100">
+                                  {displayName}
+                                </h4>
+                                {user.username && user.first_name && (
+                                  <span className="truncate text-xs text-gray-500">
+                                    {user.first_name}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="mt-1 flex items-center space-x-3 text-xs text-gray-500">
+                                <span className="flex items-center space-x-1">
+                                  <span>🌱</span>
+                                  <span>{user.total_elements}</span>
+                                </span>
+                                <span className="flex items-center space-x-1">
+                                  <span>🔥</span>
+                                  <span>{user.current_streak}</span>
+                                </span>
+                                <span className="flex items-center space-x-1">
+                                  <span>⭐</span>
+                                  <span>Ур. {user.level}</span>
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex flex-col space-y-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  handleViewFriendProfile({
+                                    telegramId: user.telegram_id,
+                                  } as Friend)
+                                }
+                                className="text-xs"
+                              >
+                                <UserIcon className="mr-1 h-3 w-3" />
+                                Профиль
+                              </Button>
+                              {canAddFriend && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    void handleSendFriendRequest(
+                                      user.telegram_id
+                                    )
+                                  }}
+                                  className="bg-green-500 text-xs hover:bg-green-600"
+                                >
+                                  <Plus className="mr-1 h-3 w-3" />
+                                  Добавить
+                                </Button>
+                              )}
+                              {isPending && (
+                                <span className="text-xs text-orange-600">
+                                  Запрос отправлен
+                                </span>
+                              )}
+                              {isFriend && (
+                                <span className="text-xs text-green-600">
+                                  ✓ Уже друзья
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      )
+                    })}
+
+                    {/* Кнопка загрузить еще */}
+                    {hasMoreResults && (
+                      <Button
+                        onClick={handleLoadMore}
+                        disabled={isLoadingMore}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        {isLoadingMore ? (
+                          <>
+                            <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-400 border-t-transparent" />
+                            Загрузка...
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="mr-2 h-4 w-4" />
+                            Загрузить еще
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </motion.div>
+                )}
+              </div>
+            </Card>
 
             {/* Поиск по реферальному коду */}
             <Card className="p-4">

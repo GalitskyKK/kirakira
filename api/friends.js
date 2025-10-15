@@ -322,7 +322,7 @@ async function handleList(req, res) {
 }
 
 // ===============================================
-// 🔍 ACTION: SEARCH - Поиск по реферальному коду
+// 🔍 ACTION: SEARCH - Поиск по реферальному коду или глобальный поиск
 // ===============================================
 async function handleSearch(req, res) {
   if (req.method !== 'GET') {
@@ -330,94 +330,216 @@ async function handleSearch(req, res) {
   }
 
   try {
-    const { referralCode, searcherTelegramId } = req.query
-
-    // Валидация входных данных
-    if (!referralCode || !searcherTelegramId) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing required parameters: referralCode, searcherTelegramId',
-      })
-    }
+    const {
+      referralCode,
+      searcherTelegramId,
+      query,
+      page = '1',
+      limit = '10',
+    } = req.query
 
     // Инициализируем Supabase клиент
     // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
     const supabase = await getSupabaseClient(req.auth?.jwt)
 
-    // Ищем пользователя по реферальному коду
-    const { data: referralData, error: referralError } = await supabase
-      .from('user_referral_codes')
-      .select(
-        `
-        telegram_id,
-        users (
-          telegram_id,
-          first_name,
-          last_name,
-          username,
-          total_elements,
-          current_streak
-        )
-      `
-      )
-      .eq('referral_code', referralCode.toUpperCase())
-      .single()
-
-    if (referralError || !referralData) {
-      return res.status(404).json({
-        success: false,
-        error: 'Пользователь с таким реферальным кодом не найден',
-      })
-    }
-
-    const targetUserId = referralData.telegram_id
-    const userData = referralData.users
-
-    // Проверяем что пользователь не ищет сам себя
-    if (parseInt(searcherTelegramId) === targetUserId) {
-      return res.status(400).json({
-        success: false,
-        error: 'Нельзя добавить себя в друзья',
-      })
-    }
-
-    // Проверяем существующие отношения между пользователями
-    const { data: existingRelation, error: relationError } = await supabase
-      .from('friendships')
-      .select('status')
-      .or(
-        `and(requester_telegram_id.eq.${searcherTelegramId},addressee_telegram_id.eq.${targetUserId}),and(requester_telegram_id.eq.${targetUserId},addressee_telegram_id.eq.${searcherTelegramId})`
-      )
-      .single()
-
-    let relationshipStatus = 'none'
-    let canSendRequest = true
-
-    if (existingRelation) {
-      relationshipStatus = existingRelation.status
-      canSendRequest = false
-
-      if (relationshipStatus === 'declined') {
-        // Можно отправить новый запрос после отклонения
-        canSendRequest = true
-        relationshipStatus = 'none'
+    // ========================================
+    // ВАРИАНТ 1: Поиск по реферальному коду
+    // ========================================
+    if (referralCode) {
+      // Валидация входных данных
+      if (!searcherTelegramId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing required parameter: searcherTelegramId',
+        })
       }
+
+      // Ищем пользователя по реферальному коду
+      const { data: referralData, error: referralError } = await supabase
+        .from('user_referral_codes')
+        .select(
+          `
+          telegram_id,
+          users (
+            telegram_id,
+            first_name,
+            last_name,
+            username,
+            total_elements,
+            current_streak
+          )
+        `
+        )
+        .eq('referral_code', referralCode.toUpperCase())
+        .single()
+
+      if (referralError || !referralData) {
+        return res.status(404).json({
+          success: false,
+          error: 'Пользователь с таким реферальным кодом не найден',
+        })
+      }
+
+      const targetUserId = referralData.telegram_id
+      const userData = referralData.users
+
+      // Проверяем что пользователь не ищет сам себя
+      if (parseInt(searcherTelegramId) === targetUserId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Нельзя добавить себя в друзья',
+        })
+      }
+
+      // Проверяем существующие отношения между пользователями
+      const { data: existingRelation, error: relationError } = await supabase
+        .from('friendships')
+        .select('status')
+        .or(
+          `and(requester_telegram_id.eq.${searcherTelegramId},addressee_telegram_id.eq.${targetUserId}),and(requester_telegram_id.eq.${targetUserId},addressee_telegram_id.eq.${searcherTelegramId})`
+        )
+        .single()
+
+      let relationshipStatus = 'none'
+      let canSendRequest = true
+
+      if (existingRelation) {
+        relationshipStatus = existingRelation.status
+        canSendRequest = false
+
+        if (relationshipStatus === 'declined') {
+          // Можно отправить новый запрос после отклонения
+          canSendRequest = true
+          relationshipStatus = 'none'
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          user: {
+            telegramId: targetUserId,
+            firstName: userData?.first_name || 'Пользователь',
+            lastName: userData?.last_name || '',
+            username: userData?.username || '',
+            gardenElements: userData?.total_elements || 0,
+            currentStreak: userData?.current_streak || 0,
+          },
+          relationshipStatus,
+          canSendRequest,
+        },
+      })
     }
 
-    res.status(200).json({
-      success: true,
-      data: {
-        user: {
-          telegramId: targetUserId,
-          firstName: userData?.first_name || 'Пользователь',
-          lastName: userData?.last_name || '',
-          username: userData?.username || '',
-          gardenElements: userData?.total_elements || 0,
-          currentStreak: userData?.current_streak || 0,
+    // ========================================
+    // ВАРИАНТ 2: Глобальный поиск пользователей
+    // ========================================
+    if (query) {
+      // Валидация входных данных
+      if (!searcherTelegramId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing required parameter: searcherTelegramId',
+        })
+      }
+
+      if (query.trim().length < 2) {
+        return res.status(400).json({
+          success: false,
+          error: 'Поисковый запрос должен содержать минимум 2 символа',
+        })
+      }
+
+      const pageNum = parseInt(page)
+      const limitNum = parseInt(limit)
+      const offset = (pageNum - 1) * limitNum
+      const searchPattern = `%${query.toLowerCase().trim()}%`
+
+      console.log(
+        `🔍 Global user search: query="${query}", page=${pageNum}, limit=${limitNum}`
+      )
+
+      // Поиск пользователей по username или firstName
+      const { data: users, error: searchError } = await supabase
+        .from('users')
+        .select(
+          'telegram_id, first_name, last_name, username, photo_url, level, total_elements, current_streak, registration_date, privacy_settings'
+        )
+        .neq('telegram_id', parseInt(searcherTelegramId))
+        .or(`username.ilike.${searchPattern},first_name.ilike.${searchPattern}`)
+        .order('username', { ascending: true, nullsFirst: false })
+        .range(offset, offset + limitNum)
+
+      if (searchError) {
+        console.error('User search error:', searchError)
+        return res.status(500).json({
+          success: false,
+          error: 'Ошибка поиска пользователей',
+        })
+      }
+
+      // Фильтруем пользователей с учетом privacy settings
+      const visibleUsers = (users || []).filter(user => {
+        const showProfile = user.privacy_settings?.showProfile ?? true
+        return showProfile
+      })
+
+      // Проверяем отношения для каждого найденного пользователя
+      const usersWithRelations = await Promise.all(
+        visibleUsers.map(async user => {
+          // Проверяем существующие отношения
+          const { data: friendship } = await supabase
+            .from('friendships')
+            .select('status')
+            .or(
+              `and(requester_telegram_id.eq.${searcherTelegramId},addressee_telegram_id.eq.${user.telegram_id}),and(requester_telegram_id.eq.${user.telegram_id},addressee_telegram_id.eq.${searcherTelegramId})`
+            )
+            .single()
+
+          let relationshipStatus = 'none'
+          if (friendship) {
+            relationshipStatus = friendship.status
+          }
+
+          return {
+            telegram_id: user.telegram_id,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            username: user.username,
+            photo_url: user.photo_url,
+            level: user.level,
+            registration_date: user.registration_date,
+            total_elements: user.total_elements,
+            current_streak: user.current_streak,
+            relationshipStatus,
+            privacy_settings: user.privacy_settings,
+          }
+        })
+      )
+
+      // Проверяем есть ли еще результаты
+      const hasMore = visibleUsers.length === limitNum + 1
+      const usersToReturn = hasMore
+        ? usersWithRelations.slice(0, limitNum)
+        : usersWithRelations
+
+      console.log(`✅ Found ${usersToReturn.length} users, hasMore: ${hasMore}`)
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          users: usersToReturn,
+          hasMore,
+          nextPage: hasMore ? pageNum + 1 : undefined,
+          total: usersToReturn.length,
         },
-        relationshipStatus,
-        canSendRequest,
-      },
+      })
+    }
+
+    // Если нет ни referralCode, ни query
+    return res.status(400).json({
+      success: false,
+      error: 'Missing required parameter: referralCode or query',
     })
   } catch (error) {
     console.error('Friend search error:', error)

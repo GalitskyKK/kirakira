@@ -265,6 +265,40 @@ export interface FriendApiSearchResponse {
   readonly nextPage?: number
 }
 
+// Глобальный поиск пользователей (новый)
+export interface FriendApiSearchUsersRequest {
+  readonly query: string // username или firstName
+  readonly searcherTelegramId: number
+  readonly page?: number
+  readonly limit?: number
+}
+
+export interface FriendApiSearchUsersResponse {
+  readonly users: readonly FriendApiSearchUser[]
+  readonly hasMore: boolean
+  readonly nextPage?: number
+  readonly total: number
+}
+
+export interface FriendApiSearchUser {
+  readonly telegram_id: number
+  readonly first_name: string
+  readonly last_name?: string
+  readonly username?: string
+  readonly photo_url?: string
+  readonly level: number
+  readonly registration_date: string
+  readonly total_elements: number
+  readonly current_streak: number
+  readonly relationshipStatus:
+    | 'none'
+    | 'pending'
+    | 'accepted'
+    | 'declined'
+    | 'blocked'
+  readonly privacy_settings: Record<string, boolean>
+}
+
 export interface FriendApiSendRequestResponse {
   readonly message: string
   readonly requestId: string
