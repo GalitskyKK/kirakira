@@ -322,6 +322,76 @@ async function handleRecord(req, res) {
 }
 
 // ===============================================
+// 📅 ACTION: TODAY - Получение настроения за сегодня
+// ===============================================
+async function handleToday(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  try {
+    const { telegramId } = req.query
+
+    if (!telegramId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameter: telegramId',
+      })
+    }
+
+    // Получаем JWT из заголовков
+    const authHeader = req.headers.authorization
+    const jwt = authHeader?.replace('Bearer ', '')
+
+    if (!jwt) {
+      return res.status(401).json({
+        success: false,
+        error: 'Missing JWT token',
+      })
+    }
+
+    const supabase = await getSupabaseClient(jwt)
+
+    // Получаем сегодняшнее настроение
+    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+
+    const { data: todayEntries, error } = await supabase
+      .from('mood_entries')
+      .select('*')
+      .eq('user_id', telegramId)
+      .eq('mood_date', today)
+      .order('created_at', { ascending: false })
+      .limit(1)
+
+    if (error) {
+      console.error('Database error:', error)
+      return res.status(500).json({
+        success: false,
+        error: 'Database error',
+      })
+    }
+
+    const todaysMood =
+      todayEntries && todayEntries.length > 0 ? todayEntries[0] : null
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        mood: todaysMood ? todaysMood.mood : null,
+        moodEntry: todaysMood,
+        canCheckin: !todaysMood, // Можно отметить, если сегодня еще не отмечали
+      },
+    })
+  } catch (error) {
+    console.error("Error getting today's mood:", error)
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    })
+  }
+}
+
+// ===============================================
 // 📊 ACTION: HISTORY - Получение истории настроений
 // ===============================================
 async function handleHistory(req, res) {
@@ -431,10 +501,12 @@ async function protectedHandler(req, res) {
         return await handleRecord(req, res)
       case 'history':
         return await handleHistory(req, res)
+      case 'today':
+        return await handleToday(req, res)
       default:
         return res.status(400).json({
           success: false,
-          error: `Unknown action: ${action}. Available actions: record, history`,
+          error: `Unknown action: ${action}. Available actions: record, history, today`,
         })
     }
   } catch (error) {

@@ -54,6 +54,8 @@ export interface TodaysMoodResponse {
   readonly success: boolean
   readonly data?: {
     readonly mood: DatabaseMoodEntry | null
+    readonly moodEntry: DatabaseMoodEntry | null
+    readonly canCheckin: boolean
   }
   readonly error?: string
 }
@@ -174,11 +176,14 @@ export async function getTodaysMood(
 
     const result = (await response.json()) as TodaysMoodResponse
 
-    if (!result.success || !result.data?.mood) {
+    if (!result.success || !result.data) {
       return null
     }
 
-    return convertServerMoodToClient(result.data.mood, userId)
+    // Возвращаем moodEntry если есть, иначе null
+    return result.data.moodEntry
+      ? convertServerMoodToClient(result.data.moodEntry, userId)
+      : null
   } catch (error) {
     console.error("Failed to get today's mood:", error)
     throw error

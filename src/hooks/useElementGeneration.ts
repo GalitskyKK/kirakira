@@ -17,10 +17,13 @@ export function useElementGeneration() {
   // Получаем данные через React Query
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
-  const { data: gardenData } = useGardenSync(undefined, false)
-  const { data: todaysMoodData } = useTodaysMood(undefined, undefined, false)
-
   const currentUser = userData?.user
+  const { data: gardenData } = useGardenSync(telegramId, !!telegramId)
+  const { data: todaysMoodData } = useTodaysMood(
+    telegramId,
+    currentUser?.id,
+    !!telegramId && !!currentUser?.id
+  )
   const currentGarden = gardenData
   const todaysMood = todaysMoodData?.mood
 
