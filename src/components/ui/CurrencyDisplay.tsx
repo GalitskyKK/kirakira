@@ -65,14 +65,20 @@ export function CurrencyDisplay({
     )
   }
 
-  const Container = onClick ? 'button' : 'div'
+  const Container = onClick ? motion.button : motion.div
 
   return (
     <Container
       onClick={onClick}
-      className={`flex items-center ${sizeClasses[size]} ${
-        onClick ? 'cursor-pointer transition-opacity hover:opacity-80' : ''
+      className={`flex items-center rounded-lg bg-gradient-to-r from-green-500/10 to-purple-500/10 px-3 py-1.5 transition-colors ${sizeClasses[size]} ${
+        onClick
+          ? 'cursor-pointer hover:from-green-500/20 hover:to-purple-500/20'
+          : ''
       }`}
+      {...(onClick && {
+        whileHover: { scale: 1.05 },
+        whileTap: { scale: 0.95 },
+      })}
     >
       {/* Ростки */}
       <motion.div

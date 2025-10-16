@@ -92,15 +92,14 @@ export function MobileLayout() {
                   variant="compact"
                 />
 
-                {/* 🧊 Заморозки стрика */}
-                {freezeData &&
-                  (freezeData.manual > 0 || freezeData.auto > 0) && (
-                    <StreakFreezeIndicator
-                      manual={freezeData.manual}
-                      auto={freezeData.auto}
-                      max={freezeData.max}
-                    />
-                  )}
+                {/* 🧊 Заморозки стрика - показываем всегда */}
+                {freezeData && (
+                  <StreakFreezeIndicator
+                    manual={freezeData.manual}
+                    auto={freezeData.auto}
+                    max={freezeData.max}
+                  />
+                )}
               </div>
 
               {/* Сообщение об авто-использовании заморозки */}
