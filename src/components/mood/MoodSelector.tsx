@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { clsx } from 'clsx'
-import { useMoodTracking } from '@/hooks'
+import { useMoodTracking } from '@/hooks/index.v2'
 import { Button, Card } from '@/components/ui'
 import { MOOD_CONFIG } from '@/types/mood'
 import type { MoodType, MoodIntensity } from '@/types'
@@ -21,14 +21,14 @@ export function MoodSelector({
   isLoading = false,
   className,
 }: MoodSelectorProps) {
-  const { canCheckinToday, todaysMood } = useMoodTracking()
+  const { recommendedMood } = useMoodTracking()
   const [selectedMood, setSelectedMood] = useState<MoodType | null>(
-    todaysMood?.mood ?? null
+    recommendedMood?.mood ?? null
   )
   const [selectedIntensity, setSelectedIntensity] = useState<MoodIntensity>(
-    todaysMood?.intensity ?? 2
+    recommendedMood?.intensity ?? 2
   )
-  const [note, setNote] = useState(todaysMood?.note ?? '')
+  const [note, setNote] = useState(recommendedMood?.note ?? '')
   const [step, setStep] = useState<'mood' | 'intensity' | 'note'>('mood')
 
   const moods = Object.entries(MOOD_CONFIG) as [
@@ -64,7 +64,7 @@ export function MoodSelector({
     }
   }
 
-  const isAlreadyCheckedIn = !canCheckinToday()
+  const isAlreadyCheckedIn = !recommendedMood?.canCheckinToday
 
   return (
     <Card className={clsx('mx-auto w-full max-w-md', className)} padding="lg">
@@ -261,7 +261,7 @@ export function MoodSelector({
         )}
       </AnimatePresence>
 
-      {isAlreadyCheckedIn && todaysMood && (
+      {isAlreadyCheckedIn && recommendedMood && (
         <motion.div
           className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/30"
           initial={{ opacity: 0, y: 10 }}
@@ -269,18 +269,20 @@ export function MoodSelector({
           transition={{ delay: 0.3 }}
         >
           <div className="flex items-center space-x-3">
-            <div className="text-2xl">{MOOD_CONFIG[todaysMood.mood].emoji}</div>
+            <div className="text-2xl">
+              {MOOD_CONFIG[recommendedMood.mood].emoji}
+            </div>
             <div>
               <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                {MOOD_CONFIG[todaysMood.mood].label}
+                {MOOD_CONFIG[recommendedMood.mood].label}
               </p>
               <p className="text-xs text-green-600 dark:text-green-300">
                 Интенсивность:{' '}
-                {['Слабо', 'Умеренно', 'Сильно'][todaysMood.intensity - 1]}
+                {['Слабо', 'Умеренно', 'Сильно'][recommendedMood.intensity - 1]}
               </p>
-              {todaysMood.note && (
+              {recommendedMood.note && (
                 <p className="mt-1 text-xs text-green-700 dark:text-green-300">
-                  "{todaysMood.note}"
+                  "{recommendedMood.note}"
                 </p>
               )}
             </div>

@@ -5,7 +5,7 @@ import {
   calculateLevelProgress,
   calculateExperienceFromStats,
 } from '@/utils/achievements'
-import { useMoodTracking, useGardenState } from '@/hooks'
+import { useGardenState, useMoodTracking } from '@/hooks/index.v2'
 
 /**
  * Получает классы цветов градиента в зависимости от уровня

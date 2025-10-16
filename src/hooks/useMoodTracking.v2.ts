@@ -11,7 +11,7 @@ import {
   useAddMoodEntry,
   useCanCheckinToday,
 } from '@/hooks/queries'
-import { useUserStore } from '@/stores'
+import { useUserSync } from '@/hooks/index.v2'
 import type { MoodType, MoodIntensity, MoodEntry, MoodStats } from '@/types'
 import { getMoodDisplayProps, getRecommendedMood } from '@/utils/moodMapping'
 import { getTimeUntilNextCheckin } from '@/utils/dateHelpers'
@@ -24,7 +24,8 @@ import { awardMoodRewards } from '@/utils/currencyRewards'
  * Объединяет серверное состояние (React Query) и клиентское состояние (Zustand)
  */
 export function useMoodTracking() {
-  const { currentUser } = useUserStore()
+  const { data: userData } = useUserSync(undefined, false)
+  const currentUser = userData?.user
   const telegramId = currentUser?.telegramId
   const userId = currentUser?.id
 

@@ -11,7 +11,7 @@ import {
   StreakFreezeModal,
 } from '@/components/ui'
 import { ProfilePage } from '@/pages/ProfilePage'
-import { useGardenState, useMoodTracking } from '@/hooks'
+import { useGardenState, useMoodTracking } from '@/hooks/index.v2'
 import { useStreakFreeze } from '@/hooks/useStreakFreeze'
 import { useCurrencyStore } from '@/stores/currencyStore'
 import { useUserSync } from '@/hooks/index.v2'

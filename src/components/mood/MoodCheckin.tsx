@@ -4,9 +4,8 @@ import { CheckCircle, Clock, Sparkles } from 'lucide-react'
 import { MoodSelector } from './MoodSelector'
 import { PlantRenderer } from '@/components/garden/plants'
 import { Card, LoadingSpinner } from '@/components/ui'
-import { useMoodTracking, useGardenState } from '@/hooks'
-// import { getTimeUntilNextCheckin } from '@/utils/dateHelpers'
-import type { MoodType, MoodIntensity, GardenElement } from '@/types'
+import { useMoodTracking } from '@/hooks/index.v2'
+import type { MoodType, MoodIntensity, MoodEntry } from '@/types'
 
 interface MoodCheckinProps {
   onElementUnlocked?: () => void
@@ -17,15 +16,10 @@ export function MoodCheckin({
   onElementUnlocked,
   className,
 }: MoodCheckinProps) {
-  const {
-    canCheckinToday,
-    todaysMood,
-    timeUntilNextCheckin,
-    checkInToday,
-    updateTodaysMoodEntry,
-    isLoading: moodLoading,
-    error: moodError,
-  } = useMoodTracking()
+  const { addMoodEntry, isLoading } = useMoodTracking()
+  const [selectedMood, setSelectedMood] = useState<MoodType | null>(null)
+  const [intensity, setIntensity] = useState<MoodIntensity>(2)
+  const [note, setNote] = useState<string | undefined>(undefined)
 
   const {
     unlockElement,
@@ -49,11 +43,25 @@ export function MoodCheckin({
 
     try {
       // Save mood entry
-      const moodEntry = todaysMood
-        ? await updateTodaysMoodEntry(mood, intensity, note)
-        : await checkInToday(mood, intensity, note)
+      // Вызываем мутацию из v2 хука
+      const newEntry = await addMoodEntry(
+        {
+          mood: selectedMood,
+          intensity,
+          note,
+        },
+        {
+          onSuccess: entry => {
+            console.log('✅ Mood entry added via v2 hook:', entry)
+            onMoodSubmit?.(entry)
+          },
+          onError: error => {
+            console.error('❌ Failed to add mood entry via v2 hook:', error)
+          },
+        }
+      )
 
-      if (moodEntry && canUnlockToday()) {
+      if (newEntry && canUnlockToday()) {
         // Unlock garden element
         const element = await unlockElement(mood)
         if (element) {

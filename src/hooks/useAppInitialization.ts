@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useTelegramSync } from './useTelegramSync'
-import { useStoresSync } from './useStoresSync'
-import { useUserStore } from '@/stores'
+import { useTelegram } from '@/hooks'
+import { useUserSync } from '@/hooks/index.v2'
+import { useUserClientStore } from '@/hooks/index.v2'
 import {
   InitializationState,
   InitializationStage,
@@ -18,7 +18,7 @@ const DEFAULT_CONFIG: InitializationConfig = {
 
 /**
  * Главный хук инициализации приложения
- * Координирует все этапы инициализации в правильном порядке
+ * Использует React Query для синхронизации данных пользователя
  */
 export function useAppInitialization(
   config: Partial<InitializationConfig> = {}
@@ -32,9 +32,14 @@ export function useAppInitialization(
     progress: 0,
   })
 
-  const { syncTelegramUser, hasTelegramUser, telegramReady } = useTelegramSync()
-  const { syncStores } = useStoresSync()
-  const { currentUser, createAnonymousUser } = useUserStore()
+  const { user: telegramUser } = useTelegram()
+  const { completeOnboarding } = useUserClientStore()
+
+  // Используем React Query для синхронизации пользователя
+  const { data: userData, isLoading: userLoading } = useUserSync(
+    telegramUser?.telegramId,
+    !!telegramUser?.telegramId
+  )
 
   const updateProgress = useCallback(
     (stage: InitializationStage, progress: number, error?: string | null) => {
@@ -60,19 +65,6 @@ export function useAppInitialization(
     [finalConfig.isDevelopment]
   )
 
-  const ensureBrowserUser = useCallback(async () => {
-    if (!currentUser) {
-      logIfDev('👤 Создание анонимного пользователя для браузерного режима...')
-      await createAnonymousUser()
-      logIfDev('✅ Анонимный пользователь создан')
-    } else {
-      logIfDev('👤 Пользователь уже существует:', {
-        id: currentUser.id,
-        isAnonymous: currentUser.isAnonymous,
-      })
-    }
-  }, [currentUser, createAnonymousUser, logIfDev])
-
   const initialize = useCallback(async () => {
     if (state.isLoading) return // Предотвращаем повторные запуски
 
@@ -81,59 +73,33 @@ export function useAppInitialization(
     try {
       updateProgress(InitializationStage.TELEGRAM_SETUP, 10)
 
-      // Этап 1: Определение режима работы и синхронизация
-      let telegramUserId: number | undefined
-      let workingMode: 'telegram' | 'browser' = 'browser'
+      // Определяем режим работы
+      const isTelegramEnv = !!window.Telegram?.WebApp
+      const workingMode: 'telegram' | 'browser' = isTelegramEnv
+        ? 'telegram'
+        : 'browser'
 
-      if (finalConfig.enableTelegram) {
-        logIfDev('📱 Определение режима работы...')
+      if (workingMode === 'telegram') {
+        logIfDev('📱 Telegram режим', {
+          telegramId: telegramUser?.telegramId,
+        })
 
-        const telegramResult = await syncTelegramUser()
-
-        if (!telegramResult.success) {
-          // Только если реальная ошибка, а не просто отсутствие Telegram
-          throw new Error(`Telegram sync failed: ${telegramResult.error}`)
-        }
-
-        // Безопасное присваивание режима (исключаем 'error' случай)
-        if (
-          telegramResult.mode === 'telegram' ||
-          telegramResult.mode === 'browser'
-        ) {
-          workingMode = telegramResult.mode
-        }
-        telegramUserId = telegramResult.user?.telegramId
-
-        if (workingMode === 'telegram') {
-          logIfDev('✅ Telegram режим - синхронизация завершена', {
-            telegramUserId,
+        // React Query автоматически синхронизирует данные через useUserSync
+        // Просто ждем, пока загрузятся данные
+        if (userLoading) {
+          logIfDev('⏳ Ожидание синхронизации пользователя...')
+        } else if (userData?.user) {
+          logIfDev('✅ Данные пользователя загружены', {
+            telegramId: userData.user.telegramId,
           })
-        } else {
-          logIfDev('🌐 Браузерный режим - Telegram недоступен')
-
-          // В браузерном режиме нужно убедиться что есть хотя бы базовый пользователь
-          await ensureBrowserUser()
+          completeOnboarding()
         }
+      } else {
+        logIfDev('🌐 Браузерный режим - работа без Telegram')
       }
 
       updateProgress(InitializationStage.STORES_SYNC, 60)
-
-      // Этап 2: Синхронизация stores (если включена)
-      if (finalConfig.enableStoresSync) {
-        logIfDev('🔄 Синхронизация stores...', { workingMode, telegramUserId })
-
-        // В Telegram режиме передаем telegramUserId для серверной синхронизации
-        // В браузерном режиме работаем только локально
-        const storesResult = await syncStores(
-          workingMode === 'telegram' ? telegramUserId : undefined
-        )
-
-        if (!storesResult.success) {
-          throw new Error(`Stores sync failed: ${storesResult.error}`)
-        }
-
-        logIfDev('✅ Stores синхронизация завершена', { mode: workingMode })
-      }
+      logIfDev('✅ Синхронизация завершена (React Query)')
 
       updateProgress(InitializationStage.COMPLETED, 100)
       logIfDev('🎉 Инициализация завершена успешно')
@@ -145,15 +111,12 @@ export function useAppInitialization(
     }
   }, [
     state.isLoading,
-    finalConfig.enableTelegram,
-    finalConfig.enableStoresSync,
-    hasTelegramUser,
-    telegramReady,
-    syncTelegramUser,
-    syncStores,
+    telegramUser,
+    userData,
+    userLoading,
+    completeOnboarding,
     updateProgress,
     logIfDev,
-    ensureBrowserUser,
   ])
 
   // Автоматический запуск инициализации при монтировании

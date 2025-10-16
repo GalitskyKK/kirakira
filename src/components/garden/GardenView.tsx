@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { clsx } from 'clsx'
-import { useGardenState } from '@/hooks'
+import { useGardenState } from '@/hooks/index.v2'
 import { GardenRoomManager } from './GardenRoomManager'
 import { GardenStats } from './GardenStats'
 import { ElementDetails } from './ElementDetails'
