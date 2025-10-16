@@ -249,7 +249,9 @@ export function HomePage() {
                         </p>
                         <p className="text-xs text-gray-600">
                           {formatDate(
-                            gardenStats.newestElement.unlockDate,
+                            gardenStats.newestElement.unlockDate instanceof Date
+                              ? gardenStats.newestElement.unlockDate
+                              : new Date(gardenStats.newestElement.unlockDate),
                             'dd MMM в HH:mm'
                           )}
                         </p>

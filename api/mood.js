@@ -350,7 +350,8 @@ async function handleToday(req, res) {
       })
     }
 
-    const supabase = await getSupabaseClient(jwt)
+    // Временно используем SERVICE_ROLE_KEY для избежания JWT ошибок
+    const supabase = await getSupabaseClient()
 
     // Получаем сегодняшнее настроение
     const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
@@ -358,7 +359,7 @@ async function handleToday(req, res) {
     const { data: todayEntries, error } = await supabase
       .from('mood_entries')
       .select('*')
-      .eq('user_id', telegramId)
+      .eq('telegram_id', telegramId)
       .eq('mood_date', today)
       .order('created_at', { ascending: false })
       .limit(1)

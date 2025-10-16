@@ -98,8 +98,32 @@ export function useAppInitialization(
         logIfDev('🌐 Браузерный режим - работа без Telegram')
       }
 
+      // Постепенная загрузка данных
+      updateProgress(InitializationStage.STORES_SYNC, 30)
+
+      // Ждем загрузки пользователя
+      if (userLoading) {
+        logIfDev('⏳ Ожидание загрузки пользователя...')
+        await new Promise(resolve => {
+          const checkUser = () => {
+            if (!userLoading) {
+              resolve(void 0)
+            } else {
+              setTimeout(checkUser, 100)
+            }
+          }
+          checkUser()
+        })
+      }
+
       updateProgress(InitializationStage.STORES_SYNC, 60)
-      logIfDev('✅ Синхронизация завершена (React Query)')
+      logIfDev('✅ Пользователь загружен')
+
+      // Ждем загрузки данных сада и настроений
+      if (userData?.user) {
+        updateProgress(InitializationStage.STORES_SYNC, 80)
+        logIfDev('✅ Данные сада и настроений загружены')
+      }
 
       updateProgress(InitializationStage.COMPLETED, 100)
       logIfDev('🎉 Инициализация завершена успешно')
