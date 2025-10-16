@@ -49,7 +49,8 @@ export function useStreakFreeze() {
         )
         if (recommendedType === 'auto') {
           console.log('🧊 [V2] Auto-freeze recommended, applying...')
-          await performFreeze('auto', streakStatus.missedDays)
+          // Авто-заморозка всегда покрывает ровно 1 день
+          await performFreeze('auto', 1)
         } else {
           console.log('🧊 [V2] Manual freeze or reset required, showing modal.')
           setShowModal(true)

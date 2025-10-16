@@ -477,6 +477,7 @@ async function handleUseStreakFreeze(req, res) {
 
     // Проверяем тип заморозки
     if (freezeType === 'auto') {
+      // 🧊 АВТО-ЗАМОРОЗКА: всегда покрывает ровно 1 день (параметр missedDays игнорируется)
       if (user.auto_freezes < 1) {
         return res.status(400).json({
           success: false,
@@ -485,7 +486,7 @@ async function handleUseStreakFreeze(req, res) {
         })
       }
     } else {
-      // manual freeze
+      // 🔧 РУЧНАЯ ЗАМОРОЗКА: покрывает количество дней = missedDays
       if (user.streak_freezes < missedDays) {
         return res.status(400).json({
           success: false,
