@@ -165,6 +165,12 @@ async function handleRecord(req, res) {
       .eq('telegram_id', telegramUserId)
       .single()
 
+    console.log(`🔍 [STREAK DEBUG] User data from DB:`, {
+      current_streak: userData?.current_streak,
+      streak_last_checkin: userData?.streak_last_checkin,
+      formattedDate,
+    })
+
     if (!userFetchError && userData) {
       const lastCheckin = userData.streak_last_checkin
         ? new Date(userData.streak_last_checkin)
@@ -174,23 +180,36 @@ async function handleRecord(req, res) {
 
       let newStreak = userData.current_streak || 0
 
+      console.log(`🔍 [STREAK DEBUG] Before calculation:`, {
+        lastCheckin: lastCheckin?.toISOString(),
+        todayDate: todayDate.toISOString(),
+        currentStreakFromDB: userData.current_streak,
+        newStreak,
+      })
+
       if (lastCheckin) {
         lastCheckin.setUTCHours(0, 0, 0, 0)
         const diffDays = Math.floor(
           (todayDate - lastCheckin) / (1000 * 60 * 60 * 24)
         )
 
+        console.log(`🔍 [STREAK DEBUG] Days difference: ${diffDays}`)
+
         if (diffDays === 1) {
           // Продолжаем стрик
           newStreak = newStreak + 1
-          console.log(`📈 Streak continues: ${newStreak}`)
+          console.log(
+            `📈 Streak continues: ${userData.current_streak} -> ${newStreak}`
+          )
         } else if (diffDays === 0) {
           // Обновление настроения за тот же день - стрик не меняется
           console.log(`🔄 Same day mood update, streak unchanged: ${newStreak}`)
         } else {
           // Стрик прерван, начинаем заново
           newStreak = 1
-          console.log(`🔁 Streak broken, starting new: ${newStreak}`)
+          console.log(
+            `🔁 Streak broken (diffDays=${diffDays}), starting new: ${newStreak}`
+          )
         }
       } else {
         // Первая отметка или нет данных о последней
