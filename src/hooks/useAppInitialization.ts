@@ -98,10 +98,7 @@ export function useAppInitialization(
             telegramId: userData.user.telegramId,
           })
         } else {
-          logIfDev('🌐 Браузерный режим - Telegram недоступен')
-
-          // В браузерном режиме нужно убедиться что есть хотя бы базовый пользователь 
-          await ensureBrowserUser()
+          logIfDev('🌐 Браузерный режим - работа без Telegram')
         }
       }
 

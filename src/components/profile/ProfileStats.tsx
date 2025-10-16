@@ -103,11 +103,10 @@ export function ProfileStats({
   const rareElements = safeUserStats.rareElementsFound
 
   // Calculate level progress for the progress bar
-  const experience = calculateExperienceFromStats(
-    user,
-    safeMoodStats,
-    totalElements
-  )
+  // Используем опыт из пользователя если доступен, иначе рассчитываем (как в ProfileHeader)
+  const experience =
+    user.experience ??
+    calculateExperienceFromStats(user, safeMoodStats, totalElements)
   const levelInfo = calculateLevelProgress(experience)
 
   return (

@@ -58,50 +58,27 @@ export function MoodSelector({
 
   return (
     <Card className={className} padding="lg">
-      <div className="mb-4">
-        {/* Progress indicator */}
-        <div className="flex items-center justify-between">
+      {/* Минимальный индикатор прогресса */}
+      <div className="mb-3">
+        <div className="flex items-center justify-center space-x-1">
           {(['mood', 'intensity', 'note'] as const).map((s, index) => (
             <div key={s} className="flex items-center">
               <div
                 className={clsx(
-                  'flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-colors',
+                  'h-1.5 w-1.5 rounded-full transition-colors',
                   step === s
-                    ? 'bg-garden-500 text-white'
+                    ? 'bg-garden-500'
                     : index <
                         (['mood', 'intensity', 'note'] as const).indexOf(step)
-                      ? 'bg-garden-200 text-garden-700'
-                      : 'bg-gray-200 text-gray-500'
+                      ? 'bg-garden-300'
+                      : 'bg-gray-300'
                 )}
-              >
-                {index + 1}
-              </div>
+              />
               {index < 2 && (
-                <div
-                  className={clsx(
-                    'mx-2 h-1 w-12 rounded-full transition-colors sm:w-16',
-                    index <
-                      (['mood', 'intensity', 'note'] as const).indexOf(step)
-                      ? 'bg-garden-200'
-                      : 'bg-gray-200'
-                  )}
-                />
+                <div className="mx-1 h-0.5 w-2 rounded-full bg-gray-200" />
               )}
             </div>
           ))}
-        </div>
-
-        {/* Step titles */}
-        <div className="mt-2 flex justify-between text-xs font-medium text-gray-600">
-          <span className={clsx(step === 'mood' && 'text-garden-700')}>
-            Настроение
-          </span>
-          <span className={clsx(step === 'intensity' && 'text-garden-700')}>
-            Интенсивность
-          </span>
-          <span className={clsx(step === 'note' && 'text-garden-700')}>
-            Заметка
-          </span>
         </div>
       </div>
 
@@ -115,8 +92,11 @@ export function MoodSelector({
             transition={{ duration: 0.2 }}
           >
             <h3 className="mb-4 text-center text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Как вы себя чувствуете?
+              Как дела?
             </h3>
+            <p className="mb-4 text-center text-sm text-gray-600 dark:text-gray-400">
+              Выберите, что лучше всего описывает ваше настроение
+            </p>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {(Object.keys(MOOD_CONFIG) as MoodType[]).map(mood => {
                 const config = MOOD_CONFIG[mood]
