@@ -505,9 +505,22 @@ async function handleUseStreakFreeze(req, res) {
     }
 
     // 🔥 СИНХРОНИЗАЦИЯ: Обновляем дату последней отметки на ВЧЕРАШНИЙ день
+    // ВАЖНО: Используем локальную дату (не UTC), чтобы совпадать с форматом из api/mood.js
     const yesterday = new Date()
     yesterday.setDate(yesterday.getDate() - 1)
-    updates.streak_last_checkin = yesterday.toISOString().split('T')[0]
+    const yesterdayYear = yesterday.getFullYear()
+    const yesterdayMonth = String(yesterday.getMonth() + 1).padStart(2, '0')
+    const yesterdayDay = String(yesterday.getDate()).padStart(2, '0')
+    updates.streak_last_checkin = `${yesterdayYear}-${yesterdayMonth}-${yesterdayDay}`
+
+    console.log(`🔍 [FREEZE DEBUG] Before applying freeze:`, {
+      telegramId,
+      freezeType,
+      missedDays,
+      currentStreak: user.current_streak,
+      yesterdayDate: updates.streak_last_checkin,
+      updates,
+    })
 
     // 🔥 ИСПРАВЛЕНИЕ: Заморозка НЕ должна изменять текущий стрик.
     // Она лишь "заполняет" пропущенные дни. Стрик будет увеличен,
@@ -577,8 +590,13 @@ async function handleResetStreak(req, res) {
 
     // 🔥 СИНХРОНИЗАЦИЯ: Устанавливаем дату последней отметки на ВЧЕРА,
     // чтобы пользователь мог сразу начать новый стрик сегодня.
+    // ВАЖНО: Используем локальную дату (не UTC), чтобы совпадать с форматом из api/mood.js
     const yesterday = new Date()
     yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayYear = yesterday.getFullYear()
+    const yesterdayMonth = String(yesterday.getMonth() + 1).padStart(2, '0')
+    const yesterdayDay = String(yesterday.getDate()).padStart(2, '0')
+    const yesterdayFormatted = `${yesterdayYear}-${yesterdayMonth}-${yesterdayDay}`
 
     // Сбрасываем стрик в базе данных
     const { data: updated, error: updateError } = await supabase
@@ -586,7 +604,7 @@ async function handleResetStreak(req, res) {
       .update({
         current_streak: 0,
         updated_at: new Date().toISOString(),
-        streak_last_checkin: yesterday.toISOString().split('T')[0],
+        streak_last_checkin: yesterdayFormatted,
       })
       .eq('telegram_id', telegramId)
       .select('current_streak, longest_streak')
@@ -717,17 +735,26 @@ async function handleCheckStreak(req, res) {
     }
 
     // --- Логика расчета пропущенных дней ---
-    const lastCheckin = user.streak_last_checkin
-      ? new Date(user.streak_last_checkin)
-      : null
+    // ВАЖНО: Используем локальное время сервера, чтобы совпадать с api/mood.js
+    const today = new Date()
+    const todayYear = today.getFullYear()
+    const todayMonth = String(today.getMonth() + 1).padStart(2, '0')
+    const todayDay = String(today.getDate()).padStart(2, '0')
+    const todayFormatted = `${todayYear}-${todayMonth}-${todayDay}`
+
     let missedDays = 0
 
-    if (lastCheckin) {
-      lastCheckin.setUTCHours(0, 0, 0, 0)
-      const today = new Date()
-      today.setUTCHours(0, 0, 0, 0)
-      const diffTime = today.getTime() - lastCheckin.getTime()
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    if (user.streak_last_checkin) {
+      // Парсим даты как локальные (не UTC)
+      const lastCheckinDate = new Date(user.streak_last_checkin + 'T00:00:00')
+      const todayDate = new Date(todayFormatted + 'T00:00:00')
+
+      const diffTime = todayDate.getTime() - lastCheckinDate.getTime()
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+
+      console.log(
+        `🔍 [CHECK STREAK] lastCheckin=${user.streak_last_checkin}, today=${todayFormatted}, diffDays=${diffDays}`
+      )
 
       if (diffDays > 1) {
         missedDays = diffDays - 1

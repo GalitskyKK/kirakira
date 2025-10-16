@@ -97,26 +97,12 @@ export function useAppInitialization(
           logIfDev('✅ Данные пользователя загружены', {
             telegramId: userData.user.telegramId,
           })
-          completeOnboarding()
+        } else {
+          logIfDev('🌐 Браузерный режим - Telegram недоступен')
+
+          // В браузерном режиме нужно убедиться что есть хотя бы базовый пользователь 
+          await ensureBrowserUser()
         }
-      } else {
-        logIfDev('🌐 Браузерный режим - работа без Telegram')
-      }
-
-      // Постепенная загрузка данных
-      updateProgress(InitializationStage.STORES_SYNC, 30)
-
-      // Ждем загрузки пользователя, используя ref чтобы избежать stale closure
-      if (userLoadingRef.current) {
-        logIfDev('⏳ Ожидание загрузки пользователя...')
-        await new Promise(resolve => {
-          const intervalId = setInterval(() => {
-            if (!userLoadingRef.current) {
-              clearInterval(intervalId)
-              resolve(void 0)
-            }
-          }, 100)
-        })
       }
 
       updateProgress(InitializationStage.STORES_SYNC, 60)

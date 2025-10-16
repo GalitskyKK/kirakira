@@ -35,7 +35,7 @@ export function CrystalSVG({
     }
   }
 
-  // Сезонные цвета для кристаллов
+  // Сезонные цвета для кристаллов 
   const getSeasonalColors = () => {
     const baseColor = color
     switch (season) {

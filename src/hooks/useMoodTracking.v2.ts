@@ -112,7 +112,7 @@ export function useMoodTracking() {
       }
 
       try {
-        // Отправляем на сервер через mutation
+        // Отправляем на сервер через mutation 
         const telegramUserData: {
           userId: string
           firstName: string
