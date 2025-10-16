@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, Clock, Sparkles } from 'lucide-react'
+import { Clock, Sparkles } from 'lucide-react'
 import { MoodSelector } from './MoodSelector'
 import { PlantRenderer } from '@/components/garden/plants'
 import { Card, LoadingSpinner } from '@/components/ui'
@@ -103,7 +103,9 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
           >
-            <CheckCircle size={48} className="mx-auto mb-4 text-green-500" />
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-500">
+              <span className="text-xl text-white">✓</span>
+            </div>
           </motion.div>
 
           <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
@@ -306,31 +308,6 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
       </AnimatePresence>
 
       <MoodSelector onMoodSelected={handleMoodSubmit} isLoading={isLoading} />
-
-      {!canCheckinToday() && todaysMood && (
-        <motion.div
-          className="mt-4 rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/30"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <div className="flex items-start space-x-2">
-            <CheckCircle
-              size={16}
-              className="mt-0.5 flex-shrink-0 text-green-600"
-            />
-            <div>
-              <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                Настроение отмечено
-              </p>
-              <p className="text-xs text-green-600 dark:text-green-300">
-                Сегодня вы уже отметили своё настроение. Новый элемент появится
-                завтра.
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      )}
 
       {isLoading && (
         <motion.div
