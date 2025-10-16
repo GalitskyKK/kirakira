@@ -151,51 +151,14 @@ async function calculateUserStats(user) {
       return null
     }
 
-    // Вычисляем стрик
-    let currentStreak = 0
-    let longestStreak = 0
-    let tempStreak = 0
+    // 🔥 V3: Стрик полностью управляется на бэкенде через streak_last_checkin
+    // Мы НЕ пересчитываем его из истории настроений, а берем ТОЛЬКО из БД
+    const currentStreak = userStats?.current_streak || 0
+    const longestStreak = userStats?.longest_streak || 0
 
-    if (moodEntries && moodEntries.length > 0) {
-      const sortedDates = moodEntries
-        .map(entry => new Date(entry.mood_date).toDateString())
-        .filter((date, index, arr) => arr.indexOf(date) === index) // уникальные даты
-        .sort((a, b) => new Date(b) - new Date(a))
-
-      const today = new Date().toDateString()
-      const yesterday = new Date(
-        Date.now() - 24 * 60 * 60 * 1000
-      ).toDateString()
-
-      // Проверяем текущий стрик
-      if (sortedDates[0] === today || sortedDates[0] === yesterday) {
-        let checkDate = new Date()
-        for (const dateStr of sortedDates) {
-          if (dateStr === checkDate.toDateString()) {
-            currentStreak++
-            checkDate.setDate(checkDate.getDate() - 1)
-          } else {
-            break
-          }
-        }
-      }
-
-      // Вычисляем самый длинный стрик
-      tempStreak = 1
-      for (let i = 1; i < sortedDates.length; i++) {
-        const currentDate = new Date(sortedDates[i])
-        const prevDate = new Date(sortedDates[i - 1])
-
-        // Проверяем, что даты идут подряд (разница 1 день)
-        if (Math.abs(prevDate - currentDate) === 24 * 60 * 60 * 1000) {
-          tempStreak++
-        } else {
-          longestStreak = Math.max(longestStreak, tempStreak)
-          tempStreak = 1
-        }
-      }
-      longestStreak = Math.max(longestStreak, tempStreak)
-    }
+    console.log(
+      `📊 STREAK [V3 Profile]: Using server-managed streak from DB: current=${currentStreak}, longest=${longestStreak}`
+    )
 
     // Подсчет редких элементов
     const rareElementsCount = gardenElements
@@ -213,25 +176,24 @@ async function calculateUserStats(user) {
         )
       : 0
 
-    // 🔥 ИСПРАВЛЕНИЕ: Умный приоритет - БД над расчетными, но расчетные дни важнее устаревших в БД
+    // 🔥 V3: Стрики ТОЛЬКО из БД, никаких пересчетов
     const finalStats = {
       totalMoodEntries: moodEntries?.length || 0,
-      currentStreak: userStats?.current_streak || currentStreak, // Приоритет БД
-      longestStreak: userStats?.longest_streak || longestStreak, // Приоритет БД
-      totalElements: userStats?.total_elements || gardenElements?.length || 0, // Приоритет БД
-      rareElementsFound: userStats?.rare_elements_found || rareElementsCount, // Приоритет БД
-      // 🎯 ИСПРАВЛЕНИЕ total_days: расчетное значение важнее устаревшего в БД
+      currentStreak, // Из БД (строка 156)
+      longestStreak, // Из БД (строка 157)
+      totalElements: userStats?.total_elements || gardenElements?.length || 0,
+      rareElementsFound: userStats?.rare_elements_found || rareElementsCount,
       totalDays: Math.max(
         userStats?.total_days || 0,
         daysSinceRegistration + 1
-      ), // +1 потому что день регистрации тоже считается
+      ),
       gardensShared: userStats?.gardens_shared || 0,
       experience: userStats?.experience || 0,
       level: userStats?.level || 1,
     }
 
     // 🔍 ОТЛАДКА: Показываем откуда берутся данные
-    console.log('📊 Stats Sources:', {
+    console.log('📊 Stats Sources [V3]:', {
       telegramId: user.telegram_id,
       registrationDate: registrationDate
         ? new Date(registrationDate).toISOString().split('T')[0]
@@ -245,11 +207,11 @@ async function calculateUserStats(user) {
       calculatedStats: {
         daysSinceRegistration,
         daysSinceRegistrationPlus1: daysSinceRegistration + 1,
-        currentStreak,
-        longestStreak,
         totalElements: gardenElements?.length,
+        rareElements: rareElementsCount,
       },
       finalStats,
+      streakSource: 'DB only (no recalculation)',
       totalDaysLogic: `Math.max(${userStats?.total_days || 0}, ${daysSinceRegistration + 1}) = ${Math.max(userStats?.total_days || 0, daysSinceRegistration + 1)}`,
     })
 
