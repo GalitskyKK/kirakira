@@ -1,7 +1,5 @@
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
-// import { formatDistanceToNow } from 'date-fns'
-// import { ru } from 'date-fns/locale'
 import { TrendingUp, Calendar, Target, Award } from 'lucide-react'
 import { Card } from '@/components/ui'
 import { useMoodTracking } from '@/hooks/index.v2'
@@ -13,7 +11,8 @@ interface MoodStatsProps {
 }
 
 export function MoodStats({ className }: MoodStatsProps) {
-  const { moodHistory, moodStats, filterMoods } = useMoodTracking()
+  const { moodStats, streakCount, recentTrend, moodRecommendation } =
+    useMoodTracking()
 
   interface ChartDataPoint {
     date: number

@@ -12,29 +12,26 @@ interface MoodSelectorProps {
     intensity: MoodIntensity,
     note?: string
   ) => void
+  initialMood?: MoodType
   isLoading?: boolean
   className?: string
 }
 
 export function MoodSelector({
   onMoodSelected,
-  isLoading = false,
+  initialMood,
+  isLoading,
   className,
 }: MoodSelectorProps) {
-  const { recommendedMood } = useMoodTracking()
+  const { canCheckinToday, todaysMood } = useMoodTracking()
   const [selectedMood, setSelectedMood] = useState<MoodType | null>(
-    recommendedMood?.mood ?? null
+    initialMood ?? todaysMood?.mood ?? null
   )
   const [selectedIntensity, setSelectedIntensity] = useState<MoodIntensity>(
-    recommendedMood?.intensity ?? 2
+    todaysMood?.intensity ?? 2
   )
-  const [note, setNote] = useState(recommendedMood?.note ?? '')
+  const [note, setNote] = useState(todaysMood?.note ?? '')
   const [step, setStep] = useState<'mood' | 'intensity' | 'note'>('mood')
-
-  const moods = Object.entries(MOOD_CONFIG) as [
-    MoodType,
-    (typeof MOOD_CONFIG)[MoodType],
-  ][]
 
   const handleMoodSelect = (mood: MoodType) => {
     setSelectedMood(mood)
@@ -48,82 +45,108 @@ export function MoodSelector({
 
   const handleSubmit = () => {
     if (selectedMood) {
-      onMoodSelected?.(
-        selectedMood,
-        selectedIntensity,
-        note.trim() || undefined
-      )
+      onMoodSelected?.(selectedMood, selectedIntensity, note || undefined)
     }
   }
 
   const handleBack = () => {
-    if (step === 'intensity') {
-      setStep('mood')
-    } else if (step === 'note') {
-      setStep('intensity')
-    }
+    if (step === 'note') setStep('intensity')
+    else if (step === 'intensity') setStep('mood')
   }
 
-  const isAlreadyCheckedIn = !recommendedMood?.canCheckinToday
+  const isAlreadyCheckedIn = !canCheckinToday
 
   return (
-    <Card className={clsx('mx-auto w-full max-w-md', className)} padding="lg">
-      <div className="mb-6 text-center">
-        <h2 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
-          {isAlreadyCheckedIn ? 'Сегодняшнее настроение' : 'Как дела?'}
-        </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          {isAlreadyCheckedIn
-            ? 'Вы уже отметили настроение сегодня'
-            : 'Выберите, что лучше всего описывает ваше настроение'}
-        </p>
+    <Card className={className} padding="lg">
+      <div className="mb-4">
+        {/* Progress indicator */}
+        <div className="flex items-center justify-between">
+          {(['mood', 'intensity', 'note'] as const).map((s, index) => (
+            <div key={s} className="flex items-center">
+              <div
+                className={clsx(
+                  'flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-colors',
+                  step === s
+                    ? 'bg-garden-500 text-white'
+                    : index <
+                        (['mood', 'intensity', 'note'] as const).indexOf(step)
+                      ? 'bg-garden-200 text-garden-700'
+                      : 'bg-gray-200 text-gray-500'
+                )}
+              >
+                {index + 1}
+              </div>
+              {index < 2 && (
+                <div
+                  className={clsx(
+                    'mx-2 h-1 w-12 rounded-full transition-colors sm:w-16',
+                    index <
+                      (['mood', 'intensity', 'note'] as const).indexOf(step)
+                      ? 'bg-garden-200'
+                      : 'bg-gray-200'
+                  )}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Step titles */}
+        <div className="mt-2 flex justify-between text-xs font-medium text-gray-600">
+          <span className={clsx(step === 'mood' && 'text-garden-700')}>
+            Настроение
+          </span>
+          <span className={clsx(step === 'intensity' && 'text-garden-700')}>
+            Интенсивность
+          </span>
+          <span className={clsx(step === 'note' && 'text-garden-700')}>
+            Заметка
+          </span>
+        </div>
       </div>
 
       <AnimatePresence mode="wait">
         {step === 'mood' && (
           <motion.div
             key="mood"
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.2 }}
           >
-            <div className="grid grid-cols-2 gap-3">
-              {moods.map(([moodKey, moodConfig]) => (
-                <motion.button
-                  key={moodKey}
-                  className={clsx(
-                    'rounded-2xl border-2 p-4 transition-all duration-200',
-                    'focus:outline-none focus:ring-2 focus:ring-offset-2',
-                    selectedMood === moodKey
-                      ? 'scale-105 border-current shadow-md'
-                      : 'hover:scale-102 border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600',
-                    isAlreadyCheckedIn &&
-                      'pointer-events-none cursor-not-allowed opacity-50'
-                  )}
-                  style={{
-                    color:
-                      selectedMood === moodKey ? moodConfig.color : undefined,
-                    backgroundColor:
-                      selectedMood === moodKey
-                        ? `${moodConfig.color}10`
-                        : undefined,
-                  }}
-                  onClick={() => {
-                    if (!isAlreadyCheckedIn) {
-                      handleMoodSelect(moodKey)
-                    }
-                  }}
-                  disabled={isAlreadyCheckedIn || isLoading}
-                  {...(!isAlreadyCheckedIn && {
-                    whileHover: { scale: 1.02 },
-                    whileTap: { scale: 0.98 },
-                  })}
-                >
-                  <div className="mb-2 text-3xl">{moodConfig.emoji}</div>
-                  <div className="text-sm font-medium">{moodConfig.label}</div>
-                </motion.button>
-              ))}
+            <h3 className="mb-4 text-center text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Как вы себя чувствуете?
+            </h3>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {(Object.keys(MOOD_CONFIG) as MoodType[]).map(mood => {
+                const config = MOOD_CONFIG[mood]
+                return (
+                  <motion.button
+                    key={mood}
+                    onClick={() => handleMoodSelect(mood)}
+                    className={clsx(
+                      'flex flex-col items-center justify-center rounded-xl border-2 p-4 transition-all hover:scale-105',
+                      selectedMood === mood
+                        ? 'border-garden-500 bg-garden-50 shadow-md dark:bg-garden-900/30'
+                        : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800'
+                    )}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <span className="mb-2 text-4xl">{config.emoji}</span>
+                    <span
+                      className={clsx(
+                        'text-sm font-medium',
+                        selectedMood === mood
+                          ? 'text-garden-700 dark:text-garden-300'
+                          : 'text-gray-700 dark:text-gray-300'
+                      )}
+                    >
+                      {config.label}
+                    </span>
+                  </motion.button>
+                )
+              })}
             </div>
           </motion.div>
         )}
@@ -131,56 +154,46 @@ export function MoodSelector({
         {step === 'intensity' && selectedMood && (
           <motion.div
             key="intensity"
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.2 }}
           >
-            <div className="mb-6 text-center">
-              <div className="mb-2 text-4xl">
-                {MOOD_CONFIG[selectedMood].emoji}
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                {MOOD_CONFIG[selectedMood].label}
-              </h3>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                Насколько сильно вы это чувствуете?
-              </p>
-            </div>
-
+            <h3 className="mb-4 text-center text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Насколько сильно?
+            </h3>
             <div className="space-y-3">
-              {[1, 2, 3].map(intensity => {
+              {([1, 2, 3] as MoodIntensity[]).map(intensity => {
                 const labels = ['Слабо', 'Умеренно', 'Сильно']
-                const isSelected = selectedIntensity === intensity
-
                 return (
                   <motion.button
                     key={intensity}
+                    onClick={() => handleIntensitySelect(intensity)}
                     className={clsx(
-                      'w-full rounded-xl border-2 p-4 text-left transition-all duration-200',
-                      'focus:outline-none focus:ring-2 focus:ring-offset-2',
-                      isSelected
-                        ? 'border-current shadow-md'
-                        : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
+                      'w-full rounded-xl border-2 p-4 text-left transition-all hover:scale-[1.02]',
+                      selectedIntensity === intensity
+                        ? 'border-garden-500 bg-garden-50 shadow-md dark:bg-garden-900/30'
+                        : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800'
                     )}
-                    style={{
-                      color: isSelected
-                        ? MOOD_CONFIG[selectedMood].color
-                        : undefined,
-                      backgroundColor: isSelected
-                        ? `${MOOD_CONFIG[selectedMood].color}10`
-                        : undefined,
-                    }}
-                    onClick={() =>
-                      handleIntensitySelect(intensity as MoodIntensity)
-                    }
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-medium">
-                        {labels[intensity - 1]}
-                      </span>
+                      <div>
+                        <p
+                          className={clsx(
+                            'font-medium',
+                            selectedIntensity === intensity
+                              ? 'text-garden-700 dark:text-garden-300'
+                              : 'text-gray-900 dark:text-gray-100'
+                          )}
+                        >
+                          {labels[intensity - 1]}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Интенсивность: {intensity}/3
+                        </p>
+                      </div>
                       <div className="flex space-x-1">
                         {Array.from({ length: 3 }, (_, i) => (
                           <div
@@ -188,7 +201,7 @@ export function MoodSelector({
                             className={clsx(
                               'h-2 w-2 rounded-full',
                               i < intensity
-                                ? 'bg-current'
+                                ? 'bg-garden-500'
                                 : 'bg-gray-300 dark:bg-gray-600'
                             )}
                           />
@@ -199,90 +212,82 @@ export function MoodSelector({
                 )
               })}
             </div>
-
-            <div className="mt-6 flex space-x-3">
-              <Button variant="outline" onClick={handleBack} fullWidth>
-                Назад
-              </Button>
-              <Button onClick={() => setStep('note')} fullWidth>
-                Далее
-              </Button>
-            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleBack}
+              className="mt-4 w-full"
+            >
+              Назад
+            </Button>
           </motion.div>
         )}
 
-        {step === 'note' && selectedMood && (
+        {step === 'note' && (
           <motion.div
             key="note"
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.2 }}
           >
-            <div className="mb-6 text-center">
-              <div className="mb-2 text-4xl">
-                {MOOD_CONFIG[selectedMood].emoji}
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                Добавить заметку
-              </h3>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                Что происходит в вашей жизни? (необязательно)
-              </p>
-            </div>
-
+            <h3 className="mb-4 text-center text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Добавить заметку? (необязательно)
+            </h3>
             <textarea
               value={note}
               onChange={e => setNote(e.target.value)}
-              placeholder="Расскажите о своем дне..."
-              className={clsx(
-                'w-full rounded-xl border border-gray-300 p-4 dark:border-gray-600',
-                'bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100',
-                'focus:border-transparent focus:outline-none focus:ring-2 focus:ring-garden-500',
-                'resize-none text-sm'
-              )}
+              placeholder="Что вы чувствуете сегодня?"
+              className="w-full rounded-xl border-2 border-gray-200 bg-white p-4 text-gray-900 placeholder-gray-400 transition-colors focus:border-garden-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
               rows={4}
               maxLength={200}
             />
-
-            <div className="mt-1 text-right text-xs text-gray-500 dark:text-gray-400">
+            <p className="mb-4 mt-1 text-right text-xs text-gray-500">
               {note.length}/200
-            </div>
-
-            <div className="mt-6 flex space-x-3">
-              <Button variant="outline" onClick={handleBack} fullWidth>
+            </p>
+            <div className="flex space-x-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleBack}
+                className="flex-1"
+              >
                 Назад
               </Button>
-              <Button onClick={handleSubmit} isLoading={isLoading} fullWidth>
-                {isAlreadyCheckedIn ? 'Обновить' : 'Сохранить'}
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleSubmit}
+                isLoading={isLoading ?? false}
+                disabled={isLoading ?? false}
+                className="flex-1"
+              >
+                {todaysMood ? 'Обновить' : 'Сохранить'}
               </Button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {isAlreadyCheckedIn && recommendedMood && (
+      {isAlreadyCheckedIn && todaysMood && (
         <motion.div
           className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/30"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
         >
           <div className="flex items-center space-x-3">
-            <div className="text-2xl">
-              {MOOD_CONFIG[recommendedMood.mood].emoji}
-            </div>
+            <div className="text-2xl">{MOOD_CONFIG[todaysMood.mood].emoji}</div>
             <div>
               <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                {MOOD_CONFIG[recommendedMood.mood].label}
+                {MOOD_CONFIG[todaysMood.mood].label}
               </p>
               <p className="text-xs text-green-600 dark:text-green-300">
                 Интенсивность:{' '}
-                {['Слабо', 'Умеренно', 'Сильно'][recommendedMood.intensity - 1]}
+                {['Слабо', 'Умеренно', 'Сильно'][todaysMood.intensity - 1]}
               </p>
-              {recommendedMood.note && (
+              {todaysMood.note && (
                 <p className="mt-1 text-xs text-green-700 dark:text-green-300">
-                  "{recommendedMood.note}"
+                  "{todaysMood.note}"
                 </p>
               )}
             </div>
@@ -290,5 +295,27 @@ export function MoodSelector({
         </motion.div>
       )}
     </Card>
+  )
+}
+
+export function MoodIcon({
+  mood,
+  size = 24,
+}: {
+  mood: MoodType
+  size?: number
+}) {
+  const config = MOOD_CONFIG[mood]
+  return (
+    <div
+      className="flex items-center justify-center rounded-full"
+      style={{
+        width: size,
+        height: size,
+        backgroundColor: `${config.color}20`,
+      }}
+    >
+      <span style={{ fontSize: size * 0.6 }}>{config.emoji}</span>
+    </div>
   )
 }
