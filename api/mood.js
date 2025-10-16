@@ -158,18 +158,72 @@ async function handleRecord(req, res) {
 
     console.log(`✅ Mood recorded to Supabase for user ${telegramUserId}`)
 
-    // Обновляем счетчики streak пользователя напрямую
-    const { error: streakError } = await supabase
+    // 🔥 V3: Обновляем стрик через серверную логику
+    const { data: userData, error: userFetchError } = await supabase
       .from('users')
-      .update({
-        last_visit_date: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
+      .select('current_streak, streak_last_checkin')
       .eq('telegram_id', telegramUserId)
+      .single()
 
-    if (streakError) {
-      console.warn('Failed to update user mood streak:', streakError)
-      // Не критично, продолжаем
+    if (!userFetchError && userData) {
+      const lastCheckin = userData.streak_last_checkin
+        ? new Date(userData.streak_last_checkin)
+        : null
+      const todayDate = new Date(formattedDate)
+      todayDate.setUTCHours(0, 0, 0, 0)
+
+      let newStreak = userData.current_streak || 0
+
+      if (lastCheckin) {
+        lastCheckin.setUTCHours(0, 0, 0, 0)
+        const diffDays = Math.floor(
+          (todayDate - lastCheckin) / (1000 * 60 * 60 * 24)
+        )
+
+        if (diffDays === 1) {
+          // Продолжаем стрик
+          newStreak = newStreak + 1
+          console.log(`📈 Streak continues: ${newStreak}`)
+        } else if (diffDays === 0) {
+          // Обновление настроения за тот же день - стрик не меняется
+          console.log(`🔄 Same day mood update, streak unchanged: ${newStreak}`)
+        } else {
+          // Стрик прерван, начинаем заново
+          newStreak = 1
+          console.log(`🔁 Streak broken, starting new: ${newStreak}`)
+        }
+      } else {
+        // Первая отметка или нет данных о последней
+        newStreak = 1
+        console.log(`🆕 First mood check-in, streak: ${newStreak}`)
+      }
+
+      // Получаем текущий longest_streak для корректного обновления
+      const { data: userFullData } = await supabase
+        .from('users')
+        .select('longest_streak')
+        .eq('telegram_id', telegramUserId)
+        .single()
+
+      const currentLongestStreak = userFullData?.longest_streak || 0
+
+      // Обновляем streak и дату в БД
+      const { error: streakError } = await supabase
+        .from('users')
+        .update({
+          current_streak: newStreak,
+          longest_streak: Math.max(newStreak, currentLongestStreak),
+          streak_last_checkin: formattedDate,
+          last_visit_date: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('telegram_id', telegramUserId)
+
+      if (streakError) {
+        console.warn('Failed to update streak:', streakError)
+      } else {
+        console.log(`✅ Streak updated to ${newStreak}`)
+      }
     }
 
     // 🏆 НАЧИСЛЯЕМ ОПЫТ ЗА ЗАПИСЬ НАСТРОЕНИЯ (JWT-аутентифицированный RPC)

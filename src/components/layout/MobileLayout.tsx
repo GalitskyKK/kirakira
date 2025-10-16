@@ -51,7 +51,6 @@ export function MobileLayout() {
     autoUsedMessage,
     useFreeze,
     resetStreak,
-    checkMissedDays,
     closeModal,
   } = useStreakFreeze()
 
@@ -64,11 +63,6 @@ export function MobileLayout() {
       void loadCurrency(currentUser.telegramId)
     }
   }, [currentUser?.telegramId, loadCurrency])
-
-  // 🧊 Проверка пропущенных дней при монтировании
-  useEffect(() => {
-    void checkMissedDays()
-  }, [checkMissedDays])
 
   const handleTabChange = (newTab: string) => {
     const newIndex = TABS.indexOf(newTab)

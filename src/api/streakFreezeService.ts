@@ -68,7 +68,7 @@ export async function getStreakFreezes(
 /**
  * Использовать заморозку стрика
  */
-export async function useStreakFreeze(
+export async function applyStreakFreeze(
   params: UseStreakFreezeParams
 ): Promise<UseStreakFreezeResponse> {
   try {
@@ -165,4 +165,33 @@ export function getRecommendedFreezeType(
   }
 
   return null
+}
+
+// 🔥 НОВЫЙ СЕРВИС
+export interface CheckStreakResponse {
+  readonly missedDays: number
+  readonly currentStreak: number
+  readonly streakState: 'ok' | 'at_risk' | 'broken'
+  readonly lastCheckin: string | null
+}
+
+export async function checkStreak(
+  telegramId: number
+): Promise<CheckStreakResponse> {
+  try {
+    const response = await apiGet<{
+      success: boolean
+      data: CheckStreakResponse
+      error?: string
+    }>(`/api/user?action=check-streak&telegramId=${telegramId}`)
+
+    if (!response.success || !response.data) {
+      throw new Error(response.error ?? 'Failed to check streak')
+    }
+
+    return response.data
+  } catch (error) {
+    console.error('Error checking streak:', error)
+    throw error
+  }
 }
