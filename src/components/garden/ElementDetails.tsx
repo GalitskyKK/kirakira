@@ -157,15 +157,21 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
                   Дата появления
                 </p>
                 <p className="text-xs text-gray-600">
-                  {format(currentElement.unlockDate, 'dd MMMM yyyy', {
-                    locale: ru,
-                  })}
+                  {format(
+                    currentElement.unlockDate instanceof Date
+                      ? currentElement.unlockDate
+                      : new Date(currentElement.unlockDate),
+                    'dd MMMM yyyy',
+                    { locale: ru }
+                  )}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {formatDistanceToNow(currentElement.unlockDate, {
-                    locale: ru,
-                    addSuffix: true,
-                  })}
+                  {formatDistanceToNow(
+                    currentElement.unlockDate instanceof Date
+                      ? currentElement.unlockDate
+                      : new Date(currentElement.unlockDate),
+                    { locale: ru, addSuffix: true }
+                  )}
                 </p>
               </div>
             </div>
@@ -240,9 +246,13 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
               <div>
                 <p className="font-medium">Растение выросло</p>
                 <p className="text-gray-500">
-                  {format(currentElement.unlockDate, 'dd MMM yyyy, HH:mm', {
-                    locale: ru,
-                  })}
+                  {format(
+                    currentElement.unlockDate instanceof Date
+                      ? currentElement.unlockDate
+                      : new Date(currentElement.unlockDate),
+                    'dd MMM yyyy, HH:mm',
+                    { locale: ru }
+                  )}
                 </p>
               </div>
             </motion.div>

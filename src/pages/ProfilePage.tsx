@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { useUserSync, useGardenSync } from '@/hooks/index.v2'
+import { useTelegramId } from '@/hooks/useTelegramId'
 import { useProfile } from '@/hooks/useProfile.v2'
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { ProfileStats } from '@/components/profile/ProfileStats'
@@ -9,11 +10,12 @@ import { LoadingSpinner } from '@/components/ui'
 
 export function ProfilePage() {
   // ✅ Получаем данные через React Query v2 хуки
+  const telegramId = useTelegramId()
   const { data: userData, isLoading: userLoading } = useUserSync(
-    undefined,
-    false
+    telegramId,
+    !!telegramId
   )
-  const { data: gardenData } = useGardenSync(undefined, false)
+  const { data: gardenData } = useGardenSync(telegramId, !!telegramId)
 
   const currentUser = userData?.user
   const currentGarden = gardenData

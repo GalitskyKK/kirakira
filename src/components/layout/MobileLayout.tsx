@@ -15,6 +15,7 @@ import { useGardenState, useMoodTracking } from '@/hooks/index.v2'
 import { useStreakFreeze } from '@/hooks/useStreakFreeze'
 import { useCurrencyStore } from '@/stores/currencyStore'
 import { useUserSync } from '@/hooks/index.v2'
+import { useTelegramId } from '@/hooks/useTelegramId'
 
 const tabVariants = {
   enter: (direction: number) => ({
@@ -38,7 +39,8 @@ export function MobileLayout() {
   const { garden, gardenStats } = useGardenState()
   const { canCheckinToday, moodHistory } = useMoodTracking()
   // Получаем данные пользователя через React Query
-  const { data: userData } = useUserSync(undefined, false)
+  const telegramId = useTelegramId()
+  const { data: userData } = useUserSync(telegramId, !!telegramId)
   const currentUser = userData?.user
   const { loadCurrency } = useCurrencyStore()
 

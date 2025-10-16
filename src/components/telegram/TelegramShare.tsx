@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Share2, Camera, Heart, Copy, MessageCircle } from 'lucide-react'
 import { useTelegram } from '@/hooks'
 import { useUserSync } from '@/hooks/index.v2'
+import { useTelegramId } from '@/hooks/useTelegramId'
 import { Button, Card } from '@/components/ui'
 import type { Garden, MoodEntry } from '@/types'
 import { authenticatedFetch } from '@/utils/apiClient'
@@ -20,7 +21,8 @@ export function TelegramShare({
 }: TelegramShareProps) {
   const { webApp, shareGarden, hapticFeedback, isTelegramEnv, showAlert } =
     useTelegram()
-  const { data: userData } = useUserSync(undefined, false)
+  const telegramId = useTelegramId()
+  const { data: userData } = useUserSync(telegramId, !!telegramId)
   const [isCapturing, setIsCapturing] = useState(false)
   const [lastSharedImage, setLastSharedImage] = useState<string | null>(null)
 

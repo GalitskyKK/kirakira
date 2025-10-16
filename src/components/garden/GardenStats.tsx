@@ -78,10 +78,12 @@ export function GardenStats({ garden }: GardenStatsProps) {
       oldestElement,
       newestElement,
       gardenAge: oldestElement
-        ? formatDistanceToNow(oldestElement.unlockDate, {
-            locale: ru,
-            addSuffix: true,
-          })
+        ? formatDistanceToNow(
+            oldestElement.unlockDate instanceof Date
+              ? oldestElement.unlockDate
+              : new Date(oldestElement.unlockDate),
+            { locale: ru, addSuffix: true }
+          )
         : null,
     }
   }, [garden.elements])
@@ -259,10 +261,12 @@ export function GardenStats({ garden }: GardenStatsProps) {
                 {stats.newestElement.name}
               </p>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                {formatDistanceToNow(stats.newestElement.unlockDate, {
-                  locale: ru,
-                  addSuffix: true,
-                })}
+                {formatDistanceToNow(
+                  stats.newestElement.unlockDate instanceof Date
+                    ? stats.newestElement.unlockDate
+                    : new Date(stats.newestElement.unlockDate),
+                  { locale: ru, addSuffix: true }
+                )}
               </p>
             </div>
           </div>

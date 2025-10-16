@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { useUserSync, useGardenSync } from '@/hooks/index.v2'
+import { useTelegramId } from '@/hooks/useTelegramId'
 import { useTodaysMood } from '@/hooks/queries/useMoodQueries'
 import {
   generateDailyElement,
@@ -14,7 +15,8 @@ import type { GardenElement, MoodType, Position2D } from '@/types'
  */
 export function useElementGeneration() {
   // Получаем данные через React Query
-  const { data: userData } = useUserSync(undefined, false)
+  const telegramId = useTelegramId()
+  const { data: userData } = useUserSync(telegramId, !!telegramId)
   const { data: gardenData } = useGardenSync(undefined, false)
   const { data: todaysMoodData } = useTodaysMood(undefined, undefined, false)
 

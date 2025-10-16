@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { useTelegram } from '@/hooks'
 import { useUserSync } from '@/hooks/index.v2'
+import { useTelegramId } from '@/hooks/useTelegramId'
 // import { useChallengeIntegration } from '@/hooks/useChallengeIntegration'
 import { Button, Card } from '@/components/ui'
 import { FriendsList } from './FriendsList'
@@ -27,7 +28,8 @@ interface TelegramCommunityProps {
 
 export function TelegramCommunity({ garden }: TelegramCommunityProps) {
   const { webApp, hapticFeedback, showAlert, isTelegramEnv } = useTelegram()
-  const { data: userData } = useUserSync(undefined, false)
+  const telegramId = useTelegramId()
+  const { data: userData } = useUserSync(telegramId, !!telegramId)
   const currentUser = userData?.user
 
   // Загружаем активные челленджи через React Query

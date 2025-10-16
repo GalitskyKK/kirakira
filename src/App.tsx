@@ -7,6 +7,7 @@ import {
 } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useUserClientStore, useUserSync } from '@/hooks/index.v2'
+import { UserProvider } from '@/contexts/UserContext'
 import { HomePage } from '@/pages/HomePage'
 import { OnboardingPage } from '@/pages/OnboardingPage'
 import { AuthPage } from '@/pages/AuthPage'
@@ -371,137 +372,139 @@ function App() {
 
   // Main app routing
   return (
-    <Router>
-      <div className="App">
-        <AnimatePresence mode="wait">
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <motion.div
-                  key="home"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <HomePage />
-                </motion.div>
-              }
-            />
-            {/* Dev роуты доступны только в DEV режиме */}
-            {import.meta.env.DEV && ShowcasePage && (
+    <UserProvider>
+      <Router>
+        <div className="App">
+          <AnimatePresence mode="wait">
+            <Routes>
               <Route
-                path="/showcase"
+                path="/"
                 element={
                   <motion.div
-                    key="showcase"
+                    key="home"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <HomePage />
+                  </motion.div>
+                }
+              />
+              {/* Dev роуты доступны только в DEV режиме */}
+              {import.meta.env.DEV && ShowcasePage && (
+                <Route
+                  path="/showcase"
+                  element={
+                    <motion.div
+                      key="showcase"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <ShowcasePage />
+                      </Suspense>
+                    </motion.div>
+                  }
+                />
+              )}
+
+              {import.meta.env.DEV && TelegramTestPage && (
+                <Route
+                  path="/telegram-test"
+                  element={
+                    <motion.div
+                      key="telegram-test"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <TelegramTestPage />
+                      </Suspense>
+                    </motion.div>
+                  }
+                />
+              )}
+
+              {import.meta.env.DEV && StreakDebugPage && (
+                <Route
+                  path="/streak-debug"
+                  element={
+                    <motion.div
+                      key="streak-debug"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <StreakDebugPage />
+                      </Suspense>
+                    </motion.div>
+                  }
+                />
+              )}
+
+              <Route
+                path="/auth"
+                element={
+                  <motion.div
+                    key="auth"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <AuthPage
+                      onSuccess={() => window.location.replace('/')}
+                      onError={error => console.error('Auth error:', error)}
+                    />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <motion.div
+                    key="profile"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <ProfilePage />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/friend/:friendTelegramId"
+                element={
+                  <motion.div
+                    key="friend-profile"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.3 }}
                   >
                     <Suspense fallback={<LoadingSpinner />}>
-                      <ShowcasePage />
+                      <FriendProfilePage />
                     </Suspense>
                   </motion.div>
                 }
               />
-            )}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </AnimatePresence>
+        </div>
 
-            {import.meta.env.DEV && TelegramTestPage && (
-              <Route
-                path="/telegram-test"
-                element={
-                  <motion.div
-                    key="telegram-test"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <TelegramTestPage />
-                    </Suspense>
-                  </motion.div>
-                }
-              />
-            )}
-
-            {import.meta.env.DEV && StreakDebugPage && (
-              <Route
-                path="/streak-debug"
-                element={
-                  <motion.div
-                    key="streak-debug"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <StreakDebugPage />
-                    </Suspense>
-                  </motion.div>
-                }
-              />
-            )}
-
-            <Route
-              path="/auth"
-              element={
-                <motion.div
-                  key="auth"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <AuthPage
-                    onSuccess={() => window.location.replace('/')}
-                    onError={error => console.error('Auth error:', error)}
-                  />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <motion.div
-                  key="profile"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <ProfilePage />
-                </motion.div>
-              }
-            />
-            <Route
-              path="/friend/:friendTelegramId"
-              element={
-                <motion.div
-                  key="friend-profile"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <FriendProfilePage />
-                  </Suspense>
-                </motion.div>
-              }
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </AnimatePresence>
-      </div>
-
-      {/* PWA Update Prompt */}
-      <UpdatePrompt />
-    </Router>
+        {/* PWA Update Prompt */}
+        <UpdatePrompt />
+      </Router>
+    </UserProvider>
   )
 }
 

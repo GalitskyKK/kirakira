@@ -13,6 +13,7 @@ import {
 } from '@/types/garden'
 import { useCurrencyStore } from '@/stores'
 import { useUserSync } from '@/hooks/index.v2'
+import { useTelegramId } from '@/hooks/useTelegramId'
 import { TrendingUp, Sparkles } from 'lucide-react'
 
 interface ElementUpgradeButtonProps {
@@ -33,7 +34,8 @@ export function ElementUpgradeButton({
   const { userCurrency } = useCurrencyStore()
 
   // Получаем данные пользователя через React Query
-  const { data: userData } = useUserSync(undefined, false)
+  const telegramId = useTelegramId()
+  const { data: userData } = useUserSync(telegramId, !!telegramId)
   const currentUser = userData?.user
 
   // Проверяем, можно ли улучшить элемент

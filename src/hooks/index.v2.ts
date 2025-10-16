@@ -30,6 +30,9 @@ export {
 // React Query хуки для прямого использования
 export * from './queries'
 
+// Telegram ID Hook
+export { useTelegramId } from './useTelegramId'
+
 // Старые хуки (для обратной совместимости)
 export { useGardenState as useGardenStateOld } from './useGardenState'
 export { useMoodTracking as useMoodTrackingOld } from './useMoodTracking'

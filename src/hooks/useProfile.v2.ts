@@ -9,7 +9,8 @@ import {
   useFriendProfile,
   useAddExperience,
 } from '@/hooks/queries'
-import { useUserStore } from '@/stores'
+import { useUserSync } from '@/hooks/index.v2'
+import { useTelegramId } from '@/hooks/useTelegramId'
 import type { ProfileData } from '@/types/api'
 
 /**
@@ -17,8 +18,8 @@ import type { ProfileData } from '@/types/api'
  * Использует React Query для управления серверным состоянием
  */
 export function useProfile() {
-  const { currentUser } = useUserStore()
-  const telegramId = currentUser?.telegramId
+  const telegramId = useTelegramId()
+  useUserSync(telegramId, !!telegramId)
 
   // Получение собственного профиля
   const {
@@ -100,8 +101,8 @@ export function useProfile() {
  * Хук для загрузки профиля друга
  */
 export function useFriendProfileData(friendTelegramId: number | undefined) {
-  const { currentUser } = useUserStore()
-  const telegramId = currentUser?.telegramId
+  const currentUserTelegramId = useTelegramId()
+  useUserSync(currentUserTelegramId, !!currentUserTelegramId)
 
   const {
     data: friendProfile,
@@ -109,16 +110,16 @@ export function useFriendProfileData(friendTelegramId: number | undefined) {
     error: queryError,
     refetch: reloadFriendProfile,
   } = useFriendProfile(
-    telegramId,
+    currentUserTelegramId,
     friendTelegramId,
-    !!telegramId && !!friendTelegramId
+    !!currentUserTelegramId && !!friendTelegramId
   )
 
   // Загрузка профиля друга
   const loadFriendProfile = async (
     customFriendId: number
   ): Promise<ProfileData | null> => {
-    if (!telegramId) {
+    if (!currentUserTelegramId) {
       console.error('❌ No user logged in')
       return null
     }

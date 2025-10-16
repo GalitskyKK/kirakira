@@ -12,6 +12,7 @@ import {
   useCanCheckinToday,
 } from '@/hooks/queries'
 import { useUserSync } from '@/hooks/index.v2'
+import { useTelegramId } from '@/hooks/useTelegramId'
 import type { MoodType, MoodIntensity, MoodEntry, MoodStats } from '@/types'
 import { getMoodDisplayProps, getRecommendedMood } from '@/utils/moodMapping'
 import { getTimeUntilNextCheckin } from '@/utils/dateHelpers'
@@ -24,9 +25,9 @@ import { awardMoodRewards } from '@/utils/currencyRewards'
  * Объединяет серверное состояние (React Query) и клиентское состояние (Zustand)
  */
 export function useMoodTracking() {
-  const { data: userData } = useUserSync(undefined, true)
+  const telegramId = useTelegramId()
+  const { data: userData } = useUserSync(telegramId, !!telegramId)
   const currentUser = userData?.user
-  const telegramId = currentUser?.telegramId
   const userId = currentUser?.id
 
   // Серверное состояние через React Query

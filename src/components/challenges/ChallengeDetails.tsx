@@ -16,6 +16,7 @@ import {
 import { Button, Card } from '@/components/ui'
 import { useTelegram } from '@/hooks'
 import { useUserSync, useJoinChallenge } from '@/hooks/index.v2'
+import { useTelegramId } from '@/hooks/useTelegramId'
 import { useChallengeDetails } from '@/hooks/queries/useChallengeQueries'
 import { ChallengeLeaderboard } from './ChallengeLeaderboard'
 
@@ -31,7 +32,8 @@ export function ChallengeDetails({
   const { hapticFeedback, showAlert } = useTelegram()
 
   // Получаем данные пользователя через React Query
-  const { data: userData } = useUserSync(undefined, false)
+  const telegramId = useTelegramId()
+  const { data: userData } = useUserSync(telegramId, !!telegramId)
   const currentUser = userData?.user
 
   // Получаем данные челленджа через React Query

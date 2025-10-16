@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useUserSync } from '@/hooks/index.v2'
+import { useTelegramId } from '@/hooks/useTelegramId'
 import { useQueryClient } from '@tanstack/react-query'
 import { userKeys } from '@/hooks/queries/useUserQueries'
 import {
@@ -18,7 +19,8 @@ export function useStreakFreeze() {
   const queryClient = useQueryClient()
 
   // Получаем данные пользователя через React Query
-  const { data: userData } = useUserSync(undefined, false)
+  const telegramId = useTelegramId()
+  const { data: userData } = useUserSync(telegramId, !!telegramId)
   const currentUser = userData?.user
 
   const [freezeData, setFreezeData] = useState<StreakFreezeData | null>(null)

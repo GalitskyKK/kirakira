@@ -11,6 +11,7 @@ import {
   useElementUpgradeInfo,
   useUpgradeElement,
 } from '@/hooks/index.v2'
+import { useTelegramId } from '@/hooks/useTelegramId'
 import { ElementUpgradeButton } from './ElementUpgradeButton'
 import { UpgradeConfirmModal } from './UpgradeConfirmModal'
 import { UpgradeResultModal } from './UpgradeResultModal'
@@ -23,7 +24,8 @@ export function ElementUpgradeManager({ element }: ElementUpgradeManagerProps) {
   const { userCurrency } = useCurrencyStore()
 
   // Получаем данные пользователя через React Query
-  const { data: userData } = useUserSync(undefined, false)
+  const telegramId = useTelegramId()
+  const { data: userData } = useUserSync(telegramId, !!telegramId)
   const currentUser = userData?.user
 
   // React Query хуки для upgrade функций
