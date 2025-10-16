@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTelegram } from '@/hooks'
 import { useUserSync } from '@/hooks/index.v2'
 import { useUserClientStore } from '@/hooks/index.v2'
@@ -40,6 +40,11 @@ export function useAppInitialization(
     telegramUser?.telegramId,
     !!telegramUser?.telegramId
   )
+
+  const userLoadingRef = useRef(userLoading)
+  useEffect(() => {
+    userLoadingRef.current = userLoading
+  }, [userLoading])
 
   const updateProgress = useCallback(
     (stage: InitializationStage, progress: number, error?: string | null) => {
@@ -101,18 +106,16 @@ export function useAppInitialization(
       // Постепенная загрузка данных
       updateProgress(InitializationStage.STORES_SYNC, 30)
 
-      // Ждем загрузки пользователя
-      if (userLoading) {
+      // Ждем загрузки пользователя, используя ref чтобы избежать stale closure
+      if (userLoadingRef.current) {
         logIfDev('⏳ Ожидание загрузки пользователя...')
         await new Promise(resolve => {
-          const checkUser = () => {
-            if (!userLoading) {
+          const intervalId = setInterval(() => {
+            if (!userLoadingRef.current) {
+              clearInterval(intervalId)
               resolve(void 0)
-            } else {
-              setTimeout(checkUser, 100)
             }
-          }
-          checkUser()
+          }, 100)
         })
       }
 
@@ -137,7 +140,6 @@ export function useAppInitialization(
     state.isLoading,
     telegramUser,
     userData,
-    userLoading,
     completeOnboarding,
     updateProgress,
     logIfDev,
