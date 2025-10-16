@@ -24,7 +24,7 @@ import { awardMoodRewards } from '@/utils/currencyRewards'
  * Объединяет серверное состояние (React Query) и клиентское состояние (Zustand)
  */
 export function useMoodTracking() {
-  const { data: userData } = useUserSync(undefined, false)
+  const { data: userData } = useUserSync(undefined, true)
   const currentUser = userData?.user
   const telegramId = currentUser?.telegramId
   const userId = currentUser?.id

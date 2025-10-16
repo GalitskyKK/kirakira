@@ -27,7 +27,7 @@ import { awardElementSprouts } from '@/utils/currencyRewards'
  */
 export function useGardenState() {
   // Получаем данные пользователя через React Query
-  const { data: userData } = useUserSync(undefined, false)
+  const { data: userData } = useUserSync(undefined, true)
   const currentUser = userData?.user
   const telegramId = currentUser?.telegramId
 

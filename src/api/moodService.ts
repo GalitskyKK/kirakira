@@ -221,7 +221,10 @@ export async function syncMoodHistory(
 
     const todaysMood =
       moods.find(entry => {
-        const entryDateStr = getLocalDateString(entry.date)
+        // Убеждаемся, что entry.date это Date объект
+        const entryDate =
+          entry.date instanceof Date ? entry.date : new Date(entry.date)
+        const entryDateStr = getLocalDateString(entryDate)
         const todayStr = getLocalDateString(today)
         return entryDateStr === todayStr
       }) || null
