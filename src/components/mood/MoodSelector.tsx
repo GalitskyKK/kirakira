@@ -103,15 +103,18 @@ export function MoodSelector({
                 return (
                   <motion.button
                     key={mood}
-                    onClick={() => handleMoodSelect(mood)}
+                    onClick={() => canCheckinToday() && handleMoodSelect(mood)}
+                    disabled={!canCheckinToday()}
                     className={clsx(
-                      'flex flex-col items-center justify-center rounded-xl border-2 p-4 transition-all hover:scale-105',
+                      'flex flex-col items-center justify-center rounded-xl border-2 p-4 transition-all',
+                      !canCheckinToday() && 'cursor-not-allowed opacity-50',
+                      canCheckinToday() && 'hover:scale-105',
                       selectedMood === mood
                         ? 'border-garden-500 bg-garden-50 shadow-md dark:bg-garden-900/30'
                         : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800'
                     )}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={canCheckinToday() ? { scale: 1.05 } : {}}
+                    whileTap={canCheckinToday() ? { scale: 0.95 } : {}}
                   >
                     <span className="mb-2 text-4xl">{config.emoji}</span>
                     <span
@@ -148,15 +151,20 @@ export function MoodSelector({
                 return (
                   <motion.button
                     key={intensity}
-                    onClick={() => handleIntensitySelect(intensity)}
+                    onClick={() =>
+                      canCheckinToday() && handleIntensitySelect(intensity)
+                    }
+                    disabled={!canCheckinToday()}
                     className={clsx(
-                      'w-full rounded-xl border-2 p-4 text-left transition-all hover:scale-[1.02]',
+                      'w-full rounded-xl border-2 p-4 text-left transition-all',
+                      !canCheckinToday() && 'cursor-not-allowed opacity-50',
+                      canCheckinToday() && 'hover:scale-[1.02]',
                       selectedIntensity === intensity
                         ? 'border-garden-500 bg-garden-50 shadow-md dark:bg-garden-900/30'
                         : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800'
                     )}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={canCheckinToday() ? { scale: 1.02 } : {}}
+                    whileTap={canCheckinToday() ? { scale: 0.98 } : {}}
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -196,6 +204,7 @@ export function MoodSelector({
               variant="secondary"
               size="sm"
               onClick={handleBack}
+              disabled={!canCheckinToday()}
               className="mt-4 w-full"
             >
               Назад
@@ -230,6 +239,7 @@ export function MoodSelector({
                 variant="secondary"
                 size="sm"
                 onClick={handleBack}
+                disabled={!canCheckinToday()}
                 className="flex-1"
               >
                 Назад
@@ -239,7 +249,7 @@ export function MoodSelector({
                 size="sm"
                 onClick={handleSubmit}
                 isLoading={isLoading ?? false}
-                disabled={isLoading ?? false}
+                disabled={!canCheckinToday() || (isLoading ?? false)}
                 className="flex-1"
               >
                 {todaysMood ? 'Обновить' : 'Сохранить'}

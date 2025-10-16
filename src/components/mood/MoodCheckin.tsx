@@ -39,8 +39,8 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
 
   const handleMoodSubmit = useCallback(
     async (mood: MoodType, intensity: MoodIntensity, note?: string) => {
-      if (!canCheckinToday && !todaysMood) {
-        console.warn('Cannot submit mood right now.')
+      if (!canCheckinToday()) {
+        console.warn('Cannot submit mood - already checked in today.')
         return
       }
 
@@ -307,9 +307,9 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
 
       <MoodSelector onMoodSelected={handleMoodSubmit} isLoading={isLoading} />
 
-      {!canUnlockToday() && todaysMood && (
+      {!canCheckinToday() && todaysMood && (
         <motion.div
-          className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/30"
+          className="mt-4 rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/30"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -317,15 +317,15 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
           <div className="flex items-start space-x-2">
             <CheckCircle
               size={16}
-              className="mt-0.5 flex-shrink-0 text-blue-600"
+              className="mt-0.5 flex-shrink-0 text-green-600"
             />
             <div>
-              <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                Элемент уже разблокирован
+              <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                Настроение отмечено
               </p>
-              <p className="text-xs text-blue-600 dark:text-blue-300">
-                Вы можете обновить настроение, но новый элемент появится только
-                завтра
+              <p className="text-xs text-green-600 dark:text-green-300">
+                Сегодня вы уже отметили своё настроение. Новый элемент появится
+                завтра.
               </p>
             </div>
           </div>
