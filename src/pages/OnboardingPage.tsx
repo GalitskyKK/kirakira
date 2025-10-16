@@ -1,8 +1,14 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronRight, ChevronLeft, Sparkles, Heart, Sprout } from 'lucide-react'
+import {
+  ChevronRight,
+  ChevronLeft,
+  Sparkles,
+  Heart,
+  Sprout,
+} from 'lucide-react'
 import { Button, Card } from '@/components/ui'
-import { useUserStore } from '@/stores'
+import { useUserClientStore } from '@/hooks/index.v2'
 
 interface OnboardingPageProps {
   onComplete: () => void
@@ -15,15 +21,15 @@ const ONBOARDING_STEPS = [
     description: 'Ваш персональный цифровой сад эмоций',
     icon: '🌸',
     content: (
-      <div className="text-center space-y-4">
-        <div className="text-6xl mb-4">🌸</div>
-        <p className="text-gray-600 leading-relaxed">
-          KiraKira — это медитативное приложение, где ваши ежедневные эмоции 
+      <div className="space-y-4 text-center">
+        <div className="mb-4 text-6xl">🌸</div>
+        <p className="leading-relaxed text-gray-600">
+          KiraKira — это медитативное приложение, где ваши ежедневные эмоции
           превращаются в красивый цифровой сад.
         </p>
-        <p className="text-gray-600 leading-relaxed">
-          Каждый день, отмечая свое настроение, вы выращиваете уникальные растения,
-          создавая персональное пространство для размышлений.
+        <p className="leading-relaxed text-gray-600">
+          Каждый день, отмечая свое настроение, вы выращиваете уникальные
+          растения, создавая персональное пространство для размышлений.
         </p>
       </div>
     ),
@@ -35,18 +41,18 @@ const ONBOARDING_STEPS = [
     icon: '💭',
     content: (
       <div className="space-y-4">
-        <div className="flex justify-center mb-4">
+        <div className="mb-4 flex justify-center">
           <Heart size={48} className="text-red-400" />
         </div>
-        <p className="text-gray-600 leading-relaxed text-center">
+        <p className="text-center leading-relaxed text-gray-600">
           Каждый день вы будете отмечать свое настроение — от радости до грусти,
           от спокойствия до тревоги.
         </p>
-        <div className="grid grid-cols-3 gap-3 mt-6">
+        <div className="mt-6 grid grid-cols-3 gap-3">
           {['😊', '😌', '😰', '😢', '😠', '😟'].map((emoji, index) => (
             <motion.div
               key={emoji}
-              className="p-3 bg-gray-50 rounded-xl text-center text-2xl"
+              className="rounded-xl bg-gray-50 p-3 text-center text-2xl"
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.1 }}
@@ -55,8 +61,9 @@ const ONBOARDING_STEPS = [
             </motion.div>
           ))}
         </div>
-        <p className="text-sm text-gray-500 text-center">
-          Ваши эмоции — это не хорошо или плохо, это просто часть человеческого опыта
+        <p className="text-center text-sm text-gray-500">
+          Ваши эмоции — это не хорошо или плохо, это просто часть человеческого
+          опыта
         </p>
       </div>
     ),
@@ -68,35 +75,36 @@ const ONBOARDING_STEPS = [
     icon: '🌱',
     content: (
       <div className="space-y-4">
-        <div className="flex justify-center mb-4">
+        <div className="mb-4 flex justify-center">
           <Sprout size={48} className="text-green-500" />
         </div>
-        <p className="text-gray-600 leading-relaxed text-center">
+        <p className="text-center leading-relaxed text-gray-600">
           Каждое настроение влияет на то, какое растение появится в вашем саду.
           Радость приносит яркие цветы, спокойствие — водные элементы.
         </p>
-        <div className="bg-garden-50 p-4 rounded-xl">
+        <div className="rounded-xl bg-garden-50 p-4">
           <div className="grid grid-cols-4 gap-4 text-center">
             <div>
-              <div className="text-2xl mb-1">🌼</div>
+              <div className="mb-1 text-2xl">🌼</div>
               <div className="text-xs text-gray-600">Радость</div>
             </div>
             <div>
-              <div className="text-2xl mb-1">💧</div>
+              <div className="mb-1 text-2xl">💧</div>
               <div className="text-xs text-gray-600">Спокойствие</div>
             </div>
             <div>
-              <div className="text-2xl mb-1">🌵</div>
+              <div className="mb-1 text-2xl">🌵</div>
               <div className="text-xs text-gray-600">Стресс</div>
             </div>
             <div>
-              <div className="text-2xl mb-1">🍄</div>
+              <div className="mb-1 text-2xl">🍄</div>
               <div className="text-xs text-gray-600">Грусть</div>
             </div>
           </div>
         </div>
-        <p className="text-sm text-gray-500 text-center">
-          Со временем ваш сад станет уникальным отражением вашего эмоционального путешествия
+        <p className="text-center text-sm text-gray-500">
+          Со временем ваш сад станет уникальным отражением вашего эмоционального
+          путешествия
         </p>
       </div>
     ),
@@ -157,21 +165,22 @@ const ONBOARDING_STEPS = [
     description: 'Ваш сад ждет первое растение',
     icon: '🌟',
     content: (
-      <div className="text-center space-y-4">
-        <div className="flex justify-center mb-4">
+      <div className="space-y-4 text-center">
+        <div className="mb-4 flex justify-center">
           <Sparkles size={48} className="text-yellow-500" />
         </div>
-        <p className="text-gray-600 leading-relaxed">
-          Отметьте свое текущее настроение, чтобы вырастить первое растение 
-          в вашем персональном саду эмоций.
+        <p className="leading-relaxed text-gray-600">
+          Отметьте свое текущее настроение, чтобы вырастить первое растение в
+          вашем персональном саду эмоций.
         </p>
-        <div className="bg-gradient-to-r from-garden-50 to-blue-50 p-4 rounded-xl">
-          <p className="text-sm text-gray-700 font-medium mb-2">
+        <div className="rounded-xl bg-gradient-to-r from-garden-50 to-blue-50 p-4">
+          <p className="mb-2 text-sm font-medium text-gray-700">
             💡 Совет для начинающих
           </p>
           <p className="text-sm text-gray-600">
-            Старайтесь отмечать настроение каждый день в одно и то же время.
-            Это поможет создать привычку и получить более точную картину ваших эмоций.
+            Старайтесь отмечать настроение каждый день в одно и то же время. Это
+            поможет создать привычку и получить более точную картину ваших
+            эмоций.
           </p>
         </div>
       </div>
@@ -181,7 +190,7 @@ const ONBOARDING_STEPS = [
 
 export function OnboardingPage({ onComplete }: OnboardingPageProps) {
   const [currentStep, setCurrentStep] = useState(0)
-  const { completeOnboarding } = useUserStore()
+  const { completeOnboarding } = useUserClientStore()
 
   const handleNext = () => {
     if (currentStep < ONBOARDING_STEPS.length - 1) {
@@ -202,21 +211,21 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
   const isLastStep = currentStep === ONBOARDING_STEPS.length - 1
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-garden-50 to-blue-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl mx-auto">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-garden-50 to-blue-50 p-4">
+      <div className="mx-auto w-full max-w-2xl">
         {/* Progress indicators */}
-        <div className="flex justify-center mb-8">
+        <div className="mb-8 flex justify-center">
           <div className="flex space-x-2">
             {ONBOARDING_STEPS.map((_, index) => (
               <motion.div
                 key={index}
-                className={`w-3 h-3 rounded-full transition-colors duration-300 ${
+                className={`h-3 w-3 rounded-full transition-colors duration-300 ${
                   index <= currentStep ? 'bg-garden-500' : 'bg-gray-300'
                 }`}
                 initial={{ scale: 0.8 }}
-                animate={{ 
+                animate={{
                   scale: index === currentStep ? 1.2 : 1,
-                  backgroundColor: index <= currentStep ? '#22c55e' : '#d1d5db'
+                  backgroundColor: index <= currentStep ? '#22c55e' : '#d1d5db',
                 }}
                 transition={{ duration: 0.3 }}
               />
@@ -235,23 +244,21 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
               transition={{ duration: 0.3 }}
             >
               {/* Header */}
-              <div className="text-center mb-8">
+              <div className="mb-8 text-center">
                 <motion.div
-                  className="text-6xl mb-4"
+                  className="mb-4 text-6xl"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
                 >
                   {currentStepData.icon}
                 </motion.div>
-                
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+
+                <h1 className="mb-2 text-2xl font-bold text-gray-900">
                   {currentStepData.title}
                 </h1>
-                
-                <p className="text-gray-600">
-                  {currentStepData.description}
-                </p>
+
+                <p className="text-gray-600">{currentStepData.description}</p>
               </div>
 
               {/* Content */}
@@ -266,7 +273,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
           </AnimatePresence>
 
           {/* Navigation */}
-          <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+          <div className="mt-8 flex items-center justify-between border-t border-gray-200 pt-6">
             <Button
               variant="outline"
               onClick={handleBack}
@@ -282,7 +289,9 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
 
             <Button
               onClick={handleNext}
-              rightIcon={isLastStep ? <Sparkles size={16} /> : <ChevronRight size={16} />}
+              rightIcon={
+                isLastStep ? <Sparkles size={16} /> : <ChevronRight size={16} />
+              }
             >
               {isLastStep ? 'Начать!' : 'Далее'}
             </Button>

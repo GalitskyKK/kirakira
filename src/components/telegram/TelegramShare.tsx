@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Share2, Camera, Heart, Copy, MessageCircle } from 'lucide-react'
 import { useTelegram } from '@/hooks'
+import { useUserSync } from '@/hooks/index.v2'
 import { Button, Card } from '@/components/ui'
 import type { Garden, MoodEntry } from '@/types'
 import { authenticatedFetch } from '@/utils/apiClient'
@@ -19,6 +20,7 @@ export function TelegramShare({
 }: TelegramShareProps) {
   const { webApp, shareGarden, hapticFeedback, isTelegramEnv, showAlert } =
     useTelegram()
+  const { data: userData } = useUserSync(undefined, false)
   const [isCapturing, setIsCapturing] = useState(false)
   const [lastSharedImage, setLastSharedImage] = useState<string | null>(null)
 
@@ -81,11 +83,7 @@ export function TelegramShare({
       })
 
       // 🏆 НАЧИСЛЯЕМ ОПЫТ ЗА ШЕРИНГ САДА (text version)
-      // Получаем текущего пользователя
-      const { useUserStore } = await import('@/stores/userStore')
-      const currentUser = useUserStore.getState().currentUser
-
-      if (currentUser?.telegramId) {
+      if (userData?.user?.telegramId) {
         try {
           const response = await authenticatedFetch(
             '/api/profile?action=add_experience',
@@ -93,7 +91,7 @@ export function TelegramShare({
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                telegramId: currentUser.telegramId,
+                telegramId: userData.user.telegramId,
                 experiencePoints: 25, // EXPERIENCE_REWARDS.SHARE_GARDEN
                 reason: 'share_garden: text description shared',
               }),

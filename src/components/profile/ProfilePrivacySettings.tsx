@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { useQueryClient } from '@tanstack/react-query'
 import { User } from '@/types'
-import { useUserStore } from '@/stores'
-import { useProfile } from '@/hooks'
+import { updatePrivacySettings } from '@/api'
 
 interface ProfilePrivacySettingsProps {
   readonly user: User
@@ -92,8 +92,7 @@ function PrivacySetting({
 }
 
 export function ProfilePrivacySettings({ user }: ProfilePrivacySettingsProps) {
-  const { updatePreferences } = useUserStore()
-  const { updatePrivacySettings } = useProfile()
+  const queryClient = useQueryClient()
   const [isUpdating, setIsUpdating] = useState(false)
 
   // Защита от undefined - создаем fallback значения для preferences.privacy
@@ -111,19 +110,16 @@ export function ProfilePrivacySettings({ user }: ProfilePrivacySettingsProps) {
   ) => {
     setIsUpdating(true)
     try {
-      // Update locally first
       const newPrivacySettings = {
         ...safePrivacy,
         [key]: value,
       }
 
-      await updatePreferences({
-        privacy: newPrivacySettings,
-      })
-
-      // Sync with server if user has Telegram ID
+      // Обновляем на сервере если пользователь авторизован
       if (user.telegramId) {
-        await updatePrivacySettings(newPrivacySettings)
+        await updatePrivacySettings(user.telegramId, newPrivacySettings)
+        // Инвалидируем кеш для обновления UI
+        await queryClient.invalidateQueries({ queryKey: ['user'] })
       }
     } catch (error) {
       console.error('Failed to update privacy settings:', error)

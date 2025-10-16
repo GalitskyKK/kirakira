@@ -1,8 +1,10 @@
 import { useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
+import { useQueryClient } from '@tanstack/react-query'
 import { TelegramLoginWidget } from './TelegramLoginWidget'
 import { useTelegram } from '@/hooks'
-import { useUserStore } from '@/stores'
+import { useUserClientStore } from '@/hooks/index.v2'
+import { syncUserFromSupabase } from '@/api'
 import { Card } from '@/components/ui'
 
 interface TelegramUser {
@@ -25,7 +27,8 @@ export function TelegramAuth({ onSuccess, onError }: TelegramAuthProps) {
   const [authError, setAuthError] = useState<string | null>(null)
 
   const { isTelegramEnv, user: telegramUser } = useTelegram()
-  const { createTelegramUser, updateLastVisit } = useUserStore()
+  const { completeOnboarding } = useUserClientStore()
+  const queryClient = useQueryClient()
 
   const handleTelegramAuth = useCallback(
     async (telegramData: TelegramUser) => {
@@ -35,21 +38,16 @@ export function TelegramAuth({ onSuccess, onError }: TelegramAuthProps) {
       try {
         console.log('Обрабатываем авторизацию Telegram:', telegramData)
 
-        // Создаем пользователя в системе на основе данных Telegram
-        const user = await createTelegramUser({
-          telegramId: telegramData.id,
-          firstName: telegramData.first_name,
-          lastName: telegramData.last_name,
-          username: telegramData.username,
-          photoUrl: telegramData.photo_url,
-          authDate: new Date(telegramData.auth_date * 1000),
-          hash: telegramData.hash,
-        })
+        // Синхронизируем пользователя с сервером через API
+        const result = await syncUserFromSupabase(telegramData.id)
 
-        console.log('Пользователь создан:', user)
+        console.log('Пользователь синхронизирован:', result)
 
-        // Обновляем время последнего визита
-        updateLastVisit()
+        // Инвалидируем кеш, чтобы приложение подтянуло свежие данные
+        await queryClient.invalidateQueries({ queryKey: ['user'] })
+
+        // Помечаем, что онбординг пройден
+        completeOnboarding()
 
         onSuccess?.()
       } catch (error) {
@@ -62,7 +60,7 @@ export function TelegramAuth({ onSuccess, onError }: TelegramAuthProps) {
         setIsLoading(false)
       }
     },
-    [createTelegramUser, updateLastVisit, onSuccess, onError]
+    [queryClient, completeOnboarding, onSuccess, onError]
   )
 
   const handleAuthError = useCallback(

@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users,
@@ -12,13 +12,13 @@ import {
   CheckCircle,
 } from 'lucide-react'
 import { useTelegram } from '@/hooks'
-import { useChallengeIntegration } from '@/hooks/useChallengeIntegration'
+import { useUserSync } from '@/hooks/index.v2'
+// import { useChallengeIntegration } from '@/hooks/useChallengeIntegration'
 import { Button, Card } from '@/components/ui'
 import { FriendsList } from './FriendsList'
 import { ChallengeDetails } from '@/components/challenges/ChallengeDetails'
-import { useUserStore } from '@/stores'
-import { useChallengeStore } from '@/stores/challengeStore'
-import type { Garden, MoodEntry } from '@/types'
+import { useChallengeList } from '@/hooks/queries/useChallengeQueries'
+import type { Garden, MoodEntry, Challenge } from '@/types'
 
 interface TelegramCommunityProps {
   readonly garden: Garden | null
@@ -27,21 +27,23 @@ interface TelegramCommunityProps {
 
 export function TelegramCommunity({ garden }: TelegramCommunityProps) {
   const { webApp, hapticFeedback, showAlert, isTelegramEnv } = useTelegram()
-  const { currentUser } = useUserStore()
+  const { data: userData } = useUserSync(undefined, false)
+  const currentUser = userData?.user
+
+  // Загружаем активные челленджи через React Query
   const {
-    challenges,
-    userParticipations,
+    data: challengesData,
     isLoading,
     error,
-    loadChallenges,
-    joinChallenge,
-    getActiveChallenges,
-    isUserParticipating,
-    canJoinChallenge,
-  } = useChallengeStore()
+  } = useChallengeList(currentUser?.telegramId, !!currentUser?.telegramId)
 
-  // Интеграция с реальными данными
-  useChallengeIntegration()
+  // Извлекаем челленджи из результата и фильтруем только активные
+  const activeChallenges = (challengesData?.challenges ?? []).filter(
+    (c: Challenge) => c.status === 'active'
+  )
+
+  // TODO: Интеграция с реальными данными требует миграции useChallengeIntegration
+  // useChallengeIntegration()
 
   const [activeTab, setActiveTab] = useState<
     'challenges' | 'social' | 'groups'
@@ -49,68 +51,14 @@ export function TelegramCommunity({ garden }: TelegramCommunityProps) {
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(
     null
   )
-  const [isJoining, setIsJoining] = useState<string | null>(null)
 
-  // Загружаем челленджи при монтировании
-  useEffect(() => {
-    if (currentUser?.telegramId) {
-      void loadChallenges(currentUser.telegramId)
-    }
-  }, [currentUser?.telegramId, loadChallenges])
-
-  // Получаем активные челленджи
-  const activeChallenges = getActiveChallenges()
-
-  // Присоединиться к челленджу
-  const handleJoinChallenge = useCallback(
-    async (challengeId: string) => {
-      if (!currentUser?.telegramId) return
-
-      const challenge = challenges.find(c => c.id === challengeId)
-      if (!challenge) return
-
-      const { canJoin, reason } = canJoinChallenge(
-        challenge,
-        currentUser.telegramId
-      )
-      if (!canJoin) {
-        showAlert(reason || 'Невозможно присоединиться к челленджу')
-        return
-      }
-
-      setIsJoining(challengeId)
+  // Открыть детали челленджа
+  const handleViewChallenge = useCallback(
+    (challengeId: string) => {
       hapticFeedback('light')
-
-      try {
-        const success = await joinChallenge(challengeId, currentUser.telegramId)
-        if (success) {
-          showAlert(
-            `Отлично! Вы присоединились к челленджу "${challenge.title}"!`
-          )
-
-          // Используем inline query для приглашения друзей
-          if (webApp) {
-            webApp.switchInlineQuery(
-              `challenge_${challengeId}`,
-              challenge.type === 'cooperative' ? ['groups', 'users'] : ['users']
-            )
-          }
-        }
-      } catch (error) {
-        console.error('Failed to join challenge:', error)
-      } finally {
-        setIsJoining(null)
-      }
+      setSelectedChallengeId(challengeId)
     },
-    [
-      currentUser,
-      challenges,
-      canJoinChallenge,
-      showAlert,
-      hapticFeedback,
-      joinChallenge,
-      webApp,
-    ]
+    [hapticFeedback]
   )
 
   // Поделиться прогрессом
@@ -118,9 +66,13 @@ export function TelegramCommunity({ garden }: TelegramCommunityProps) {
     (challengeId: string) => {
       if (!webApp || !garden) return
 
-      const challenge = challenges.find(c => c.id === challengeId)
-      const participation = userParticipations.find(
-        p => p.challengeId === challengeId
+      const challenge = activeChallenges.find(
+        (c: Challenge) => c.id === challengeId
+      )
+      if (!challenge) return
+
+      const participation = challengesData?.userParticipations.find(
+        (p: any) => p.challengeId === challengeId
       )
 
       if (!challenge || !participation) return
@@ -138,19 +90,10 @@ export function TelegramCommunity({ garden }: TelegramCommunityProps) {
       webApp,
       hapticFeedback,
       garden,
-      challenges,
-      userParticipations,
+      activeChallenges,
+      challengesData,
       currentUser,
     ]
-  )
-
-  // Просмотреть детали челленджа
-  const handleViewChallenge = useCallback(
-    (challengeId: string) => {
-      hapticFeedback('light')
-      setSelectedChallengeId(challengeId)
-    },
-    [hapticFeedback]
   )
 
   // Создать групповой сад
@@ -263,7 +206,9 @@ export function TelegramCommunity({ garden }: TelegramCommunityProps) {
 
             {error && (
               <Card className="p-4 text-center">
-                <div className="text-sm text-red-500">❌ {error}</div>
+                <div className="text-sm text-red-500">
+                  ❌ {error.message || 'Произошла ошибка'}
+                </div>
               </Card>
             )}
 
@@ -280,16 +225,13 @@ export function TelegramCommunity({ garden }: TelegramCommunityProps) {
             )}
 
             {!isLoading &&
-              activeChallenges.map((challenge, index) => {
-                const isParticipating = isUserParticipating(challenge.id)
-                const participation = userParticipations.find(
-                  p => p.challengeId === challenge.id
+              activeChallenges.map((challenge: Challenge, index: number) => {
+                const isParticipating = challengesData?.userParticipations.some(
+                  (p: any) => p.challengeId === challenge.id
                 )
-                const isJoiningThis = isJoining === challenge.id
-                const canJoin =
-                  currentUser && currentUser.telegramId
-                    ? canJoinChallenge(challenge, currentUser.telegramId)
-                    : { canJoin: false }
+                const participation = challengesData?.userParticipations.find(
+                  (p: any) => p.challengeId === challenge.id
+                )
 
                 // Подсчитываем время до окончания
                 const timeRemaining =
@@ -441,18 +383,10 @@ export function TelegramCommunity({ garden }: TelegramCommunityProps) {
                           ) : (
                             <Button
                               size="sm"
-                              onClick={() => handleJoinChallenge(challenge.id)}
-                              disabled={!canJoin.canJoin || isJoiningThis}
+                              onClick={() => handleViewChallenge(challenge.id)}
                               className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
                             >
-                              {isJoiningThis ? (
-                                <div className="mr-1 h-3 w-3 animate-spin rounded-full border-b-2 border-white" />
-                              ) : null}
-                              <span className="text-xs">
-                                {isJoiningThis
-                                  ? 'Присоединяемся...'
-                                  : 'Участвовать'}
-                              </span>
+                              <span className="text-xs">Участвовать</span>
                             </Button>
                           )}
                         </div>
@@ -473,7 +407,7 @@ export function TelegramCommunity({ garden }: TelegramCommunityProps) {
             className="space-y-4"
           >
             {/* Полная система друзей */}
-            <FriendsList currentUser={currentUser} />
+            <FriendsList currentUser={currentUser ?? null} />
           </motion.div>
         )}
 
