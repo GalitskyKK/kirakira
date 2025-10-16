@@ -97,7 +97,7 @@ export function MoodSelector({
           </div>
 
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Новый элемент появится завтра
+            Возвращайтесь завтра и вырасти новое растение !
           </p>
         </div>
       </Card>
