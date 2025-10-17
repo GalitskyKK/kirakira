@@ -45,11 +45,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
             '✅ Element details updated with new rarity:',
             updatedElement.rarity
           )
-
-          // 📜 СКРОЛЛИМ НАВЕРХ после обновления элемента
-          if (contentRef.current) {
-            contentRef.current.scrollTo({ top: 0, behavior: 'smooth' })
-          }
+          // Скролл будет вызван из callback onUpgradeComplete
         }, 500) // Небольшая задержка для анимации
       }
     }
@@ -307,9 +303,16 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
           <ElementUpgradeManager
             element={currentElement}
             onUpgradeComplete={() => {
-              // 📜 Скроллим наверх после закрытия модального окна
+              // 📜 Скроллим наверх после закрытия модального окна результата
+              console.log('🔝 Scrolling to top after upgrade modal close')
               if (contentRef.current) {
-                contentRef.current.scrollTo({ top: 0, behavior: 'smooth' })
+                contentRef.current.scrollTo({
+                  top: 0,
+                  behavior: 'smooth',
+                })
+                console.log('✅ Scroll command executed')
+              } else {
+                console.warn('⚠️ contentRef.current is null')
               }
             }}
           />

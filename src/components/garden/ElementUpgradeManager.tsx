@@ -57,6 +57,9 @@ export function ElementUpgradeManager({
   // 🔑 Уникальный ключ для модального окна результата
   const [resultModalKey, setResultModalKey] = useState(0)
 
+  // 🔒 Сохраняем элемент в момент улучшения для предотвращения ререндеров модалки
+  const upgradeElementRef = useRef<GardenElement>(element)
+
   // Получаем данные из React Query
   const progressBonus = upgradeInfo?.progressBonus ?? 0
   const failedAttempts = upgradeInfo?.failedAttempts ?? 0
@@ -75,6 +78,8 @@ export function ElementUpgradeManager({
 
       // 🔒 Блокируем повторные вызовы
       isProcessingRef.current = true
+      // 🔑 Сохраняем элемент для модального окна
+      upgradeElementRef.current = element
       setShowConfirmModal(false)
       setIsUpgrading(true)
 
@@ -130,18 +135,25 @@ export function ElementUpgradeManager({
         }, 500)
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [currentUser?.telegramId, element.id, upgradeElementMutation]
+    // element намеренно используется без включения в deps для предотвращения ререндеров
   )
 
   const handleCloseResult = useCallback(() => {
+    console.log('🚪 Closing upgrade result modal')
     setShowResultModal(false)
     setUpgradeResult(null)
 
-    // 📜 Вызываем callback для скролла наверх
+    // 📜 Вызываем callback для скролла наверх НЕМЕДЛЕННО
     if (onUpgradeComplete) {
-      setTimeout(() => {
-        onUpgradeComplete()
-      }, 100) // Небольшая задержка для плавности
+      console.log('📞 Calling onUpgradeComplete callback')
+      // Используем requestAnimationFrame для вызова после закрытия модалки
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          onUpgradeComplete()
+        })
+      })
     }
   }, [onUpgradeComplete])
 
@@ -157,7 +169,9 @@ export function ElementUpgradeManager({
       <UpgradeConfirmModal
         isOpen={showConfirmModal}
         onClose={handleCloseConfirm}
-        onConfirm={handleConfirmUpgrade}
+        onConfirm={useFree => {
+          void handleConfirmUpgrade(useFree)
+        }}
         element={element}
         progressBonus={progressBonus}
         failedAttempts={failedAttempts}
@@ -172,8 +186,8 @@ export function ElementUpgradeManager({
           isOpen={showResultModal}
           onClose={handleCloseResult}
           success={upgradeResult.success}
-          element={element}
-          oldRarity={element.rarity}
+          element={upgradeElementRef.current}
+          oldRarity={upgradeElementRef.current.rarity}
           {...(upgradeResult.newRarity !== undefined && {
             newRarity: upgradeResult.newRarity,
           })}
