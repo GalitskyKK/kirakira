@@ -39,10 +39,10 @@ export interface DailyQuest {
   readonly currentProgress: number
   readonly status: QuestStatus
   readonly rewards: QuestRewards
-  readonly generatedAt: Date
-  readonly expiresAt: Date
-  readonly completedAt?: Date
-  readonly claimedAt?: Date
+  readonly generatedAt: Date | string
+  readonly expiresAt: Date | string
+  readonly completedAt?: Date | string
+  readonly claimedAt?: Date | string
   readonly metadata?: QuestMetadata
 }
 
@@ -279,7 +279,11 @@ export function getQuestProgress(quest: DailyQuest): number {
  * Проверяет, истекло ли задание
  */
 export function isQuestExpired(quest: DailyQuest): boolean {
-  return new Date() > quest.expiresAt
+  const expiresAt =
+    quest.expiresAt instanceof Date
+      ? quest.expiresAt
+      : new Date(quest.expiresAt)
+  return new Date() > expiresAt
 }
 
 /**
@@ -287,16 +291,20 @@ export function isQuestExpired(quest: DailyQuest): boolean {
  */
 export function getQuestTimeRemaining(quest: DailyQuest): number {
   const now = new Date()
-  const expires = quest.expiresAt
+  const expires =
+    quest.expiresAt instanceof Date
+      ? quest.expiresAt
+      : new Date(quest.expiresAt)
   return Math.max(expires.getTime() - now.getTime(), 0)
 }
 
 /**
  * Форматирует время до истечения квеста
  */
-export function formatTimeRemaining(expiresAt: Date): string {
+export function formatTimeRemaining(expiresAt: Date | string): string {
   const now = new Date()
-  const diff = expiresAt.getTime() - now.getTime()
+  const expires = expiresAt instanceof Date ? expiresAt : new Date(expiresAt)
+  const diff = expires.getTime() - now.getTime()
 
   if (diff <= 0) return 'Истекло'
 

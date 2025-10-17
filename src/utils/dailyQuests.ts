@@ -360,12 +360,16 @@ export function sortQuestsByCategory<
 /**
  * Сортирует квесты по времени истечения
  */
-export function sortQuestsByExpiration<T extends { expiresAt: Date }>(
+export function sortQuestsByExpiration<T extends { expiresAt: Date | string }>(
   quests: T[]
 ): T[] {
-  return [...quests].sort(
-    (a, b) => a.expiresAt.getTime() - b.expiresAt.getTime()
-  )
+  return [...quests].sort((a, b) => {
+    const aExpires =
+      a.expiresAt instanceof Date ? a.expiresAt : new Date(a.expiresAt)
+    const bExpires =
+      b.expiresAt instanceof Date ? b.expiresAt : new Date(b.expiresAt)
+    return aExpires.getTime() - bExpires.getTime()
+  })
 }
 
 // ===============================================
@@ -425,25 +429,6 @@ export function canClaimQuestReward(quest: {
 // ===============================================
 // 🎯 ФОРМАТИРОВАНИЕ
 // ===============================================
-
-/**
- * Форматирует время до истечения квеста
- */
-export function formatTimeRemaining(expiresAt: Date): string {
-  const now = new Date()
-  const diff = expiresAt.getTime() - now.getTime()
-
-  if (diff <= 0) return 'Истекло'
-
-  const hours = Math.floor(diff / (1000 * 60 * 60))
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-
-  if (hours > 0) {
-    return `${hours}ч ${minutes}м`
-  }
-
-  return `${minutes}м`
-}
 
 /**
  * Форматирует прогресс квеста
