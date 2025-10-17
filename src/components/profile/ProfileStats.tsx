@@ -71,7 +71,7 @@ export function ProfileStats({
   totalElements,
 }: ProfileStatsProps) {
   // Защита от undefined - создаем fallback значения
-  // 🔧 ИСПРАВЛЕНИЕ: API возвращает totalMoodEntries (не totalEntries)
+  // 🔧 ИСПРАВЛЕНИЕ: API возвращает totalMoodEntries (не totalEntries) b
   const safeMoodStats = moodStats || {
     totalEntries: 0,
     totalMoodEntries: 0, // добавлено для совместимости с API
