@@ -125,6 +125,7 @@ export interface DatabaseUserStats {
   readonly totalElements: number
   readonly rareElementsFound: number
   readonly gardensShared: number
+  readonly totalMoodEntries?: number // 🔧 Добавлено для совместимости с API
   readonly experience: number
   readonly level: number
 }

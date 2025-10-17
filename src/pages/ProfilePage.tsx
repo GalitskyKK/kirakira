@@ -76,11 +76,12 @@ export function ProfilePage() {
     )
   }
 
-  // Готовим данные для компонентов с защитой от undefined
+  // 🔧 ИСПРАВЛЕНИЕ: Используем данные из API вместо захардкоженных нулей
   const moodStats = {
-    totalEntries: 0,
-    currentStreak: 0,
-    longestStreak: 0,
+    totalEntries: profileData?.stats?.totalMoodEntries ?? 0,
+    totalMoodEntries: profileData?.stats?.totalMoodEntries ?? 0, // API возвращает это поле
+    currentStreak: profileData?.stats?.currentStreak ?? 0,
+    longestStreak: profileData?.stats?.longestStreak ?? 0,
     mostFrequentMood: null,
     averageIntensity: 0,
     moodDistribution: {
@@ -125,6 +126,7 @@ export function ProfilePage() {
       rareElementsFound: apiUser?.rare_elements_found ?? 0,
       gardensShared: apiUser?.gardens_shared ?? 0,
       totalElements: totalElements,
+      totalMoodEntries: profileData?.stats?.totalMoodEntries ?? 0, // 🔧 Добавлено
       firstVisit: currentUser?.stats?.firstVisit ?? new Date(),
       lastVisit: currentUser?.stats?.lastVisit ?? new Date(),
       streakFreezes:
