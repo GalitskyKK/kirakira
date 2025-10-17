@@ -244,8 +244,10 @@ export function useElementUpgradeInfo(
       return getElementUpgradeInfo(telegramId, elementId)
     },
     enabled: enabled && !!telegramId && !!elementId,
-    staleTime: 1000 * 60 * 2, // 2 минуты
+    staleTime: 0, // ✅ ИСПРАВЛЕНИЕ: Всегда получать свежие данные
     gcTime: 1000 * 60 * 10, // 10 минут в кеше
+    refetchOnMount: 'always', // 🔄 Всегда обновлять при монтировании
+    refetchOnWindowFocus: true, // 🔄 Обновлять при фокусе на окне
   })
 }
 
@@ -266,7 +268,7 @@ export function useUpgradeElement() {
       useFree?: boolean
     }) => upgradeElement(telegramId, elementId, useFree),
     onSuccess: (result, variables) => {
-      // Инвалидируем queries для перезагрузки данных
+      // ✅ ИСПРАВЛЕНИЕ: Инвалидируем все связанные queries для перезагрузки данных
       queryClient.invalidateQueries({
         queryKey: gardenKeys.sync(variables.telegramId),
       })
@@ -278,6 +280,15 @@ export function useUpgradeElement() {
           variables.telegramId,
           variables.elementId
         ),
+      })
+
+      // 🔑 КРИТИЧЕСКИ ВАЖНО: Инвалидируем профиль пользователя
+      // для обновления информации о бесплатных улучшениях (freeUpgrades)
+      queryClient.invalidateQueries({
+        queryKey: ['profile', 'own', variables.telegramId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['user', 'sync', variables.telegramId],
       })
 
       console.log('✅ Element upgrade completed:', result)

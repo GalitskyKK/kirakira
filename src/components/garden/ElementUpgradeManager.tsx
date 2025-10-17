@@ -3,7 +3,7 @@
  * Управляет процессом улучшения элемента (кнопка + модальные окна)
  */
 
-import { useState } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import type { GardenElement, RarityLevel } from '@/types/garden'
 import { useCurrencyStore } from '@/stores'
 import {
@@ -47,73 +47,87 @@ export function ElementUpgradeManager({ element }: ElementUpgradeManagerProps) {
   } | null>(null)
   const [isUpgrading, setIsUpgrading] = useState(false)
 
+  // ✅ ИСПРАВЛЕНИЕ: Используем ref для предотвращения множественных вызовов
+  const isProcessingRef = useRef(false)
+
   // Получаем данные из React Query
   const progressBonus = upgradeInfo?.progressBonus ?? 0
   const failedAttempts = upgradeInfo?.failedAttempts ?? 0
 
-  const handleOpenConfirm = () => {
+  const handleOpenConfirm = useCallback(() => {
     setShowConfirmModal(true)
-  }
+  }, [])
 
-  const handleCloseConfirm = () => {
+  const handleCloseConfirm = useCallback(() => {
     setShowConfirmModal(false)
-  }
+  }, [])
 
-  const handleConfirmUpgrade = async (useFree: boolean) => {
-    if (!currentUser?.telegramId) return
+  const handleConfirmUpgrade = useCallback(
+    async (useFree: boolean) => {
+      if (!currentUser?.telegramId || isProcessingRef.current) return
 
-    setShowConfirmModal(false)
-    setIsUpgrading(true)
+      // 🔒 Блокируем повторные вызовы
+      isProcessingRef.current = true
+      setShowConfirmModal(false)
+      setIsUpgrading(true)
 
-    try {
-      // Выполняем улучшение через React Query
-      const result = await upgradeElementMutation.mutateAsync({
-        telegramId: currentUser.telegramId,
-        elementId: element.id,
-        useFree,
-      })
-
-      // 🔄 СИНХРОНИЗИРУЕМ ВАЛЮТУ ПОСЛЕ УЛУЧШЕНИЯ
       try {
-        const { loadCurrency } = useCurrencyStore.getState()
-        await loadCurrency(currentUser.telegramId)
-        console.log('✅ Currency synced after element upgrade')
-      } catch (error) {
-        console.warn('⚠️ Failed to sync currency after upgrade:', error)
-      }
+        // Выполняем улучшение через React Query
+        const result = await upgradeElementMutation.mutateAsync({
+          telegramId: currentUser.telegramId,
+          elementId: element.id,
+          useFree,
+        })
 
-      if (result) {
+        // 🔄 СИНХРОНИЗИРУЕМ ВАЛЮТУ ПОСЛЕ УЛУЧШЕНИЯ
+        try {
+          const { loadCurrency } = useCurrencyStore.getState()
+          await loadCurrency(currentUser.telegramId)
+          console.log('✅ Currency synced after element upgrade')
+        } catch (error) {
+          console.warn('⚠️ Failed to sync currency after upgrade:', error)
+        }
+
+        if (result) {
+          setUpgradeResult({
+            success: result.upgraded,
+            ...(result.newRarity !== undefined && {
+              newRarity: result.newRarity,
+            }),
+            ...(result.upgraded && { xpReward: result.xpReward }),
+            progressBonus: result.progressBonus ?? 0,
+            failedAttempts: result.failedAttempts ?? 0,
+          })
+          setShowResultModal(true)
+
+          // 🎉 ИНФОРМАЦИЯ ОБНОВЛЯЕТСЯ ПРЯМО НА СТРАНИЦЕ ЭЛЕМЕНТА
+          if (result.upgraded) {
+            console.log(
+              '✅ Element details will be updated automatically via React Query invalidation'
+            )
+          }
+        }
+      } catch (error) {
+        console.error('Failed to upgrade element:', error)
         setUpgradeResult({
-          success: result.upgraded,
-          ...(result.newRarity !== undefined && {
-            newRarity: result.newRarity,
-          }),
-          ...(result.upgraded && { xpReward: result.xpReward }),
-          progressBonus: result.progressBonus ?? 0,
-          failedAttempts: result.failedAttempts ?? 0,
+          success: false,
         })
         setShowResultModal(true)
-
-        // 🎉 ИНФОРМАЦИЯ ОБНОВЛЯЕТСЯ ПРЯМО НА СТРАНИЦЕ ЭЛЕМЕНТА
-        if (result.upgraded) {
-          console.log('✅ Element details will be updated automatically')
-        }
+      } finally {
+        setIsUpgrading(false)
+        // 🔓 Разблокируем через небольшую задержку для предотвращения двойных кликов
+        setTimeout(() => {
+          isProcessingRef.current = false
+        }, 500)
       }
-    } catch (error) {
-      console.error('Failed to upgrade element:', error)
-      setUpgradeResult({
-        success: false,
-      })
-      setShowResultModal(true)
-    } finally {
-      setIsUpgrading(false)
-    }
-  }
+    },
+    [currentUser?.telegramId, element.id, upgradeElementMutation]
+  )
 
-  const handleCloseResult = () => {
+  const handleCloseResult = useCallback(() => {
     setShowResultModal(false)
     setUpgradeResult(null)
-  }
+  }, [])
 
   return (
     <>

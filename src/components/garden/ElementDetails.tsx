@@ -7,7 +7,7 @@ import { MOOD_CONFIG } from '@/types/mood'
 import { PlantRenderer } from '@/components/garden/plants'
 import type { GardenElement } from '@/types'
 import { ElementUpgradeManager } from './ElementUpgradeManager'
-import { useGardenSync } from '@/hooks/index.v2'
+import { useGardenSync, useTelegramId } from '@/hooks/index.v2'
 import { useEffect, useState } from 'react'
 
 interface ElementDetailsProps {
@@ -19,8 +19,14 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
   const [currentElement, setCurrentElement] = useState(element)
   const [isUpgrading, setIsUpgrading] = useState(false)
 
-  // Получаем данные сада через React Query
-  const { data: gardenData } = useGardenSync(undefined, false) // Не включаем автоматическую загрузку
+  // 🔑 Получаем telegramId через хук
+  const telegramId = useTelegramId()
+
+  // ✅ ИСПРАВЛЕНИЕ: Включаем автоматическую синхронизацию с сервером
+  const { data: gardenData } = useGardenSync(
+    telegramId,
+    telegramId !== null && telegramId !== undefined
+  )
 
   // 🔄 ОБНОВЛЯЕМ ЭЛЕМЕНТ ПРИ ИЗМЕНЕНИЯХ В САДЕ
   useEffect(() => {
