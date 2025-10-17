@@ -20,7 +20,10 @@ export function useStreakFreeze() {
 
   // Получаем данные пользователя через React Query
   const telegramId = useTelegramId()
-  const { data: userData } = useUserSync(telegramId, !!telegramId)
+  const { data: userData } = useUserSync(
+    telegramId,
+    telegramId != null && telegramId > 0
+  )
   const currentUser = userData?.user
 
   const [freezeData, setFreezeData] = useState<StreakFreezeData | null>(null)
@@ -38,17 +41,18 @@ export function useStreakFreeze() {
     setIsLoading(true)
 
     try {
+      // 🧊 ВСЕГДА загружаем данные о заморозках, чтобы показывать индикатор
+      const freezes = await getStreakFreezes(currentUser.telegramId)
+      setFreezeData(freezes)
+
       const streakStatus = await checkStreak(currentUser.telegramId)
       setHasProcessedStreakCheck(true)
 
       console.log('✅ [V2] Server streak status:', streakStatus)
+      console.log('🧊 [V2] Freeze data loaded:', freezes)
 
       if (streakStatus.streakState === 'at_risk') {
         setMissedDays(streakStatus.missedDays)
-
-        // Загружаем данные о заморозках
-        const freezes = await getStreakFreezes(currentUser.telegramId)
-        setFreezeData(freezes)
 
         // Проверяем, можно ли использовать авто-заморозку
         const recommendedType = getRecommendedFreezeType(
