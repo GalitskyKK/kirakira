@@ -19,11 +19,13 @@ import { UpgradeResultModal } from './UpgradeResultModal'
 export interface ElementUpgradeManagerProps {
   readonly element: GardenElement
   readonly onUpgradeSuccess?: (newRarity: RarityLevel, xpReward: number) => void
+  readonly onUpgradeComplete?: () => void
 }
 
 export function ElementUpgradeManager({
   element,
   onUpgradeSuccess,
+  onUpgradeComplete,
 }: ElementUpgradeManagerProps) {
   const { userCurrency } = useCurrencyStore()
 
@@ -143,10 +145,20 @@ export function ElementUpgradeManager({
   )
 
   const handleCloseResult = useCallback(() => {
-    console.log('🚪 Closing failure result modal')
+    console.log('🚪 Closing upgrade result modal')
     setShowResultModal(false)
     setUpgradeResult(null)
-  }, [])
+
+    if (onUpgradeComplete) {
+      console.log('📞 Calling onUpgradeComplete callback')
+      // Используем requestAnimationFrame для гарантии выполнения после анимации
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          onUpgradeComplete()
+        })
+      })
+    }
+  }, [onUpgradeComplete])
 
   return (
     <>

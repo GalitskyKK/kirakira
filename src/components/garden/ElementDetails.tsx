@@ -9,6 +9,7 @@ import type { GardenElement, RarityLevel } from '@/types'
 import { ElementUpgradeManager } from './ElementUpgradeManager'
 import { SuccessUpgradeOverlay } from './SuccessUpgradeOverlay'
 import { useGardenSync, useTelegramId } from '@/hooks/index.v2'
+import { useScrollToTop } from '@/hooks/useScrollToTop'
 import { useEffect, useState } from 'react'
 
 interface ElementDetailsProps {
@@ -28,6 +29,13 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
 
   // 🔑 Получаем telegramId через хук
   const telegramId = useTelegramId()
+
+  // 📜 Управление скроллом - автоматически скроллим наверх при открытии
+  const { containerRef, scrollToTop } = useScrollToTop({
+    enabled: true,
+    behavior: 'smooth',
+    delay: 100, // Небольшая задержка для плавности
+  })
 
   // ✅ ИСПРАВЛЕНИЕ: Включаем автоматическую синхронизацию с сервером
   const { data: gardenData } = useGardenSync(
@@ -117,8 +125,8 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 space-y-6 overflow-y-auto p-4">
+      {/* Content - с ref для скролла */}
+      <div ref={containerRef} className="flex-1 space-y-6 overflow-y-auto p-4">
         {/* Element Display */}
         <Card padding="lg" className="text-center">
           <motion.div
@@ -312,6 +320,8 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
               console.log('🎉 Showing success overlay', { newRarity, xpReward })
               setSuccessData({ newRarity, xpReward })
               setShowSuccessOverlay(true)
+              // Скроллим наверх после успешного улучшения
+              scrollToTop()
             }}
           />
         </div>
@@ -340,6 +350,8 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
             console.log('🏡 Returning to garden after successful upgrade')
             setShowSuccessOverlay(false)
             setSuccessData(null)
+            // Скроллим наверх перед возвратом в сад
+            scrollToTop()
             // Возвращаемся в сад
             onBack()
           }}
