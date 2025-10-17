@@ -55,7 +55,10 @@ export const ShelfElement = memo(function ShelfElement({
     }
   }, [])
 
-  const moodConfig = MOOD_CONFIG[element.moodInfluence] || MOOD_CONFIG.joy // Fallback to joy if invalid mood
+  const moodConfig =
+    element.moodInfluence in MOOD_CONFIG
+      ? MOOD_CONFIG[element.moodInfluence]
+      : MOOD_CONFIG.joy // Fallback to joy if invalid mood
 
   // Локализация редкости
   const rarityLabels: Record<string, string> = {

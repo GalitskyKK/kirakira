@@ -57,7 +57,11 @@ export function MoodSelector({
   const isAlreadyCheckedIn = !canCheckinToday()
 
   // Если уже отметили настроение, показываем информацию о нём
-  if (isAlreadyCheckedIn && todaysMood) {
+  if (
+    isAlreadyCheckedIn &&
+    todaysMood?.mood &&
+    todaysMood.mood in MOOD_CONFIG
+  ) {
     const moodConfig = MOOD_CONFIG[todaysMood.mood]
     const intensityLabels = ['Слабо', 'Умеренно', 'Сильно']
 
@@ -147,7 +151,9 @@ export function MoodSelector({
             </p>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {(Object.keys(MOOD_CONFIG) as MoodType[]).map(mood => {
+                if (!(mood in MOOD_CONFIG)) return null
                 const config = MOOD_CONFIG[mood]
+
                 return (
                   <motion.button
                     key={mood}
@@ -337,7 +343,9 @@ export function MoodIcon({
   mood: MoodType
   size?: number
 }) {
+  if (!(mood in MOOD_CONFIG)) return null
   const config = MOOD_CONFIG[mood]
+
   return (
     <div
       className="flex items-center justify-center rounded-full"
