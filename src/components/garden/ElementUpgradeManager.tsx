@@ -18,12 +18,12 @@ import { UpgradeResultModal } from './UpgradeResultModal'
 
 export interface ElementUpgradeManagerProps {
   readonly element: GardenElement
-  readonly onUpgradeComplete?: () => void
+  readonly onUpgradeSuccess?: (newRarity: RarityLevel, xpReward: number) => void
 }
 
 export function ElementUpgradeManager({
   element,
-  onUpgradeComplete,
+  onUpgradeSuccess,
 }: ElementUpgradeManagerProps) {
   const { userCurrency } = useCurrencyStore()
 
@@ -101,24 +101,26 @@ export function ElementUpgradeManager({
         }
 
         if (result) {
-          setUpgradeResult({
-            success: result.upgraded,
-            ...(result.newRarity !== undefined && {
-              newRarity: result.newRarity,
-            }),
-            ...(result.upgraded && { xpReward: result.xpReward }),
-            progressBonus: result.progressBonus ?? 0,
-            failedAttempts: result.failedAttempts ?? 0,
-          })
-          // 🔑 Генерируем новый ключ для модального окна
-          setResultModalKey(prev => prev + 1)
-          setShowResultModal(true)
-
-          // 🎉 ИНФОРМАЦИЯ ОБНОВЛЯЕТСЯ ПРЯМО НА СТРАНИЦЕ ЭЛЕМЕНТА
-          if (result.upgraded) {
+          // 🎉 УСПЕХ - показываем оверлей на странице элемента
+          if (result.upgraded && result.newRarity !== undefined) {
             console.log(
-              '✅ Element details will be updated automatically via React Query invalidation'
+              '✅ Element upgraded successfully, showing success overlay'
             )
+            // Вызываем callback для показа оверлея
+            if (onUpgradeSuccess) {
+              onUpgradeSuccess(result.newRarity, result.xpReward ?? 0)
+            }
+          } else {
+            // ❌ НЕУДАЧА - показываем модальное окно
+            console.log('❌ Upgrade failed, showing failure modal')
+            setUpgradeResult({
+              success: false,
+              progressBonus: result.progressBonus ?? 0,
+              failedAttempts: result.failedAttempts ?? 0,
+            })
+            // 🔑 Генерируем новый ключ для модального окна
+            setResultModalKey(prev => prev + 1)
+            setShowResultModal(true)
           }
         }
       } catch (error) {
@@ -141,21 +143,10 @@ export function ElementUpgradeManager({
   )
 
   const handleCloseResult = useCallback(() => {
-    console.log('🚪 Closing upgrade result modal')
+    console.log('🚪 Closing failure result modal')
     setShowResultModal(false)
     setUpgradeResult(null)
-
-    // 📜 Вызываем callback для скролла наверх НЕМЕДЛЕННО
-    if (onUpgradeComplete) {
-      console.log('📞 Calling onUpgradeComplete callback')
-      // Используем requestAnimationFrame для вызова после закрытия модалки
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          onUpgradeComplete()
-        })
-      })
-    }
-  }, [onUpgradeComplete])
+  }, [])
 
   return (
     <>
@@ -180,28 +171,21 @@ export function ElementUpgradeManager({
         isLoading={isUpgrading}
       />
 
-      {upgradeResult !== null && upgradeResult !== undefined && (
-        <UpgradeResultModal
-          key={`upgrade-result-${resultModalKey}`}
-          isOpen={showResultModal}
-          onClose={handleCloseResult}
-          success={upgradeResult.success}
-          element={upgradeElementRef.current}
-          oldRarity={upgradeElementRef.current.rarity}
-          {...(upgradeResult.newRarity !== undefined && {
-            newRarity: upgradeResult.newRarity,
-          })}
-          {...(upgradeResult.xpReward !== undefined && {
-            xpReward: upgradeResult.xpReward,
-          })}
-          {...(upgradeResult.progressBonus !== undefined && {
-            progressBonus: upgradeResult.progressBonus,
-          })}
-          {...(upgradeResult.failedAttempts !== undefined && {
-            failedAttempts: upgradeResult.failedAttempts,
-          })}
-        />
-      )}
+      {/* Показываем модальное окно ТОЛЬКО для неудачи */}
+      {upgradeResult !== null &&
+        upgradeResult !== undefined &&
+        !upgradeResult.success && (
+          <UpgradeResultModal
+            key={`upgrade-result-${resultModalKey}`}
+            isOpen={showResultModal}
+            onClose={handleCloseResult}
+            success={false}
+            element={upgradeElementRef.current}
+            oldRarity={upgradeElementRef.current.rarity}
+            progressBonus={upgradeResult.progressBonus ?? 0}
+            failedAttempts={upgradeResult.failedAttempts ?? 0}
+          />
+        )}
     </>
   )
 }

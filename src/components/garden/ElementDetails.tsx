@@ -5,10 +5,11 @@ import { ArrowLeft, Calendar, Heart, Star } from 'lucide-react'
 import { Button, Card } from '@/components/ui'
 import { MOOD_CONFIG } from '@/types/mood'
 import { PlantRenderer } from '@/components/garden/plants'
-import type { GardenElement } from '@/types'
+import type { GardenElement, RarityLevel } from '@/types'
 import { ElementUpgradeManager } from './ElementUpgradeManager'
+import { SuccessUpgradeOverlay } from './SuccessUpgradeOverlay'
 import { useGardenSync, useTelegramId } from '@/hooks/index.v2'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 
 interface ElementDetailsProps {
   element: GardenElement
@@ -18,8 +19,12 @@ interface ElementDetailsProps {
 export function ElementDetails({ element, onBack }: ElementDetailsProps) {
   const [currentElement, setCurrentElement] = useState(element)
   const [isUpgrading, setIsUpgrading] = useState(false)
-  // ✅ Ref для контейнера с контентом для скролла
-  const contentRef = useRef<HTMLDivElement>(null)
+  // ✅ Состояние для успешного улучшения
+  const [showSuccessOverlay, setShowSuccessOverlay] = useState(false)
+  const [successData, setSuccessData] = useState<{
+    newRarity: RarityLevel
+    xpReward: number
+  } | null>(null)
 
   // 🔑 Получаем telegramId через хук
   const telegramId = useTelegramId()
@@ -94,7 +99,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="relative flex h-full flex-col">
       {/* Header */}
       <div className="border-b border-gray-200 p-4">
         <div className="flex items-center space-x-3">
@@ -113,7 +118,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
       </div>
 
       {/* Content */}
-      <div ref={contentRef} className="flex-1 space-y-6 overflow-y-auto p-4">
+      <div className="flex-1 space-y-6 overflow-y-auto p-4">
         {/* Element Display */}
         <Card padding="lg" className="text-center">
           <motion.div
@@ -302,18 +307,11 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
         <div className="flex justify-center">
           <ElementUpgradeManager
             element={currentElement}
-            onUpgradeComplete={() => {
-              // 📜 Скроллим наверх после закрытия модального окна результата
-              console.log('🔝 Scrolling to top after upgrade modal close')
-              if (contentRef.current) {
-                contentRef.current.scrollTo({
-                  top: 0,
-                  behavior: 'smooth',
-                })
-                console.log('✅ Scroll command executed')
-              } else {
-                console.warn('⚠️ contentRef.current is null')
-              }
+            onUpgradeSuccess={(newRarity: RarityLevel, xpReward: number) => {
+              // 🎉 Показываем оверлей успешного улучшения
+              console.log('🎉 Showing success overlay', { newRarity, xpReward })
+              setSuccessData({ newRarity, xpReward })
+              setShowSuccessOverlay(true)
             }}
           />
         </div>
@@ -330,6 +328,23 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
           </p>
         </Card>
       </div>
+
+      {/* Оверлей успешного улучшения */}
+      {showSuccessOverlay && successData && (
+        <SuccessUpgradeOverlay
+          isVisible={showSuccessOverlay}
+          newRarity={successData.newRarity}
+          xpReward={successData.xpReward}
+          elementEmoji={currentElement.emoji}
+          onComplete={() => {
+            console.log('🏡 Returning to garden after successful upgrade')
+            setShowSuccessOverlay(false)
+            setSuccessData(null)
+            // Возвращаемся в сад
+            onBack()
+          }}
+        />
+      )}
     </div>
   )
 }
