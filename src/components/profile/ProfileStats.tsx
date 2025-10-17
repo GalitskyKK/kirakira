@@ -4,6 +4,8 @@ import {
   calculateLevelProgress,
   calculateExperienceFromStats,
 } from '@/utils/achievements'
+import { DailyQuestList } from '@/components/quests'
+import { useState } from 'react'
 
 interface ProfileStatsProps {
   readonly user: User
@@ -70,6 +72,7 @@ export function ProfileStats({
   moodStats,
   totalElements,
 }: ProfileStatsProps) {
+  const [showQuests, setShowQuests] = useState(false)
   // Защита от undefined - создаем fallback значения
   // 🔧 ИСПРАВЛЕНИЕ: API возвращает totalMoodEntries (не totalEntries)
   const safeMoodStats = moodStats || {
@@ -234,6 +237,61 @@ export function ProfileStats({
           <div className="mt-2 text-center text-xs text-gray-400 dark:text-gray-500">
             Ещё {levelInfo.experienceToNext} опыта до повышения
           </div>
+        )}
+      </motion.div>
+
+      {/* Daily Quests Button */}
+      <motion.div
+        className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <button
+          onClick={() => setShowQuests(!showQuests)}
+          className="flex w-full items-center justify-between rounded-lg bg-gradient-to-r from-garden-50 to-green-50 p-4 transition-colors hover:from-garden-100 hover:to-green-100 dark:from-garden-900/30 dark:to-green-900/30 dark:hover:from-garden-900/50 dark:hover:to-green-900/50"
+        >
+          <div className="flex items-center space-x-3">
+            <div className="text-2xl">🎯</div>
+            <div className="text-left">
+              <div className="font-medium text-gray-900 dark:text-gray-100">
+                Ежедневные задания
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Выполняйте задания и получайте награды
+              </div>
+            </div>
+          </div>
+          <div className="text-gray-400 dark:text-gray-500">
+            {showQuests ? '▼' : '▶'}
+          </div>
+        </button>
+
+        {/* Daily Quests List */}
+        {showQuests && (
+          <motion.div
+            className="mt-4"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {user.telegramId ? (
+              <DailyQuestList telegramId={user.telegramId} />
+            ) : (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/30">
+                <div className="text-center">
+                  <div className="mb-2 text-2xl">🔒</div>
+                  <div className="font-medium text-red-900 dark:text-red-200">
+                    Требуется авторизация
+                  </div>
+                  <div className="text-sm text-red-700 dark:text-red-300">
+                    Войдите в аккаунт для просмотра заданий
+                  </div>
+                </div>
+              </div>
+            )}
+          </motion.div>
         )}
       </motion.div>
     </motion.div>

@@ -4,7 +4,6 @@ import { MobileTabNavigation } from './MobileTabNavigation'
 import { GardenView } from '@/components/garden'
 import { MoodCheckin, MoodStats } from '@/components/mood'
 import { TelegramCommunity } from '@/components/telegram'
-import { DailyQuestList } from '@/components/quests'
 import {
   TelegramStatus,
   CurrencyDisplay,
@@ -33,7 +32,7 @@ const tabVariants = {
   }),
 }
 
-const TABS = ['mood', 'garden', 'quests', 'community', 'stats', 'profile']
+const TABS = ['mood', 'garden', 'community', 'stats', 'profile']
 
 export function MobileLayout() {
   const [activeTab, setActiveTab] = useState('mood')
@@ -244,33 +243,6 @@ export function MobileLayout() {
             <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
               <GardenView className="min-h-[400px]" />
             </div>
-          </div>
-        )
-
-      case 'quests':
-        return (
-          <div>
-            <div className="mb-4">
-              <h2 className="mb-1 text-xl font-bold text-gray-900 dark:text-gray-100">
-                Ежедневные задания
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Выполняйте задания и получайте награды
-              </p>
-            </div>
-
-            {telegramId ? (
-              <DailyQuestList telegramId={telegramId} />
-            ) : (
-              <div className="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-900/30">
-                <h3 className="font-bold text-red-900 dark:text-red-200">
-                  Ошибка авторизации
-                </h3>
-                <p className="text-red-700 dark:text-red-300">
-                  Необходима авторизация для просмотра заданий
-                </p>
-              </div>
-            )}
           </div>
         )
 
