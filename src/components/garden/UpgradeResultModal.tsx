@@ -33,26 +33,34 @@ export function UpgradeResultModal({
 }: UpgradeResultModalProps) {
   const [showConfetti, setShowConfetti] = useState(false)
   const [showAnimation, setShowAnimation] = useState(false)
+  // ✅ ИСПРАВЛЕНИЕ: Добавляем уникальный ключ для предотвращения множественных рендеров
+  const [modalKey] = useState(() => Date.now())
 
-  // Показываем анимацию при успехе
+  // Показываем анимацию при успехе (только один раз при монтировании)
   useEffect(() => {
-    if (success && newRarity) {
+    if (isOpen && success && newRarity !== undefined && newRarity !== null) {
       setShowAnimation(true)
       const timer = setTimeout(() => setShowAnimation(false), 3500)
       return () => clearTimeout(timer)
     }
     return undefined
-  }, [success, newRarity])
+  }, [isOpen, success, newRarity]) // ✅ Включаем все зависимости
 
-  // Показываем конфетти для legendary улучшения
+  // Показываем конфетти для legendary улучшения (только один раз при монтировании)
   useEffect(() => {
-    if (success && newRarity === 'legendary') {
+    if (
+      isOpen &&
+      success &&
+      newRarity !== undefined &&
+      newRarity !== null &&
+      newRarity === 'legendary'
+    ) {
       setShowConfetti(true)
       const timer = setTimeout(() => setShowConfetti(false), 3000)
       return () => clearTimeout(timer)
     }
     return undefined
-  }, [success, newRarity])
+  }, [isOpen, success, newRarity]) // ✅ Включаем все зависимости
 
   if (!isOpen) return null
 
@@ -91,17 +99,21 @@ export function UpgradeResultModal({
   }
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {/* Анимация улучшения (поверх модалки) */}
-      {showAnimation && newRarity && (
+      {showAnimation && newRarity !== undefined && newRarity !== null && (
         <UpgradeAnimation
+          key={`animation-${modalKey}`}
           rarity={newRarity}
           emoji={element.emoji}
           onComplete={() => setShowAnimation(false)}
         />
       )}
 
-      <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div
+        key={`modal-${modalKey}`}
+        className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      >
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -122,7 +134,7 @@ export function UpgradeResultModal({
           {/* Конфетти для legendary */}
           {showConfetti && (
             <div className="pointer-events-none absolute inset-0 z-20">
-              {[...Array(30)].map((_, i) => (
+              {Array.from({ length: 30 }, (_, i) => (
                 <motion.div
                   key={i}
                   initial={{
@@ -149,7 +161,7 @@ export function UpgradeResultModal({
                       '#FFA500',
                       '#FF69B4',
                       '#00CED1',
-                    ][Math.floor(Math.random() * 4)],
+                    ][Math.floor(Math.random() * 4)] as string,
                   }}
                 />
               ))}
@@ -158,7 +170,7 @@ export function UpgradeResultModal({
 
           {/* Результат */}
           <div className="max-h-[calc(80vh-40px)] overflow-y-auto p-6 text-center">
-            {success && newRarity ? (
+            {success && newRarity !== undefined && newRarity !== null ? (
               <>
                 {/* Успех */}
                 <CheckCircle className="mx-auto h-16 w-16 text-green-500" />

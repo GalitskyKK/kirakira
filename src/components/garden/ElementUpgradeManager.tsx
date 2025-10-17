@@ -16,11 +16,15 @@ import { ElementUpgradeButton } from './ElementUpgradeButton'
 import { UpgradeConfirmModal } from './UpgradeConfirmModal'
 import { UpgradeResultModal } from './UpgradeResultModal'
 
-interface ElementUpgradeManagerProps {
+export interface ElementUpgradeManagerProps {
   readonly element: GardenElement
+  readonly onUpgradeComplete?: () => void
 }
 
-export function ElementUpgradeManager({ element }: ElementUpgradeManagerProps) {
+export function ElementUpgradeManager({
+  element,
+  onUpgradeComplete,
+}: ElementUpgradeManagerProps) {
   const { userCurrency } = useCurrencyStore()
 
   // Получаем данные пользователя через React Query
@@ -49,6 +53,9 @@ export function ElementUpgradeManager({ element }: ElementUpgradeManagerProps) {
 
   // ✅ ИСПРАВЛЕНИЕ: Используем ref для предотвращения множественных вызовов
   const isProcessingRef = useRef(false)
+
+  // 🔑 Уникальный ключ для модального окна результата
+  const [resultModalKey, setResultModalKey] = useState(0)
 
   // Получаем данные из React Query
   const progressBonus = upgradeInfo?.progressBonus ?? 0
@@ -98,6 +105,8 @@ export function ElementUpgradeManager({ element }: ElementUpgradeManagerProps) {
             progressBonus: result.progressBonus ?? 0,
             failedAttempts: result.failedAttempts ?? 0,
           })
+          // 🔑 Генерируем новый ключ для модального окна
+          setResultModalKey(prev => prev + 1)
           setShowResultModal(true)
 
           // 🎉 ИНФОРМАЦИЯ ОБНОВЛЯЕТСЯ ПРЯМО НА СТРАНИЦЕ ЭЛЕМЕНТА
@@ -127,7 +136,14 @@ export function ElementUpgradeManager({ element }: ElementUpgradeManagerProps) {
   const handleCloseResult = useCallback(() => {
     setShowResultModal(false)
     setUpgradeResult(null)
-  }, [])
+
+    // 📜 Вызываем callback для скролла наверх
+    if (onUpgradeComplete) {
+      setTimeout(() => {
+        onUpgradeComplete()
+      }, 100) // Небольшая задержка для плавности
+    }
+  }, [onUpgradeComplete])
 
   return (
     <>
@@ -152,6 +168,7 @@ export function ElementUpgradeManager({ element }: ElementUpgradeManagerProps) {
 
       {upgradeResult !== null && upgradeResult !== undefined && (
         <UpgradeResultModal
+          key={`upgrade-result-${resultModalKey}`}
           isOpen={showResultModal}
           onClose={handleCloseResult}
           success={upgradeResult.success}

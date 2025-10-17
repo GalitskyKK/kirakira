@@ -8,7 +8,7 @@ import { PlantRenderer } from '@/components/garden/plants'
 import type { GardenElement } from '@/types'
 import { ElementUpgradeManager } from './ElementUpgradeManager'
 import { useGardenSync, useTelegramId } from '@/hooks/index.v2'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
 interface ElementDetailsProps {
   element: GardenElement
@@ -18,6 +18,8 @@ interface ElementDetailsProps {
 export function ElementDetails({ element, onBack }: ElementDetailsProps) {
   const [currentElement, setCurrentElement] = useState(element)
   const [isUpgrading, setIsUpgrading] = useState(false)
+  // ✅ Ref для контейнера с контентом для скролла
+  const contentRef = useRef<HTMLDivElement>(null)
 
   // 🔑 Получаем telegramId через хук
   const telegramId = useTelegramId()
@@ -43,6 +45,11 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
             '✅ Element details updated with new rarity:',
             updatedElement.rarity
           )
+
+          // 📜 СКРОЛЛИМ НАВЕРХ после обновления элемента
+          if (contentRef.current) {
+            contentRef.current.scrollTo({ top: 0, behavior: 'smooth' })
+          }
         }, 500) // Небольшая задержка для анимации
       }
     }
@@ -110,7 +117,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 space-y-6 overflow-y-auto p-4">
+      <div ref={contentRef} className="flex-1 space-y-6 overflow-y-auto p-4">
         {/* Element Display */}
         <Card padding="lg" className="text-center">
           <motion.div
@@ -297,7 +304,15 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
 
         {/* Upgrade Button */}
         <div className="flex justify-center">
-          <ElementUpgradeManager element={currentElement} />
+          <ElementUpgradeManager
+            element={currentElement}
+            onUpgradeComplete={() => {
+              // 📜 Скроллим наверх после закрытия модального окна
+              if (contentRef.current) {
+                contentRef.current.scrollTo({ top: 0, behavior: 'smooth' })
+              }
+            }}
+          />
         </div>
 
         {/* Care Tips */}
