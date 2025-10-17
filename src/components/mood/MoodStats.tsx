@@ -24,13 +24,15 @@ export function MoodStats({ className }: MoodStatsProps) {
 
   const chartData = useMemo((): ChartDataPoint[] => {
     const last7Days = recentTrend.slice(0, 7).reverse()
-    return last7Days.map((entry: MoodEntry) => ({
-      date: entry.date.getDate(),
-      mood: entry.mood,
-      intensity: entry.intensity,
-      emoji: MOOD_CONFIG[entry.mood].emoji,
-      color: MOOD_CONFIG[entry.mood].color,
-    }))
+    return last7Days
+      .filter((entry: MoodEntry) => entry.mood && entry.mood in MOOD_CONFIG)
+      .map((entry: MoodEntry) => ({
+        date: entry.date.getDate(),
+        mood: entry.mood,
+        intensity: entry.intensity,
+        emoji: MOOD_CONFIG[entry.mood].emoji,
+        color: MOOD_CONFIG[entry.mood].color,
+      }))
   }, [recentTrend])
 
   const topMoods = useMemo(() => {
@@ -211,7 +213,7 @@ export function MoodStats({ className }: MoodStatsProps) {
         )}
 
         {/* Recommendation */}
-        {moodRecommendation.mood && (
+        {moodRecommendation.mood && moodRecommendation.mood in MOOD_CONFIG && (
           <Card padding="sm" variant="glass">
             <div className="flex items-start space-x-3">
               <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/50">

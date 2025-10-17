@@ -249,7 +249,7 @@ export function GardenStats({ garden }: GardenStatsProps) {
       )}
 
       {/* Recent Elements */}
-      {stats.newestElement && (
+      {stats.newestElement && stats.newestElement.emoji && (
         <Card padding="sm">
           <h4 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
             Последнее растение

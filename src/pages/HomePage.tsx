@@ -234,31 +234,35 @@ export function HomePage() {
                   )}
                 </Card>
 
-                {gardenStats.newestElement && (
-                  <Card padding="sm">
-                    <h3 className="mb-3 text-sm font-semibold text-gray-900">
-                      Последнее растение
-                    </h3>
-                    <div className="flex items-center space-x-3">
-                      <div className="text-2xl">
-                        {gardenStats.newestElement.emoji}
+                {gardenStats.newestElement &&
+                  gardenStats.newestElement.emoji && (
+                    <Card padding="sm">
+                      <h3 className="mb-3 text-sm font-semibold text-gray-900">
+                        Последнее растение
+                      </h3>
+                      <div className="flex items-center space-x-3">
+                        <div className="text-2xl">
+                          {gardenStats.newestElement.emoji}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">
+                            {gardenStats.newestElement.name}
+                          </p>
+                          <p className="text-xs text-gray-600">
+                            {formatDate(
+                              gardenStats.newestElement.unlockDate instanceof
+                                Date
+                                ? gardenStats.newestElement.unlockDate
+                                : new Date(
+                                    gardenStats.newestElement.unlockDate
+                                  ),
+                              'dd MMM в HH:mm'
+                            )}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium">
-                          {gardenStats.newestElement.name}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          {formatDate(
-                            gardenStats.newestElement.unlockDate instanceof Date
-                              ? gardenStats.newestElement.unlockDate
-                              : new Date(gardenStats.newestElement.unlockDate),
-                            'dd MMM в HH:mm'
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </Card>
-                )}
+                    </Card>
+                  )}
               </div>
             </div>
           </div>

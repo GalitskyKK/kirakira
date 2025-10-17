@@ -87,7 +87,7 @@ export function MoodSelector({
               </div>
             </div>
 
-            {todaysMood.note && (
+            {(todaysMood.note ?? '').length > 0 && (
               <div className="mt-3 rounded-lg bg-white p-3 dark:bg-gray-800">
                 <p className="text-sm italic text-gray-700 dark:text-gray-300">
                   "{todaysMood.note}"
@@ -228,7 +228,7 @@ export function MoodSelector({
                             key={i}
                             className={clsx(
                               'h-2 w-2 rounded-full',
-                              i < intensity
+                              i < (intensity as number)
                                 ? 'bg-garden-500'
                                 : 'bg-gray-300 dark:bg-gray-600'
                             )}
@@ -297,31 +297,35 @@ export function MoodSelector({
         )}
       </AnimatePresence>
 
-      {isAlreadyCheckedIn && todaysMood && (
-        <motion.div
-          className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/30"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div className="flex items-center space-x-3">
-            <div className="text-2xl">{MOOD_CONFIG[todaysMood.mood].emoji}</div>
-            <div>
-              <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                {MOOD_CONFIG[todaysMood.mood].label}
-              </p>
-              <p className="text-xs text-green-600 dark:text-green-300">
-                Интенсивность:{' '}
-                {['Слабо', 'Умеренно', 'Сильно'][todaysMood.intensity - 1]}
-              </p>
-              {todaysMood.note && (
-                <p className="mt-1 text-xs text-green-700 dark:text-green-300">
-                  "{todaysMood.note}"
+      {isAlreadyCheckedIn &&
+        todaysMood?.mood &&
+        todaysMood.mood in MOOD_CONFIG && (
+          <motion.div
+            className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/30"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="flex items-center space-x-3">
+              <div className="text-2xl">
+                {MOOD_CONFIG[todaysMood.mood].emoji}
+              </div>
+              <div>
+                <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                  {MOOD_CONFIG[todaysMood.mood].label}
                 </p>
-              )}
+                <p className="text-xs text-green-600 dark:text-green-300">
+                  Интенсивность:{' '}
+                  {['Слабо', 'Умеренно', 'Сильно'][todaysMood.intensity - 1]}
+                </p>
+                {(todaysMood.note ?? '').length > 0 && (
+                  <p className="mt-1 text-xs text-green-700 dark:text-green-300">
+                    "{todaysMood.note}"
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-        </motion.div>
-      )}
+          </motion.div>
+        )}
     </Card>
   )
 }
