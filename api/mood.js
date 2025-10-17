@@ -349,7 +349,7 @@ async function handleToday(req, res) {
   }
 
   try {
-    const { telegramId } = req.query
+    const { telegramId, localDate } = req.query
 
     if (!telegramId) {
       return res.status(400).json({
@@ -358,22 +358,23 @@ async function handleToday(req, res) {
       })
     }
 
-    // Получаем JWT из заголовков
-    const authHeader = req.headers.authorization
-    const jwt = authHeader?.replace('Bearer ', '')
+    // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
+    const supabase = await getSupabaseClient(req.auth?.jwt)
 
-    if (!jwt) {
-      return res.status(401).json({
-        success: false,
-        error: 'Missing JWT token',
-      })
+    // 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Используем локальную дату клиента
+    // Клиент должен передать свою локальную дату в формате YYYY-MM-DD
+    // Если не передана - используем UTC дату сервера как fallback (но это НЕ рекомендуется)
+    let today
+    if (localDate) {
+      today = localDate // Используем локальную дату пользователя из параметра
+      console.log(`📅 Using client's local date: ${today}`)
+    } else {
+      // Fallback: UTC дата сервера (может быть неправильной для пользователя!)
+      today = new Date().toISOString().split('T')[0]
+      console.warn(
+        `⚠️ No localDate provided, using server UTC date: ${today} (may be incorrect for user timezone!)`
+      )
     }
-
-    // Временно используем SERVICE_ROLE_KEY для избежания JWT ошибок
-    const supabase = await getSupabaseClient()
-
-    // Получаем сегодняшнее настроение
-    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
 
     const { data: todayEntries, error } = await supabase
       .from('mood_entries')

@@ -71,8 +71,10 @@ export function ProfileStats({
   totalElements,
 }: ProfileStatsProps) {
   // Защита от undefined - создаем fallback значения
+  // 🔧 ИСПРАВЛЕНИЕ: API возвращает totalMoodEntries (не totalEntries)
   const safeMoodStats = moodStats || {
     totalEntries: 0,
+    totalMoodEntries: 0, // добавлено для совместимости с API
     currentStreak: 0,
     longestStreak: 0,
     mostFrequentMood: null,
@@ -172,7 +174,9 @@ export function ProfileStats({
         <StatCard
           emoji="💭"
           label="Настроений"
-          value={safeMoodStats.totalEntries}
+          value={
+            safeMoodStats.totalMoodEntries ?? safeMoodStats.totalEntries ?? 0
+          }
           color="blue"
           delay={0.35}
         />

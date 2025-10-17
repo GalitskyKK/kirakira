@@ -68,9 +68,23 @@ export function useMoodTracking() {
   }, [moodData, localMoodHistory])
 
   // Статистика настроений
+  // 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Используем серверные стрики из userData вместо локального расчета
   const moodStats: MoodStats = useMemo(() => {
-    return calculateMoodStats(moodHistory)
-  }, [moodHistory])
+    const localStats = calculateMoodStats(moodHistory)
+
+    // Если есть серверные данные о стриках - используем их (более точные!)
+    if (userData?.stats) {
+      return {
+        ...localStats,
+        currentStreak: userData.stats.currentStreak ?? localStats.currentStreak,
+        longestStreak: userData.stats.longestStreak ?? localStats.longestStreak,
+        totalMoodEntries:
+          userData.stats.totalMoodEntries ?? localStats.totalEntries,
+      }
+    }
+
+    return localStats
+  }, [moodHistory, userData?.stats])
 
   // Время до следующей отметки
   const timeUntilNextCheckin = useMemo(() => {
@@ -112,7 +126,7 @@ export function useMoodTracking() {
       }
 
       try {
-        // Отправляем на сервер через mutation 
+        // Отправляем на сервер через mutation
         const telegramUserData: {
           userId: string
           firstName: string

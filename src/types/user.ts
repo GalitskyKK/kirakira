@@ -61,6 +61,7 @@ export interface UserStats {
   readonly totalElements: number
   readonly rareElementsFound: number
   readonly gardensShared: number
+  readonly totalMoodEntries?: number // 🔧 Добавлено для совместимости с API
   readonly firstVisit: Date
   readonly lastVisit: Date
   // 🧊 Система заморозок стрика

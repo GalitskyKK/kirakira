@@ -29,6 +29,7 @@ export interface MoodState {
 
 export interface MoodStats {
   readonly totalEntries: number
+  readonly totalMoodEntries?: number // 🔧 Добавлено для совместимости с API
   readonly currentStreak: number
   readonly longestStreak: number
   readonly mostFrequentMood: MoodType | null

@@ -166,8 +166,16 @@ export async function getTodaysMood(
   userId: string
 ): Promise<MoodEntry | null> {
   try {
+    // 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Передаем локальную дату пользователя
+    // для корректной работы с часовыми поясами
+    const today = new Date()
+    const year = today.getFullYear()
+    const month = String(today.getMonth() + 1).padStart(2, '0')
+    const day = String(today.getDate()).padStart(2, '0')
+    const localDate = `${year}-${month}-${day}` // YYYY-MM-DD в локальном времени
+
     const response = await authenticatedFetch(
-      `/api/mood?action=today&telegramId=${telegramId}`
+      `/api/mood?action=today&telegramId=${telegramId}&localDate=${localDate}`
     )
 
     if (!response.ok) {
