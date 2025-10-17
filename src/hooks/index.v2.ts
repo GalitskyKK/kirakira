@@ -30,6 +30,9 @@ export {
 // React Query хуки для прямого использования
 export * from './queries'
 
+// Daily Quest хуки
+export * from './queries/useDailyQuestQueries'
+
 // Telegram ID Hook
 export { useTelegramId } from './useTelegramId'
 

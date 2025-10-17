@@ -13,6 +13,7 @@ import {
 } from '@/hooks/queries'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
+import { useUpdateQuestProgress } from '@/hooks/queries/useDailyQuestQueries'
 import type { MoodType, MoodIntensity, MoodEntry, MoodStats } from '@/types'
 import { getMoodDisplayProps, getRecommendedMood } from '@/utils/moodMapping'
 import { getTimeUntilNextCheckin } from '@/utils/dateHelpers'
@@ -39,6 +40,7 @@ export function useMoodTracking() {
   } = useMoodSync(telegramId, userId, !!telegramId && !!userId)
 
   const addMoodMutation = useAddMoodEntry()
+  const updateQuestProgress = useUpdateQuestProgress()
 
   // Проверка возможности отметки настроения
   const { canCheckin, todaysMood } = useCanCheckinToday(telegramId, userId)
@@ -184,6 +186,30 @@ export function useMoodTracking() {
           console.log(
             `💰 Awarded ${currencyResult.sprouts} sprouts for mood check-in`
           )
+        }
+
+        // 🎯 Обновляем прогресс daily quests
+        if (telegramId) {
+          try {
+            // Обновляем квесты связанные с настроением
+            console.log('🎯 Updating mood-related daily quests...')
+
+            // Обновляем квесты типа record_specific_mood и record_with_note
+            const moodQuests = ['record_specific_mood', 'record_with_note']
+            for (const questType of moodQuests) {
+              try {
+                await updateQuestProgress.mutateAsync({
+                  telegramId,
+                  questType: questType as any,
+                  increment: 1,
+                })
+              } catch (error) {
+                console.warn(`⚠️ Failed to update quest ${questType}:`, error)
+              }
+            }
+          } catch (questError) {
+            console.error('❌ Failed to update quest progress:', questError)
+          }
         }
 
         return entry

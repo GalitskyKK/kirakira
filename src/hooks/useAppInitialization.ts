@@ -111,6 +111,14 @@ export function useAppInitialization(
         logIfDev('✅ Данные сада и настроений загружены')
       }
 
+      // Проверяем daily quests
+      updateProgress(InitializationStage.DAILY_QUESTS_CHECK, 85)
+      if (userData?.user?.telegramId) {
+        logIfDev('🎯 Проверка ежедневных заданий...')
+        // Daily quests будут загружены автоматически через React Query
+        // когда компонент DailyQuestList будет отрендерен
+      }
+
       updateProgress(InitializationStage.COMPLETED, 100)
       logIfDev('🎉 Инициализация завершена успешно')
     } catch (error) {
