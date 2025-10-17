@@ -108,18 +108,24 @@ export function FriendGardenView({
       setFriendGarden(result.data)
       hapticFeedback('success')
 
-      // 🎯 Обновляем прогресс daily quest для посещения сада друга
+      // 🎯 Обновляем прогресс daily quest для посещения сада друга (неблокирующе)
       if (currentUser?.telegramId) {
-        try {
-          await updateQuestProgress.mutateAsync({
+        // Выполняем обновление квеста в фоне, не блокируя основной UI
+        updateQuestProgress
+          .mutateAsync({
             telegramId: currentUser.telegramId,
             questType: 'visit_friend_garden',
             increment: 1,
           })
-          console.log('✅ Visit friend garden quest updated')
-        } catch (error) {
-          console.warn('⚠️ Failed to update visit_friend_garden quest:', error)
-        }
+          .then(() => {
+            console.log('✅ Visit friend garden quest updated')
+          })
+          .catch(error => {
+            console.warn(
+              '⚠️ Failed to update visit_friend_garden quest:',
+              error
+            )
+          })
       }
     } catch (error) {
       console.error('Failed to load friend garden:', error)

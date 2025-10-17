@@ -118,17 +118,19 @@ export function useAppInitialization(
       if (userData?.user?.telegramId) {
         logIfDev('🎯 Проверка ежедневных заданий...')
 
-        // Обновляем прогресс login_streak при входе в приложение
-        try {
-          await updateQuestProgress.mutateAsync({
+        // Обновляем прогресс login_streak при входе в приложение (неблокирующе)
+        updateQuestProgress
+          .mutateAsync({
             telegramId: userData.user.telegramId,
             questType: 'login_streak',
             increment: 1,
           })
-          logIfDev('✅ Login streak quest updated')
-        } catch (error) {
-          console.warn('⚠️ Failed to update login_streak quest:', error)
-        }
+          .then(() => {
+            logIfDev('✅ Login streak quest updated')
+          })
+          .catch(error => {
+            console.warn('⚠️ Failed to update login_streak quest:', error)
+          })
 
         // Daily quests будут загружены автоматически через React Query
         // когда компонент DailyQuestList будет отрендерен

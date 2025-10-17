@@ -181,7 +181,11 @@ export function useUpdateQuestProgress() {
       }
     },
     onError: error => {
-      console.error('Update quest progress error:', error)
+      // Не логируем ошибки как критические, так как квесты могут не существовать
+      console.warn(
+        'Quest progress update failed (this is usually not critical):',
+        error
+      )
     },
   })
 }

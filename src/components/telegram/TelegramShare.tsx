@@ -106,21 +106,23 @@ export function TelegramShare({
             console.log('🏆 Added XP for sharing garden text')
             showAlert('🏆 +25 XP за шеринг сада!')
 
-            // 🎯 Обновляем прогресс daily quest для поделиться садом
+            // 🎯 Обновляем прогресс daily quest для поделиться садом (неблокирующе)
             if (userData?.user?.telegramId) {
-              try {
-                await updateQuestProgress.mutateAsync({
+              updateQuestProgress
+                .mutateAsync({
                   telegramId: userData.user.telegramId,
                   questType: 'share_garden',
                   increment: 1,
                 })
-                console.log('✅ Share garden quest updated (text)')
-              } catch (error) {
-                console.warn(
-                  '⚠️ Failed to update share_garden quest (text):',
-                  error
-                )
-              }
+                .then(() => {
+                  console.log('✅ Share garden quest updated (text)')
+                })
+                .catch(error => {
+                  console.warn(
+                    '⚠️ Failed to update share_garden quest (text):',
+                    error
+                  )
+                })
             }
           }
         } catch (error) {

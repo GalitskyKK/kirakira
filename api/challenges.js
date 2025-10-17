@@ -1364,7 +1364,16 @@ async function handleUpdateDailyProgress(req, res) {
   try {
     const { questId, telegramId, questType, increment = 1 } = req.body
 
+    console.log('🎯 UPDATE DAILY PROGRESS REQUEST:', {
+      questId,
+      telegramId,
+      questType,
+      increment,
+      body: req.body,
+    })
+
     if (!telegramId) {
+      console.error('❌ Missing telegramId in request')
       return res.status(400).json({
         success: false,
         error: 'Missing required parameter: telegramId',
@@ -1397,16 +1406,24 @@ async function handleUpdateDailyProgress(req, res) {
       quest = questData
     } else if (questType) {
       // Обновляем все активные квесты данного типа
+      console.log(
+        `🔍 Searching for active quests of type: ${questType} for user: ${telegramId}`
+      )
+
       const { data: quests, error: fetchError } = await supabase
         .from('daily_quests')
         .select('*')
         .eq('telegram_id', parseInt(telegramId))
         .eq('quest_type', questType)
         .eq('status', 'active')
-        .lt('expires_at', new Date().toISOString())
+        .gt('expires_at', new Date().toISOString()) // Only active quests that haven't expired yet
+
+      console.log(
+        `📊 Found ${quests?.length || 0} active quests of type ${questType}`
+      )
 
       if (fetchError) {
-        console.error('Fetch quests error:', fetchError)
+        console.error('❌ Fetch quests error:', fetchError)
         return res.status(500).json({
           success: false,
           error: 'Failed to fetch quests',

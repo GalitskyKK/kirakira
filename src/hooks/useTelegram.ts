@@ -203,17 +203,19 @@ export function useTelegram() {
                 showAlert('🏆 +25 XP за шеринг сада!')
               }
 
-              // 🎯 Обновляем прогресс daily quest для поделиться садом
-              try {
-                await updateQuestProgress.mutateAsync({
+              // 🎯 Обновляем прогресс daily quest для поделиться садом (неблокирующе)
+              updateQuestProgress
+                .mutateAsync({
                   telegramId: user.telegramId,
                   questType: 'share_garden',
                   increment: 1,
                 })
-                console.log('✅ Share garden quest updated')
-              } catch (error) {
-                console.warn('⚠️ Failed to update share_garden quest:', error)
-              }
+                .then(() => {
+                  console.log('✅ Share garden quest updated')
+                })
+                .catch(error => {
+                  console.warn('⚠️ Failed to update share_garden quest:', error)
+                })
             }
           } catch (error) {
             console.warn('⚠️ Failed to add XP for garden share:', error)
