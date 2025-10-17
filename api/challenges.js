@@ -1430,8 +1430,28 @@ async function handleUpdateDailyProgress(req, res) {
         })
       }
 
+      // Если квестов не найдено, это не ошибка - просто нет активных квестов этого типа
+      if (!quests || quests.length === 0) {
+        console.log(
+          `ℹ️ No active quests of type ${questType} found for user ${telegramId}`
+        )
+        return res.status(200).json({
+          success: true,
+          data: {
+            quest: null,
+            isCompleted: false,
+            isNewlyCompleted: false,
+            message: `No active quests of type ${questType} found`,
+          },
+        })
+      }
+
       // Обновляем каждый найденный квест
       for (const questItem of quests) {
+        console.log(
+          `🔄 Updating quest ${questItem.id} (${questItem.quest_type})`
+        )
+
         const { data: questData, error: updateError } = await supabase.rpc(
           'update_daily_quest_progress',
           {
@@ -1443,6 +1463,54 @@ async function handleUpdateDailyProgress(req, res) {
 
         if (updateError) {
           console.warn(`Failed to update quest ${questItem.id}:`, updateError)
+          console.warn(`Quest details:`, {
+            id: questItem.id,
+            type: questItem.quest_type,
+            status: questItem.status,
+            expires_at: questItem.expires_at,
+            current_progress: questItem.current_progress,
+          })
+
+          // Если функция не существует, попробуем обновить напрямую
+          if (
+            updateError.code === '42883' ||
+            updateError.message?.includes('function') ||
+            updateError.message?.includes('does not exist')
+          ) {
+            console.log(
+              `🔄 Function not found, trying direct update for quest ${questItem.id}`
+            )
+
+            const newProgress = Math.min(
+              questItem.current_progress + parseInt(increment),
+              questItem.target_value
+            )
+            const isCompleted = newProgress >= questItem.target_value
+
+            const { data: directUpdate, error: directError } = await supabase
+              .from('daily_quests')
+              .update({
+                current_progress: newProgress,
+                status: isCompleted ? 'completed' : 'active',
+                completed_at: isCompleted ? new Date().toISOString() : null,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', questItem.id)
+              .select()
+              .single()
+
+            if (directError) {
+              console.error(
+                `Direct update failed for quest ${questItem.id}:`,
+                directError
+              )
+            } else {
+              console.log(
+                `✅ Direct update successful for quest ${questItem.id}`
+              )
+              quest = directUpdate
+            }
+          }
         } else {
           quest = questData // Возвращаем последний обновленный квест
         }
@@ -1455,9 +1523,16 @@ async function handleUpdateDailyProgress(req, res) {
     }
 
     if (!quest) {
-      return res.status(404).json({
-        success: false,
-        error: 'Задание не найдено или неактивно',
+      console.log(`ℹ️ No quest was successfully updated for user ${telegramId}`)
+      return res.status(200).json({
+        success: true,
+        data: {
+          quest: null,
+          isCompleted: false,
+          isNewlyCompleted: false,
+          message:
+            'No quests were updated (may not exist or already completed)',
+        },
       })
     }
 
