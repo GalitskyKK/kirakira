@@ -13,6 +13,8 @@ import {
 } from '@/api'
 import type { MoodEntry } from '@/types'
 import { saveMoodHistory, loadMoodHistory } from '@/utils/storage'
+import { userKeys } from './useUserQueries'
+import { gardenKeys } from './useGardenQueries'
 
 // ============================================
 // QUERY KEYS - Константы для React Query
@@ -172,7 +174,7 @@ export function useAddMoodEntry() {
 
       return { previousSync, previousToday, optimisticEntry }
     },
-    onSuccess: (result, request, context) => {
+    onSuccess: async (result, request, context) => {
       // Заменяем оптимистичную запись на реальную с сервера
       if (result && context) {
         queryClient.setQueryData(
@@ -205,13 +207,35 @@ export function useAddMoodEntry() {
         saveMoodHistory(updatedHistory)
       }
 
-      // Инвалидируем связанные queries
-      queryClient.invalidateQueries({
-        queryKey: moodKeys.sync(request.telegramUserId),
-      })
-      queryClient.invalidateQueries({
-        queryKey: moodKeys.history(request.telegramUserId),
-      })
+      // Инвалидируем связанные queries с немедленным рефетчем
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: moodKeys.sync(request.telegramUserId),
+          refetchType: 'active',
+        }),
+        queryClient.invalidateQueries({
+          queryKey: moodKeys.history(request.telegramUserId),
+          refetchType: 'active',
+        }),
+        queryClient.invalidateQueries({
+          queryKey: moodKeys.today(request.telegramUserId),
+          refetchType: 'active',
+        }),
+        // Инвалидируем user queries для обновления стрика и статистики
+        queryClient.invalidateQueries({
+          queryKey: userKeys.sync(request.telegramUserId),
+          refetchType: 'active',
+        }),
+        queryClient.invalidateQueries({
+          queryKey: userKeys.profile(request.telegramUserId),
+          refetchType: 'active',
+        }),
+        // Инвалидируем garden queries для обновления сада (может появиться новое растение)
+        queryClient.invalidateQueries({
+          queryKey: gardenKeys.sync(request.telegramUserId),
+          refetchType: 'active',
+        }),
+      ])
 
       console.log('✅ Mood entry added successfully')
     },
