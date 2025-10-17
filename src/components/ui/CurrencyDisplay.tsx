@@ -14,6 +14,7 @@ interface CurrencyDisplayProps {
   readonly size?: 'sm' | 'md' | 'lg'
   readonly variant?: 'compact' | 'full'
   readonly onClick?: () => void
+  readonly showBorder?: boolean // Показывать ли рамку (по умолчанию true)
 }
 
 /**
@@ -25,6 +26,7 @@ export function CurrencyDisplay({
   size = 'md',
   variant = 'compact',
   onClick,
+  showBorder = true,
 }: CurrencyDisplayProps): JSX.Element {
   const { userCurrency, isLoading } = useCurrencyStore()
 
@@ -70,15 +72,20 @@ export function CurrencyDisplay({
   return (
     <Container
       onClick={onClick}
-      className={`flex items-center rounded-lg bg-gradient-to-r from-green-500/10 to-purple-500/10 px-3 py-1.5 transition-colors ${sizeClasses[size]} ${
-        onClick
+      className={`flex items-center ${sizeClasses[size]} ${
+        showBorder
+          ? 'rounded-lg bg-gradient-to-r from-green-500/10 to-purple-500/10 px-3 py-1.5 transition-colors'
+          : ''
+      } ${
+        onClick && showBorder
           ? 'cursor-pointer hover:from-green-500/20 hover:to-purple-500/20'
           : ''
       }`}
-      {...(onClick && {
-        whileHover: { scale: 1.05 },
-        whileTap: { scale: 0.95 },
-      })}
+      {...(onClick &&
+        showBorder && {
+          whileHover: { scale: 1.05 },
+          whileTap: { scale: 0.95 },
+        })}
     >
       {/* Ростки */}
       <motion.div

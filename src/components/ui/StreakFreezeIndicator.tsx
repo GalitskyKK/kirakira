@@ -10,6 +10,7 @@ interface StreakFreezeIndicatorProps {
   readonly auto: number // Авто-заморозки
   readonly max: number // Максимальное накопление
   readonly onClick?: () => void
+  readonly showBorder?: boolean // Показывать ли рамку (по умолчанию true)
 }
 
 export function StreakFreezeIndicator({
@@ -17,17 +18,12 @@ export function StreakFreezeIndicator({
   auto,
   max,
   onClick,
+  showBorder = true,
 }: StreakFreezeIndicatorProps) {
   const isNearMax = manual >= max - 1
 
-  return (
-    <motion.button
-      onClick={onClick}
-      className="flex items-center gap-1.5 rounded-lg bg-blue-500/10 px-3 py-1.5 transition-colors hover:bg-blue-500/20"
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      title={`Заморозки стрика:\n• Обычные: ${manual}/${max}\n• Авто: ${auto} (срабатывают автоматически)`}
-    >
+  const content = (
+    <>
       {/* Обычные заморозки */}
       <div className="flex items-center gap-1">
         <span className="text-lg">❄️</span>
@@ -60,6 +56,29 @@ export function StreakFreezeIndicator({
           transition={{ duration: 2, repeat: Infinity }}
         />
       )}
-    </motion.button>
+    </>
+  )
+
+  if (showBorder) {
+    return (
+      <motion.button
+        onClick={onClick}
+        className="flex items-center gap-1.5 rounded-lg bg-blue-500/10 px-3 py-1.5 transition-colors hover:bg-blue-500/20"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        title={`Заморозки стрика:\n• Обычные: ${manual}/${max}\n• Авто: ${auto} (срабатывают автоматически)`}
+      >
+        {content}
+      </motion.button>
+    )
+  }
+
+  return (
+    <div
+      className="flex items-center gap-1.5"
+      title={`Заморозки стрика:\n• Обычные: ${manual}/${max}\n• Авто: ${auto} (срабатывают автоматически)`}
+    >
+      {content}
+    </div>
   )
 }
