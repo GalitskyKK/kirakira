@@ -4,11 +4,12 @@
  */
 
 import { useEffect, useCallback } from 'react'
-import { useGardenStore } from '@/stores'
-import { useMoodStore } from '@/stores'
 import { useChallengeStore } from '@/stores/challengeStore'
 import { useUserStore } from '@/stores'
-import type { ChallengeMetric } from '@/types/challenges'
+import type { ChallengeMetric, GardenElement, MoodEntry } from '@/types'
+import { useGardenSync, useMoodSync } from '@/hooks/queries'
+import { useUserSync } from '@/hooks/index.v2'
+import { useTelegramId } from '@/hooks/useTelegramId'
 
 interface ChallengeProgressUpdate {
   readonly challengeId: string
@@ -17,8 +18,18 @@ interface ChallengeProgressUpdate {
 }
 
 export function useChallengeIntegration() {
-  const { currentGarden } = useGardenStore()
-  const { moodHistory } = useMoodStore()
+  const telegramId = useTelegramId()
+  const { data: userData } = useUserSync(telegramId, !!telegramId)
+  const userId = userData?.user?.id
+
+  // Используем v2 хуки для получения актуальных данных
+  const { data: gardenData } = useGardenSync(telegramId, !!telegramId)
+  const { data: moodData } = useMoodSync(
+    telegramId,
+    userId,
+    !!telegramId && !!userId
+  )
+
   const { userParticipations, updateProgress, loadChallenges } =
     useChallengeStore()
   const { currentUser } = useUserStore()
@@ -26,77 +37,40 @@ export function useChallengeIntegration() {
   // Функция для подсчета метрик с момента присоединения к челленджу
   const calculateChallengeMetrics = useCallback(
     (challengeStartDate: Date): Record<ChallengeMetric, number> => {
-      console.log(
-        `🔢 Calculating metrics from date: ${challengeStartDate.toISOString()}`
-      )
-      console.log(`🔢 Date type: ${typeof challengeStartDate}`)
-      console.log(`🔢 Is Date instance: ${challengeStartDate instanceof Date}`)
-
       const startTime = challengeStartDate.getTime()
-      console.log(`⏰ Start time: ${startTime}`)
-
-      // Проверяем что время корректное (не NaN и не слишком большое)
-      if (isNaN(startTime)) {
-        console.error(`❌ Invalid start time: ${startTime}`)
-      }
-      if (startTime > Date.now() + 365 * 24 * 60 * 60 * 1000) {
-        // больше чем год в будущем
-        console.error(`❌ Start time too far in future: ${startTime}`)
-        console.error(`❌ Current time: ${Date.now()}`)
-      }
 
       // Элементы сада, добавленные после начала челленджа
       const gardenElementsAfterStart =
-        currentGarden?.elements.filter(
-          el => el.unlockDate.getTime() >= startTime
+        gardenData?.garden?.elements.filter(
+          (el: GardenElement) => new Date(el.unlockDate).getTime() >= startTime
         ) || []
 
       // Записи настроения после начала челленджа
-      const moodEntriesAfterStart = moodHistory.filter(
-        mood => mood.date.getTime() >= startTime
-      )
-
-      console.log(
-        `🌱 Garden elements total: ${currentGarden?.elements.length || 0}`
-      )
-      console.log(
-        `🌱 Garden elements after start: ${gardenElementsAfterStart.length}`
-      )
-      console.log(`😊 Mood entries total: ${moodHistory.length}`)
-      console.log(
-        `😊 Mood entries after start: ${moodEntriesAfterStart.length}`
-      )
+      const moodEntriesAfterStart =
+        moodData?.moodHistory.filter(
+          (mood: MoodEntry) => new Date(mood.date).getTime() >= startTime
+        ) || []
 
       const metrics = {
-        // Элементы сада, добавленные после начала челленджа
         garden_elements_count: gardenElementsAfterStart.length,
-
-        // Редкие элементы, добавленные после начала челленджа
-        rare_elements_count: gardenElementsAfterStart.filter(el =>
-          ['rare', 'epic', 'legendary'].includes(el.rarity)
+        rare_elements_count: gardenElementsAfterStart.filter(
+          (el: GardenElement) =>
+            ['rare', 'epic', 'legendary'].includes(el.rarity)
         ).length,
-
-        // Разнообразие сада (уникальные типы после начала челленджа)
-        garden_diversity: new Set(gardenElementsAfterStart.map(el => el.type))
-          .size,
-
-        // Записи настроения после начала челленджа
+        garden_diversity: new Set(
+          gardenElementsAfterStart.map((el: GardenElement) => el.type)
+        ).size,
         mood_entries_count: moodEntriesAfterStart.length,
-
-        // Стрик дней (считаем с момента присоединения)
         streak_days: Math.max(
           0,
           Math.floor((Date.now() - startTime) / (1000 * 60 * 60 * 24))
         ),
-
-        // Взаимодействия с друзьями (пока заглушка)
         friend_interactions: 0,
       }
 
-      console.log(`📊 Calculated metrics:`, metrics)
       return metrics
     },
-    [currentGarden, moodHistory]
+    [gardenData, moodData]
   )
 
   // Функция для определения какие челленджи нужно обновить
@@ -262,19 +236,23 @@ export function useChallengeIntegration() {
 
   // Hook для отслеживания изменений в саду
   useEffect(() => {
-    if (!currentGarden || !currentUser) return
+    if (!gardenData?.garden || !currentUser) return
 
     // Обновляем прогресс челленджей при изменении сада
     void updateChallengeProgress()
-  }, [currentGarden?.elements.length, updateChallengeProgress, currentUser])
+  }, [
+    gardenData?.garden?.elements.length,
+    updateChallengeProgress,
+    currentUser,
+  ])
 
   // Hook для отслеживания изменений в настроениях
   useEffect(() => {
-    if (!currentUser) return
+    if (!moodData?.moodHistory || !currentUser) return
 
     // Обновляем прогресс челленджей при изменении настроений
     void updateChallengeProgress()
-  }, [moodHistory.length, updateChallengeProgress, currentUser])
+  }, [moodData?.moodHistory?.length, updateChallengeProgress, currentUser])
 
   // Hook для отслеживания изменений в стрике
   useEffect(() => {
