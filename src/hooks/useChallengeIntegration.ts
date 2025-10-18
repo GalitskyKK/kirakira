@@ -4,13 +4,13 @@
  */
 
 import { useEffect, useCallback } from 'react'
-import { useChallengeStore } from '@/stores/challengeStore'
 import { useUserStore } from '@/stores'
 import type { ChallengeMetric, GardenElement, MoodEntry } from '@/types'
 import {
   useGardenSync,
   useMoodSync,
   useUpdateChallengeProgress,
+  useChallengeList,
 } from '@/hooks/queries'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
@@ -34,7 +34,11 @@ export function useChallengeIntegration() {
     !!telegramId && !!userId
   )
 
-  const { userParticipations, loadChallenges } = useChallengeStore()
+  // ✨ ИЗМЕНЕНИЕ: Загружаем челленджи через React Query вместо Zustand
+  const { data: challengesData } = useChallengeList(telegramId, !!telegramId)
+  const challenges = challengesData?.challenges ?? []
+  const userParticipations = challengesData?.userParticipations ?? []
+
   const { currentUser } = useUserStore()
   const updateProgressMutation = useUpdateChallengeProgress()
 
@@ -87,18 +91,37 @@ export function useChallengeIntegration() {
 
   // Основная функция обновления прогресса
   const updateChallengeProgress = useCallback(async () => {
-    if (!currentUser?.telegramId) return
+    if (!currentUser?.telegramId) {
+      console.warn('⚠️ updateChallengeProgress: No current user')
+      return
+    }
+
+    console.log(
+      '🔄 updateChallengeProgress called for user:',
+      currentUser.telegramId
+    )
+    console.log('📋 Total participations:', userParticipations.length)
 
     const activeParticipations = getActiveParticipations()
+    console.log('✅ Active participations:', activeParticipations.length)
+
+    if (activeParticipations.length === 0) {
+      console.log('ℹ️ No active participations found')
+      return false
+    }
+
     const updates: ChallengeProgressUpdate[] = []
 
     // Проходим по всем активным участиям
     for (const participation of activeParticipations) {
-      // Находим челлендж в store
-      const challenge = useChallengeStore
-        .getState()
-        .challenges.find(c => c.id === participation.challengeId)
-      if (!challenge) continue
+      // Находим челлендж из React Query данных
+      const challenge = challenges.find(c => c.id === participation.challengeId)
+      if (!challenge) {
+        console.warn(
+          `⚠️ Challenge ${participation.challengeId} not found in loaded challenges`
+        )
+        continue
+      }
 
       // Используем дату присоединения как точку отсчета
       const joinedTime = participation.joinedAt.getTime()
@@ -179,6 +202,7 @@ export function useChallengeIntegration() {
     calculateChallengeMetrics,
     getActiveParticipations,
     updateProgressMutation,
+    challenges,
   ])
 
   // Функция для принудительного обновления всех челленджей
@@ -188,10 +212,11 @@ export function useChallengeIntegration() {
     const activeParticipations = getActiveParticipations()
 
     for (const participation of activeParticipations) {
-      const challenge = useChallengeStore
-        .getState()
-        .challenges.find(c => c.id === participation.challengeId)
-      if (!challenge) continue
+      const challenge = challenges.find(c => c.id === participation.challengeId)
+      if (!challenge) {
+        console.warn(`⚠️ Challenge ${participation.challengeId} not found`)
+        continue
+      }
 
       // Используем дату присоединения как точку отсчета
       const startDate = new Date(
@@ -236,6 +261,7 @@ export function useChallengeIntegration() {
     calculateChallengeMetrics,
     getActiveParticipations,
     updateProgressMutation,
+    challenges,
   ])
 
   // Hook для отслеживания изменений в саду
@@ -262,12 +288,8 @@ export function useChallengeIntegration() {
     void updateChallengeProgress()
   }, [currentUser?.stats.currentStreak, updateChallengeProgress])
 
-  // Инициализация - загружаем челленджи если их нет
-  useEffect(() => {
-    if (currentUser?.telegramId && userParticipations.length === 0) {
-      void loadChallenges(currentUser.telegramId)
-    }
-  }, [currentUser?.telegramId, userParticipations.length, loadChallenges])
+  // React Query автоматически загружает челленджи через useChallengeList
+  // Больше не нужна ручная загрузка через Zustand loadChallenges
 
   // Периодическое обновление (каждые 5 минут)
   useEffect(() => {
@@ -293,10 +315,11 @@ export function useChallengeIntegration() {
     console.log(`📋 Found ${activeParticipations.length} active participations`)
 
     for (const participation of activeParticipations) {
-      const challenge = useChallengeStore
-        .getState()
-        .challenges.find(c => c.id === participation.challengeId)
-      if (!challenge) continue
+      const challenge = challenges.find(c => c.id === participation.challengeId)
+      if (!challenge) {
+        console.warn(`⚠️ Challenge ${participation.challengeId} not found`)
+        continue
+      }
 
       const joinedTime = participation.joinedAt.getTime()
       const challengeStartTime = challenge.startDate.getTime()
@@ -337,6 +360,7 @@ export function useChallengeIntegration() {
     getActiveParticipations,
     calculateChallengeMetrics,
     updateProgressMutation,
+    challenges,
   ])
 
   return {
@@ -354,12 +378,22 @@ export function useChallengeGardenIntegration() {
 
   // Функция для вызова после добавления элемента в сад
   const onGardenElementAdded = useCallback(async () => {
-    if (!currentUser?.telegramId) return
+    if (!currentUser?.telegramId) {
+      console.log('⚠️ No user for challenge update')
+      return
+    }
 
-    // Небольшая задержка, чтобы изменения успели сохраниться
-    setTimeout(async () => {
+    console.log(
+      '🌱 Starting challenge progress update after garden element added...'
+    )
+
+    try {
+      // React Query уже инвалидирует кеши, задержка не нужна
       await updateChallengeProgress()
-    }, 1000)
+      console.log('✅ Challenge progress updated successfully')
+    } catch (error) {
+      console.error('❌ Failed to update challenge progress:', error)
+    }
   }, [currentUser?.telegramId, updateChallengeProgress])
 
   return {
@@ -373,12 +407,20 @@ export function useChallengeMoodIntegration() {
 
   // Функция для вызова после добавления записи настроения
   const onMoodEntryAdded = useCallback(async () => {
-    if (!currentUser?.telegramId) return
+    if (!currentUser?.telegramId) {
+      console.log('⚠️ No user for challenge update')
+      return
+    }
 
-    // Небольшая задержка, чтобы изменения успели сохраниться
-    setTimeout(async () => {
+    console.log('🏆 Starting challenge progress update after mood entry...')
+
+    try {
+      // React Query уже инвалидирует кеши, задержка не нужна
       await updateChallengeProgress()
-    }, 1000)
+      console.log('✅ Challenge progress updated successfully')
+    } catch (error) {
+      console.error('❌ Failed to update challenge progress:', error)
+    }
   }, [currentUser?.telegramId, updateChallengeProgress])
 
   return {
