@@ -1442,7 +1442,6 @@ async function handleUpdateDailyProgress(req, res) {
               current_progress: newProgress,
               status: isCompleted ? 'completed' : 'active',
               completed_at: isCompleted ? new Date().toISOString() : null,
-              updated_at: new Date().toISOString(),
             })
             .eq('id', questId)
             .select()
@@ -1570,7 +1569,6 @@ async function handleUpdateDailyProgress(req, res) {
                 current_progress: newProgress,
                 status: isCompleted ? 'completed' : 'active',
                 completed_at: isCompleted ? new Date().toISOString() : null,
-                updated_at: new Date().toISOString(),
               })
               .eq('id', questItem.id)
               .select()
