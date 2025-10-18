@@ -118,9 +118,14 @@ export function useClaimDailyQuest() {
         queryKey: dailyQuestKeys.stats(variables.telegramId),
       })
 
-      // Инвалидируем кеш валюты
+      // Инвалидируем кеш валюты (синхронизация баланса)
       queryClient.invalidateQueries({
         queryKey: ['currency', variables.telegramId],
+      })
+
+      // Инвалидируем кеш профиля (обновление опыта и уровня)
+      queryClient.invalidateQueries({
+        queryKey: ['user', variables.telegramId],
       })
 
       // Обновляем конкретное задание в кеше
@@ -128,6 +133,8 @@ export function useClaimDailyQuest() {
         dailyQuestKeys.quest(variables.questId),
         data.quest
       )
+
+      console.log('✅ Quest reward claimed and all related caches invalidated')
     },
     onError: error => {
       console.error('Claim daily quest error:', error)

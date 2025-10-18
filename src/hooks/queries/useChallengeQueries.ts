@@ -176,7 +176,19 @@ export function useUpdateChallengeProgress() {
         queryKey: challengeKeys.list(request.telegramId),
       })
 
-      console.log(`✅ Updated challenge progress: ${request.value}`)
+      // Инвалидируем кеш валюты (челленджи могут давать награды)
+      queryClient.invalidateQueries({
+        queryKey: ['currency', request.telegramId],
+      })
+
+      // Инвалидируем кеш профиля (обновление опыта и уровня)
+      queryClient.invalidateQueries({
+        queryKey: ['user', request.telegramId],
+      })
+
+      console.log(
+        `✅ Updated challenge progress: ${request.value} (all related caches invalidated)`
+      )
     },
     onError: (error, request, context) => {
       // Откатываем оптимистичное обновление при ошибке

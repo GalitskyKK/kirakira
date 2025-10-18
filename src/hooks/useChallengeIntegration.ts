@@ -7,7 +7,11 @@ import { useEffect, useCallback } from 'react'
 import { useChallengeStore } from '@/stores/challengeStore'
 import { useUserStore } from '@/stores'
 import type { ChallengeMetric, GardenElement, MoodEntry } from '@/types'
-import { useGardenSync, useMoodSync } from '@/hooks/queries'
+import {
+  useGardenSync,
+  useMoodSync,
+  useUpdateChallengeProgress,
+} from '@/hooks/queries'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 
@@ -30,9 +34,9 @@ export function useChallengeIntegration() {
     !!telegramId && !!userId
   )
 
-  const { userParticipations, updateProgress, loadChallenges } =
-    useChallengeStore()
+  const { userParticipations, loadChallenges } = useChallengeStore()
   const { currentUser } = useUserStore()
+  const updateProgressMutation = useUpdateChallengeProgress()
 
   // Функция для подсчета метрик с момента присоединения к челленджу
   const calculateChallengeMetrics = useCallback(
@@ -151,15 +155,15 @@ export function useChallengeIntegration() {
       }
     }
 
-    // Выполняем обновления
+    // Выполняем обновления через React Query для автоматической инвалидации кеша
     for (const update of updates) {
       try {
-        await updateProgress(
-          update.challengeId,
-          currentUser.telegramId,
-          update.metric,
-          update.newValue
-        )
+        await updateProgressMutation.mutateAsync({
+          challengeId: update.challengeId,
+          telegramId: currentUser.telegramId,
+          metric: update.metric,
+          value: update.newValue,
+        })
 
         console.log(
           `✅ Updated challenge progress: ${update.challengeId} - ${update.metric}: ${update.newValue}`
@@ -174,7 +178,7 @@ export function useChallengeIntegration() {
     currentUser,
     calculateChallengeMetrics,
     getActiveParticipations,
-    updateProgress,
+    updateProgressMutation,
   ])
 
   // Функция для принудительного обновления всех челленджей
@@ -208,12 +212,12 @@ export function useChallengeIntegration() {
       // Не уменьшаем прогресс при принудительном обновлении
       if (cappedValue >= participation.currentProgress) {
         try {
-          await updateProgress(
-            participation.challengeId,
-            currentUser.telegramId,
+          await updateProgressMutation.mutateAsync({
+            challengeId: participation.challengeId,
+            telegramId: currentUser.telegramId,
             metric,
-            cappedValue
-          )
+            value: cappedValue,
+          })
 
           console.log(
             `🔄 Force updated challenge: ${participation.challengeId} - ${metric}: ${cappedValue}/${targetValue}`
@@ -231,7 +235,7 @@ export function useChallengeIntegration() {
     currentUser,
     calculateChallengeMetrics,
     getActiveParticipations,
-    updateProgress,
+    updateProgressMutation,
   ])
 
   // Hook для отслеживания изменений в саду
@@ -317,12 +321,12 @@ export function useChallengeIntegration() {
       )
 
       try {
-        await updateProgress(
-          participation.challengeId,
-          currentUser.telegramId,
+        await updateProgressMutation.mutateAsync({
+          challengeId: participation.challengeId,
+          telegramId: currentUser.telegramId,
           metric,
-          cappedValue
-        )
+          value: cappedValue,
+        })
         console.log(`✅ Recalculated ${challenge.title}: ${cappedValue}`)
       } catch (error) {
         console.error(`❌ Failed to recalculate ${challenge.title}:`, error)
@@ -332,7 +336,7 @@ export function useChallengeIntegration() {
     currentUser,
     getActiveParticipations,
     calculateChallengeMetrics,
-    updateProgress,
+    updateProgressMutation,
   ])
 
   return {
