@@ -3,7 +3,7 @@
  * Автоматически обновляет прогресс челленджей при изменении данных
  */
 
-import { useEffect, useCallback } from 'react'
+import { useCallback } from 'react'
 import type { ChallengeMetric, GardenElement, MoodEntry } from '@/types'
 import {
   useGardenSync,
@@ -95,31 +95,12 @@ export function useChallengeIntegration() {
   // Основная функция обновления прогресса
   const updateChallengeProgress = useCallback(async () => {
     if (!currentUser?.telegramId) {
-      console.warn('⚠️ updateChallengeProgress: No current user')
       return
     }
 
-    console.log('═══════════════════════════════════════════')
-    console.log('🔄 updateChallengeProgress called')
-    console.log('👤 User ID:', currentUser.telegramId)
-    console.log('📋 Total participations:', userParticipations.length)
-    console.log(
-      '📋 Participations:',
-      userParticipations.map(p => ({
-        id: p.id.substring(0, 8),
-        challengeId: p.challengeId.substring(0, 8),
-        status: p.status,
-        currentProgress: p.currentProgress,
-      }))
-    )
-    console.log('🎯 Total challenges loaded:', challenges.length)
-    console.log('═══════════════════════════════════════════')
-
     const activeParticipations = getActiveParticipations()
-    console.log('✅ Active participations:', activeParticipations.length)
 
     if (activeParticipations.length === 0) {
-      console.log('ℹ️ No active participations found')
       return false
     }
 
@@ -127,33 +108,11 @@ export function useChallengeIntegration() {
 
     // Проходим по всем активным участиям
     for (const participation of activeParticipations) {
-      console.log(`\n🔍 Processing participation:`, {
-        id: participation.id.substring(0, 8),
-        challengeId: participation.challengeId,
-        status: participation.status,
-        currentProgress: participation.currentProgress,
-      })
-
       // Находим челлендж из React Query данных
       const challenge = challenges.find(c => c.id === participation.challengeId)
       if (!challenge) {
-        console.warn(
-          `⚠️ Challenge ${participation.challengeId} not found in loaded challenges`
-        )
-        console.warn(
-          'Available challenge IDs:',
-          challenges.map(c => c.id)
-        )
         continue
       }
-
-      console.log(`✅ Found challenge:`, {
-        id: challenge.id,
-        title: challenge.title,
-        status: challenge.status,
-        metric: challenge.requirements.metric,
-        targetValue: challenge.requirements.targetValue,
-      })
 
       // Используем дату присоединения как точку отсчета
       const joinedTime = participation.joinedAt.getTime()
@@ -161,31 +120,14 @@ export function useChallengeIntegration() {
       const maxTime = Math.max(joinedTime, challengeStartTime)
       const startDate = new Date(maxTime)
 
-      console.log(`\n🎯 Processing challenge: ${challenge.title}`)
-      console.log(
-        `📅 Participation joined: ${participation.joinedAt.toISOString()}`
-      )
-      console.log(`🕐 Participation joined time: ${joinedTime}`)
-      console.log(`📅 Challenge start: ${challenge.startDate.toISOString()}`)
-      console.log(`🕐 Challenge start time: ${challengeStartTime}`)
-      console.log(`🕐 Max time: ${maxTime}`)
-      console.log(`📅 Using start date: ${startDate.toISOString()}`)
-      console.log(`🕐 Using start time: ${startDate.getTime()}`)
-      console.log(`📊 Current DB progress: ${participation.currentProgress}`)
-
       // Считаем метрики с момента присоединения/начала челленджа
       const challengeMetrics = calculateChallengeMetrics(startDate)
       const metric = challenge.requirements.metric
       const currentValue = challengeMetrics[metric]
       const targetValue = challenge.requirements.targetValue
 
-      console.log(`📈 Metric: ${metric}`)
-      console.log(`🔢 Calculated value: ${currentValue}`)
-      console.log(`🎯 Target value: ${targetValue}`)
-
       // Ограничиваем прогресс целевым значением
       const cappedValue = Math.min(currentValue, targetValue)
-      console.log(`🧢 Capped value: ${cappedValue}`)
 
       // Проверяем, изменилось ли значение и не уменьшился ли прогресс
       if (
@@ -197,16 +139,6 @@ export function useChallengeIntegration() {
           metric,
           newValue: cappedValue,
         })
-
-        console.log(
-          `📊 Challenge ${challenge.title}: ${participation.currentProgress} → ${cappedValue}/${targetValue} (${Math.round(
-            (cappedValue / targetValue) * 100
-          )}%)`
-        )
-      } else if (cappedValue < participation.currentProgress) {
-        console.log(
-          `⚠️ Challenge ${challenge.title}: Skipping progress decrease ${participation.currentProgress} → ${cappedValue}`
-        )
       }
     }
 
@@ -219,10 +151,6 @@ export function useChallengeIntegration() {
           metric: update.metric,
           value: update.newValue,
         })
-
-        console.log(
-          `✅ Updated challenge progress: ${update.challengeId} - ${update.metric}: ${update.newValue}`
-        )
       } catch (error) {
         console.error(`❌ Failed to update challenge progress:`, error)
       }
@@ -296,46 +224,25 @@ export function useChallengeIntegration() {
     challenges,
   ])
 
-  // Hook для отслеживания изменений в саду
-  useEffect(() => {
-    if (!gardenData?.elements || !currentUser) return
-
-    // Обновляем прогресс челленджей при изменении сада
-    void updateChallengeProgress()
-  }, [gardenData?.elements.length, updateChallengeProgress, currentUser])
-
-  // Hook для отслеживания изменений в настроениях
-  useEffect(() => {
-    if (!moodData?.moods || !currentUser) return
-
-    // Обновляем прогресс челленджей при изменении настроений
-    void updateChallengeProgress()
-  }, [moodData?.moods.length, updateChallengeProgress, currentUser])
-
-  // Hook для отслеживания изменений в стрике
-  useEffect(() => {
-    if (!currentUser) return
-
-    // Обновляем прогресс челленджей при изменении стрика
-    void updateChallengeProgress()
-  }, [currentUser?.stats.currentStreak, updateChallengeProgress])
+  // ❌ УДАЛЕНЫ: useEffect для автоматического обновления при изменении данных
+  // Это вызывало бесконечный цикл:
+  // 1. updateChallengeProgress() → mutate
+  // 2. mutate → invalidate cache
+  // 3. cache invalidate → refetch
+  // 4. refetch → новые данные → useEffect срабатывает снова
+  // 5. GOTO 1
+  //
+  // ✅ Теперь прогресс обновляется ТОЛЬКО вручную через:
+  // - onMoodEntryAdded() (после добавления настроения)
+  // - onGardenElementAdded() (после добавления элемента)
+  // - forceUpdateAllChallenges() (ручной пересчёт)
 
   // React Query автоматически загружает челленджи через useChallengeList
   // Больше не нужна ручная загрузка через Zustand loadChallenges
 
-  // Периодическое обновление (каждые 5 минут)
-  useEffect(() => {
-    if (!currentUser?.telegramId) return
-
-    const interval = setInterval(
-      () => {
-        void updateChallengeProgress()
-      },
-      5 * 60 * 1000
-    ) // 5 минут
-
-    return () => clearInterval(interval)
-  }, [currentUser?.telegramId, updateChallengeProgress])
+  // ❌ УДАЛЕНО: Периодическое обновление каждые 5 минут
+  // React Query имеет встроенный механизм refetch, не нужно дублировать
+  // Если нужно периодическое обновление, настройте refetchInterval в useChallengeList
 
   // Добавляем функцию для ручного пересчета всех челленджей
   const recalculateAllChallenges = useCallback(async () => {
@@ -409,17 +316,10 @@ export function useChallengeGardenIntegration() {
 
   // Функция для вызова после добавления элемента в сад
   const onGardenElementAdded = useCallback(async () => {
-    console.log(
-      '🌱 Starting challenge progress update after garden element added...'
-    )
-
     try {
-      // React Query уже инвалидирует кеши, задержка не нужна
-      // Проверка currentUser внутри updateChallengeProgress
       await updateChallengeProgress()
-      console.log('✅ Challenge progress updated successfully')
     } catch (error) {
-      console.error('❌ Failed to update challenge progress:', error)
+      // Ошибки не критичны, т.к. прогресс можно обновить позже
     }
   }, [updateChallengeProgress])
 
@@ -433,15 +333,10 @@ export function useChallengeMoodIntegration() {
 
   // Функция для вызова после добавления записи настроения
   const onMoodEntryAdded = useCallback(async () => {
-    console.log('🏆 Starting challenge progress update after mood entry...')
-
     try {
-      // React Query уже инвалидирует кеши, задержка не нужна
-      // Проверка currentUser внутри updateChallengeProgress
       await updateChallengeProgress()
-      console.log('✅ Challenge progress updated successfully')
     } catch (error) {
-      console.error('❌ Failed to update challenge progress:', error)
+      // Ошибки не критичны, т.к. прогресс можно обновить позже
     }
   }, [updateChallengeProgress])
 
