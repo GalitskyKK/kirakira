@@ -97,11 +97,21 @@ export function useChallengeIntegration() {
       return
     }
 
-    console.log(
-      '🔄 updateChallengeProgress called for user:',
-      currentUser.telegramId
-    )
+    console.log('═══════════════════════════════════════════')
+    console.log('🔄 updateChallengeProgress called')
+    console.log('👤 User ID:', currentUser.telegramId)
     console.log('📋 Total participations:', userParticipations.length)
+    console.log(
+      '📋 Participations:',
+      userParticipations.map(p => ({
+        id: p.id.substring(0, 8),
+        challengeId: p.challengeId.substring(0, 8),
+        status: p.status,
+        currentProgress: p.currentProgress,
+      }))
+    )
+    console.log('🎯 Total challenges loaded:', challenges.length)
+    console.log('═══════════════════════════════════════════')
 
     const activeParticipations = getActiveParticipations()
     console.log('✅ Active participations:', activeParticipations.length)
