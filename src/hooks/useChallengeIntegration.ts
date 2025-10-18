@@ -39,15 +39,15 @@ export function useChallengeIntegration() {
     (challengeStartDate: Date): Record<ChallengeMetric, number> => {
       const startTime = challengeStartDate.getTime()
 
-      // Элементы сада, добавленные после начала челленджа
+      // Элементы сада, добавленные после начала челлендж
       const gardenElementsAfterStart =
-        gardenData?.garden?.elements.filter(
+        gardenData?.elements.filter(
           (el: GardenElement) => new Date(el.unlockDate).getTime() >= startTime
         ) || []
 
       // Записи настроения после начала челленджа
       const moodEntriesAfterStart =
-        moodData?.moodHistory.filter(
+        moodData?.moods.filter(
           (mood: MoodEntry) => new Date(mood.date).getTime() >= startTime
         ) || []
 
@@ -236,23 +236,19 @@ export function useChallengeIntegration() {
 
   // Hook для отслеживания изменений в саду
   useEffect(() => {
-    if (!gardenData?.garden || !currentUser) return
+    if (!gardenData?.elements || !currentUser) return
 
     // Обновляем прогресс челленджей при изменении сада
     void updateChallengeProgress()
-  }, [
-    gardenData?.garden?.elements.length,
-    updateChallengeProgress,
-    currentUser,
-  ])
+  }, [gardenData?.elements.length, updateChallengeProgress, currentUser])
 
   // Hook для отслеживания изменений в настроениях
   useEffect(() => {
-    if (!moodData?.moodHistory || !currentUser) return
+    if (!moodData?.moods || !currentUser) return
 
     // Обновляем прогресс челленджей при изменении настроений
     void updateChallengeProgress()
-  }, [moodData?.moodHistory?.length, updateChallengeProgress, currentUser])
+  }, [moodData?.moods.length, updateChallengeProgress, currentUser])
 
   // Hook для отслеживания изменений в стрике
   useEffect(() => {
