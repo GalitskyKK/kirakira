@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt', // Показываем уведомление при наличии обновления
+      registerType: 'prompt', // ✅ Показываем кнопку обновления + автообновление при закрытии
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       devOptions: {
         enabled: true, // Для тестирования в разработке
@@ -48,8 +48,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,avif}'],
         // Очистка старых кэшей при обновлении
         cleanupOutdatedCaches: true,
-        // НЕ пропускаем ожидание - даем пользователю контроль через prompt
-        skipWaiting: false,
+        // ✅ АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ: Service Worker обновляется немедленно
+        skipWaiting: true,
         clientsClaim: true,
         runtimeCaching: [
           {

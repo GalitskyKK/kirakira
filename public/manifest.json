@@ -1,6 +1,7 @@
 {
   "name": "KiraKira - Цифровой сад эмоций",
   "short_name": "KiraKira",
+  "version": "1.1.1",
   "description": "Медитативное приложение, где ваши ежедневные эмоции превращаются в красивый цифровой сад",
   "theme_color": "#22c55e",
   "background_color": "#f0fdf4",
@@ -44,7 +45,7 @@
     },
     {
       "src": "screenshot-mobile-2.png",
-      "sizes": "390x844", 
+      "sizes": "390x844",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Отслеживание настроения"
@@ -52,7 +53,7 @@
     {
       "src": "screenshot-desktop-1.png",
       "sizes": "1280x720",
-      "type": "image/png", 
+      "type": "image/png",
       "form_factor": "wide",
       "label": "Цифровой сад на рабочем столе"
     }
