@@ -48,17 +48,39 @@ export function useChallengeIntegration() {
     (challengeStartDate: Date): Record<ChallengeMetric, number> => {
       const startTime = challengeStartDate.getTime()
 
+      console.log(
+        `\n📊 Calculating metrics from:`,
+        challengeStartDate.toISOString()
+      )
+      console.log(`🗓️ Start time (ms):`, startTime)
+      console.log(
+        `📦 Garden data:`,
+        gardenData ? `${gardenData.elements.length} elements` : 'null'
+      )
+      console.log(
+        `😊 Mood data:`,
+        moodData ? `${moodData.moods.length} moods` : 'null'
+      )
+
       // Элементы сада, добавленные после начала челлендж
       const gardenElementsAfterStart =
-        gardenData?.elements.filter(
-          (el: GardenElement) => new Date(el.unlockDate).getTime() >= startTime
-        ) || []
+        gardenData?.elements.filter((el: GardenElement) => {
+          const elTime = new Date(el.unlockDate).getTime()
+          return elTime >= startTime
+        }) || []
 
       // Записи настроения после начала челленджа
       const moodEntriesAfterStart =
-        moodData?.moods.filter(
-          (mood: MoodEntry) => new Date(mood.date).getTime() >= startTime
-        ) || []
+        moodData?.moods.filter((mood: MoodEntry) => {
+          const moodTime = new Date(mood.date).getTime()
+          return moodTime >= startTime
+        }) || []
+
+      console.log(
+        `🌱 Garden elements after start:`,
+        gardenElementsAfterStart.length
+      )
+      console.log(`😊 Mood entries after start:`, moodEntriesAfterStart.length)
 
       const metrics = {
         garden_elements_count: gardenElementsAfterStart.length,
@@ -76,6 +98,8 @@ export function useChallengeIntegration() {
         ),
         friend_interactions: 0,
       }
+
+      console.log(`✅ Calculated metrics:`, metrics)
 
       return metrics
     },
@@ -125,14 +149,33 @@ export function useChallengeIntegration() {
 
     // Проходим по всем активным участиям
     for (const participation of activeParticipations) {
+      console.log(`\n🔍 Processing participation:`, {
+        id: participation.id.substring(0, 8),
+        challengeId: participation.challengeId,
+        status: participation.status,
+        currentProgress: participation.currentProgress,
+      })
+
       // Находим челлендж из React Query данных
       const challenge = challenges.find(c => c.id === participation.challengeId)
       if (!challenge) {
         console.warn(
           `⚠️ Challenge ${participation.challengeId} not found in loaded challenges`
         )
+        console.warn(
+          'Available challenge IDs:',
+          challenges.map(c => c.id)
+        )
         continue
       }
+
+      console.log(`✅ Found challenge:`, {
+        id: challenge.id,
+        title: challenge.title,
+        status: challenge.status,
+        metric: challenge.requirements.metric,
+        targetValue: challenge.requirements.targetValue,
+      })
 
       // Используем дату присоединения как точку отсчета
       const joinedTime = participation.joinedAt.getTime()
