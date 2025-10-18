@@ -20,3 +20,6 @@ export * from './challengeService'
 
 // Streak Freeze Service
 export * from './streakFreezeService'
+
+// Daily Quest Service
+export * from './dailyQuestService'

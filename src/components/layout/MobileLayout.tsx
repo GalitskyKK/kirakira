@@ -174,6 +174,23 @@ export function MobileLayout() {
               </button>
 
               <button
+                onClick={() => setActiveTab('quests')}
+                className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-gray-900 dark:text-gray-100">
+                      Ежедневные задания
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Выполняйте и получайте награды
+                    </div>
+                  </div>
+                  <div className="text-2xl">🎯</div>
+                </div>
+              </button>
+
+              <button
                 onClick={() => setActiveTab('community')}
                 className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
               >

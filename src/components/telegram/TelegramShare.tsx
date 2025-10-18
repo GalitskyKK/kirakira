@@ -4,6 +4,7 @@ import { Share2, Camera, Heart, Copy, MessageCircle } from 'lucide-react'
 import { useTelegram } from '@/hooks'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
+import { useUpdateQuestProgress } from '@/hooks/queries/useDailyQuestQueries'
 import { Button, Card } from '@/components/ui'
 import type { Garden, MoodEntry } from '@/types'
 import { authenticatedFetch } from '@/utils/apiClient'
@@ -23,6 +24,7 @@ export function TelegramShare({
     useTelegram()
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
+  const updateQuestProgress = useUpdateQuestProgress()
   const [isCapturing, setIsCapturing] = useState(false)
   const [lastSharedImage, setLastSharedImage] = useState<string | null>(null)
 
@@ -103,6 +105,25 @@ export function TelegramShare({
           if (response.ok) {
             console.log('🏆 Added XP for sharing garden text')
             showAlert('🏆 +25 XP за шеринг сада!')
+
+            // 🎯 Обновляем прогресс daily quest для поделиться садом (неблокирующе)
+            if (userData?.user?.telegramId) {
+              updateQuestProgress
+                .mutateAsync({
+                  telegramId: userData.user.telegramId,
+                  questType: 'share_garden',
+                  increment: 1,
+                })
+                .then(() => {
+                  console.log('✅ Share garden quest updated (text)')
+                })
+                .catch(error => {
+                  console.warn(
+                    '⚠️ Failed to update share_garden quest (text):',
+                    error
+                  )
+                })
+            }
           }
         } catch (error) {
           console.warn('⚠️ Failed to add XP for garden text share:', error)
@@ -111,7 +132,14 @@ export function TelegramShare({
     } catch {
       showAlert('Ошибка при отправке сообщения')
     }
-  }, [webApp, hapticFeedback, generateGardenDescription, showAlert])
+  }, [
+    webApp,
+    hapticFeedback,
+    generateGardenDescription,
+    showAlert,
+    userData?.user?.telegramId,
+    updateQuestProgress,
+  ])
 
   // Шаринг скриншота сада
   const handleShareImage = useCallback(async () => {

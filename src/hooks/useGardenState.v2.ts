@@ -13,6 +13,7 @@ import {
 } from '@/hooks/queries'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
+import { useUpdateQuestProgress } from '@/hooks/queries/useDailyQuestQueries'
 import type { MoodType, Position2D, GardenElement } from '@/types'
 import { loadGarden, saveGarden } from '@/utils/storage'
 import {
@@ -42,6 +43,7 @@ export function useGardenState() {
 
   const addElementMutation = useAddGardenElement()
   const updatePositionMutation = useUpdateElementPosition()
+  const updateQuestProgress = useUpdateQuestProgress()
 
   // Клиентское UI состояние через Zustand
   const {
@@ -255,6 +257,38 @@ export function useGardenState() {
             console.log(
               `💰 Awarded ${currencyResult.amount} sprouts for ${result.element.rarity} element`
             )
+          }
+
+          // 🎯 Обновляем прогресс daily quests
+          if (telegramId) {
+            try {
+              // Обновляем квесты связанные с садом
+              console.log('🎯 Updating garden-related daily quests...')
+
+              // Обновляем квесты типа collect_elements и collect_rare_element
+              const gardenQuests = ['collect_elements']
+              if (
+                newElement.rarity === 'rare' ||
+                newElement.rarity === 'epic' ||
+                newElement.rarity === 'legendary'
+              ) {
+                gardenQuests.push('collect_rare_element')
+              }
+
+              for (const questType of gardenQuests) {
+                try {
+                  await updateQuestProgress.mutateAsync({
+                    telegramId,
+                    questType: questType as any,
+                    increment: 1,
+                  })
+                } catch (error) {
+                  console.warn(`⚠️ Failed to update quest ${questType}:`, error)
+                }
+              }
+            } catch (questError) {
+              console.error('❌ Failed to update quest progress:', questError)
+            }
           }
 
           return result.element

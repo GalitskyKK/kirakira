@@ -125,12 +125,12 @@ export function MobileTabNavigation({
               >
                 {tab.id === 'community' ? (
                   <span>
-                    <span className="xs:inline hidden">Комьюнити</span>
+                    <span className="hidden xs:inline">Комьюнити</span>
                     <span className="xs:hidden">Друзья</span>
                   </span>
                 ) : tab.id === 'stats' ? (
                   <span>
-                    <span className="xs:inline hidden">Статистика</span>
+                    <span className="hidden xs:inline">Статистика</span>
                     <span className="xs:hidden">Стат-ка</span>
                   </span>
                 ) : (

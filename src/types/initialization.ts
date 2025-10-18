@@ -14,6 +14,7 @@ export enum InitializationStage {
   TELEGRAM_SETUP = 'telegram_setup',
   USER_SYNC = 'user_sync',
   STORES_SYNC = 'stores_sync',
+  DAILY_QUESTS_CHECK = 'daily_quests_check',
   COMPLETED = 'completed',
   FAILED = 'failed',
 }

@@ -4,6 +4,7 @@ export { useMoodStore } from './moodStore'
 export { useUserStore } from './userStore'
 export { usePremiumStore, premiumUtils } from './premiumStore'
 export { useCurrencyStore } from './currencyStore'
+export { useDailyQuestStore } from './dailyQuestStore'
 
 // Store initialization function with static imports to avoid chunk splitting warnings
 import { useUserStore } from './userStore'

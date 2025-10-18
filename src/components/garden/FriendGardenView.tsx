@@ -4,6 +4,7 @@ import { ArrowLeft, Users, Calendar, Flame, MapPin, Info } from 'lucide-react'
 import { Button, Card, UserAvatar } from '@/components/ui'
 import { ShelfView, GardenStats } from '@/components/garden'
 import { useTelegram } from '@/hooks'
+import { useUpdateQuestProgress } from '@/hooks/queries/useDailyQuestQueries'
 import type {
   User,
   GardenElement,
@@ -65,6 +66,7 @@ export function FriendGardenView({
   onBack,
 }: FriendGardenViewProps) {
   const { hapticFeedback, showAlert } = useTelegram()
+  const updateQuestProgress = useUpdateQuestProgress()
 
   // Состояние для данных сада друга (изолировано от основного garden store)
   const [friendGarden, setFriendGarden] = useState<FriendGardenData | null>(
@@ -105,6 +107,26 @@ export function FriendGardenView({
       console.log(`✅ Friend garden loaded:`, result.data)
       setFriendGarden(result.data)
       hapticFeedback('success')
+
+      // 🎯 Обновляем прогресс daily quest для посещения сада друга (неблокирующе)
+      if (currentUser?.telegramId) {
+        // Выполняем обновление квеста в фоне, не блокируя основной UI
+        updateQuestProgress
+          .mutateAsync({
+            telegramId: currentUser.telegramId,
+            questType: 'visit_friend_garden',
+            increment: 1,
+          })
+          .then(() => {
+            console.log('✅ Visit friend garden quest updated')
+          })
+          .catch(error => {
+            console.warn(
+              '⚠️ Failed to update visit_friend_garden quest:',
+              error
+            )
+          })
+      }
     } catch (error) {
       console.error('Failed to load friend garden:', error)
       const errorMessage =
@@ -115,7 +137,13 @@ export function FriendGardenView({
     } finally {
       setIsLoading(false)
     }
-  }, [currentUser?.telegramId, friendTelegramId, hapticFeedback, showAlert])
+  }, [
+    currentUser?.telegramId,
+    friendTelegramId,
+    hapticFeedback,
+    showAlert,
+    updateQuestProgress,
+  ])
 
   // Загружаем данные при монтировании
   useEffect(() => {

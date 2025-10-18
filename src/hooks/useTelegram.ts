@@ -6,6 +6,7 @@ import type {
   TelegramEventType,
 } from '@/types/telegram'
 import { authenticatedFetch } from '@/utils/apiClient'
+import { useUpdateQuestProgress } from '@/hooks/queries/useDailyQuestQueries'
 
 /**
  * Хук для работы с Telegram Mini Apps API
@@ -18,6 +19,7 @@ export function useTelegram() {
   const [colorScheme, setColorScheme] = useState<'light' | 'dark'>('light')
   const [themeParams, setThemeParams] = useState<ThemeParams>({})
   const [isReady, setIsReady] = useState(false)
+  const updateQuestProgress = useUpdateQuestProgress()
 
   // Инициализация Telegram WebApp
   useEffect(() => {
@@ -200,6 +202,20 @@ export function useTelegram() {
               if (showAlert) {
                 showAlert('🏆 +25 XP за шеринг сада!')
               }
+
+              // 🎯 Обновляем прогресс daily quest для поделиться садом (неблокирующе)
+              updateQuestProgress
+                .mutateAsync({
+                  telegramId: user.telegramId,
+                  questType: 'share_garden',
+                  increment: 1,
+                })
+                .then(() => {
+                  console.log('✅ Share garden quest updated')
+                })
+                .catch(error => {
+                  console.warn('⚠️ Failed to update share_garden quest:', error)
+                })
             }
           } catch (error) {
             console.warn('⚠️ Failed to add XP for garden share:', error)
@@ -207,7 +223,7 @@ export function useTelegram() {
         }
       }
     },
-    [webApp, user?.telegramId, showAlert]
+    [webApp, user?.telegramId, showAlert, updateQuestProgress]
   )
 
   // Закрытие приложения

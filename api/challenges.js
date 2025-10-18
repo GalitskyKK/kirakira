@@ -696,13 +696,13 @@ async function handleUpdateProgress(req, res) {
       `📊 Updating progress: ${participation.current_progress} → ${newValue}`
     )
 
-    // Обновляем прогресс через функцию БД
-    const { error: updateError } = await supabase.rpc(
-      'update_challenge_progress',
+    // Обновляем прогресс через улучшенную функцию БД
+    const { data: updateResult, error: updateError } = await supabase.rpc(
+      'update_challenge_progress_v2',
       {
-        participant_uuid: participation.id,
-        new_progress: newValue,
-        new_max_progress: Math.max(participation.max_progress, newValue),
+        p_participant_id: participation.id,
+        p_new_progress: newValue,
+        p_new_max_progress: Math.max(participation.max_progress, newValue),
       }
     )
 
@@ -714,20 +714,22 @@ async function handleUpdateProgress(req, res) {
       })
     }
 
-    // Получаем обновленные данные
-    const { data: updatedParticipation, error: fetchError } = await supabase
-      .from('challenge_participants')
-      .select('*')
-      .eq('id', participation.id)
-      .single()
-
-    if (fetchError) {
-      console.error('Updated participation fetch error:', fetchError)
-      return res.status(500).json({
+    // Проверяем результат обновления
+    if (!updateResult?.success) {
+      console.error('Progress update failed:', updateResult?.error)
+      return res.status(400).json({
         success: false,
-        error: 'Ошибка получения обновленных данных',
+        error: updateResult?.error || 'Ошибка обновления прогресса',
       })
     }
+
+    // Если челлендж выполнен, начисляем награды
+    if (updateResult.is_completed && updateResult.rewards?.success) {
+      console.log('🎉 Challenge completed! Rewards:', updateResult.rewards)
+    }
+
+    // Используем данные из результата обновления
+    const updatedParticipation = updateResult.participant
 
     // Получаем обновленный лидерборд
     const { data: leaderboard, error: leaderboardError } = await supabase.rpc(
@@ -998,6 +1000,664 @@ async function awardExperience(
 }
 
 // ===============================================
+// 🔧 CHALLENGE MAINTENANCE
+// ===============================================
+
+/**
+ * Завершение истекших челленджей и начисление наград
+ */
+async function handleCompleteExpiredChallenges(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  try {
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+
+    // Вызываем функцию завершения челленджей
+    const { data: result, error: completeError } = await supabase.rpc(
+      'complete_expired_challenges'
+    )
+
+    if (completeError) {
+      console.error('Complete expired challenges error:', completeError)
+      return res.status(500).json({
+        success: false,
+        error: 'Ошибка завершения челленджей',
+      })
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        message: 'Expired challenges completed successfully',
+        result,
+      },
+    })
+  } catch (error) {
+    console.error('Complete expired challenges error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    })
+  }
+}
+
+// ===============================================
+// 🎯 DAILY QUESTS HANDLERS
+// ===============================================
+
+/**
+ * Получение ежедневных заданий пользователя
+ */
+async function handleDailyQuests(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  try {
+    const { telegramId } = req.query
+
+    if (!telegramId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameter: telegramId',
+      })
+    }
+
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+
+    // Очищаем истекшие квесты и auto-claim награды
+    const { data: cleanupResult } = await supabase.rpc(
+      'cleanup_expired_daily_quests',
+      {
+        p_telegram_id: parseInt(telegramId),
+      }
+    )
+
+    // Получаем текущие квесты
+    const { data: quests, error: questsError } = await supabase
+      .from('daily_quests')
+      .select('*')
+      .eq('telegram_id', parseInt(telegramId))
+      .gte('generated_at', new Date().toISOString().split('T')[0]) // Сегодняшние квесты
+      .order('generated_at', { ascending: true })
+
+    if (questsError) {
+      console.error('Daily quests fetch error:', questsError)
+      return res.status(500).json({
+        success: false,
+        error: 'Ошибка при получении ежедневных заданий',
+      })
+    }
+
+    // Если нет квестов на сегодня, генерируем новые
+    if (!quests || quests.length === 0) {
+      console.log('🎯 No quests for today, generating new ones...')
+
+      // Получаем уровень пользователя
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('level')
+        .eq('telegram_id', parseInt(telegramId))
+        .single()
+
+      if (userError) {
+        console.error('User fetch error:', userError)
+        return res.status(500).json({
+          success: false,
+          error: 'Ошибка при получении данных пользователя',
+        })
+      }
+
+      const userLevel = user?.level || 1
+
+      // Генерируем новые квесты
+      const { data: newQuests, error: generateError } = await supabase.rpc(
+        'generate_daily_quests',
+        {
+          p_telegram_id: parseInt(telegramId),
+          p_user_level: userLevel,
+        }
+      )
+
+      if (generateError) {
+        console.error('Quest generation error:', generateError)
+        return res.status(500).json({
+          success: false,
+          error: 'Ошибка при генерации заданий',
+        })
+      }
+
+      // Форматируем новые квесты
+      const formattedQuests = (newQuests || []).map(quest => ({
+        id: quest.id,
+        telegramId: quest.telegram_id,
+        questType: quest.quest_type,
+        questCategory: quest.quest_category,
+        targetValue: quest.target_value,
+        currentProgress: quest.current_progress,
+        status: quest.status,
+        rewards: quest.rewards,
+        generatedAt: new Date(quest.generated_at).toISOString(),
+        expiresAt: new Date(quest.expires_at).toISOString(),
+        completedAt: quest.completed_at
+          ? new Date(quest.completed_at).toISOString()
+          : undefined,
+        claimedAt: quest.claimed_at
+          ? new Date(quest.claimed_at).toISOString()
+          : undefined,
+        metadata: quest.metadata,
+      }))
+
+      // Получаем статистику
+      const { data: stats } = await supabase.rpc('get_daily_quests_stats', {
+        p_telegram_id: parseInt(telegramId),
+      })
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          quests: formattedQuests,
+          completedToday: stats?.completed_quests || 0,
+          totalToday: stats?.total_quests || 0,
+          canClaimBonus: (stats?.completed_quests || 0) >= 3,
+          bonusRewards:
+            (stats?.completed_quests || 0) >= 3
+              ? {
+                  sprouts: 50 + ((stats?.completed_quests || 0) - 3) * 25,
+                  gems: (stats?.completed_quests || 0) >= 5 ? 1 : 0,
+                  experience: 25 + ((stats?.completed_quests || 0) - 3) * 25,
+                  description: `Бонус за ${stats?.completed_quests || 0} квестов!`,
+                }
+              : undefined,
+          stats: {
+            activeQuests: stats?.active_quests || 0,
+            completedQuests: stats?.completed_quests || 0,
+            claimedQuests: stats?.claimed_quests || 0,
+            totalQuests: stats?.total_quests || 0,
+            completionRate: stats?.completion_rate || 0,
+            totalRewards: stats?.total_rewards || {
+              sprouts: 0,
+              gems: 0,
+              experience: 0,
+            },
+          },
+        },
+      })
+    }
+
+    // Форматируем существующие квесты
+    const formattedQuests = quests.map(quest => ({
+      id: quest.id,
+      telegramId: quest.telegram_id,
+      questType: quest.quest_type,
+      questCategory: quest.quest_category,
+      targetValue: quest.target_value,
+      currentProgress: quest.current_progress,
+      status: quest.status,
+      rewards: quest.rewards,
+      generatedAt: new Date(quest.generated_at).toISOString(),
+      expiresAt: new Date(quest.expires_at).toISOString(),
+      completedAt: quest.completed_at
+        ? new Date(quest.completed_at).toISOString()
+        : undefined,
+      claimedAt: quest.claimed_at
+        ? new Date(quest.claimed_at).toISOString()
+        : undefined,
+      metadata: quest.metadata,
+    }))
+
+    // Получаем статистику
+    const { data: stats } = await supabase.rpc('get_daily_quests_stats', {
+      p_telegram_id: parseInt(telegramId),
+    })
+
+    const completedToday = quests.filter(
+      q => q.status === 'completed' || q.status === 'claimed'
+    ).length
+    const totalToday = quests.length
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        quests: formattedQuests,
+        completedToday,
+        totalToday,
+        canClaimBonus: completedToday >= 3,
+        bonusRewards:
+          completedToday >= 3
+            ? {
+                sprouts: 50 + (completedToday - 3) * 25,
+                gems: completedToday >= 5 ? 1 : 0,
+                experience: 25 + (completedToday - 3) * 25,
+                description: `Бонус за ${completedToday} квестов!`,
+              }
+            : undefined,
+        stats: {
+          activeQuests: stats?.active_quests || 0,
+          completedQuests: stats?.completed_quests || 0,
+          claimedQuests: stats?.claimed_quests || 0,
+          totalQuests: stats?.total_quests || 0,
+          completionRate: stats?.completion_rate || 0,
+          totalRewards: stats?.total_rewards || {
+            sprouts: 0,
+            gems: 0,
+            experience: 0,
+          },
+        },
+      },
+    })
+  } catch (error) {
+    console.error('Daily quests error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    })
+  }
+}
+
+/**
+ * Получение награды за выполненное задание
+ */
+async function handleClaimDailyQuest(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  try {
+    const { questId, telegramId } = req.body
+
+    if (!questId || !telegramId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameters: questId, telegramId',
+      })
+    }
+
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+
+    // Получаем награду через функцию БД
+    const { data: quest, error: claimError } = await supabase.rpc(
+      'claim_daily_quest_reward',
+      {
+        p_quest_id: questId,
+        p_telegram_id: parseInt(telegramId),
+      }
+    )
+
+    if (claimError) {
+      console.error('Claim quest error:', claimError)
+      return res.status(400).json({
+        success: false,
+        error: 'Ошибка при получении награды',
+      })
+    }
+
+    if (!quest) {
+      return res.status(404).json({
+        success: false,
+        error: 'Задание не найдено или не выполнено',
+      })
+    }
+
+    // Получаем обновленный баланс пользователя
+    const { data: balance, error: balanceError } = await supabase
+      .from('user_currency')
+      .select('sprouts, gems')
+      .eq('telegram_id', parseInt(telegramId))
+      .single()
+
+    if (balanceError) {
+      console.error('Balance fetch error:', balanceError)
+    }
+
+    // Форматируем квест
+    const formattedQuest = {
+      id: quest.id,
+      telegramId: quest.telegram_id,
+      questType: quest.quest_type,
+      questCategory: quest.quest_category,
+      targetValue: quest.target_value,
+      currentProgress: quest.current_progress,
+      status: quest.status,
+      rewards: quest.rewards,
+      generatedAt: new Date(quest.generated_at).toISOString(),
+      expiresAt: new Date(quest.expires_at).toISOString(),
+      completedAt: quest.completed_at
+        ? new Date(quest.completed_at).toISOString()
+        : undefined,
+      claimedAt: quest.claimed_at
+        ? new Date(quest.claimed_at).toISOString()
+        : undefined,
+      metadata: quest.metadata,
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        quest: formattedQuest,
+        newBalance: {
+          sprouts: balance?.sprouts || 0,
+          gems: balance?.gems || 0,
+        },
+        rewards: quest.rewards,
+      },
+    })
+  } catch (error) {
+    console.error('Claim daily quest error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    })
+  }
+}
+
+/**
+ * Обновление прогресса задания
+ */
+async function handleUpdateDailyProgress(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  try {
+    const { questId, telegramId, questType, increment = 1 } = req.body
+
+    console.log('🎯 UPDATE DAILY PROGRESS REQUEST:', {
+      questId,
+      telegramId,
+      questType,
+      increment,
+      body: req.body,
+    })
+
+    if (!telegramId) {
+      console.error('❌ Missing telegramId in request')
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameter: telegramId',
+      })
+    }
+
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+
+    let quest = null
+
+    if (questId) {
+      // Обновляем конкретный квест по ID
+      const { data: questData, error: updateError } = await supabase.rpc(
+        'update_daily_quest_progress',
+        {
+          p_quest_id: questId,
+          p_telegram_id: parseInt(telegramId),
+          p_increment: parseInt(increment),
+        }
+      )
+
+      if (updateError) {
+        console.warn('Update quest progress error:', updateError)
+        console.warn('Quest ID:', questId, 'Telegram ID:', telegramId)
+
+        // Если функция не существует, попробуем обновить напрямую
+        if (
+          updateError.code === '42883' ||
+          updateError.message?.includes('function') ||
+          updateError.message?.includes('does not exist')
+        ) {
+          console.log(
+            `🔄 Function not found, trying direct update for quest ${questId}`
+          )
+
+          // Получаем квест для прямого обновления
+          const { data: questItem, error: fetchError } = await supabase
+            .from('daily_quests')
+            .select('*')
+            .eq('id', questId)
+            .eq('telegram_id', parseInt(telegramId))
+            .single()
+
+          if (fetchError || !questItem) {
+            console.warn(`Quest ${questId} not found for direct update`)
+            return res.status(200).json({
+              success: true,
+              data: {
+                quest: null,
+                isCompleted: false,
+                isNewlyCompleted: false,
+                message: 'Quest not found or not accessible',
+              },
+            })
+          }
+
+          const newProgress = Math.min(
+            questItem.current_progress + parseInt(increment),
+            questItem.target_value
+          )
+          const isCompleted = newProgress >= questItem.target_value
+
+          const { data: directUpdate, error: directError } = await supabase
+            .from('daily_quests')
+            .update({
+              current_progress: newProgress,
+              status: isCompleted ? 'completed' : 'active',
+              completed_at: isCompleted ? new Date().toISOString() : null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', questId)
+            .select()
+            .single()
+
+          if (directError) {
+            console.error(
+              `Direct update failed for quest ${questId}:`,
+              directError
+            )
+            return res.status(200).json({
+              success: true,
+              data: {
+                quest: null,
+                isCompleted: false,
+                isNewlyCompleted: false,
+                message: 'Quest update failed',
+              },
+            })
+          } else {
+            console.log(`✅ Direct update successful for quest ${questId}`)
+            quest = directUpdate
+          }
+        } else {
+          // Для других ошибок возвращаем успешный ответ
+          return res.status(200).json({
+            success: true,
+            data: {
+              quest: null,
+              isCompleted: false,
+              isNewlyCompleted: false,
+              message: 'Quest update failed (non-critical)',
+            },
+          })
+        }
+      }
+
+      quest = questData
+    } else if (questType) {
+      // Обновляем все активные квесты данного типа
+      console.log(
+        `🔍 Searching for active quests of type: ${questType} for user: ${telegramId}`
+      )
+
+      const { data: quests, error: fetchError } = await supabase
+        .from('daily_quests')
+        .select('*')
+        .eq('telegram_id', parseInt(telegramId))
+        .eq('quest_type', questType)
+        .eq('status', 'active')
+        .gt('expires_at', new Date().toISOString()) // Only active quests that haven't expired yet
+
+      console.log(
+        `📊 Found ${quests?.length || 0} active quests of type ${questType}`
+      )
+
+      if (fetchError) {
+        console.error('❌ Fetch quests error:', fetchError)
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to fetch quests',
+        })
+      }
+
+      // Если квестов не найдено, это не ошибка - просто нет активных квестов этого типа
+      if (!quests || quests.length === 0) {
+        console.log(
+          `ℹ️ No active quests of type ${questType} found for user ${telegramId}`
+        )
+        return res.status(200).json({
+          success: true,
+          data: {
+            quest: null,
+            isCompleted: false,
+            isNewlyCompleted: false,
+            message: `No active quests of type ${questType} found`,
+          },
+        })
+      }
+
+      // Обновляем каждый найденный квест
+      for (const questItem of quests) {
+        console.log(
+          `🔄 Updating quest ${questItem.id} (${questItem.quest_type})`
+        )
+
+        const { data: questData, error: updateError } = await supabase.rpc(
+          'update_daily_quest_progress',
+          {
+            p_quest_id: questItem.id,
+            p_telegram_id: parseInt(telegramId),
+            p_increment: parseInt(increment),
+          }
+        )
+
+        if (updateError) {
+          console.warn(`Failed to update quest ${questItem.id}:`, updateError)
+          console.warn(`Quest details:`, {
+            id: questItem.id,
+            type: questItem.quest_type,
+            status: questItem.status,
+            expires_at: questItem.expires_at,
+            current_progress: questItem.current_progress,
+          })
+
+          // Если функция не существует, попробуем обновить напрямую
+          if (
+            updateError.code === '42883' ||
+            updateError.message?.includes('function') ||
+            updateError.message?.includes('does not exist')
+          ) {
+            console.log(
+              `🔄 Function not found, trying direct update for quest ${questItem.id}`
+            )
+
+            const newProgress = Math.min(
+              questItem.current_progress + parseInt(increment),
+              questItem.target_value
+            )
+            const isCompleted = newProgress >= questItem.target_value
+
+            const { data: directUpdate, error: directError } = await supabase
+              .from('daily_quests')
+              .update({
+                current_progress: newProgress,
+                status: isCompleted ? 'completed' : 'active',
+                completed_at: isCompleted ? new Date().toISOString() : null,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', questItem.id)
+              .select()
+              .single()
+
+            if (directError) {
+              console.error(
+                `Direct update failed for quest ${questItem.id}:`,
+                directError
+              )
+            } else {
+              console.log(
+                `✅ Direct update successful for quest ${questItem.id}`
+              )
+              quest = directUpdate
+            }
+          }
+        } else {
+          quest = questData // Возвращаем последний обновленный квест
+        }
+      }
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameter: questId or questType',
+      })
+    }
+
+    if (!quest) {
+      console.log(`ℹ️ No quest was successfully updated for user ${telegramId}`)
+      return res.status(200).json({
+        success: true,
+        data: {
+          quest: null,
+          isCompleted: false,
+          isNewlyCompleted: false,
+          message:
+            'No quests were updated (may not exist or already completed)',
+        },
+      })
+    }
+
+    // Форматируем квест
+    const formattedQuest = {
+      id: quest.id,
+      telegramId: quest.telegram_id,
+      questType: quest.quest_type,
+      questCategory: quest.quest_category,
+      targetValue: quest.target_value,
+      currentProgress: quest.current_progress,
+      status: quest.status,
+      rewards: quest.rewards,
+      generatedAt: new Date(quest.generated_at).toISOString(),
+      expiresAt: new Date(quest.expires_at).toISOString(),
+      completedAt: quest.completed_at
+        ? new Date(quest.completed_at).toISOString()
+        : undefined,
+      claimedAt: quest.claimed_at
+        ? new Date(quest.claimed_at).toISOString()
+        : undefined,
+      metadata: quest.metadata,
+    }
+
+    const isCompleted = quest.status === 'completed'
+    const isNewlyCompleted =
+      isCompleted &&
+      quest.completed_at &&
+      new Date(quest.completed_at).getTime() - new Date().getTime() < 5000 // В течение 5 секунд
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        quest: formattedQuest,
+        isCompleted,
+        isNewlyCompleted,
+      },
+    })
+  } catch (error) {
+    console.error('Update daily progress error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    })
+  }
+}
+
+// ===============================================
 // ОСНОВНОЙ ОБРАБОТЧИК
 // ===============================================
 
@@ -1037,6 +1697,15 @@ async function protectedHandler(req, res) {
         return await handleJoin(req, res)
       case 'update_progress':
         return await handleUpdateProgress(req, res)
+      case 'complete_expired':
+        return await handleCompleteExpiredChallenges(req, res)
+      // 🎯 Daily Quests actions
+      case 'daily-quests':
+        return await handleDailyQuests(req, res)
+      case 'claim-daily-quest':
+        return await handleClaimDailyQuest(req, res)
+      case 'update-daily-progress':
+        return await handleUpdateDailyProgress(req, res)
       default:
         return res.status(400).json({
           success: false,
