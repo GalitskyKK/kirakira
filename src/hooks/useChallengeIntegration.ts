@@ -48,20 +48,6 @@ export function useChallengeIntegration() {
     (challengeStartDate: Date): Record<ChallengeMetric, number> => {
       const startTime = challengeStartDate.getTime()
 
-      console.log(
-        `\n📊 Calculating metrics from:`,
-        challengeStartDate.toISOString()
-      )
-      console.log(`🗓️ Start time (ms):`, startTime)
-      console.log(
-        `📦 Garden data:`,
-        gardenData ? `${gardenData.elements.length} elements` : 'null'
-      )
-      console.log(
-        `😊 Mood data:`,
-        moodData ? `${moodData.moods.length} moods` : 'null'
-      )
-
       // Элементы сада, добавленные после начала челлендж
       const gardenElementsAfterStart =
         gardenData?.elements.filter((el: GardenElement) => {
@@ -75,12 +61,6 @@ export function useChallengeIntegration() {
           const moodTime = new Date(mood.date).getTime()
           return moodTime >= startTime
         }) || []
-
-      console.log(
-        `🌱 Garden elements after start:`,
-        gardenElementsAfterStart.length
-      )
-      console.log(`😊 Mood entries after start:`, moodEntriesAfterStart.length)
 
       const metrics = {
         garden_elements_count: gardenElementsAfterStart.length,
@@ -98,8 +78,6 @@ export function useChallengeIntegration() {
         ),
         friend_interactions: 0,
       }
-
-      console.log(`✅ Calculated metrics:`, metrics)
 
       return metrics
     },
