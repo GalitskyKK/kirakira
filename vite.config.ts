@@ -10,7 +10,6 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt', // ✅ Показываем кнопку обновления + автообновление при закрытии
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
-      selfDestroying: true,
       devOptions: {
         enabled: true, // Для тестирования в разработке
       },
