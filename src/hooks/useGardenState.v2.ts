@@ -14,6 +14,7 @@ import {
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useUpdateQuestProgress } from '@/hooks/queries/useDailyQuestQueries'
+import { useChallengeGardenIntegration } from '@/hooks/useChallengeIntegration'
 import type { MoodType, Position2D, GardenElement } from '@/types'
 import { loadGarden, saveGarden } from '@/utils/storage'
 import {
@@ -44,6 +45,7 @@ export function useGardenState() {
   const addElementMutation = useAddGardenElement()
   const updatePositionMutation = useUpdateElementPosition()
   const updateQuestProgress = useUpdateQuestProgress()
+  const { onGardenElementAdded } = useChallengeGardenIntegration()
 
   // Клиентское UI состояние через Zustand
   const {
@@ -289,6 +291,17 @@ export function useGardenState() {
             } catch (questError) {
               console.error('❌ Failed to update quest progress:', questError)
             }
+          }
+
+          // 🏆 Обновляем прогресс челенджей
+          try {
+            console.log('🏆 Updating challenge progress...')
+            await onGardenElementAdded()
+          } catch (challengeError) {
+            console.warn(
+              '⚠️ Failed to update challenge progress:',
+              challengeError
+            )
           }
 
           return result.element

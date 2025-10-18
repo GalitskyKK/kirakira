@@ -1287,11 +1287,116 @@ async function handleClaimDailyQuest(req, res) {
     )
 
     if (claimError) {
-      console.error('Claim quest error:', claimError)
-      return res.status(400).json({
-        success: false,
-        error: 'Ошибка при получении награды',
-      })
+      console.warn('Claim quest error:', claimError)
+
+      // Если функция не существует, делаем прямое обновление
+      if (
+        claimError.code === '42703' ||
+        claimError.message?.includes('function') ||
+        claimError.message?.includes('does not exist')
+      ) {
+        console.log(
+          `🔄 Function not found, trying direct claim for quest ${questId}`
+        )
+
+        // Получаем квест
+        const { data: questItem, error: fetchError } = await supabase
+          .from('daily_quests')
+          .select('*')
+          .eq('id', questId)
+          .eq('telegram_id', parseInt(telegramId))
+          .single()
+
+        if (fetchError || !questItem) {
+          return res.status(404).json({
+            success: false,
+            error: 'Задание не найдено или не выполнено',
+          })
+        }
+
+        if (questItem.status !== 'completed') {
+          return res.status(400).json({
+            success: false,
+            error: 'Задание не выполнено',
+          })
+        }
+
+        if (questItem.claimed_at) {
+          return res.status(400).json({
+            success: false,
+            error: 'Награда уже получена',
+          })
+        }
+
+        // Обновляем статус квеста
+        const { data: updatedQuest, error: updateError } = await supabase
+          .from('daily_quests')
+          .update({
+            status: 'claimed',
+            claimed_at: new Date().toISOString(),
+          })
+          .eq('id', questId)
+          .select()
+          .single()
+
+        if (updateError) {
+          console.error(
+            `Direct claim failed for quest ${questId}:`,
+            updateError
+          )
+          return res.status(400).json({
+            success: false,
+            error: 'Ошибка при получении награды',
+          })
+        }
+
+        // Начисляем награду
+        const rewards = questItem.rewards
+        if (rewards) {
+          // Сначала получаем текущий баланс
+          const { data: currentBalance, error: balanceFetchError } =
+            await supabase
+              .from('user_currency')
+              .select('sprouts, gems')
+              .eq('telegram_id', parseInt(telegramId))
+              .single()
+
+          if (balanceFetchError && balanceFetchError.code !== 'PGRST116') {
+            console.error('Balance fetch error:', balanceFetchError)
+          }
+
+          // Вычисляем новый баланс
+          const currentSprouts = currentBalance?.sprouts || 0
+          const currentGems = currentBalance?.gems || 0
+          const newSprouts = currentSprouts + (rewards.sprouts || 0)
+          const newGems = currentGems + (rewards.gems || 0)
+
+          // Обновляем баланс
+          const { error: currencyError } = await supabase
+            .from('user_currency')
+            .upsert(
+              {
+                telegram_id: parseInt(telegramId),
+                sprouts: newSprouts,
+                gems: newGems,
+              },
+              {
+                onConflict: 'telegram_id',
+              }
+            )
+
+          if (currencyError) {
+            console.error('Currency update error:', currencyError)
+          }
+        }
+
+        quest = updatedQuest
+      } else {
+        return res.status(400).json({
+          success: false,
+          error: 'Ошибка при получении награды',
+        })
+      }
     }
 
     if (!quest) {

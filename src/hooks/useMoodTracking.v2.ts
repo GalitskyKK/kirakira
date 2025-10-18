@@ -14,6 +14,7 @@ import {
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useUpdateQuestProgress } from '@/hooks/queries/useDailyQuestQueries'
+import { useChallengeMoodIntegration } from '@/hooks/useChallengeIntegration'
 import type { MoodType, MoodIntensity, MoodEntry, MoodStats } from '@/types'
 import { getMoodDisplayProps, getRecommendedMood } from '@/utils/moodMapping'
 import { getTimeUntilNextCheckin } from '@/utils/dateHelpers'
@@ -41,6 +42,7 @@ export function useMoodTracking() {
 
   const addMoodMutation = useAddMoodEntry()
   const updateQuestProgress = useUpdateQuestProgress()
+  const { onMoodEntryAdded } = useChallengeMoodIntegration()
 
   // Проверка возможности отметки настроения
   const { canCheckin, todaysMood } = useCanCheckinToday(telegramId, userId)
@@ -210,6 +212,17 @@ export function useMoodTracking() {
           } catch (questError) {
             console.error('❌ Failed to update quest progress:', questError)
           }
+        }
+
+        // 🏆 Обновляем прогресс челенджей
+        try {
+          console.log('🏆 Updating challenge progress...')
+          await onMoodEntryAdded()
+        } catch (challengeError) {
+          console.warn(
+            '⚠️ Failed to update challenge progress:',
+            challengeError
+          )
         }
 
         return entry
