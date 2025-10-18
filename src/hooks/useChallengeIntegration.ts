@@ -4,7 +4,6 @@
  */
 
 import { useEffect, useCallback } from 'react'
-import { useUserStore } from '@/stores'
 import type { ChallengeMetric, GardenElement, MoodEntry } from '@/types'
 import {
   useGardenSync,
@@ -26,6 +25,9 @@ export function useChallengeIntegration() {
   const { data: userData } = useUserSync(telegramId, !!telegramId)
   const userId = userData?.user?.id
 
+  // ✨ Используем currentUser из React Query вместо Zustand
+  const currentUser = userData?.user
+
   // Используем v2 хуки для получения актуальных данных
   const { data: gardenData } = useGardenSync(telegramId, !!telegramId)
   const { data: moodData } = useMoodSync(
@@ -39,7 +41,6 @@ export function useChallengeIntegration() {
   const challenges = challengesData?.challenges ?? []
   const userParticipations = challengesData?.userParticipations ?? []
 
-  const { currentUser } = useUserStore()
   const updateProgressMutation = useUpdateChallengeProgress()
 
   // Функция для подсчета метрик с момента присоединения к челленджу
@@ -374,27 +375,22 @@ export function useChallengeIntegration() {
 // Интеграция с существующими системами
 export function useChallengeGardenIntegration() {
   const { updateChallengeProgress } = useChallengeIntegration()
-  const { currentUser } = useUserStore()
 
   // Функция для вызова после добавления элемента в сад
   const onGardenElementAdded = useCallback(async () => {
-    if (!currentUser?.telegramId) {
-      console.log('⚠️ No user for challenge update')
-      return
-    }
-
     console.log(
       '🌱 Starting challenge progress update after garden element added...'
     )
 
     try {
       // React Query уже инвалидирует кеши, задержка не нужна
+      // Проверка currentUser внутри updateChallengeProgress
       await updateChallengeProgress()
       console.log('✅ Challenge progress updated successfully')
     } catch (error) {
       console.error('❌ Failed to update challenge progress:', error)
     }
-  }, [currentUser?.telegramId, updateChallengeProgress])
+  }, [updateChallengeProgress])
 
   return {
     onGardenElementAdded,
@@ -403,25 +399,20 @@ export function useChallengeGardenIntegration() {
 
 export function useChallengeMoodIntegration() {
   const { updateChallengeProgress } = useChallengeIntegration()
-  const { currentUser } = useUserStore()
 
   // Функция для вызова после добавления записи настроения
   const onMoodEntryAdded = useCallback(async () => {
-    if (!currentUser?.telegramId) {
-      console.log('⚠️ No user for challenge update')
-      return
-    }
-
     console.log('🏆 Starting challenge progress update after mood entry...')
 
     try {
       // React Query уже инвалидирует кеши, задержка не нужна
+      // Проверка currentUser внутри updateChallengeProgress
       await updateChallengeProgress()
       console.log('✅ Challenge progress updated successfully')
     } catch (error) {
       console.error('❌ Failed to update challenge progress:', error)
     }
-  }, [currentUser?.telegramId, updateChallengeProgress])
+  }, [updateChallengeProgress])
 
   return {
     onMoodEntryAdded,
