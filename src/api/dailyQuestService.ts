@@ -47,12 +47,12 @@ export async function claimDailyQuest(
   telegramId: number,
   questId: string
 ): Promise<ClaimQuestResponse> {
+  const url = `${DAILY_QUESTS_ENDPOINT}?action=claim-daily-quest`
   const response = await apiPost<{
     success: boolean
     data: ClaimQuestResponse
     error?: string
-  }>(DAILY_QUESTS_ENDPOINT, {
-    action: 'claim-daily-quest',
+  }>(url, {
     telegramId,
     questId,
   })
@@ -73,7 +73,6 @@ export async function updateQuestProgress(
   increment: number = 1
 ): Promise<UpdateProgressResponse> {
   const requestBody: any = {
-    action: 'update-daily-progress',
     telegramId,
     increment,
   }
@@ -85,11 +84,12 @@ export async function updateQuestProgress(
     requestBody.questType = questIdOrType
   }
 
+  const url = `${DAILY_QUESTS_ENDPOINT}?action=update-daily-progress`
   const response = await apiPost<{
     success: boolean
     data: UpdateProgressResponse
     error?: string
-  }>(DAILY_QUESTS_ENDPOINT, requestBody)
+  }>(url, requestBody)
 
   if (!response.success) {
     throw new Error(response.error || 'Ошибка при обновлении прогресса')
