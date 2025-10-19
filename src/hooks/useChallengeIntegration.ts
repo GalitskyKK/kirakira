@@ -3,7 +3,7 @@
  * Автоматически обновляет прогресс челленджей при изменении данных
  */
 
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import type { ChallengeMetric, GardenElement, MoodEntry } from '@/types'
 import {
   useGardenSync,
@@ -42,6 +42,10 @@ export function useChallengeIntegration() {
   const userParticipations = challengesData?.userParticipations ?? []
 
   const updateProgressMutation = useUpdateChallengeProgress()
+
+  // 🔑 Стабильная ссылка на mutation для избежания пересоздания callbacks
+  const updateProgressMutationRef = useRef(updateProgressMutation)
+  updateProgressMutationRef.current = updateProgressMutation
 
   // Функция для подсчета метрик с момента присоединения к челленджу
   const calculateChallengeMetrics = useCallback(
@@ -145,7 +149,7 @@ export function useChallengeIntegration() {
     // Выполняем обновления через React Query для автоматической инвалидации кеша
     for (const update of updates) {
       try {
-        await updateProgressMutation.mutateAsync({
+        await updateProgressMutationRef.current.mutateAsync({
           challengeId: update.challengeId,
           telegramId: currentUser.telegramId,
           metric: update.metric,
@@ -161,7 +165,6 @@ export function useChallengeIntegration() {
     currentUser,
     calculateChallengeMetrics,
     getActiveParticipations,
-    updateProgressMutation,
     challenges,
   ])
 
@@ -197,7 +200,7 @@ export function useChallengeIntegration() {
       // Не уменьшаем прогресс при принудительном обновлении
       if (cappedValue >= participation.currentProgress) {
         try {
-          await updateProgressMutation.mutateAsync({
+          await updateProgressMutationRef.current.mutateAsync({
             challengeId: participation.challengeId,
             telegramId: currentUser.telegramId,
             metric,
@@ -220,7 +223,6 @@ export function useChallengeIntegration() {
     currentUser,
     calculateChallengeMetrics,
     getActiveParticipations,
-    updateProgressMutation,
     challenges,
   ])
 
@@ -283,7 +285,7 @@ export function useChallengeIntegration() {
       )
 
       try {
-        await updateProgressMutation.mutateAsync({
+        await updateProgressMutationRef.current.mutateAsync({
           challengeId: participation.challengeId,
           telegramId: currentUser.telegramId,
           metric,
@@ -298,7 +300,6 @@ export function useChallengeIntegration() {
     currentUser,
     getActiveParticipations,
     calculateChallengeMetrics,
-    updateProgressMutation,
     challenges,
   ])
 
