@@ -4,7 +4,7 @@
  */
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, Sparkles, ArrowLeft } from 'lucide-react'
+import { CheckCircle, Sparkles, X } from 'lucide-react'
 import { type RarityLevel } from '@/types/garden'
 import { useEffect, useState } from 'react'
 
@@ -28,7 +28,10 @@ export function SuccessUpgradeOverlay({
   const [countdown, setCountdown] = useState(3)
 
   useEffect(() => {
-    if (!isVisible) return
+    if (!isVisible) {
+      setCountdown(3)
+      return
+    }
 
     // Обратный отсчет
     const countdownInterval = setInterval(() => {
@@ -102,45 +105,65 @@ export function SuccessUpgradeOverlay({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-white/95 via-white/90 to-white/95 backdrop-blur-md dark:from-gray-900/95 dark:via-gray-900/90 dark:to-gray-900/95"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          onClick={onComplete}
         >
-          {/* Частицы */}
-          <div className="pointer-events-none absolute inset-0">
-            {Array.from({ length: 20 }, (_, i) => (
-              <motion.div
-                key={i}
-                initial={{
-                  x: '50%',
-                  y: '50%',
-                  scale: 0,
-                  opacity: 0,
-                }}
-                animate={{
-                  x: `${50 + (Math.random() - 0.5) * 100}%`,
-                  y: `${50 + (Math.random() - 0.5) * 100}%`,
-                  scale: [0, 1, 1, 0],
-                  opacity: [0, 1, 1, 0],
-                  rotate: Math.random() * 360,
-                }}
-                transition={{
-                  duration: 2 + Math.random(),
-                  delay: Math.random() * 0.5,
-                  ease: 'easeOut',
-                }}
-                className="absolute h-2 w-2 rounded-full"
-                style={{
-                  backgroundColor: getParticleColor(newRarity),
-                  boxShadow: `0 0 10px ${getParticleColor(newRarity)}`,
-                }}
-              />
-            ))}
-          </div>
+          {/* Модальное окно */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.8, opacity: 0, y: 20 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            onClick={e => e.stopPropagation()}
+            className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-gray-800"
+          >
+            {/* Фоновый градиент редкости */}
+            <div
+              className={`absolute inset-x-0 top-0 h-32 bg-gradient-to-b ${getRarityColor(newRarity)} opacity-20 blur-xl`}
+            />
 
-          {/* Контент - адаптивный для мобильных */}
-          <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-4 py-4 text-center">
-            {/* Скроллируемый контент */}
-            <div className="flex max-h-full w-full max-w-sm flex-col items-center justify-center space-y-4 overflow-y-auto">
-              {/* Иконка успеха - меньше на мобильных */}
+            {/* Частицы внутри модалки */}
+            <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl">
+              {Array.from({ length: 15 }, (_, i) => (
+                <motion.div
+                  key={i}
+                  initial={{
+                    x: '50%',
+                    y: '50%',
+                    scale: 0,
+                    opacity: 0,
+                  }}
+                  animate={{
+                    x: `${Math.random() * 100}%`,
+                    y: `${Math.random() * 100}%`,
+                    scale: [0, 1, 0],
+                    opacity: [0, 0.8, 0],
+                  }}
+                  transition={{
+                    duration: 1.5 + Math.random(),
+                    delay: Math.random() * 0.3,
+                    ease: 'easeOut',
+                  }}
+                  className="absolute h-1.5 w-1.5 rounded-full"
+                  style={{
+                    backgroundColor: getParticleColor(newRarity),
+                    boxShadow: `0 0 8px ${getParticleColor(newRarity)}`,
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Кнопка закрытия */}
+            <button
+              onClick={onComplete}
+              className="absolute right-3 top-3 z-10 rounded-full bg-gray-100 p-1.5 text-gray-600 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            {/* Контент */}
+            <div className="relative z-10 flex flex-col items-center gap-4 px-6 py-8 text-center">
+              {/* Иконка успеха */}
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
@@ -150,36 +173,35 @@ export function SuccessUpgradeOverlay({
                   damping: 15,
                   delay: 0.1,
                 }}
-                className="flex justify-center"
               >
                 <div className="relative">
-                  <CheckCircle className="h-16 w-16 text-green-500 drop-shadow-xl sm:h-20 sm:w-20" />
+                  <CheckCircle className="h-14 w-14 text-green-500 drop-shadow-lg" />
                   <motion.div
                     animate={{
-                      scale: [1, 1.2, 1],
-                      opacity: [0.5, 0, 0.5],
+                      scale: [1, 1.3, 1],
+                      opacity: [0.4, 0, 0.4],
                     }}
                     transition={{
                       duration: 2,
                       repeat: Infinity,
                       ease: 'easeInOut',
                     }}
-                    className="absolute inset-0 rounded-full bg-green-400"
+                    className="absolute inset-0 -z-10 rounded-full bg-green-400 blur-md"
                   />
                 </div>
               </motion.div>
 
-              {/* Заголовок - адаптивный размер */}
+              {/* Заголовок */}
               <motion.h2
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl"
+                className="text-xl font-bold text-gray-900 dark:text-white"
               >
                 Улучшение успешно!
               </motion.h2>
 
-              {/* Эмодзи элемента - меньше на мобильных */}
+              {/* Эмодзи элемента */}
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
@@ -189,62 +211,65 @@ export function SuccessUpgradeOverlay({
                   damping: 10,
                   delay: 0.3,
                 }}
-                className="text-6xl sm:text-8xl"
+                className="text-6xl leading-none"
               >
                 {elementEmoji}
               </motion.div>
 
-              {/* Новая редкость - адаптивный размер */}
+              {/* Новая редкость */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.4 }}
+                transition={{ delay: 0.4, type: 'spring' }}
               >
                 <div
-                  className={`inline-block rounded-full bg-gradient-to-r ${getRarityColor(newRarity)} px-4 py-2 text-lg font-bold text-white shadow-2xl sm:px-6 sm:py-3 sm:text-xl`}
+                  className={`inline-flex items-center gap-2 rounded-full bg-gradient-to-r ${getRarityColor(newRarity)} px-5 py-2 text-base font-bold text-white shadow-lg`}
                 >
+                  <Sparkles className="h-4 w-4" />
                   {getRarityLabel(newRarity)}
                 </div>
               </motion.div>
 
-              {/* XP награда - адаптивный размер */}
+              {/* XP награда */}
               {xpReward > 0 && (
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
-                  className="flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-yellow-100 to-orange-100 px-4 py-2 dark:from-yellow-900/30 dark:to-orange-900/30"
+                  className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-yellow-50 to-orange-50 px-4 py-2 dark:from-yellow-900/20 dark:to-orange-900/20"
                 >
-                  <Sparkles className="h-4 w-4 text-yellow-600 dark:text-yellow-400 sm:h-5 sm:w-5" />
-                  <span className="text-base font-bold text-yellow-700 dark:text-yellow-300 sm:text-lg">
-                    +{xpReward} XP
+                  <Sparkles className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                  <span className="text-sm font-bold text-yellow-700 dark:text-yellow-300">
+                    +{xpReward} опыта
                   </span>
                 </motion.div>
               )}
 
-              {/* Обратный отсчет - адаптивный размер */}
+              {/* Разделитель */}
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-gray-300 to-transparent dark:via-gray-600" />
+
+              {/* Обратный отсчет */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 }}
-                className="flex items-center justify-center gap-2 text-xs text-gray-600 dark:text-gray-400 sm:text-sm"
+                className="text-xs text-gray-500 dark:text-gray-400"
               >
-                <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>Возврат в сад через {countdown} сек</span>
+                Автозакрытие через {countdown} сек
               </motion.div>
 
-              {/* Кнопка немедленного возврата - адаптивная */}
+              {/* Кнопка возврата */}
               <motion.button
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
                 onClick={onComplete}
-                className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-3 text-sm font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95 sm:w-auto sm:px-6"
+                className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg active:scale-95"
               >
-                Вернуться сейчас
+                Вернуться в сад
               </motion.button>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
