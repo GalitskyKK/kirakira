@@ -1300,54 +1300,60 @@ async function handleClaimDailyQuest(req, res) {
       return res.status(400).json({ success: false, error: errorMessage })
     }
 
-    const quest = data?.[0]
+    // 🔧 ИСПРАВЛЕНИЕ: Новая структура ответа от SQL функции
+    // Функция возвращает: { quest_row, sprouts_earned, gems_earned, balance }
+    const result = data?.[0]
 
-    if (!quest) {
-      // Этот случай не должен происходить, если RPC отработала без ошибок
+    if (!result || !result.quest_row) {
       return res.status(404).json({
         success: false,
         error: 'Задание не найдено или уже получено.',
       })
     }
 
-    // Получаем обновленный баланс пользователя
-    const { data: balance, error: balanceError } = await supabase
-      .from('user_currency')
-      .select('sprouts, gems')
-      .eq('telegram_id', parseInt(telegramId))
-      .single()
+    // Извлекаем данные из новой структуры
+    const questRow = result.quest_row
+    const sproutsEarned = result.sprouts_earned || 0
+    const gemsEarned = result.gems_earned || 0
+    const balance = result.balance || { sprouts: 0, gems: 0 }
 
-    if (balanceError) {
-      console.error('Balance fetch error:', balanceError)
-      // Не блокируем ответ из-за ошибки получения баланса
-    }
+    console.log('✅ Quest claimed successfully:', {
+      questId: questRow.id,
+      sproutsEarned,
+      gemsEarned,
+      newBalance: balance,
+    })
 
-    // Форматируем квест
+    // Форматируем квест для ответа
     const formattedQuest = {
-      id: quest.id,
-      telegramId: quest.telegram_id,
-      questType: quest.quest_type,
-      questCategory: quest.quest_category,
-      targetValue: quest.target_value,
-      currentProgress: quest.current_progress,
-      status: quest.status,
-      rewards: quest.rewards,
-      generatedAt: new Date(quest.generated_at).toISOString(),
-      expiresAt: new Date(quest.expires_at).toISOString(),
-      completedAt: quest.completed_at
-        ? new Date(quest.completed_at).toISOString()
+      id: questRow.id,
+      telegramId: questRow.telegram_id,
+      questType: questRow.quest_type,
+      questCategory: questRow.quest_category,
+      targetValue: questRow.target_value,
+      currentProgress: questRow.current_progress,
+      status: questRow.status,
+      rewards: questRow.rewards,
+      generatedAt: new Date(questRow.generated_at).toISOString(),
+      expiresAt: new Date(questRow.expires_at).toISOString(),
+      completedAt: questRow.completed_at
+        ? new Date(questRow.completed_at).toISOString()
         : undefined,
-      claimedAt: quest.claimed_at
-        ? new Date(quest.claimed_at).toISOString()
+      claimedAt: questRow.claimed_at
+        ? new Date(questRow.claimed_at).toISOString()
         : undefined,
-      metadata: quest.metadata,
+      metadata: questRow.metadata,
     }
 
     return res.status(200).json({
       success: true,
       data: {
         quest: formattedQuest,
-        balance, // Отправляем обновленный баланс
+        balance, // Баланс уже включен в ответ функции
+        rewards: {
+          sprouts: sproutsEarned,
+          gems: gemsEarned,
+        },
       },
     })
   } catch (error) {
