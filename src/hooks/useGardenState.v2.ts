@@ -15,7 +15,7 @@ import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useUpdateQuestProgress } from '@/hooks/queries/useDailyQuestQueries'
 import { useChallengeGardenIntegration } from '@/hooks/useChallengeIntegration'
-import type { MoodType, Position2D, GardenElement } from '@/types'
+import type { MoodType, Position2D, GardenElement, Garden } from '@/types'
 import { loadGarden, saveGarden } from '@/utils/storage'
 import {
   generateDailyElement,
@@ -58,20 +58,21 @@ export function useGardenState() {
     clearSelection,
   } = useGardenClientStore()
 
-  // Локальное состояние из localStorage (для offline-first подхода)
-  const localGarden = loadGarden()
-
-  // Объединенное состояние: приоритет серверным данным, fallback на локальные
+  // 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Объединенное состояние с приоритетом серверным данным
+  // Если после очистки localStorage нет сада, но есть серверные данные - создаём сад из них
   const currentGarden = useMemo(() => {
-    if (!localGarden) return null
+    const localGarden = loadGarden()
 
-    // Если есть серверные данные, обновляем локальный сад
-    if (gardenData) {
-      const updatedGarden = {
-        ...localGarden,
+    // Если есть серверные данные - они приоритетнее
+    if (gardenData && currentUser) {
+      const updatedGarden: Garden = {
+        id: `garden_${currentUser.id}`,
+        userId: currentUser.id,
+        createdAt: currentUser.registrationDate,
         streak: gardenData.streak,
         elements: gardenData.elements,
         lastVisited: new Date(),
+        season: getCurrentSeason(new Date()),
       }
 
       // Сохраняем обновленный сад локально
@@ -80,8 +81,28 @@ export function useGardenState() {
       return updatedGarden
     }
 
-    return localGarden
-  }, [localGarden, gardenData])
+    // Fallback на локальные данные (offline-first)
+    if (localGarden) {
+      return localGarden
+    }
+
+    // Если нет ни серверных, ни локальных данных, но есть пользователь - создаём пустой сад
+    if (currentUser && !isLoading) {
+      const emptyGarden: Garden = {
+        id: `garden_${currentUser.id}`,
+        userId: currentUser.id,
+        createdAt: currentUser.registrationDate,
+        streak: 0,
+        elements: [],
+        lastVisited: new Date(),
+        season: getCurrentSeason(new Date()),
+      }
+      saveGarden(emptyGarden)
+      return emptyGarden
+    }
+
+    return null
+  }, [gardenData, currentUser, isLoading])
 
   // Статистика сада
   const gardenStats = useMemo(() => {

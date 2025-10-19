@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Users, Calendar, Flame, MapPin, Info } from 'lucide-react'
 import { Button, Card, UserAvatar } from '@/components/ui'
@@ -68,6 +68,12 @@ export function FriendGardenView({
   const { hapticFeedback, showAlert } = useTelegram()
   const updateQuestProgress = useUpdateQuestProgress()
 
+  // 🔑 Отслеживаем, был ли уже обновлён квест для избежания повторных вызовов
+  const questUpdatedRef = useRef(false)
+  // 🔑 Стабильная ссылка на updateQuestProgress для избежания пересоздания callback
+  const updateQuestProgressRef = useRef(updateQuestProgress)
+  updateQuestProgressRef.current = updateQuestProgress
+
   // Состояние для данных сада друга (изолировано от основного garden store)
   const [friendGarden, setFriendGarden] = useState<FriendGardenData | null>(
     null
@@ -108,10 +114,11 @@ export function FriendGardenView({
       setFriendGarden(result.data)
       hapticFeedback('success')
 
-      // 🎯 Обновляем прогресс daily quest для посещения сада друга (неблокирующе)
-      if (currentUser?.telegramId) {
+      // 🎯 Обновляем прогресс daily quest для посещения сада друга (только один раз)
+      if (currentUser?.telegramId && !questUpdatedRef.current) {
+        questUpdatedRef.current = true
         // Выполняем обновление квеста в фоне, не блокируя основной UI
-        updateQuestProgress
+        updateQuestProgressRef.current
           .mutateAsync({
             telegramId: currentUser.telegramId,
             questType: 'visit_friend_garden',
@@ -125,6 +132,8 @@ export function FriendGardenView({
               '⚠️ Failed to update visit_friend_garden quest:',
               error
             )
+            // Сбрасываем флаг при ошибке, чтобы можно было повторить
+            questUpdatedRef.current = false
           })
       }
     } catch (error) {
@@ -137,16 +146,12 @@ export function FriendGardenView({
     } finally {
       setIsLoading(false)
     }
-  }, [
-    currentUser?.telegramId,
-    friendTelegramId,
-    hapticFeedback,
-    showAlert,
-    updateQuestProgress,
-  ])
+  }, [currentUser?.telegramId, friendTelegramId, hapticFeedback, showAlert])
 
-  // Загружаем данные при монтировании
+  // Загружаем данные при монтировании или изменении друга
   useEffect(() => {
+    // Сбрасываем флаг квеста при изменении друга
+    questUpdatedRef.current = false
     void loadFriendGarden()
   }, [loadFriendGarden])
 
