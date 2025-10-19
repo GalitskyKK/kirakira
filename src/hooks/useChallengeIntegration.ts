@@ -3,7 +3,7 @@
  * Автоматически обновляет прогресс челленджей при изменении данных
  */
 
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useEffect } from 'react'
 import type { ChallengeMetric, GardenElement, MoodEntry } from '@/types'
 import {
   useGardenSync,
@@ -315,14 +315,20 @@ export function useChallengeIntegration() {
 export function useChallengeGardenIntegration() {
   const { updateChallengeProgress } = useChallengeIntegration()
 
+  // 🔑 Стабильная ссылка для избежания пересоздания callback
+  const updateProgressRef = useRef(updateChallengeProgress)
+  useEffect(() => {
+    updateProgressRef.current = updateChallengeProgress
+  }, [updateChallengeProgress])
+
   // Функция для вызова после добавления элемента в сад
   const onGardenElementAdded = useCallback(async () => {
     try {
-      await updateChallengeProgress()
+      await updateProgressRef.current()
     } catch (error) {
       // Ошибки не критичны, т.к. прогресс можно обновить позже
     }
-  }, [updateChallengeProgress])
+  }, []) // 🔑 Пустой массив зависимостей - функция стабильна
 
   return {
     onGardenElementAdded,
@@ -332,14 +338,20 @@ export function useChallengeGardenIntegration() {
 export function useChallengeMoodIntegration() {
   const { updateChallengeProgress } = useChallengeIntegration()
 
+  // 🔑 Стабильная ссылка для избежания пересоздания callback
+  const updateProgressRef = useRef(updateChallengeProgress)
+  useEffect(() => {
+    updateProgressRef.current = updateChallengeProgress
+  }, [updateChallengeProgress])
+
   // Функция для вызова после добавления записи настроения
   const onMoodEntryAdded = useCallback(async () => {
     try {
-      await updateChallengeProgress()
+      await updateProgressRef.current()
     } catch (error) {
       // Ошибки не критичны, т.к. прогресс можно обновить позже
     }
-  }, [updateChallengeProgress])
+  }, []) // 🔑 Пустой массив зависимостей - функция стабильна
 
   return {
     onMoodEntryAdded,

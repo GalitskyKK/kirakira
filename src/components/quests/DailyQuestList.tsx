@@ -9,7 +9,7 @@ import {
   useDailyQuests,
   useTodayCompletionRate,
 } from '@/hooks/queries/useDailyQuestQueries'
-import { useQuestUI, useQuestProgress } from '@/stores/dailyQuestStore'
+import { useQuestUI } from '@/stores/dailyQuestStore'
 import { DailyQuestCard } from './DailyQuestCard'
 import { QuestCompletionSummary } from './QuestCompletionSummary'
 import { QuestRewardModal } from './QuestRewardModal'
@@ -36,7 +36,29 @@ export function DailyQuestList({
   } = useDailyQuests(telegramId)
   const { completed, total, percentage } = useTodayCompletionRate(telegramId)
   const { lastClaimedRewards } = useQuestUI()
-  const { overallProgress, overallPercentage } = useQuestProgress()
+
+  // 🔧 ИСПРАВЛЕНИЕ: Используем React Query данные вместо Zustand
+  const overallProgress = React.useMemo(() => {
+    if (!questsData?.quests) return { completed: 0, target: 0 }
+
+    const completed = questsData.quests.reduce(
+      (sum, quest) => sum + quest.currentProgress,
+      0
+    )
+    const target = questsData.quests.reduce(
+      (sum, quest) => sum + quest.targetValue,
+      0
+    )
+
+    return { completed, target }
+  }, [questsData?.quests])
+
+  const overallPercentage = React.useMemo(() => {
+    if (overallProgress.target === 0) return 0
+    return Math.round(
+      (overallProgress.completed / overallProgress.target) * 100
+    )
+  }, [overallProgress])
 
   // Группируем квесты по категориям
   const questsByCategory = React.useMemo(() => {
