@@ -3,7 +3,7 @@
  * Модальное окно для отображения полученных наград
  */
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
@@ -21,17 +21,27 @@ export function QuestRewardModal({
   isOpen = true,
   onClose,
 }: QuestRewardModalProps) {
-  // Автоматически закрываем модалку через 3 секунды
+  // 🔑 Стабильная ссылка на onClose для предотвращения пересоздания таймера
+  const onCloseRef = useRef(onClose)
   useEffect(() => {
-    if (isOpen) {
-      const timer = setTimeout(() => {
-        onClose()
-      }, 3000)
+    onCloseRef.current = onClose
+  }, [onClose])
 
-      return () => clearTimeout(timer)
+  // Автоматически закрываем модалку через 3 секунды (запускается только один раз при открытии)
+  useEffect(() => {
+    if (!isOpen) return
+
+    console.log('🎁 Quest reward modal opened, setting close timer...')
+    const timer = setTimeout(() => {
+      console.log('⏰ Auto-closing quest reward modal')
+      onCloseRef.current()
+    }, 3000)
+
+    return () => {
+      console.log('🧹 Clearing quest reward modal timer')
+      clearTimeout(timer)
     }
-    return undefined
-  }, [isOpen, onClose])
+  }, [isOpen]) // 🔑 Только isOpen в зависимостях - таймер запустится один раз при открытии
 
   if (!isOpen) return null
 
