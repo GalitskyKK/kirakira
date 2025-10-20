@@ -36,19 +36,27 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
       document.body.style.overflow = 'hidden'
       document.body.style.paddingRight = '0px'
 
-      // Блокируем скролл через addEventListener
-      const preventScroll = (e: Event) => {
+      // Блокируем скролл только для body, не для модалки
+      const preventBodyScroll = (e: Event) => {
+        // Проверяем, что событие не из модалки
+        const target = e.target as Element
+        const modal = document.querySelector('[data-modal="theme-shop"]')
+        if (modal && modal.contains(target)) {
+          return // Позволяем скролл внутри модалки
+        }
         e.preventDefault()
       }
 
-      document.addEventListener('wheel', preventScroll, { passive: false })
-      document.addEventListener('touchmove', preventScroll, { passive: false })
+      document.addEventListener('wheel', preventBodyScroll, { passive: false })
+      document.addEventListener('touchmove', preventBodyScroll, {
+        passive: false,
+      })
 
       return () => {
         document.body.style.overflow = 'unset'
         document.body.style.paddingRight = '0px'
-        document.removeEventListener('wheel', preventScroll)
-        document.removeEventListener('touchmove', preventScroll)
+        document.removeEventListener('wheel', preventBodyScroll)
+        document.removeEventListener('touchmove', preventBodyScroll)
       }
     } else {
       document.body.style.overflow = 'unset'
@@ -58,13 +66,34 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
   }, [isOpen])
 
   const handleBuyTheme = async (themeId: string) => {
-    if (!currentUser?.telegramId) return
+    console.log('🛒 handleBuyTheme called with themeId:', themeId)
+    console.log('👤 currentUser:', currentUser)
+    console.log('💰 userCurrency:', userCurrency)
+
+    if (!currentUser?.telegramId) {
+      console.error('❌ No currentUser.telegramId')
+      return
+    }
 
     setPurchasingTheme(themeId)
+    console.log('⏳ Set purchasing theme:', themeId)
 
     try {
       const theme = themes.find(t => t.id === themeId)
-      if (!theme) return
+      console.log('🎨 Found theme:', theme)
+      if (!theme) {
+        console.error('❌ Theme not found')
+        return
+      }
+
+      console.log('💸 Calling spendCurrency with:', {
+        telegramId: currentUser.telegramId,
+        currency: 'sprouts',
+        amount: theme.priceSprouts,
+        reason: 'buy_theme',
+        description: `Покупка темы "${theme.name}"`,
+        metadata: { themeId, themeName: theme.name },
+      })
 
       const result = await spendCurrency(
         currentUser.telegramId,
@@ -75,18 +104,22 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
         { themeId, themeName: theme.name }
       )
 
+      console.log('📊 spendCurrency result:', result)
+
       if (result.success) {
         // Обновляем список купленных тем
+        console.log('🔄 Refetching owned themes...')
         await refetchOwnedThemes()
-        console.log('Theme purchased successfully!')
+        console.log('✅ Theme purchased successfully!')
         // Можно добавить toast уведомление
       } else {
-        console.error('Failed to buy theme:', result.error)
+        console.error('❌ Failed to buy theme:', result.error)
         // Можно добавить toast с ошибкой
       }
     } catch (error) {
-      console.error('Failed to buy theme:', error)
+      console.error('💥 Error in handleBuyTheme:', error)
     } finally {
+      console.log('🏁 Clearing purchasing theme')
       setPurchasingTheme(null)
     }
   }
@@ -103,6 +136,7 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
     <AnimatePresence>
       <motion.div
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+        data-modal="theme-shop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -243,6 +277,10 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
                                 className="w-full"
                                 disabled={isPurchasing}
                                 onClick={e => {
+                                  console.log(
+                                    '🖱️ Buy button clicked for theme:',
+                                    theme.id
+                                  )
                                   e.stopPropagation()
                                   handleBuyTheme(theme.id)
                                 }}

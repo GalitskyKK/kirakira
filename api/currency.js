@@ -13,6 +13,8 @@
 
 // 🔒 Функция для инициализации Supabase с JWT (RLS-защищенный)
 async function getSupabaseClient(jwt = null) {
+  console.log('🔑 getSupabaseClient called with jwt:', jwt ? 'present' : 'null')
+
   if (!process.env.SUPABASE_URL) {
     throw new Error('SUPABASE_URL not configured')
   }
@@ -20,6 +22,7 @@ async function getSupabaseClient(jwt = null) {
   // ✅ ПРИОРИТЕТ: Используем JWT для RLS-защищенных запросов
   if (jwt) {
     try {
+      console.log('🔑 Using JWT client')
       const { createAuthenticatedSupabaseClient } = await import('./_jwt.js')
       return await createAuthenticatedSupabaseClient(jwt)
     } catch (error) {
@@ -172,6 +175,9 @@ async function handleSpend(req, res) {
     }
 
     // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
+    console.log('🔑 req.auth:', req.auth)
+    console.log('🔑 req.auth?.jwt:', req.auth?.jwt)
+
     const supabase = await getSupabaseClient(req.auth?.jwt)
 
     console.log(
@@ -179,6 +185,15 @@ async function handleSpend(req, res) {
     )
 
     // Вызываем функцию PostgreSQL для атомарного списания
+    console.log('💸 Calling spend_currency with params:', {
+      p_telegram_id: telegramId,
+      p_currency_type: currencyType,
+      p_amount: amount,
+      p_reason: reason,
+      p_description: description || null,
+      p_metadata: metadata,
+    })
+
     const { data, error } = await supabase.rpc('spend_currency', {
       p_telegram_id: telegramId,
       p_currency_type: currencyType,
@@ -187,6 +202,8 @@ async function handleSpend(req, res) {
       p_description: description || null,
       p_metadata: metadata,
     })
+
+    console.log('💸 spend_currency result:', { data, error })
 
     if (error) {
       console.error('❌ Error spending currency:', error)
