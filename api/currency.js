@@ -1,12 +1,14 @@
 /**
- * 💰 ОБЪЕДИНЕННЫЙ API ДЛЯ ВАЛЮТЫ
- * Включает: earn, spend, balance, transactions
+ * 💰 ОБЪЕДИНЕННЫЙ API ДЛЯ ВАЛЮТЫ И МАГАЗИНА
+ * Включает: earn, spend, balance, transactions, themes
  *
  * ACTIONS:
  * - earn: Начисление валюты
  * - spend: Списание валюты
  * - balance: Получение баланса
  * - transactions: История транзакций
+ * - list_themes: Список тем и купленных
+ * - buy_theme: Покупка темы
  */
 
 // 🔒 Функция для инициализации Supabase с JWT (RLS-защищенный)
@@ -423,6 +425,256 @@ async function handleTransactions(req, res) {
 }
 
 // ===============================================
+// 🎨 ACTION: LIST_THEMES - Список тем и купленных
+// ===============================================
+async function handleListThemes(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' })
+  }
+
+  try {
+    const telegramId = parseInt(req.query.telegramId)
+
+    if (!telegramId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing telegramId parameter',
+      })
+    }
+
+    // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+
+    console.log(`🎨 Getting themes for user ${telegramId}`)
+
+    // Получаем купленные темы пользователя
+    const { data: ownedThemes, error: ownedError } = await supabase
+      .from('shop_purchases')
+      .select('item_id')
+      .eq('telegram_id', telegramId)
+      .eq('item_type', 'garden_theme')
+
+    if (ownedError) {
+      console.error('❌ Error fetching owned themes:', ownedError)
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to fetch owned themes',
+      })
+    }
+
+    const ownedThemeIds = ownedThemes.map(t => t.item_id)
+
+    // Статичный список тем (в будущем можно вынести в БД)
+    const themes = [
+      { id: 'light', name: 'Светлая', priceSprouts: 0, isDefault: true },
+      { id: 'dark', name: 'Тёмная', priceSprouts: 0, isDefault: true },
+      { id: 'sunset', name: 'Закат', priceSprouts: 500, isDefault: false },
+      { id: 'night', name: 'Ночное небо', priceSprouts: 600, isDefault: false },
+      { id: 'forest', name: 'Лесная', priceSprouts: 700, isDefault: false },
+      { id: 'aqua', name: 'Морская', priceSprouts: 800, isDefault: false },
+    ]
+
+    console.log(`✅ Themes fetched for user ${telegramId}:`, {
+      total: themes.length,
+      owned: ownedThemeIds.length,
+    })
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        themes,
+        ownedThemeIds,
+      },
+    })
+  } catch (error) {
+    console.error('❌ Unexpected error in handleListThemes:', error)
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Internal server error',
+    })
+  }
+}
+
+// ===============================================
+// 🛒 ACTION: BUY_THEME - Покупка темы
+// ===============================================
+async function handleBuyTheme(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' })
+  }
+
+  try {
+    const { telegramId, themeId } = req.body
+
+    if (!telegramId || !themeId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: telegramId, themeId',
+      })
+    }
+
+    // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+
+    console.log(`🛒 Buying theme ${themeId} for user ${telegramId}`)
+
+    // Получаем информацию о теме
+    const themes = [
+      { id: 'light', name: 'Светлая', priceSprouts: 0, isDefault: true },
+      { id: 'dark', name: 'Тёмная', priceSprouts: 0, isDefault: true },
+      { id: 'sunset', name: 'Закат', priceSprouts: 500, isDefault: false },
+      { id: 'night', name: 'Ночное небо', priceSprouts: 600, isDefault: false },
+      { id: 'forest', name: 'Лесная', priceSprouts: 700, isDefault: false },
+      { id: 'aqua', name: 'Морская', priceSprouts: 800, isDefault: false },
+    ]
+
+    const theme = themes.find(t => t.id === themeId)
+    if (!theme) {
+      return res.status(400).json({
+        success: false,
+        error: 'Theme not found',
+      })
+    }
+
+    // Проверяем, не куплена ли уже тема
+    const { data: existingPurchase, error: checkError } = await supabase
+      .from('shop_purchases')
+      .select('id')
+      .eq('telegram_id', telegramId)
+      .eq('item_id', themeId)
+      .eq('item_type', 'garden_theme')
+      .single()
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      console.error('❌ Error checking existing purchase:', checkError)
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to check existing purchase',
+      })
+    }
+
+    if (existingPurchase) {
+      return res.status(400).json({
+        success: false,
+        error: 'Theme already purchased',
+      })
+    }
+
+    // Если тема бесплатная, просто добавляем в покупки
+    if (theme.isDefault || theme.priceSprouts === 0) {
+      const { data: purchaseData, error: purchaseError } = await supabase
+        .from('shop_purchases')
+        .insert({
+          telegram_id: telegramId,
+          item_id: themeId,
+          item_type: 'garden_theme',
+          cost_sprouts: 0,
+          cost_gems: 0,
+        })
+        .select()
+        .single()
+
+      if (purchaseError) {
+        console.error('❌ Error creating free purchase:', purchaseError)
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to create purchase',
+        })
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          themeId,
+          themeName: theme.name,
+          cost: 0,
+          purchaseId: purchaseData.id,
+        },
+      })
+    }
+
+    // Для платных тем списываем валюту
+    const { data: spendResult, error: spendError } = await supabase.rpc(
+      'spend_currency',
+      {
+        p_telegram_id: telegramId,
+        p_currency_type: 'sprouts',
+        p_amount: theme.priceSprouts,
+        p_reason: 'buy_theme',
+        p_description: `Покупка темы "${theme.name}"`,
+        p_metadata: { themeId, themeName: theme.name },
+      }
+    )
+
+    if (spendError) {
+      console.error('❌ Error spending currency for theme:', spendError)
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to process payment',
+      })
+    }
+
+    const spendData = spendResult[0]
+
+    // Проверяем успешность операции
+    if (!spendData.success) {
+      console.log(
+        `⚠️ Insufficient funds for theme purchase: ${spendData.error_message}`
+      )
+      return res.status(400).json({
+        success: false,
+        error: spendData.error_message || 'Insufficient funds',
+      })
+    }
+
+    // Создаем запись о покупке
+    const { data: purchaseData, error: purchaseError } = await supabase
+      .from('shop_purchases')
+      .insert({
+        telegram_id: telegramId,
+        item_id: themeId,
+        item_type: 'garden_theme',
+        cost_sprouts: theme.priceSprouts,
+        cost_gems: 0,
+      })
+      .select()
+      .single()
+
+    if (purchaseError) {
+      console.error('❌ Error creating purchase record:', purchaseError)
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to create purchase record',
+      })
+    }
+
+    console.log(`✅ Theme purchased successfully:`, {
+      themeId,
+      cost: theme.priceSprouts,
+      newBalance: spendData.new_balance,
+    })
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        themeId,
+        themeName: theme.name,
+        cost: theme.priceSprouts,
+        newBalance: spendData.new_balance,
+        transactionId: spendData.transaction_id,
+        purchaseId: purchaseData.id,
+      },
+    })
+  } catch (error) {
+    console.error('❌ Unexpected error in handleBuyTheme:', error)
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Internal server error',
+    })
+  }
+}
+
+// ===============================================
 // 🎯 РОУТЕР
 // ===============================================
 
@@ -466,10 +718,16 @@ async function handler(req, res) {
       case 'transactions':
         return await handleTransactions(req, res)
 
+      case 'list_themes':
+        return await handleListThemes(req, res)
+
+      case 'buy_theme':
+        return await handleBuyTheme(req, res)
+
       default:
         return res.status(400).json({
           success: false,
-          error: `Unknown action: ${action}. Valid actions: earn, spend, balance, transactions`,
+          error: `Unknown action: ${action}. Valid actions: earn, spend, balance, transactions, list_themes, buy_theme`,
         })
     }
   } catch (error) {

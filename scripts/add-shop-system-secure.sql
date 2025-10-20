@@ -1,0 +1,193 @@
+-- =============================================
+-- БЕЗОПАСНАЯ МИГРАЦИЯ: Добавление системы магазина с RLS
+-- =============================================
+
+-- 1. Создаем таблицу для покупок в магазине
+CREATE TABLE IF NOT EXISTS public.shop_purchases (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  telegram_id bigint NOT NULL,
+  item_type text NOT NULL CHECK (item_type = ANY (ARRAY['garden_theme'::text, 'premium_feature'::text, 'decoration'::text])),
+  item_id text NOT NULL,
+  price_sprouts integer DEFAULT 0 CHECK (price_sprouts >= 0),
+  price_gems integer DEFAULT 0 CHECK (price_gems >= 0),
+  purchased_at timestamp with time zone DEFAULT now(),
+  metadata jsonb DEFAULT '{}'::jsonb,
+  CONSTRAINT shop_purchases_pkey PRIMARY KEY (id),
+  CONSTRAINT shop_purchases_telegram_id_fkey FOREIGN KEY (telegram_id) REFERENCES public.users(telegram_id),
+  CONSTRAINT shop_purchases_unique UNIQUE (telegram_id, item_type, item_id)
+);
+
+-- 2. Включаем RLS для таблицы shop_purchases
+ALTER TABLE public.shop_purchases ENABLE ROW LEVEL SECURITY;
+
+-- 3. Создаем RLS политики для shop_purchases
+-- Политика SELECT: пользователи могут читать только свои покупки
+CREATE POLICY "Users can view own purchases" ON public.shop_purchases
+  FOR SELECT USING (
+    telegram_id = (auth.jwt() ->> 'telegram_id')::bigint
+  );
+
+-- Политика INSERT: пользователи могут создавать только свои покупки
+CREATE POLICY "Users can insert own purchases" ON public.shop_purchases
+  FOR INSERT WITH CHECK (
+    telegram_id = (auth.jwt() ->> 'telegram_id')::bigint
+  );
+
+-- Политика UPDATE: пользователи могут обновлять только свои покупки
+CREATE POLICY "Users can update own purchases" ON public.shop_purchases
+  FOR UPDATE USING (
+    telegram_id = (auth.jwt() ->> 'telegram_id')::bigint
+  );
+
+-- 4. Проверяем и включаем RLS для user_currency (если не включен)
+ALTER TABLE public.user_currency ENABLE ROW LEVEL SECURITY;
+
+-- Политика SELECT для user_currency
+CREATE POLICY "Users can view own currency" ON public.user_currency
+  FOR SELECT USING (
+    telegram_id = (auth.jwt() ->> 'telegram_id')::bigint
+  );
+
+-- Политика UPDATE для user_currency (только через функции)
+CREATE POLICY "Users can update own currency" ON public.user_currency
+  FOR UPDATE USING (
+    telegram_id = (auth.jwt() ->> 'telegram_id')::bigint
+  );
+
+-- 5. Проверяем и включаем RLS для currency_transactions
+ALTER TABLE public.currency_transactions ENABLE ROW LEVEL SECURITY;
+
+-- Политика SELECT для currency_transactions
+CREATE POLICY "Users can view own transactions" ON public.currency_transactions
+  FOR SELECT USING (
+    telegram_id = (auth.jwt() ->> 'telegram_id')::bigint
+  );
+
+-- Политика INSERT для currency_transactions (только через функции)
+CREATE POLICY "Users can insert own transactions" ON public.currency_transactions
+  FOR INSERT WITH CHECK (
+    telegram_id = (auth.jwt() ->> 'telegram_id')::bigint
+  );
+
+-- 6. Создаем безопасную функцию для траты валюты
+CREATE OR REPLACE FUNCTION public.spend_currency(
+  p_telegram_id bigint,
+  p_currency_type text,
+  p_amount integer,
+  p_reason text,
+  p_description text DEFAULT NULL,
+  p_metadata jsonb DEFAULT '{}'::jsonb
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_current_balance integer;
+  v_new_balance integer;
+  v_transaction_id uuid;
+  v_auth_telegram_id bigint;
+BEGIN
+  -- 🔒 КРИТИЧЕСКАЯ ПРОВЕРКА: Получаем telegram_id из JWT токена
+  v_auth_telegram_id := (auth.jwt() ->> 'telegram_id')::bigint;
+  
+  -- Проверяем, что пользователь аутентифицирован
+  IF v_auth_telegram_id IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'User not authenticated');
+  END IF;
+  
+  -- 🔒 КРИТИЧЕСКАЯ ПРОВЕРКА: Пользователь может тратить только свои деньги
+  IF p_telegram_id != v_auth_telegram_id THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Access denied: cannot spend other user currency');
+  END IF;
+
+  -- Проверяем входные параметры
+  IF p_telegram_id IS NULL OR p_currency_type IS NULL OR p_amount IS NULL OR p_reason IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Missing required parameters');
+  END IF;
+
+  -- Проверяем тип валюты
+  IF p_currency_type NOT IN ('sprouts', 'gems') THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Invalid currency type');
+  END IF;
+
+  -- Проверяем сумму
+  IF p_amount <= 0 THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Amount must be positive');
+  END IF;
+
+  -- Получаем текущий баланс (теперь безопасно благодаря RLS)
+  SELECT 
+    CASE 
+      WHEN p_currency_type = 'sprouts' THEN sprouts
+      WHEN p_currency_type = 'gems' THEN gems
+    END
+  INTO v_current_balance
+  FROM public.user_currency
+  WHERE telegram_id = p_telegram_id;
+
+  -- Проверяем, существует ли пользователь
+  IF v_current_balance IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'User not found');
+  END IF;
+
+  -- Проверяем достаточность средств
+  IF v_current_balance < p_amount THEN
+    RETURN jsonb_build_object(
+      'success', false, 
+      'error', 'Insufficient funds',
+      'current_balance', v_current_balance,
+      'required_amount', p_amount
+    );
+  END IF;
+
+  -- Вычисляем новый баланс
+  v_new_balance := v_current_balance - p_amount;
+
+  -- Обновляем баланс пользователя (безопасно благодаря RLS)
+  UPDATE public.user_currency
+  SET 
+    sprouts = CASE WHEN p_currency_type = 'sprouts' THEN v_new_balance ELSE sprouts END,
+    gems = CASE WHEN p_currency_type = 'gems' THEN v_new_balance ELSE gems END,
+    total_sprouts_spent = CASE WHEN p_currency_type = 'sprouts' THEN total_sprouts_spent + p_amount ELSE total_sprouts_spent END,
+    total_gems_spent = CASE WHEN p_currency_type = 'gems' THEN total_gems_spent + p_amount ELSE total_gems_spent END,
+    last_updated = now(),
+    updated_at = now()
+  WHERE telegram_id = p_telegram_id;
+
+  -- Создаем запись транзакции (безопасно благодаря RLS)
+  INSERT INTO public.currency_transactions (
+    telegram_id, transaction_type, currency_type, amount,
+    balance_before, balance_after, reason, description, metadata
+  ) VALUES (
+    p_telegram_id, 'spend', p_currency_type, p_amount,
+    v_current_balance, v_new_balance, p_reason, p_description, p_metadata
+  ) RETURNING id INTO v_transaction_id;
+
+  -- Возвращаем успешный результат
+  RETURN jsonb_build_object(
+    'success', true,
+    'transaction_id', v_transaction_id,
+    'balance_before', v_current_balance,
+    'balance_after', v_new_balance,
+    'amount_spent', p_amount
+  );
+
+EXCEPTION
+  WHEN OTHERS THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Database error: ' || SQLERRM);
+END;
+$$;
+
+-- 7. Создаем индексы для оптимизации
+CREATE INDEX IF NOT EXISTS idx_shop_purchases_telegram_id ON public.shop_purchases(telegram_id);
+CREATE INDEX IF NOT EXISTS idx_shop_purchases_item_type ON public.shop_purchases(item_type);
+CREATE INDEX IF NOT EXISTS idx_shop_purchases_item_id ON public.shop_purchases(item_id);
+
+-- 8. Права доступа
+GRANT SELECT, INSERT, UPDATE ON public.shop_purchases TO authenticated;
+GRANT EXECUTE ON FUNCTION public.spend_currency TO authenticated;
+
+-- 9. Комментарии для документации
+COMMENT ON TABLE public.shop_purchases IS 'Покупки пользователей в магазине (темы, премиум функции, декорации) - защищено RLS';
+COMMENT ON FUNCTION public.spend_currency IS 'Безопасная функция для траты валюты с проверкой JWT и RLS';

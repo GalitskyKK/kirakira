@@ -193,7 +193,7 @@ export function ShelfView({
         />
 
         {/* Magical floating particles */}
-        {Array.from({ length: 15 }, (_, i) => (
+        {Array.from({ length: theme.particleDensity }, (_, i) => (
           <motion.div
             key={`particle-${i}`}
             className="absolute h-1 w-1 rounded-full opacity-60"
@@ -263,12 +263,23 @@ export function ShelfView({
                   )}
                 >
                   {/* Main shelf surface */}
-                  <div className="shelf-surface absolute inset-0 rounded-lg bg-gradient-to-b from-amber-200 via-amber-300 to-amber-400 shadow-lg">
+                  <div
+                    className="shelf-surface absolute inset-0 shadow-lg"
+                    style={{
+                      background: theme.shelfSurface,
+                      borderRadius: theme.shelfRadius,
+                      boxShadow: theme.shelfShadow,
+                    }}
+                  >
                     {/* Wood grain details */}
-                    <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-amber-400/30 to-transparent" />
                     <div
-                      className="absolute inset-0 rounded-lg opacity-40"
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/30 to-transparent"
+                      style={{ borderRadius: theme.shelfRadius }}
+                    />
+                    <div
+                      className="absolute inset-0 opacity-40"
                       style={{
+                        borderRadius: theme.shelfRadius,
                         backgroundImage: `
                         repeating-linear-gradient(
                           0deg,
@@ -281,29 +292,45 @@ export function ShelfView({
                     />
 
                     {/* Enhanced surface texture */}
-                    <div className="absolute inset-0 rounded-lg bg-gradient-to-b from-white/10 via-transparent to-black/10" />
+                    <div
+                      className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-black/10"
+                      style={{ borderRadius: theme.shelfRadius }}
+                    />
                   </div>
 
                   {/* Enhanced shelf edge (3D effect) */}
                   <div
                     className={clsx(
-                      'shelf-edge absolute inset-x-0 bottom-0 rounded-b-lg bg-gradient-to-b from-amber-500 to-amber-600 shadow-md',
+                      'shelf-edge absolute inset-x-0 bottom-0 shadow-md',
                       isMobile ? 'h-3' : 'h-4' // Более объемный край
                     )}
+                    style={{
+                      background: theme.shelfEdge,
+                      borderBottomLeftRadius: theme.shelfRadius,
+                      borderBottomRightRadius: theme.shelfRadius,
+                    }}
                   />
 
                   {/* Enhanced shelf supports */}
                   <div
                     className={clsx(
-                      'shelf-support absolute -left-2 bottom-0 rounded-lg bg-gradient-to-b from-amber-400 to-amber-500 shadow-md',
+                      'shelf-support absolute -left-2 bottom-0 shadow-md',
                       isMobile ? 'h-12 w-5' : 'h-16 w-6' // Более крупные опоры
                     )}
+                    style={{
+                      background: theme.shelfSupport,
+                      borderRadius: theme.shelfRadius,
+                    }}
                   />
                   <div
                     className={clsx(
-                      'shelf-support absolute -right-2 bottom-0 rounded-lg bg-gradient-to-b from-amber-400 to-amber-500 shadow-md',
+                      'shelf-support absolute -right-2 bottom-0 shadow-md',
                       isMobile ? 'h-12 w-5' : 'h-16 w-6'
                     )}
+                    style={{
+                      background: theme.shelfSupport,
+                      borderRadius: theme.shelfRadius,
+                    }}
                   />
 
                   {/* Additional shelf depth */}
@@ -312,13 +339,17 @@ export function ShelfView({
 
                 {/* Back wall */}
                 <div
-                  className="shelf-back absolute inset-0 -z-10 rounded-lg opacity-80"
-                  style={{ background: theme.wallBackground }}
+                  className="shelf-back absolute inset-0 -z-10 opacity-80"
+                  style={{
+                    background: theme.wallBackground,
+                    borderRadius: theme.wallRadius,
+                  }}
                 >
                   {/* Wall texture */}
                   <div
-                    className="absolute inset-0 rounded-lg opacity-30"
+                    className="absolute inset-0 opacity-30"
                     style={{
+                      borderRadius: theme.wallRadius,
                       backgroundImage: `
                       radial-gradient(circle at 25% 25%, rgba(255,255,255,0.2) 1px, transparent 1px),
                       radial-gradient(circle at 75% 75%, rgba(0,0,0,0.1) 1px, transparent 1px)

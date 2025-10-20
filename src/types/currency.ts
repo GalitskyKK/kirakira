@@ -100,6 +100,7 @@ export type CurrencySpendReason =
   | 'plant_skin_common'
   | 'plant_skin_rare'
   | 'particle_effect'
+  | 'buy_theme' // Покупка темы сада
   // Геймплей - Комнаты
   | 'extra_room'
   | 'room_upgrade_slots'
@@ -327,6 +328,7 @@ export const SHOP_COSTS: Record<CurrencySpendReason, ShopItemCost> = {
   plant_skin_common: { sprouts: 150 },
   plant_skin_rare: { sprouts: 300 },
   particle_effect: { sprouts: 250 },
+  buy_theme: { sprouts: 500 }, // Покупка темы сада
 
   // Геймплей - Комнаты
   extra_room: { sprouts: 800 },

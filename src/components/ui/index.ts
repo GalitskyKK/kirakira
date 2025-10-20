@@ -26,3 +26,4 @@ export {
 } from './TransactionHistory'
 export { StreakFreezeIndicator } from './StreakFreezeIndicator'
 export { StreakFreezeModal } from './StreakFreezeModal'
+export { ThemeShop } from './ThemeShop'

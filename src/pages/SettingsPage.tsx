@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { ProfilePrivacySettings } from '@/components/profile/ProfilePrivacySettings'
+import { ThemeSettings } from '@/components/settings/ThemeSettings'
 
 export function SettingsPage() {
   const navigate = useNavigate()
@@ -50,7 +51,8 @@ export function SettingsPage() {
       </div>
 
       {/* Content */}
-      <div className="p-4">
+      <div className="space-y-6 p-4">
+        <ThemeSettings />
         <ProfilePrivacySettings user={currentUser} />
       </div>
     </motion.div>
