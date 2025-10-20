@@ -380,8 +380,8 @@ function App() {
   // Main app routing
   return (
     <UserProvider>
-      <Router>
-        <div className="App">
+      <div className="App">
+        <Router>
           <AnimatePresence mode="wait">
             <Routes>
               <Route
@@ -516,11 +516,11 @@ function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </AnimatePresence>
-        </div>
+        </Router>
 
-        {/* PWA Update Prompt */}
+        {/* PWA Update Prompt - глобально доступен */}
         <UpdatePrompt />
-      </Router>
+      </div>
     </UserProvider>
   )
 }
