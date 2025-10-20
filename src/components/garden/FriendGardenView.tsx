@@ -5,6 +5,7 @@ import { Button, Card, UserAvatar } from '@/components/ui'
 import { ShelfView, GardenStats } from '@/components/garden'
 import { useTelegram } from '@/hooks'
 import { useQuestIntegration } from '@/hooks/useQuestIntegration'
+import { useDailyQuests } from '@/hooks/queries/useDailyQuestQueries'
 import type {
   User,
   GardenElement,
@@ -66,13 +67,16 @@ export function FriendGardenView({
   onBack,
 }: FriendGardenViewProps) {
   const { hapticFeedback, showAlert } = useTelegram()
-  const { questActions } = useQuestIntegration({
+  const { questActions, updateQuestsWithValidation } = useQuestIntegration({
     onQuestUpdated: (questType, isCompleted) => {
       if (isCompleted) {
         console.log(`🎉 Quest completed: ${questType}`)
       }
     },
   })
+
+  // Получаем квесты для умной валидации
+  const { data: questsData } = useDailyQuests(currentUser?.telegramId || 0)
 
   // 🔑 Отслеживаем, был ли уже обновлён квест для избежания повторных вызовов
   const questUpdatedRef = useRef(false)
@@ -117,23 +121,47 @@ export function FriendGardenView({
       setFriendGarden(result.data)
       hapticFeedback('success')
 
-      // 🎯 Обновляем прогресс daily quest для посещения сада друга (только один раз)
+      // 🎯 Обновляем прогресс daily quest для посещения сада друга с умной валидацией
       if (currentUser?.telegramId && !questUpdatedRef.current) {
         questUpdatedRef.current = true
+
         // Выполняем обновление квеста в фоне, не блокируя основной UI
-        questActions
-          .visitFriendGarden()
-          .then(() => {
-            console.log('✅ Visit friend garden quest updated')
-          })
-          .catch(error => {
-            console.warn(
-              '⚠️ Failed to update visit_friend_garden quest:',
-              error
-            )
-            // Сбрасываем флаг при ошибке, чтобы можно было повторить
-            questUpdatedRef.current = false
-          })
+        if (questsData?.quests && questsData.quests.length > 0) {
+          updateQuestsWithValidation(
+            {
+              friendTelegramId: friendTelegramId,
+            },
+            questsData.quests
+          )
+            .then(() => {
+              console.log(
+                '✅ Visit friend garden quest updated with validation'
+              )
+            })
+            .catch(error => {
+              console.warn(
+                '⚠️ Failed to update visit_friend_garden quest with validation:',
+                error
+              )
+              // Сбрасываем флаг при ошибке, чтобы можно было повторить
+              questUpdatedRef.current = false
+            })
+        } else {
+          // Fallback к старому методу если квесты не загружены
+          questActions
+            .visitFriendGarden()
+            .then(() => {
+              console.log('✅ Visit friend garden quest updated (fallback)')
+            })
+            .catch(error => {
+              console.warn(
+                '⚠️ Failed to update visit_friend_garden quest (fallback):',
+                error
+              )
+              // Сбрасываем флаг при ошибке, чтобы можно было повторить
+              questUpdatedRef.current = false
+            })
+        }
       }
     } catch (error) {
       console.error('Failed to load friend garden:', error)

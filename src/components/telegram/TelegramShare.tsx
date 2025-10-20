@@ -5,6 +5,7 @@ import { useTelegram } from '@/hooks'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useQuestIntegration } from '@/hooks/useQuestIntegration'
+import { useDailyQuests } from '@/hooks/queries/useDailyQuestQueries'
 import { Button, Card } from '@/components/ui'
 import type { Garden, MoodEntry } from '@/types'
 import { authenticatedFetch } from '@/utils/apiClient'
@@ -24,13 +25,16 @@ export function TelegramShare({
     useTelegram()
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
-  const { questActions } = useQuestIntegration({
+  const { questActions, updateQuestsWithValidation } = useQuestIntegration({
     onQuestUpdated: (questType, isCompleted) => {
       if (isCompleted) {
         console.log(`🎉 Quest completed: ${questType}`)
       }
     },
   })
+
+  // Получаем квесты для умной валидации
+  const { data: questsData } = useDailyQuests(telegramId || 0)
   const [isCapturing, setIsCapturing] = useState(false)
   const [lastSharedImage, setLastSharedImage] = useState<string | null>(null)
 
@@ -112,19 +116,40 @@ export function TelegramShare({
             console.log('🏆 Added XP for sharing garden text')
             showAlert('🏆 +25 XP за шеринг сада!')
 
-            // 🎯 Обновляем прогресс daily quest для поделиться садом (неблокирующе)
+            // 🎯 Обновляем прогресс daily quest для поделиться садом с умной валидацией
             if (userData?.user?.telegramId) {
-              questActions
-                .shareGarden()
-                .then(() => {
-                  console.log('✅ Share garden quest updated (text)')
-                })
-                .catch(error => {
-                  console.warn(
-                    '⚠️ Failed to update share_garden quest (text):',
-                    error
-                  )
-                })
+              if (questsData?.quests && questsData.quests.length > 0) {
+                updateQuestsWithValidation(
+                  {
+                    // Контекст шаринга всегда валиден
+                  },
+                  questsData.quests
+                )
+                  .then(() => {
+                    console.log(
+                      '✅ Share garden quest updated with validation (text)'
+                    )
+                  })
+                  .catch(error => {
+                    console.warn(
+                      '⚠️ Failed to update share_garden quest with validation (text):',
+                      error
+                    )
+                  })
+              } else {
+                // Fallback к старому методу если квесты не загружены
+                questActions
+                  .shareGarden()
+                  .then(() => {
+                    console.log('✅ Share garden quest updated (fallback text)')
+                  })
+                  .catch(error => {
+                    console.warn(
+                      '⚠️ Failed to update share_garden quest (fallback text):',
+                      error
+                    )
+                  })
+              }
             }
           }
         } catch (error) {
@@ -141,6 +166,8 @@ export function TelegramShare({
     showAlert,
     userData?.user?.telegramId,
     questActions,
+    updateQuestsWithValidation,
+    questsData?.quests,
   ])
 
   // Шаринг скриншота сада
@@ -160,19 +187,40 @@ export function TelegramShare({
       const description = generateGardenDescription()
       shareGarden(imageUrl, description)
 
-      // 🎯 Обновляем прогресс daily quest для поделиться садом
+      // 🎯 Обновляем прогресс daily quest для поделиться садом с умной валидацией
       if (userData?.user?.telegramId) {
-        questActions
-          .shareGarden()
-          .then(() => {
-            console.log('✅ Share garden quest updated (image)')
-          })
-          .catch(error => {
-            console.warn(
-              '⚠️ Failed to update share_garden quest (image):',
-              error
-            )
-          })
+        if (questsData?.quests && questsData.quests.length > 0) {
+          updateQuestsWithValidation(
+            {
+              // Контекст шаринга всегда валиден
+            },
+            questsData.quests
+          )
+            .then(() => {
+              console.log(
+                '✅ Share garden quest updated with validation (image)'
+              )
+            })
+            .catch(error => {
+              console.warn(
+                '⚠️ Failed to update share_garden quest with validation (image):',
+                error
+              )
+            })
+        } else {
+          // Fallback к старому методу если квесты не загружены
+          questActions
+            .shareGarden()
+            .then(() => {
+              console.log('✅ Share garden quest updated (fallback image)')
+            })
+            .catch(error => {
+              console.warn(
+                '⚠️ Failed to update share_garden quest (fallback image):',
+                error
+              )
+            })
+        }
       }
 
       hapticFeedback('success')
@@ -189,6 +237,8 @@ export function TelegramShare({
     shareGarden,
     showAlert,
     questActions,
+    updateQuestsWithValidation,
+    questsData?.quests,
     userData?.user?.telegramId,
   ])
 

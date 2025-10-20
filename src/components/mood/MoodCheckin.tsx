@@ -7,6 +7,8 @@ import { Card, LoadingSpinner } from '@/components/ui'
 import { useMoodTracking } from '@/hooks/index.v2'
 import { useGardenState } from '@/hooks/index.v2'
 import { useQuestIntegration } from '@/hooks/useQuestIntegration'
+import { useDailyQuests } from '@/hooks/queries/useDailyQuestQueries'
+import { useTelegramId } from '@/hooks/useTelegramId'
 import type { MoodType, MoodIntensity, MoodEntry, GardenElement } from '@/types'
 
 interface MoodCheckinProps {
@@ -36,7 +38,9 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
     error: gardenError,
   } = useGardenState()
 
-  const { questActions } = useQuestIntegration({
+  const telegramId = useTelegramId()
+  const { data: questsData } = useDailyQuests(telegramId ?? 0)
+  const { questActions, updateQuestsWithValidation } = useQuestIntegration({
     onQuestUpdated: (questType, isCompleted) => {
       if (isCompleted) {
         console.log(`🎉 Quest completed: ${questType}`)
@@ -63,8 +67,19 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
         if (moodEntry) {
           onMoodSubmit?.(moodEntry)
 
-          // Обновляем квесты настроения
-          await questActions.recordMood(mood, !!note)
+          // Обновляем квесты настроения с умной валидацией
+          if (questsData?.quests && questsData.quests.length > 0) {
+            await updateQuestsWithValidation(
+              {
+                moodType: mood,
+                hasNote: !!note,
+              },
+              questsData.quests
+            )
+          } else {
+            // Fallback к старому методу если квесты не загружены
+            await questActions.recordMood(mood, !!note)
+          }
 
           if (!todaysMood && canUnlockToday()) {
             // Unlock garden element
@@ -97,6 +112,9 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
       onMoodSubmit,
       canUnlockToday,
       unlockElement,
+      updateQuestsWithValidation,
+      questsData?.quests,
+      questActions,
     ]
   )
 

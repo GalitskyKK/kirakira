@@ -13,8 +13,12 @@ import {
 } from '@/hooks/queries'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
-import { useUpdateQuestProgress } from '@/hooks/queries/useDailyQuestQueries'
+import {
+  useUpdateQuestProgress,
+  useDailyQuests,
+} from '@/hooks/queries/useDailyQuestQueries'
 import { useChallengeGardenIntegration } from '@/hooks/useChallengeIntegration'
+import { useQuestIntegration } from '@/hooks/useQuestIntegration'
 import type { MoodType, Position2D, GardenElement, Garden } from '@/types'
 import { loadGarden, saveGarden } from '@/utils/storage'
 import {
@@ -46,6 +50,16 @@ export function useGardenState() {
   const updatePositionMutation = useUpdateElementPosition()
   const updateQuestProgress = useUpdateQuestProgress()
   const { onGardenElementAdded } = useChallengeGardenIntegration()
+
+  // Получаем квесты для умной валидации
+  const { data: questsData } = useDailyQuests(telegramId || 0)
+  const { updateQuestsWithValidation } = useQuestIntegration({
+    onQuestUpdated: (questType, isCompleted) => {
+      if (isCompleted) {
+        console.log(`🎉 Quest completed: ${questType}`)
+      }
+    },
+  })
 
   // Клиентское UI состояние через Zustand
   const {
@@ -282,13 +296,37 @@ export function useGardenState() {
             )
           }
 
-          // 🎯 Обновляем прогресс daily quests
-          if (telegramId) {
+          // 🎯 Обновляем прогресс daily quests с умной валидацией
+          if (
+            telegramId &&
+            questsData?.quests &&
+            questsData.quests.length > 0
+          ) {
             try {
-              // Обновляем квесты связанные с садом
-              console.log('🎯 Updating garden-related daily quests...')
+              console.log(
+                '🎯 Updating garden-related daily quests with validation...'
+              )
 
-              // Обновляем квесты типа collect_elements и collect_rare_element
+              await updateQuestsWithValidation(
+                {
+                  elementType: newElement.type,
+                  isRareElement:
+                    newElement.rarity === 'rare' ||
+                    newElement.rarity === 'epic' ||
+                    newElement.rarity === 'legendary',
+                },
+                questsData.quests
+              )
+            } catch (questError) {
+              console.error('❌ Failed to update quest progress:', questError)
+            }
+          } else if (telegramId) {
+            // Fallback к старому методу если квесты не загружены
+            try {
+              console.log(
+                '🎯 Updating garden-related daily quests (fallback)...'
+              )
+
               const gardenQuests = ['collect_elements']
               if (
                 newElement.rarity === 'rare' ||
@@ -310,7 +348,10 @@ export function useGardenState() {
                 }
               }
             } catch (questError) {
-              console.error('❌ Failed to update quest progress:', questError)
+              console.error(
+                '❌ Failed to update quest progress (fallback):',
+                questError
+              )
             }
           }
 
