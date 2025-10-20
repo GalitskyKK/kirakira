@@ -182,7 +182,7 @@ export const useCurrencyStore = create<CurrencyStore>()(
         if (userCurrency) {
           const updatedCurrency: UserCurrency = {
             ...userCurrency,
-            [currencyType]: result.data.newBalance,
+            [currencyType]: result.data.balance_after,
             ...(currencyType === 'sprouts'
               ? {
                   totalSproutsEarned: userCurrency.totalSproutsEarned + amount,
@@ -196,14 +196,14 @@ export const useCurrencyStore = create<CurrencyStore>()(
           set({ userCurrency: updatedCurrency })
 
           console.log(
-            `✅ Currency earned. New balance: ${result.data.newBalance}`
+            `✅ Currency earned. New balance: ${result.data.balance_after}`
           )
         }
 
         return {
           success: true,
-          newBalance: result.data.newBalance,
-          transactionId: result.data.transactionId,
+          balance_after: result.data.balance_after,
+          transaction_id: result.data.transaction_id,
         }
       } catch (error) {
         const errorMessage =
@@ -266,7 +266,7 @@ export const useCurrencyStore = create<CurrencyStore>()(
         if (userCurrency) {
           const updatedCurrency: UserCurrency = {
             ...userCurrency,
-            [currencyType]: result.data.newBalance,
+            [currencyType]: result.data.balance_after,
             ...(currencyType === 'sprouts'
               ? {
                   totalSproutsSpent: userCurrency.totalSproutsSpent + amount,
@@ -280,14 +280,14 @@ export const useCurrencyStore = create<CurrencyStore>()(
           set({ userCurrency: updatedCurrency })
 
           console.log(
-            `✅ Currency spent. New balance: ${result.data.newBalance}`
+            `✅ Currency spent. New balance: ${result.data.balance_after}`
           )
         }
 
         return {
           success: true,
-          newBalance: result.data.newBalance,
-          transactionId: result.data.transactionId,
+          balance_after: result.data.balance_after,
+          transaction_id: result.data.transaction_id,
         }
       } catch (error) {
         const errorMessage =
