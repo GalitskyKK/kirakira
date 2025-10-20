@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useState } from 'react'
 import { User, MoodStats } from '@/types'
 import { calculateAchievements } from '@/utils/achievements'
 
@@ -29,7 +30,7 @@ function AchievementBadge({
 }: AchievementBadgeProps) {
   return (
     <motion.div
-      className={`rounded-xl border p-4 transition-all ${
+      className={`rounded-lg border p-3 transition-all ${
         isUnlocked
           ? 'border-garden-200 bg-gradient-to-br from-garden-50 to-green-50 dark:border-garden-700 dark:from-garden-900/30 dark:to-green-900/30'
           : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800'
@@ -40,12 +41,12 @@ function AchievementBadge({
     >
       <div className="text-center">
         <div
-          className={`mb-2 text-3xl ${isUnlocked ? 'grayscale-0' : 'grayscale'}`}
+          className={`mb-1 text-2xl ${isUnlocked ? 'grayscale-0' : 'grayscale'}`}
         >
           {emoji}
         </div>
         <div
-          className={`text-sm font-medium ${isUnlocked ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'}`}
+          className={`text-xs font-medium ${isUnlocked ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'}`}
         >
           {name}
         </div>
@@ -81,8 +82,10 @@ export function ProfileAchievements({
   moodStats,
   totalElements,
 }: ProfileAchievementsProps) {
+  const [showAll, setShowAll] = useState(false)
+
   // Защита от undefined - создаем fallback значения для moodStats
-  const safeMoodStats = moodStats || {
+  const safeMoodStats = moodStats ?? {
     totalEntries: 0,
     currentStreak: 0,
     longestStreak: 0,
@@ -103,6 +106,9 @@ export function ProfileAchievements({
   // Use the new achievements system
   const achievements = calculateAchievements(user, safeMoodStats, totalElements)
   const unlockedCount = achievements.filter(a => a.isUnlocked).length
+  const displayedAchievements = showAll
+    ? achievements
+    : achievements.slice(0, 2)
 
   return (
     <motion.div
@@ -120,21 +126,47 @@ export function ProfileAchievements({
         </div>
       </div>
 
-      {/* Achievements Gri */}
+      {/* Achievements Grid - показываем только первые 2 или все */}
       <div className="grid grid-cols-2 gap-3">
-        {achievements.map((achievement, index) => (
+        {displayedAchievements.map((achievement, index) => (
           <AchievementBadge
             key={achievement.name}
             emoji={achievement.emoji}
             name={achievement.name}
             description={achievement.description}
             isUnlocked={achievement.isUnlocked}
-            progress={achievement.progress || 0}
-            maxProgress={achievement.maxProgress || 1}
+            progress={achievement.progress ?? 0}
+            maxProgress={achievement.maxProgress ?? 1}
             delay={0.1 + index * 0.05}
           />
         ))}
       </div>
+
+      {/* Кнопка "Посмотреть все" если есть больше 2 достижений */}
+      {achievements.length > 2 && !showAll && (
+        <motion.button
+          onClick={() => setShowAll(true)}
+          className="w-full rounded-lg border border-gray-200 bg-white p-3 text-center text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          Посмотреть все ({achievements.length})
+        </motion.button>
+      )}
+
+      {/* Кнопка "Свернуть" если показаны все */}
+      {showAll && achievements.length > 2 && (
+        <motion.button
+          onClick={() => setShowAll(false)}
+          className="w-full rounded-lg border border-gray-200 bg-white p-3 text-center text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          Свернуть
+        </motion.button>
+      )}
 
       {/* Progress Summary */}
       <motion.div

@@ -1,11 +1,5 @@
 import { motion } from 'framer-motion'
 import { User, Garden, MoodStats } from '@/types'
-import {
-  calculateLevelProgress,
-  calculateExperienceFromStats,
-} from '@/utils/achievements'
-import { DailyQuestList } from '@/components/quests'
-import { useState } from 'react'
 
 interface ProfileStatsProps {
   readonly user: User
@@ -45,17 +39,17 @@ function StatCard({
 
   return (
     <motion.div
-      className={`rounded-xl bg-gradient-to-br ${colorClasses[color as keyof typeof colorClasses]} p-4`}
+      className={`rounded-lg bg-gradient-to-br ${colorClasses[color as keyof typeof colorClasses]} p-3`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.3 }}
     >
       <div className="text-center">
-        <div className="mb-2 text-3xl">{emoji}</div>
-        <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <div className="mb-1 text-2xl">{emoji}</div>
+        <div className="text-xl font-bold text-gray-900 dark:text-gray-100">
           {value}
         </div>
-        <div className="text-sm font-medium">{label}</div>
+        <div className="text-xs font-medium">{label}</div>
         {subtitle && (
           <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             {subtitle}
@@ -69,32 +63,13 @@ function StatCard({
 export function ProfileStats({
   user,
   garden: _garden,
-  moodStats,
+  moodStats: _moodStats,
   totalElements,
 }: ProfileStatsProps) {
-  const [showQuests, setShowQuests] = useState(false)
-  // Защита от undefined - создаем fallback значения
-  // 🔧 ИСПРАВЛЕНИЕ: API возвращает totalMoodEntries (не totalEntries) b
-  const safeMoodStats = moodStats || {
-    totalEntries: 0,
-    totalMoodEntries: 0, // добавлено для совместимости с API
-    currentStreak: 0,
-    longestStreak: 0,
-    mostFrequentMood: null,
-    averageIntensity: 0,
-    moodDistribution: {
-      joy: 0,
-      calm: 0,
-      stress: 0,
-      sadness: 0,
-      anger: 0,
-      anxiety: 0,
-    },
-    weeklyTrend: [],
-    monthlyTrend: [],
-  }
+  // Защита от undefined - создаем fallback значения (используется в будущем)
+  // const _safeMoodStats = moodStats ?? { ... }
 
-  const safeUserStats = user?.stats || {
+  const safeUserStats = user?.stats ?? {
     currentStreak: 0,
     longestStreak: 0,
     totalDays: 0,
@@ -103,16 +78,8 @@ export function ProfileStats({
   }
 
   const currentStreak = safeUserStats.currentStreak
-  const longestStreak = safeUserStats.longestStreak
   const totalDays = safeUserStats.totalDays
   const rareElements = safeUserStats.rareElementsFound
-
-  // Calculate level progress for the progress bar
-  // Используем опыт из пользователя если доступен, иначе рассчитываем (как в ProfileHeader)
-  const experience =
-    user.experience ??
-    calculateExperienceFromStats(user, safeMoodStats, totalElements)
-  const levelInfo = calculateLevelProgress(experience)
 
   return (
     <motion.div
@@ -125,175 +92,44 @@ export function ProfileStats({
         📊 Статистика
       </h2>
 
-      {/* Main Stats Grid */}
+      {/* Main Stats Grid - минимизированные карточки */}
       <div className="grid grid-cols-2 gap-3">
         <StatCard
           emoji="🔥"
-          label="Текущий стрик"
+          label="Стрик"
           value={currentStreak}
-          subtitle={currentStreak > 0 ? 'дней подряд' : 'начните сегодня!'}
+          subtitle={currentStreak > 0 ? 'дней' : 'начните!'}
           color="orange"
           delay={0.1}
         />
 
         <StatCard
           emoji="🌱"
-          label="Растений в саду"
+          label="Растений"
           value={totalElements}
-          subtitle={totalElements > 0 ? 'элементов' : 'вырастите первое!'}
+          subtitle={totalElements > 0 ? 'шт.' : 'вырастите!'}
           color="green"
           delay={0.15}
         />
 
         <StatCard
           emoji="📅"
-          label="Всего дней"
+          label="Дней"
           value={totalDays}
-          subtitle="с момента начала"
+          subtitle="всего"
           color="blue"
           delay={0.2}
         />
 
         <StatCard
           emoji="⭐"
-          label="Редкие элементы"
+          label="Редких"
           value={rareElements}
           subtitle="найдено"
           color="purple"
           delay={0.25}
         />
       </div>
-
-      {/* Additional Stats */}
-      <div className="grid grid-cols-3 gap-2">
-        <StatCard
-          emoji="🏆"
-          label="Лучший стрик"
-          value={longestStreak}
-          color="pink"
-          delay={0.3}
-        />
-
-        <StatCard
-          emoji="💭"
-          label="Настроений"
-          value={
-            safeMoodStats.totalMoodEntries ?? safeMoodStats.totalEntries ?? 0
-          }
-          color="blue"
-          delay={0.35}
-        />
-
-        <StatCard
-          emoji="📤"
-          label="Поделился"
-          value={safeUserStats.gardensShared}
-          color="green"
-          delay={0.4}
-        />
-      </div>
-
-      {/* Progress to next level (real data) */}
-      <motion.div
-        className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.45 }}
-      >
-        <div className="mb-3 flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            🎯 Прогресс до следующего уровня
-          </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            {levelInfo.nextLevel
-              ? `${levelInfo.progress.toFixed(1)}%`
-              : 'Макс. уровень!'}
-          </span>
-        </div>
-
-        <div className="mb-2 h-3 w-full rounded-full bg-gray-200 dark:bg-gray-700">
-          <div
-            className="h-3 rounded-full bg-gradient-to-r from-garden-400 to-green-500 transition-all duration-500"
-            style={{ width: `${levelInfo.progress}%` }}
-          />
-        </div>
-
-        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-          <span className="flex items-center">
-            <span className="mr-1">{levelInfo.currentLevel.emoji}</span>
-            {levelInfo.currentLevel.name}
-          </span>
-          {levelInfo.nextLevel ? (
-            <span className="flex items-center">
-              <span className="mr-1">{levelInfo.nextLevel.emoji}</span>
-              {levelInfo.nextLevel.name}
-            </span>
-          ) : (
-            <span>🌈 Максимум</span>
-          )}
-        </div>
-
-        {levelInfo.nextLevel && (
-          <div className="mt-2 text-center text-xs text-gray-400 dark:text-gray-500">
-            Ещё {levelInfo.experienceToNext} опыта до повышения
-          </div>
-        )}
-      </motion.div>
-
-      {/* Daily Quests Button */}
-      <motion.div
-        className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
-        <button
-          onClick={() => setShowQuests(!showQuests)}
-          className="flex w-full items-center justify-between rounded-lg bg-gradient-to-r from-garden-50 to-green-50 p-4 transition-colors hover:from-garden-100 hover:to-green-100 dark:from-garden-900/30 dark:to-green-900/30 dark:hover:from-garden-900/50 dark:hover:to-green-900/50"
-        >
-          <div className="flex items-center space-x-3">
-            <div className="text-2xl">🎯</div>
-            <div className="text-left">
-              <div className="font-medium text-gray-900 dark:text-gray-100">
-                Ежедневные задания
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                Выполняйте задания и получайте награды
-              </div>
-            </div>
-          </div>
-          <div className="text-gray-400 dark:text-gray-500">
-            {showQuests ? '▼' : '▶'}
-          </div>
-        </button>
-
-        {/* Daily Quests List */}
-        {showQuests && (
-          <motion.div
-            className="mt-4"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            {user.telegramId ? (
-              <DailyQuestList telegramId={user.telegramId} />
-            ) : (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/30">
-                <div className="text-center">
-                  <div className="mb-2 text-2xl">🔒</div>
-                  <div className="font-medium text-red-900 dark:text-red-200">
-                    Требуется авторизация
-                  </div>
-                  <div className="text-sm text-red-700 dark:text-red-300">
-                    Войдите в аккаунт для просмотра заданий
-                  </div>
-                </div>
-              </div>
-            )}
-          </motion.div>
-        )}
-      </motion.div>
     </motion.div>
   )
 }

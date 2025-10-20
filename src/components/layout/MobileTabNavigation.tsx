@@ -1,53 +1,50 @@
 import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
-import { Leaf, BarChart3, Heart, Users, User } from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { Leaf, Heart, Users, User, Target } from 'lucide-react'
 
 interface Tab {
   id: string
-  label: string
+  path: string
   icon: React.ReactNode
   count?: number
 }
 
 interface MobileTabNavigationProps {
-  activeTab: string
-  onTabChange: (tabId: string) => void
   className?: string
 }
 
 const TABS: Tab[] = [
   {
     id: 'mood',
-    label: 'Настроение',
+    path: '/mobile',
     icon: <Heart className="h-5 w-5" />,
   },
   {
     id: 'garden',
-    label: 'Сад',
+    path: '/mobile/garden',
     icon: <Leaf className="h-5 w-5" />,
   },
   {
+    id: 'tasks',
+    path: '/mobile/tasks',
+    icon: <Target className="h-5 w-5" />,
+  },
+  {
     id: 'community',
-    label: 'Комьюнити',
+    path: '/mobile/community',
     icon: <Users className="h-5 w-5" />,
   },
   {
-    id: 'stats',
-    label: 'Статистика',
-    icon: <BarChart3 className="h-5 w-5" />,
-  },
-  {
     id: 'profile',
-    label: 'Профиль',
+    path: '/mobile/profile',
     icon: <User className="h-5 w-5" />,
   },
 ]
 
-export function MobileTabNavigation({
-  activeTab,
-  onTabChange,
-  className,
-}: MobileTabNavigationProps) {
+export function MobileTabNavigation({ className }: MobileTabNavigationProps) {
+  const navigate = useNavigate()
+  const location = useLocation()
   return (
     <div
       className={clsx(
@@ -67,20 +64,20 @@ export function MobileTabNavigation({
     >
       <div className="flex">
         {TABS.map(tab => {
-          const isActive = activeTab === tab.id
+          const isActive = location.pathname === tab.path
 
           return (
             <motion.button
               key={tab.id}
               className={clsx(
                 'flex flex-1 flex-col items-center justify-center',
-                'relative min-h-[56px] px-1 py-2 sm:min-h-[60px]',
+                'relative min-h-[48px] px-1 py-2',
                 'transition-colors duration-200',
                 isActive
                   ? 'text-garden-600 dark:text-garden-400'
                   : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
               )}
-              onClick={() => onTabChange(tab.id)}
+              onClick={() => navigate(tab.path)}
               whileTap={{ scale: 0.95 }}
             >
               {/* Active indicator */}
@@ -116,27 +113,7 @@ export function MobileTabNavigation({
                 {tab.icon}
               </motion.div>
 
-              {/* Label */}
-              <span
-                className={clsx(
-                  'max-w-full truncate text-xs font-medium leading-tight',
-                  isActive && 'font-semibold'
-                )}
-              >
-                {tab.id === 'community' ? (
-                  <span>
-                    <span className="hidden xs:inline">Комьюнити</span>
-                    <span className="xs:hidden">Друзья</span>
-                  </span>
-                ) : tab.id === 'stats' ? (
-                  <span>
-                    <span className="hidden xs:inline">Статистика</span>
-                    <span className="xs:hidden">Стат-ка</span>
-                  </span>
-                ) : (
-                  tab.label
-                )}
-              </span>
+              {/* No labels - icons only */}
 
               {/* Count badge */}
               {tab.count !== undefined && (

@@ -1,4 +1,6 @@
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
+import { Settings, BarChart3 } from 'lucide-react'
 import { User } from '@/types'
 import { UserAvatar } from '@/components/ui'
 import {
@@ -40,6 +42,7 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ user, stats }: ProfileHeaderProps) {
+  const navigate = useNavigate()
   const displayName = user.firstName ?? user.username ?? 'Пользователь'
   const username = user.username != null ? `@${user.username}` : null
 
@@ -130,15 +133,23 @@ export function ProfileHeader({ user, stats }: ProfileHeaderProps) {
             </div>
           </div>
 
-          {/* Actions - Desktop only, стекаются в колонку на мобилке */}
-          {/* <div className="ml-2 flex flex-shrink-0 flex-col space-y-1">
-            <button className="whitespace-nowrap rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
-              ⚙️ Настройки
+          {/* Actions - кнопки настроек и статистики */}
+          <div className="ml-2 flex flex-shrink-0 space-x-2">
+            <button
+              onClick={() => navigate('/mobile/stats')}
+              className="flex items-center justify-center rounded-lg bg-white p-2 text-gray-600 shadow-sm transition-colors hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              title="Статистика"
+            >
+              <BarChart3 className="h-4 w-4" />
             </button>
-            <button className="whitespace-nowrap rounded-lg bg-garden-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-garden-600">
-              📤 Поделиться
+            <button
+              onClick={() => navigate('/mobile/settings')}
+              className="flex items-center justify-center rounded-lg bg-white p-2 text-gray-600 shadow-sm transition-colors hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              title="Настройки"
+            >
+              <Settings className="h-4 w-4" />
             </button>
-          </div> */}
+          </div>
         </div>
 
         {/* Bottom row: Level, Progress, Stats */}

@@ -5,7 +5,6 @@ import { useProfile } from '@/hooks/useProfile.v2'
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { ProfileStats } from '@/components/profile/ProfileStats'
 import { ProfileAchievements } from '@/components/profile/ProfileAchievements'
-import { ProfilePrivacySettings } from '@/components/profile/ProfilePrivacySettings'
 import { LoadingSpinner } from '@/components/ui'
 
 export function ProfilePage() {
@@ -13,9 +12,9 @@ export function ProfilePage() {
   const telegramId = useTelegramId()
   const { data: userData, isLoading: userLoading } = useUserSync(
     telegramId,
-    !!telegramId
+    telegramId != null
   )
-  const { data: gardenData } = useGardenSync(telegramId, !!telegramId)
+  const { data: gardenData } = useGardenSync(telegramId, telegramId != null)
 
   const currentUser = userData?.user
   const currentGarden = gardenData
@@ -183,9 +182,6 @@ export function ProfilePage() {
         moodStats={moodStats}
         totalElements={totalElements}
       />
-
-      {/* Настройки приватности */}
-      <ProfilePrivacySettings user={renderUser} />
     </motion.div>
   )
 }

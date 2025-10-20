@@ -12,6 +12,13 @@ import { HomePage } from '@/pages/HomePage'
 import { OnboardingPage } from '@/pages/OnboardingPage'
 import { AuthPage } from '@/pages/AuthPage'
 import { ProfilePage } from '@/pages/ProfilePage'
+import { MoodPage } from '@/pages/MoodPage'
+import { GardenPage } from '@/pages/GardenPage'
+import { TasksPage } from '@/pages/TasksPage'
+import { CommunityPage } from '@/pages/CommunityPage'
+import { SettingsPage } from '@/pages/SettingsPage'
+import { StatsPage } from '@/pages/StatsPage'
+import { MobileLayout } from '@/components/layout/MobileLayout'
 // ShowcasePage импортируется условно только в DEV режиме
 import { LoadingSpinner } from '@/components/ui'
 import { lazy, Suspense } from 'react'
@@ -391,6 +398,16 @@ function App() {
                   </motion.div>
                 }
               />
+              {/* Mobile routes wrapped in MobileLayout */}
+              <Route path="/mobile" element={<MobileLayout />}>
+                <Route index element={<MoodPage />} />
+                <Route path="garden" element={<GardenPage />} />
+                <Route path="tasks" element={<TasksPage />} />
+                <Route path="community" element={<CommunityPage />} />
+                <Route path="profile" element={<ProfilePage />} />
+                <Route path="settings" element={<SettingsPage />} />
+                <Route path="stats" element={<StatsPage />} />
+              </Route>
               {/* Dev роуты доступны только в DEV режиме */}
               {import.meta.env.DEV && ShowcasePage && (
                 <Route

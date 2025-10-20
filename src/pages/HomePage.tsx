@@ -7,12 +7,14 @@ import { MobileLayout } from '@/components/layout/MobileLayout'
 import { Card } from '@/components/ui'
 import { useGardenState, useMoodTracking, useElementGeneration } from '@/hooks'
 import { formatDate } from '@/utils/dateHelpers'
+import { useNavigate } from 'react-router-dom'
 
 export function HomePage() {
   const { garden: _garden, gardenStats } = useGardenState()
   const { todaysMood, streakCount } = useMoodTracking()
   const { canUnlock, getMilestoneInfo } = useElementGeneration()
   const [isMobile, setIsMobile] = useState(false)
+  const navigate = useNavigate()
 
   const milestoneInfo = getMilestoneInfo
 
@@ -26,6 +28,13 @@ export function HomePage() {
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
+
+  // Mobile layout - redirect to mobile mood page
+  useEffect(() => {
+    if (isMobile) {
+      navigate('/mobile', { replace: true })
+    }
+  }, [isMobile, navigate])
 
   // Mobile layout
   if (isMobile) {
