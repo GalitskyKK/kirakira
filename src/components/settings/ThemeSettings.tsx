@@ -8,7 +8,26 @@ import { Check, Lock, Leaf } from 'lucide-react'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
 import { useCurrencyStore } from '@/stores/currencyStore'
 import { useUserStore } from '@/stores/userStore'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button, Card } from '@/components/ui'
+
+// Импортируем функции для работы с локальным хранилищем
+const loadOwnedThemesFromStorage = (): string[] => {
+  try {
+    const stored = localStorage.getItem('garden_owned_themes')
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
+
+const saveOwnedThemesToStorage = (themeIds: string[]): void => {
+  try {
+    localStorage.setItem('garden_owned_themes', JSON.stringify(themeIds))
+  } catch {
+    // Игнорируем ошибки localStorage
+  }
+}
 
 interface ThemeSettingsProps {
   readonly className?: string
@@ -22,9 +41,11 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
     canUseTheme,
     setGardenTheme,
     isLoadingThemes,
+    refetchOwnedThemes,
   } = useGardenTheme()
   const { userCurrency, spendCurrency } = useCurrencyStore()
   const currentUser = useUserStore(s => s.currentUser)
+  const queryClient = useQueryClient()
 
   const handleBuyTheme = async (themeId: string) => {
     if (!currentUser?.telegramId) return
@@ -41,7 +62,34 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
 
       if (result.success) {
         // Обновляем список купленных тем
-        window.location.reload() // Простое решение для обновления
+        await refetchOwnedThemes()
+
+        // Принудительно обновляем кеш React Query
+        await queryClient.invalidateQueries({
+          queryKey: ['themes', 'catalog'],
+        })
+
+        // Принудительно обновляем локальное состояние
+        const currentOwned = loadOwnedThemesFromStorage()
+        const updatedOwned = [...currentOwned, themeId]
+        saveOwnedThemesToStorage(updatedOwned)
+
+        // Принудительно обновляем React Query кеш
+        queryClient.setQueryData(['themes', 'catalog'], (oldData: any) => {
+          if (oldData?.success && oldData?.data?.ownedThemeIds) {
+            return {
+              ...oldData,
+              data: {
+                ...oldData.data,
+                ownedThemeIds: [...oldData.data.ownedThemeIds, themeId],
+              },
+            }
+          }
+          return oldData
+        })
+
+        console.log('✅ Theme purchased successfully!')
+        console.log('🎨 Updated owned themes:', updatedOwned)
       }
     } catch (error) {
       console.error('Failed to buy theme:', error)
