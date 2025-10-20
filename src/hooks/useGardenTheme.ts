@@ -277,6 +277,11 @@ export function useGardenTheme() {
   } = useQuery({
     queryKey: ['themes', 'catalog'],
     queryFn: async (): Promise<ThemesCatalogResponse> => {
+      console.log('🔍 useGardenTheme - fetching themes:', {
+        currentUser: currentUser?.telegramId,
+        hasTelegramId: !!currentUser?.telegramId,
+      })
+
       if (!currentUser?.telegramId || currentUser.telegramId === 0) {
         throw new Error('No user logged in')
       }
@@ -290,6 +295,7 @@ export function useGardenTheme() {
       }
 
       const result = (await response.json()) as ThemesCatalogResponse
+      console.log('🎨 useGardenTheme - themes data received:', result)
       return result
     },
     enabled: Boolean(currentUser?.telegramId && currentUser.telegramId > 0),
@@ -299,12 +305,22 @@ export function useGardenTheme() {
 
   // Получаем список купленных тем
   const ownedThemeIds = useMemo(() => {
+    console.log('🔍 useGardenTheme - computing ownedThemeIds:', {
+      themesDataSuccess: themesData?.success,
+      themesDataOwned: themesData?.data?.ownedThemeIds,
+      hasThemesData: !!themesData,
+    })
+
     if (themesData?.success === true && themesData.data?.ownedThemeIds) {
       const serverOwned = themesData.data.ownedThemeIds
+      console.log('🎨 useGardenTheme - using server owned themes:', serverOwned)
       saveOwnedThemesToStorage(serverOwned)
       return serverOwned
     }
-    return loadOwnedThemesFromStorage()
+
+    const localOwned = loadOwnedThemesFromStorage()
+    console.log('🎨 useGardenTheme - using local owned themes:', localOwned)
+    return localOwned
   }, [themesData])
 
   const theme = useMemo(() => {
