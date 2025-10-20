@@ -120,7 +120,7 @@ export function ProfileAchievements({
         </div>
       </div>
 
-      {/* Achievements Grid */}
+      {/* Achievements Gri */}
       <div className="grid grid-cols-2 gap-3">
         {achievements.map((achievement, index) => (
           <AchievementBadge
