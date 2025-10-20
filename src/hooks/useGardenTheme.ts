@@ -270,7 +270,11 @@ export function useGardenTheme() {
   const [themeId, setThemeId] = useState<string | null>(null)
 
   // Загружаем купленные темы с сервера
-  const { data: themesData, isLoading: isLoadingThemes } = useQuery({
+  const {
+    data: themesData,
+    isLoading: isLoadingThemes,
+    refetch: refetchOwnedThemes,
+  } = useQuery({
     queryKey: ['themes', 'catalog'],
     queryFn: async (): Promise<ThemesCatalogResponse> => {
       if (!currentUser?.telegramId || currentUser.telegramId === 0) {
@@ -353,5 +357,6 @@ export function useGardenTheme() {
     ownedThemeIds,
     canUseTheme,
     isLoadingThemes,
+    refetchOwnedThemes,
   }
 }

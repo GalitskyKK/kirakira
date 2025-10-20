@@ -23,6 +23,7 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
     canUseTheme,
     setGardenTheme,
     isLoadingThemes,
+    refetchOwnedThemes,
   } = useGardenTheme()
   const { userCurrency, spendCurrency } = useCurrencyStore()
   const currentUser = useUserStore(s => s.currentUser)
@@ -34,14 +35,25 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
       document.body.style.paddingRight = '0px'
+
+      // Блокируем скролл через addEventListener
+      const preventScroll = (e: Event) => {
+        e.preventDefault()
+      }
+
+      document.addEventListener('wheel', preventScroll, { passive: false })
+      document.addEventListener('touchmove', preventScroll, { passive: false })
+
+      return () => {
+        document.body.style.overflow = 'unset'
+        document.body.style.paddingRight = '0px'
+        document.removeEventListener('wheel', preventScroll)
+        document.removeEventListener('touchmove', preventScroll)
+      }
     } else {
       document.body.style.overflow = 'unset'
       document.body.style.paddingRight = '0px'
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset'
-      document.body.style.paddingRight = '0px'
+      return undefined
     }
   }, [isOpen])
 
@@ -51,18 +63,26 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
     setPurchasingTheme(themeId)
 
     try {
+      const theme = themes.find(t => t.id === themeId)
+      if (!theme) return
+
       const result = await spendCurrency(
         currentUser.telegramId,
         'sprouts',
-        themes.find(t => t.id === themeId)?.priceSprouts || 0,
+        theme.priceSprouts,
         'buy_theme',
-        `Покупка темы "${themes.find(t => t.id === themeId)?.name}"`,
-        { themeId, themeName: themes.find(t => t.id === themeId)?.name }
+        `Покупка темы "${theme.name}"`,
+        { themeId, themeName: theme.name }
       )
 
       if (result.success) {
         // Обновляем список купленных тем
-        window.location.reload() // Простое решение для обновления
+        await refetchOwnedThemes()
+        console.log('Theme purchased successfully!')
+        // Можно добавить toast уведомление
+      } else {
+        console.error('Failed to buy theme:', result.error)
+        // Можно добавить toast с ошибкой
       }
     } catch (error) {
       console.error('Failed to buy theme:', error)
@@ -87,8 +107,6 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        onWheel={e => e.preventDefault()}
-        onTouchMove={e => e.preventDefault()}
       >
         <motion.div
           className="flex max-h-[80vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900"
@@ -124,8 +142,11 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {themes.map(theme => {
-                  const isOwned = ownedThemeIds.includes(theme.id)
-                  const canBuy = canUseTheme(theme.id)
+                  const isOwned =
+                    ownedThemeIds.includes(theme.id) || theme.isDefault
+                  const canBuy =
+                    isOwned ||
+                    (userCurrency?.sprouts || 0) >= theme.priceSprouts
                   const isPurchasing = purchasingTheme === theme.id
                   const isSelected = false // TODO: Add selected state
 
@@ -215,7 +236,8 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
                               >
                                 Выбрать
                               </Button>
-                            ) : canBuy ? (
+                            ) : (userCurrency?.sprouts || 0) >=
+                              theme.priceSprouts ? (
                               <Button
                                 size="sm"
                                 className="w-full"
@@ -238,7 +260,7 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
                                 className="w-full"
                                 disabled
                               >
-                                Недоступно
+                                Недостаточно средств
                               </Button>
                             )}
                           </div>
