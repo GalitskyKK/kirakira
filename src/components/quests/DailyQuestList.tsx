@@ -35,7 +35,8 @@ export function DailyQuestList({
     refetch,
   } = useDailyQuests(telegramId)
   const { completed, total, percentage } = useTodayCompletionRate(telegramId)
-  const { lastClaimedRewards } = useQuestUI()
+  const { lastClaimedRewards, isShowingRewardAnimation, hideRewardAnimation } =
+    useQuestUI()
 
   // 🔧 ИСПРАВЛЕНИЕ: Используем React Query данные вместо Zustand
   const overallProgress = React.useMemo(() => {
@@ -151,6 +152,7 @@ export function DailyQuestList({
           totalCount={total}
           percentage={percentage}
           quests={questsData.quests}
+          telegramId={telegramId}
         />
       </div>
 
@@ -196,7 +198,11 @@ export function DailyQuestList({
       {/* Модалка награды */}
       <AnimatePresence>
         {lastClaimedRewards && (
-          <QuestRewardModal rewards={lastClaimedRewards} onClose={() => {}} />
+          <QuestRewardModal
+            rewards={lastClaimedRewards}
+            isOpen={isShowingRewardAnimation}
+            onClose={hideRewardAnimation}
+          />
         )}
       </AnimatePresence>
 

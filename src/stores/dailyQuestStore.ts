@@ -444,8 +444,14 @@ export const useQuestRewards = () => {
 export const useQuestUI = () => {
   const selectedQuestId = useDailyQuestStore(state => state.selectedQuestId)
   const showQuestModal = useDailyQuestStore(state => state.showQuestModal)
+  const isShowingRewardAnimation = useDailyQuestStore(
+    state => state.isShowingRewardAnimation
+  )
   const showRewardAnimation = useDailyQuestStore(
     state => state.showRewardAnimation
+  )
+  const hideRewardAnimation = useDailyQuestStore(
+    state => state.hideRewardAnimation
   )
   const lastClaimedRewards = useDailyQuestStore(
     state => state.lastClaimedRewards
@@ -457,7 +463,9 @@ export const useQuestUI = () => {
   return {
     selectedQuestId,
     showQuestModal,
+    isShowingRewardAnimation,
     showRewardAnimation,
+    hideRewardAnimation,
     lastClaimedRewards,
     isLoading,
     isRefreshing,

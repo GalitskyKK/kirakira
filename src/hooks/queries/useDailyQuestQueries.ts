@@ -239,6 +239,62 @@ export function useUpdateMultipleQuestProgress() {
   })
 }
 
+/**
+ * Мутация для получения всех доступных наград
+ */
+export function useClaimAllRewards() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      telegramId,
+      questIds,
+    }: {
+      telegramId: number
+      questIds: string[]
+    }) => {
+      // Получаем все награды последовательно
+      const results = []
+      for (const questId of questIds) {
+        try {
+          const result = await claimDailyQuest(telegramId, questId)
+          results.push(result)
+        } catch (error) {
+          console.warn(`Failed to claim quest ${questId}:`, error)
+          // Продолжаем с другими квестами даже если один не удался
+        }
+      }
+      return results
+    },
+    onSuccess: (data, variables) => {
+      // Инвалидируем кеш заданий
+      queryClient.invalidateQueries({
+        queryKey: dailyQuestKeys.quests(variables.telegramId),
+      })
+
+      // Инвалидируем кеш статистики
+      queryClient.invalidateQueries({
+        queryKey: dailyQuestKeys.stats(variables.telegramId),
+      })
+
+      // Инвалидируем кеш валюты (синхронизация баланса)
+      queryClient.invalidateQueries({
+        queryKey: ['currency', variables.telegramId],
+      })
+
+      // Инвалидируем кеш профиля (обновление опыта и уровня)
+      queryClient.invalidateQueries({
+        queryKey: ['user', variables.telegramId],
+      })
+
+      console.log(`✅ Claimed ${data.length} quest rewards successfully`)
+    },
+    onError: error => {
+      console.error('Claim all rewards error:', error)
+    },
+  })
+}
+
 // ===============================================
 // 🎯 HELPER HOOKS
 // ===============================================

@@ -6,6 +6,8 @@
 import { motion } from 'framer-motion'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { useClaimAllRewards } from '@/hooks/queries/useDailyQuestQueries'
+import { useDailyQuestStore } from '@/stores/dailyQuestStore'
 import { calculateBonusRewards, formatQuestRewards } from '@/types/dailyQuests'
 import type { DailyQuest } from '@/types/dailyQuests'
 
@@ -14,6 +16,7 @@ interface QuestCompletionSummaryProps {
   readonly totalCount: number
   readonly percentage: number
   readonly quests: readonly DailyQuest[]
+  readonly telegramId: number
   readonly className?: string
 }
 
@@ -22,10 +25,15 @@ export function QuestCompletionSummary({
   totalCount,
   percentage,
   quests,
+  telegramId,
   className = '',
 }: QuestCompletionSummaryProps) {
   // Вычисляем бонусные награды
   const bonusRewards = calculateBonusRewards(completedCount, totalCount)
+
+  // Хуки для получения всех наград
+  const claimAllMutation = useClaimAllRewards()
+  const { showRewardAnimation } = useDailyQuestStore()
 
   // Группируем квесты по статусу
   const questsByStatus = quests.reduce(
@@ -46,6 +54,39 @@ export function QuestCompletionSummary({
 
   const expiredQuests = questsByStatus['expired'] ?? []
   const unclaimedQuests = questsByStatus['completed'] ?? []
+
+  // Обработчик получения всех наград
+  const handleClaimAllRewards = async () => {
+    if (unclaimedQuests.length === 0) return
+
+    try {
+      const questIds = unclaimedQuests.map(quest => quest.id)
+      const results = await claimAllMutation.mutateAsync({
+        telegramId,
+        questIds,
+      })
+
+      // Показываем анимацию с суммарными наградами
+      if (results.length > 0) {
+        const totalRewards = results.reduce(
+          (total, result) => ({
+            sprouts: total.sprouts + result.rewards.sprouts,
+            gems: total.gems + (result.rewards.gems || 0),
+            experience: total.experience + result.rewards.experience,
+          }),
+          { sprouts: 0, gems: 0, experience: 0 }
+        )
+
+        // Показываем анимацию награды
+        showRewardAnimation({
+          ...totalRewards,
+          description: `Получены награды за ${results.length} заданий!`,
+        })
+      }
+    } catch (error) {
+      console.error('Claim all rewards error:', error)
+    }
+  }
 
   // Определяем цвет на основе прогресса
   const getProgressColor = () => {
@@ -178,8 +219,15 @@ export function QuestCompletionSummary({
         {/* Кнопка действий */}
         {unclaimedQuests.length > 0 && (
           <div className="text-center">
-            <Button size="sm" className="bg-green-500 hover:bg-green-600">
-              Получить все награды ({unclaimedQuests.length})
+            <Button
+              size="sm"
+              className="bg-green-500 hover:bg-green-600"
+              onClick={handleClaimAllRewards}
+              disabled={claimAllMutation.isPending}
+            >
+              {claimAllMutation.isPending
+                ? 'Получение...'
+                : `Получить все награды (${unclaimedQuests.length})`}
             </Button>
           </div>
         )}
