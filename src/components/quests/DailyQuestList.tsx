@@ -11,7 +11,6 @@ import {
 } from '@/hooks/queries/useDailyQuestQueries'
 import { useQuestUI } from '@/stores/dailyQuestStore'
 import { DailyQuestCard } from './DailyQuestCard'
-import { QuestCompletionSummary } from './QuestCompletionSummary'
 import { QuestRewardModal } from './QuestRewardModal'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -34,7 +33,7 @@ export function DailyQuestList({
     error,
     refetch,
   } = useDailyQuests(telegramId)
-  const { completed, total, percentage } = useTodayCompletionRate(telegramId)
+  const { completed, total } = useTodayCompletionRate(telegramId)
   const { lastClaimedRewards, isShowingRewardAnimation, hideRewardAnimation } =
     useQuestUI()
 
@@ -100,10 +99,14 @@ export function DailyQuestList({
   if (!questsData?.quests || questsData.quests.length === 0) {
     return (
       <div className={`p-4 ${className}`}>
-        <Card className="p-8 text-center">
+        <Card className="p-8 text-center dark:bg-gray-800">
           <div className="mb-4 text-6xl">🎯</div>
-          <h3 className="mb-2 text-xl font-semibold">Нет заданий на сегодня</h3>
-          <p className="mb-4 text-gray-600">Задания появятся завтра в 00:00</p>
+          <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
+            Нет заданий на сегодня
+          </h3>
+          <p className="mb-4 text-gray-600 dark:text-gray-400">
+            Задания появятся завтра в 00:00
+          </p>
           <Button onClick={() => refetch()} variant="outline">
             Обновить
           </Button>
@@ -114,46 +117,36 @@ export function DailyQuestList({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Заголовок и статистика */}
-      <div className="space-y-4">
+      {/* Заголовок и компактная статистика */}
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
             Ежедневные задания
           </h2>
-          <div className="text-sm text-gray-600">
-            {completed} из {total} выполнено
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {completed}/{total}
           </div>
         </div>
 
-        {/* Общий прогресс */}
-        <Card className="p-4">
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Общий прогресс</span>
-              <span className="font-medium">{overallPercentage}%</span>
-            </div>
-            <div className="h-2 w-full rounded-full bg-gray-200">
-              <motion.div
-                className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"
-                initial={{ width: 0 }}
-                animate={{ width: `${overallPercentage}%` }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-              />
-            </div>
-            <div className="text-xs text-gray-500">
-              {overallProgress.completed} из {overallProgress.target} заданий
-            </div>
+        {/* Компактный прогресс */}
+        <Card className="p-3 dark:bg-gray-800">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Прогресс
+            </span>
+            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              {overallPercentage}%
+            </span>
+          </div>
+          <div className="mt-2 h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+            <motion.div
+              className="h-1.5 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"
+              initial={{ width: 0 }}
+              animate={{ width: `${overallPercentage}%` }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+            />
           </div>
         </Card>
-
-        {/* Сводка выполнения */}
-        <QuestCompletionSummary
-          completedCount={completed}
-          totalCount={total}
-          percentage={percentage}
-          quests={questsData.quests}
-          telegramId={telegramId}
-        />
       </div>
 
       {/* Список заданий по категориям */}
@@ -164,11 +157,13 @@ export function DailyQuestList({
           return (
             <div key={category} className="space-y-3">
               <div className="flex items-center space-x-2">
-                <span className="text-2xl">{categoryInfo.emoji}</span>
-                <h3 className="text-lg font-semibold text-gray-900">
+                <span className="text-xl">{categoryInfo.emoji}</span>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
                   {categoryInfo.name}
                 </h3>
-                <span className="text-sm text-gray-500">({quests.length})</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  ({quests.length})
+                </span>
               </div>
 
               <div className="grid gap-3">

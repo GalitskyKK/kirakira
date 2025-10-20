@@ -114,7 +114,7 @@ export function RoomNavigator({
         </div>
 
         {/* Счётчик элементов */}
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-gray-500 dark:text-gray-400">
           Комната {currentRoomIndex + 1} из {totalRooms}
         </div>
       </div>

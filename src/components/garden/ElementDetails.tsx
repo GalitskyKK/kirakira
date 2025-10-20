@@ -97,13 +97,18 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
 
   const getRarityColor = (rarity: string) => {
     const colors: Record<string, string> = {
-      common: 'text-gray-600 bg-gray-100',
-      uncommon: 'text-green-600 bg-green-100',
-      rare: 'text-blue-600 bg-blue-100',
-      epic: 'text-purple-600 bg-purple-100',
-      legendary: 'text-yellow-600 bg-yellow-100',
+      common: 'text-gray-600 bg-gray-100 dark:text-gray-300 dark:bg-gray-700',
+      uncommon:
+        'text-green-600 bg-green-100 dark:text-green-300 dark:bg-green-900/30',
+      rare: 'text-blue-600 bg-blue-100 dark:text-blue-300 dark:bg-blue-900/30',
+      epic: 'text-purple-600 bg-purple-100 dark:text-purple-300 dark:bg-purple-900/30',
+      legendary:
+        'text-yellow-600 bg-yellow-100 dark:text-yellow-300 dark:bg-yellow-900/30',
     }
-    return colors[rarity] ?? 'text-gray-600 bg-gray-100'
+    return (
+      colors[rarity] ??
+      'text-gray-600 bg-gray-100 dark:text-gray-300 dark:bg-gray-700'
+    )
   }
 
   return (
@@ -119,7 +124,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
           >
             Назад
           </Button>
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Детали растения
           </h2>
         </div>
@@ -144,11 +149,13 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
             </div>
           </motion.div>
 
-          <h3 className="mb-2 text-2xl font-bold text-gray-900">
+          <h3 className="mb-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
             {currentElement.name}
           </h3>
 
-          <p className="mb-4 text-gray-600">{currentElement.description}</p>
+          <p className="mb-4 text-gray-600 dark:text-gray-300">
+            {currentElement.description}
+          </p>
 
           <div className="flex justify-center space-x-2">
             <motion.span
@@ -160,7 +167,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
             >
               {rarityLabels[currentElement.rarity] ?? currentElement.rarity}
             </motion.span>
-            <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+            <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
               {typeLabels[currentElement.type] ?? currentElement.type}
             </span>
           </div>
@@ -175,10 +182,10 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
                 <Calendar size={16} className="text-blue-600" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   Дата появления
                 </p>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
                   {format(
                     currentElement.unlockDate instanceof Date
                       ? currentElement.unlockDate
@@ -209,8 +216,10 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
                 <Heart size={16} style={{ color: moodConfig.color }} />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Настроение</p>
-                <p className="flex items-center space-x-1 text-xs text-gray-600">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  Настроение
+                </p>
+                <p className="flex items-center space-x-1 text-xs text-gray-600 dark:text-gray-400">
                   <span>{moodConfig.emoji}</span>
                   <span>{moodConfig.label}</span>
                 </p>
@@ -229,8 +238,10 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
                   <Star size={16} className="text-green-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">Сезон</p>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    Сезон
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
                     {seasonLabels[currentElement.seasonalVariant] ??
                       currentElement.seasonalVariant}
                   </p>
@@ -242,10 +253,10 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
           {/* Position */}
           <Card padding="sm">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 Позиция в саду
               </p>
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-gray-600 dark:text-gray-400">
                 ({currentElement.position.x}, {currentElement.position.y})
               </p>
             </div>
@@ -254,10 +265,10 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
 
         {/* Element Journey */}
         <Card padding="sm">
-          <h4 className="mb-3 text-sm font-semibold text-gray-900">
+          <h4 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
             История элемента
           </h4>
-          <div className="space-y-3 text-xs text-gray-600">
+          <div className="space-y-3 text-xs text-gray-600 dark:text-gray-400">
             <motion.div
               className="flex items-start space-x-2"
               initial={{ opacity: 0, x: -10 }}
@@ -328,10 +339,10 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
 
         {/* Care Tips */}
         <Card padding="sm" variant="glass">
-          <h4 className="mb-2 text-sm font-semibold text-gray-900">
+          <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
             💡 Знаете ли вы?
           </h4>
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-gray-600 dark:text-gray-400">
             Каждое растение в вашем саду уникально и создается на основе вашего
             настроения в день его появления. Рост растений зависит от
             регулярности ведения дневника настроения.

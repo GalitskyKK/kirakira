@@ -104,17 +104,19 @@ export function QuestCompletionSummary({
   }
 
   return (
-    <Card className={`p-4 ${className}`}>
+    <Card className={`p-4 dark:bg-gray-800 ${className}`}>
       <div className="space-y-4">
         {/* Основная статистика */}
         <div className="text-center">
           <div className={`text-3xl font-bold ${getProgressColor()}`}>
             {completedCount} / {totalCount}
           </div>
-          <div className="mb-2 text-sm text-gray-600">заданий выполнено</div>
+          <div className="mb-2 text-sm text-gray-600 dark:text-gray-400">
+            заданий выполнено
+          </div>
 
           {/* Прогресс-бар */}
-          <div className="mb-2 h-3 w-full rounded-full bg-gray-200">
+          <div className="mb-2 h-3 w-full rounded-full bg-gray-200 dark:bg-gray-700">
             <motion.div
               className={`h-3 rounded-full ${getProgressBarColor()}`}
               initial={{ width: 0 }}
@@ -134,14 +136,14 @@ export function QuestCompletionSummary({
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            className="rounded-lg border border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 p-3"
+            className="rounded-lg border border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 p-3 dark:border-purple-700 dark:from-purple-900/30 dark:to-pink-900/30"
           >
             <div className="text-center">
               <div className="mb-1 text-2xl">🎁</div>
-              <div className="mb-1 text-sm font-semibold text-purple-700">
+              <div className="mb-1 text-sm font-semibold text-purple-700 dark:text-purple-300">
                 Бонусная награда!
               </div>
-              <div className="text-xs text-purple-600">
+              <div className="text-xs text-purple-600 dark:text-purple-400">
                 {formatQuestRewards(bonusRewards)}
               </div>
             </div>

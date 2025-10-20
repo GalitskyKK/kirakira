@@ -184,7 +184,7 @@ export function GardenView({ className }: GardenViewProps) {
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                       Мой Сад
                     </h2>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       {garden.elements.length} растений
                     </p>
                   </div>
@@ -193,21 +193,21 @@ export function GardenView({ className }: GardenViewProps) {
                     {/* Режим перемещения элемента */}
                     {elementBeingMoved ? (
                       <>
-                        <div className="flex items-center space-x-2 rounded-lg bg-blue-50 px-3 py-1.5">
-                          <span className="text-sm text-blue-700">
+                        <div className="flex items-center space-x-2 rounded-lg bg-blue-50 px-3 py-1.5 dark:bg-blue-900/30">
+                          <span className="text-sm text-blue-700 dark:text-blue-300">
                             Перемещение: {elementBeingMoved.name}
                           </span>
                         </div>
                         <button
                           onClick={handleConfirmMovement}
-                          className="rounded-lg bg-green-100 px-3 py-1.5 text-sm text-green-700 transition-colors hover:bg-green-200"
+                          className="rounded-lg bg-green-100 px-3 py-1.5 text-sm text-green-700 transition-colors hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50"
                           title="Подтвердить перемещение"
                         >
                           ✓
                         </button>
                         <button
                           onClick={handleCancelMovement}
-                          className="rounded-lg bg-red-100 px-3 py-1.5 text-sm text-red-700 transition-colors hover:bg-red-200"
+                          className="rounded-lg bg-red-100 px-3 py-1.5 text-sm text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
                           title="Отменить перемещение"
                         >
                           ✕
