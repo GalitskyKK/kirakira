@@ -149,6 +149,20 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
         const updatedOwned = [...currentOwned, themeId]
         saveOwnedThemesToStorage(updatedOwned)
 
+        // Принудительно обновляем React Query кеш
+        queryClient.setQueryData(['themes', 'catalog'], (oldData: any) => {
+          if (oldData?.success && oldData?.data?.ownedThemeIds) {
+            return {
+              ...oldData,
+              data: {
+                ...oldData.data,
+                ownedThemeIds: [...oldData.data.ownedThemeIds, themeId],
+              },
+            }
+          }
+          return oldData
+        })
+
         console.log('✅ Theme purchased successfully!')
         console.log('🎨 Updated owned themes:', updatedOwned)
         // Можно добавить toast уведомление
