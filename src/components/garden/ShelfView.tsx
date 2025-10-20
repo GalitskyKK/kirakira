@@ -15,7 +15,7 @@ interface ShelfViewProps {
   onSlotClick?: (shelfIndex: number, position: number) => void // Клик по слоту
 }
 
-// Responsive constants - optimized to fit shelf width
+// Responsive constants - optimized to fit shelf width n
 const SHELF_COUNT = 4
 const ELEMENTS_PER_SHELF_DESKTOP = 4 // Desktop: 5 elements fit comfortably
 const ELEMENTS_PER_SHELF_MOBILE = 4 // Mobile: 4 elements fit screen
