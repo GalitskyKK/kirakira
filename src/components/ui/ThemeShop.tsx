@@ -8,7 +8,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Check, Lock, Leaf } from 'lucide-react'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
 import { useCurrencyStore } from '@/stores/currencyStore'
-import { useUserStore } from '@/stores/userStore'
+import { useUserSync } from '@/hooks/queries/useUserQueries'
+import { useTelegramId } from '@/hooks/useTelegramId'
 import { Button, Card } from '@/components/ui'
 
 interface ThemeShopProps {
@@ -26,7 +27,11 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
     refetchOwnedThemes,
   } = useGardenTheme()
   const { userCurrency, spendCurrency } = useCurrencyStore()
-  const currentUser = useUserStore(s => s.currentUser)
+
+  // Используем правильный подход - React Query вместо Zustand
+  const telegramId = useTelegramId()
+  const { data: userData } = useUserSync(telegramId, !!telegramId)
+  const currentUser = userData?.user
 
   const [purchasingTheme, setPurchasingTheme] = useState<string | null>(null)
 
@@ -69,11 +74,14 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
     console.log('🛒 handleBuyTheme called with themeId:', themeId)
     console.log('👤 currentUser:', currentUser)
     console.log('💰 userCurrency:', userCurrency)
+    console.log('🔑 telegramId:', telegramId)
 
-    if (!currentUser?.telegramId) {
-      console.error('❌ No currentUser.telegramId')
+    if (!telegramId) {
+      console.error('❌ No telegramId available')
       return
     }
+
+    console.log('✅ Using telegramId:', telegramId)
 
     setPurchasingTheme(themeId)
     console.log('⏳ Set purchasing theme:', themeId)
@@ -87,7 +95,7 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
       }
 
       console.log('💸 Calling spendCurrency with:', {
-        telegramId: currentUser.telegramId,
+        telegramId: telegramId,
         currency: 'sprouts',
         amount: theme.priceSprouts,
         reason: 'buy_theme',
@@ -96,7 +104,7 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
       })
 
       const result = await spendCurrency(
-        currentUser.telegramId,
+        telegramId,
         'sprouts',
         theme.priceSprouts,
         'buy_theme',
