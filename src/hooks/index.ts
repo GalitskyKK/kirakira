@@ -30,3 +30,4 @@ export { useStreakFreeze } from './useStreakFreeze'
 export { useScrollToTop } from './useScrollToTop'
 
 // Additional utility hooks can be added here
+export { useGardenTheme } from './useGardenTheme'

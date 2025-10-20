@@ -2,7 +2,9 @@ import { useMemo, useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { clsx } from 'clsx'
 import { ShelfElement } from './ShelfElement.tsx'
+import { useGardenTheme } from '@/hooks/useGardenTheme'
 import type { GardenElement as GardenElementType, ViewMode } from '@/types'
+import { RarityLevel } from '@/types/garden'
 
 interface ShelfViewProps {
   elements: readonly GardenElementType[]
@@ -38,6 +40,7 @@ export function ShelfView({
 }: ShelfViewProps) {
   // Responsive design hook
   const [isMobile, setIsMobile] = useState(false)
+  const { theme } = useGardenTheme()
 
   useEffect(() => {
     const checkMobile = () => {
@@ -109,7 +112,7 @@ export function ShelfView({
           shelfIndex < SHELF_COUNT &&
           positionOnShelf < ELEMENTS_PER_SHELF
         ) {
-          shelfData[shelfIndex]!.elements.push({
+          shelfData[shelfIndex]?.elements.push({
             element,
             position: positionOnShelf,
           })
@@ -169,7 +172,10 @@ export function ShelfView({
     <div className="shelf-container relative min-h-[650px] w-full overflow-visible sm:min-h-[700px] lg:min-h-[750px]">
       {/* Background with wooden texture and magical atmosphere */}
       <div className="absolute left-0 right-0 top-0 h-full min-h-[650px] sm:min-h-[700px] lg:min-h-[750px]">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100" />
+        <div
+          className="absolute inset-0"
+          style={{ background: theme.containerBackground }}
+        />
 
         {/* Subtle wood grain texture */}
         <div
@@ -190,10 +196,11 @@ export function ShelfView({
         {Array.from({ length: 15 }, (_, i) => (
           <motion.div
             key={`particle-${i}`}
-            className="absolute h-1 w-1 rounded-full bg-gradient-to-r from-yellow-300 to-amber-400 opacity-60"
+            className="absolute h-1 w-1 rounded-full opacity-60"
             style={{
               left: `${10 + Math.random() * 80}%`,
               top: `${10 + Math.random() * 80}%`,
+              background: `linear-gradient(90deg, ${theme.particleFrom}, ${theme.particleTo})`,
             }}
             animate={{
               y: [0, -30, 0],
@@ -304,7 +311,10 @@ export function ShelfView({
                 </div>
 
                 {/* Back wall */}
-                <div className="shelf-back absolute inset-0 -z-10 rounded-lg bg-gradient-to-b from-blue-300 via-blue-400 to-blue-500 opacity-80">
+                <div
+                  className="shelf-back absolute inset-0 -z-10 rounded-lg opacity-80"
+                  style={{ background: theme.wallBackground }}
+                >
                   {/* Wall texture */}
                   <div
                     className="absolute inset-0 rounded-lg opacity-30"
@@ -524,7 +534,7 @@ export function ShelfView({
 
                   {/* Spotlight effect for featured items */}
                   {shelfElements.some(
-                    ({ element }) => element.rarity === 'legendary'
+                    ({ element }) => element.rarity === RarityLevel.LEGENDARY
                   ) && (
                     <motion.div
                       className="absolute inset-0"
