@@ -1123,6 +1123,22 @@ async function handleDailyQuests(req, res) {
 
       if (generateError) {
         console.error('Quest generation error:', generateError)
+
+        // Проверяем, является ли ошибка связанной с target_value
+        if (
+          generateError.code === '23514' &&
+          generateError.message.includes('daily_quests_target_value_check')
+        ) {
+          console.error(
+            '❌ Quest generation failed due to invalid target_value constraint'
+          )
+          return res.status(500).json({
+            success: false,
+            error:
+              'Ошибка генерации заданий: некорректное значение target_value. Обратитесь к администратору.',
+          })
+        }
+
         return res.status(500).json({
           success: false,
           error: 'Ошибка при генерации заданий',
