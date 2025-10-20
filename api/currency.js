@@ -110,15 +110,18 @@ async function handleEarn(req, res) {
       })
     }
 
-    const result = data[0]
+    // PostgreSQL функция возвращает объект, а не массив
+    const result = data
 
     console.log(`✅ Currency earned successfully:`, result)
 
     return res.status(200).json({
       success: true,
       data: {
-        newBalance: result.new_balance,
-        transactionId: result.transaction_id,
+        balance_after: result.balance_after,
+        balance_before: result.balance_before,
+        amount_earned: result.amount_earned,
+        transaction_id: result.transaction_id,
         currencyType,
         amount,
         reason,

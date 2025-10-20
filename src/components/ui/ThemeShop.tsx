@@ -10,6 +10,7 @@ import { useGardenTheme } from '@/hooks/useGardenTheme'
 import { useCurrencyStore } from '@/stores/currencyStore'
 import { useUserSync } from '@/hooks/queries/useUserQueries'
 import { useTelegramId } from '@/hooks/useTelegramId'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button, Card } from '@/components/ui'
 
 interface ThemeShopProps {
@@ -32,6 +33,7 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
   const currentUser = userData?.user
+  const queryClient = useQueryClient()
 
   const [purchasingTheme, setPurchasingTheme] = useState<string | null>(null)
 
@@ -118,6 +120,12 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
         // Обновляем список купленных тем
         console.log('🔄 Refetching owned themes...')
         await refetchOwnedThemes()
+
+        // Принудительно обновляем кеш React Query
+        await queryClient.invalidateQueries({
+          queryKey: ['themes', 'catalog'],
+        })
+
         console.log('✅ Theme purchased successfully!')
         // Можно добавить toast уведомление
       } else {

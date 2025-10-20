@@ -104,6 +104,103 @@ CREATE POLICY "Users can insert own transactions" ON public.currency_transaction
     telegram_id = public.get_telegram_id()
   );
 
+-- 6. Создаем безопасную функцию для начисления валюты
+CREATE OR REPLACE FUNCTION public.earn_currency(
+  p_telegram_id bigint,
+  p_currency_type text,
+  p_amount integer,
+  p_reason text,
+  p_description text DEFAULT NULL,
+  p_metadata jsonb DEFAULT '{}'::jsonb
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_current_balance integer;
+  v_new_balance integer;
+  v_transaction_id uuid;
+  v_auth_telegram_id bigint;
+BEGIN
+  -- 🔒 КРИТИЧЕСКАЯ ПРОВЕРКА: Получаем telegram_id из JWT токена
+  v_auth_telegram_id := public.get_telegram_id();
+  
+  -- Проверяем, что пользователь аутентифицирован
+  IF v_auth_telegram_id IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'User not authenticated');
+  END IF;
+  
+  -- 🔒 КРИТИЧЕСКАЯ ПРОВЕРКА: Пользователь может начислять только себе
+  IF p_telegram_id != v_auth_telegram_id THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Access denied: cannot earn currency for other user');
+  END IF;
+
+  -- Проверяем входные параметры
+  IF p_telegram_id IS NULL OR p_currency_type IS NULL OR p_amount IS NULL OR p_reason IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Missing required parameters');
+  END IF;
+
+  -- Проверяем тип валюты
+  IF p_currency_type NOT IN ('sprouts', 'gems') THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Invalid currency type');
+  END IF;
+
+  -- Проверяем сумму
+  IF p_amount <= 0 THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Amount must be positive');
+  END IF;
+
+  -- Получаем текущий баланс
+  SELECT 
+    CASE WHEN p_currency_type = 'sprouts' THEN sprouts ELSE gems END
+  INTO v_current_balance
+  FROM public.user_currency
+  WHERE telegram_id = p_telegram_id;
+
+  -- Если пользователя нет, создаем запись
+  IF v_current_balance IS NULL THEN
+    INSERT INTO public.user_currency (telegram_id, sprouts, gems)
+    VALUES (p_telegram_id, 0, 0)
+    ON CONFLICT (telegram_id) DO NOTHING;
+    
+    v_current_balance := 0;
+  END IF;
+
+  -- Вычисляем новый баланс
+  v_new_balance := v_current_balance + p_amount;
+
+  -- Обновляем баланс пользователя (безопасно благодаря RLS)
+  UPDATE public.user_currency
+  SET 
+    sprouts = CASE WHEN p_currency_type = 'sprouts' THEN v_new_balance ELSE sprouts END,
+    gems = CASE WHEN p_currency_type = 'gems' THEN v_new_balance ELSE gems END,
+    total_sprouts_earned = CASE WHEN p_currency_type = 'sprouts' THEN total_sprouts_earned + p_amount ELSE total_sprouts_earned END,
+    total_gems_earned = CASE WHEN p_currency_type = 'gems' THEN total_gems_earned + p_amount ELSE total_gems_earned END,
+    last_updated = now(),
+    updated_at = now()
+  WHERE telegram_id = p_telegram_id;
+
+  -- Создаем запись транзакции (безопасно благодаря RLS)
+  INSERT INTO public.currency_transactions (
+    telegram_id, transaction_type, currency_type, amount,
+    balance_before, balance_after, reason, description, metadata
+  ) VALUES (
+    p_telegram_id, 'earn', p_currency_type, p_amount,
+    v_current_balance, v_new_balance, p_reason, p_description, p_metadata
+  ) RETURNING id INTO v_transaction_id;
+
+  -- Возвращаем успешный результат
+  RETURN jsonb_build_object(
+    'success', true,
+    'transaction_id', v_transaction_id,
+    'balance_before', v_current_balance,
+    'balance_after', v_new_balance,
+    'amount_earned', p_amount
+  );
+END;
+$$;
+
 -- 7. Создаем безопасную функцию для траты валюты
 CREATE OR REPLACE FUNCTION public.spend_currency(
   p_telegram_id bigint,
