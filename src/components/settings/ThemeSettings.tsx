@@ -93,6 +93,9 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
           return oldData
         })
 
+        // Принудительно обновляем localStorage версию для useGardenTheme
+        window.dispatchEvent(new Event('storage'))
+
         console.log('✅ Theme purchased successfully!')
         console.log('🎨 Updated owned themes:', updatedOwned)
       }

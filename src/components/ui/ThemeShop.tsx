@@ -163,6 +163,9 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
           return oldData
         })
 
+        // Принудительно обновляем localStorage версию для useGardenTheme
+        window.dispatchEvent(new Event('storage'))
+
         console.log('✅ Theme purchased successfully!')
         console.log('🎨 Updated owned themes:', updatedOwned)
         // Можно добавить toast уведомление

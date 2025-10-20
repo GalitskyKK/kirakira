@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTelegramTheme } from '@/hooks/useTelegram'
-import { useUserStore } from '@/stores/userStore'
+import { useUserSync } from '@/hooks/queries/useUserQueries'
+import { useTelegramId } from '@/hooks/useTelegramId'
 import { authenticatedFetch } from '@/utils/apiClient'
 
 // =============================
@@ -252,20 +253,15 @@ function loadOwnedThemesFromStorage(): string[] {
   return []
 }
 
-function saveOwnedThemesToStorage(ownedThemeIds: string[]): void {
-  try {
-    localStorage.setItem(OWNED_THEMES_KEY, JSON.stringify(ownedThemeIds))
-  } catch (error) {
-    console.warn('Failed to save owned themes to storage:', error)
-  }
-}
+// Функция удалена - теперь используется в компонентах
 
 export function useGardenTheme() {
   const { isDark: isTelegramDark } = useTelegramTheme()
-  const userPreferredTheme = useUserStore(
-    s => s.currentUser?.preferences.theme ?? 'auto'
-  )
-  const currentUser = useUserStore(s => s.currentUser)
+  // Используем React Query вместо Zustand для консистентности
+  const telegramId = useTelegramId()
+  const { data: userData } = useUserSync(telegramId, !!telegramId)
+  const currentUser = userData?.user
+  const userPreferredTheme = currentUser?.preferences?.theme ?? 'auto'
 
   const [themeId, setThemeId] = useState<string | null>(null)
 
@@ -303,39 +299,41 @@ export function useGardenTheme() {
     retry: 2,
   })
 
-  // Получаем список купленных тем
-  const ownedThemeIds = useMemo(() => {
-    console.log('🔍 useGardenTheme - computing ownedThemeIds:', {
-      themesDataSuccess: themesData?.success,
-      themesDataOwned: themesData?.data?.ownedThemeIds,
-      hasThemesData: !!themesData,
-    })
+  // Получаем список купленных тем (удалено - заменено на finalOwnedThemeIds)
 
-    if (themesData?.success === true && themesData.data?.ownedThemeIds) {
-      const serverOwned = themesData.data.ownedThemeIds
-      console.log('🎨 useGardenTheme - using server owned themes:', serverOwned)
-      saveOwnedThemesToStorage(serverOwned)
-      return serverOwned
+  // Принудительно обновляем ownedThemeIds при изменении localStorage
+  const [localStorageVersion, setLocalStorageVersion] = useState(0)
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setLocalStorageVersion(prev => prev + 1)
     }
 
-    const localOwned = loadOwnedThemesFromStorage()
-    console.log('🎨 useGardenTheme - using local owned themes:', localOwned)
-    return localOwned
-  }, [themesData])
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
+
+  // Обновляем ownedThemeIds при изменении localStorage
+  const finalOwnedThemeIds = useMemo(() => {
+    if (themesData?.success === true && themesData.data?.ownedThemeIds) {
+      return themesData.data.ownedThemeIds
+    }
+    return loadOwnedThemesFromStorage()
+  }, [themesData, localStorageVersion])
 
   const theme = useMemo(() => {
     if (themeId) {
       const found = THEMES.find(t => t.id === themeId)
-      if (found && (found.isDefault || ownedThemeIds.includes(found.id))) {
+      if (found && (found.isDefault || finalOwnedThemeIds.includes(found.id))) {
         return found
       }
     }
     return resolveInitialTheme(
       userPreferredTheme,
       isTelegramDark,
-      ownedThemeIds
+      finalOwnedThemeIds
     )
-  }, [themeId, userPreferredTheme, isTelegramDark, ownedThemeIds])
+  }, [themeId, userPreferredTheme, isTelegramDark, finalOwnedThemeIds])
 
   // Сохраняем выбранную тему и следим за URL-параметром при монтировании
   useEffect(() => {
@@ -362,7 +360,7 @@ export function useGardenTheme() {
   const canUseTheme = (themeId: string): boolean => {
     const theme = THEMES.find(t => t.id === themeId)
     if (!theme) return false
-    return theme.isDefault || ownedThemeIds.includes(themeId)
+    return theme.isDefault || finalOwnedThemeIds.includes(themeId)
   }
 
   return {
@@ -370,7 +368,7 @@ export function useGardenTheme() {
     themes: THEMES,
     setGardenTheme,
     isDarkTheme: theme.isDark,
-    ownedThemeIds,
+    ownedThemeIds: finalOwnedThemeIds,
     canUseTheme,
     isLoadingThemes,
     refetchOwnedThemes,
