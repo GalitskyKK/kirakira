@@ -496,6 +496,8 @@ async function handleListThemes(req, res) {
     const supabase = await getSupabaseClient(req.auth?.jwt)
 
     console.log(`🎨 Getting themes for user ${telegramId}`)
+    console.log(`🔑 JWT present:`, !!req.auth?.jwt)
+    console.log(`🔑 req.auth:`, req.auth)
 
     // Получаем купленные темы пользователя
     const { data: ownedThemes, error: ownedError } = await supabase
@@ -512,7 +514,9 @@ async function handleListThemes(req, res) {
       })
     }
 
+    console.log(`📦 Raw owned themes from DB:`, ownedThemes)
     const ownedThemeIds = ownedThemes.map(t => t.item_id)
+    console.log(`🎨 Processed owned theme IDs:`, ownedThemeIds)
 
     // Статичный список тем (в будущем можно вынести в БД)
     const themes = [

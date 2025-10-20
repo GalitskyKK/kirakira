@@ -13,6 +13,24 @@ import { useTelegramId } from '@/hooks/useTelegramId'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button, Card } from '@/components/ui'
 
+// Импортируем функции для работы с локальным хранилищем
+const loadOwnedThemesFromStorage = (): string[] => {
+  try {
+    const stored = localStorage.getItem('garden_owned_themes')
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
+
+const saveOwnedThemesToStorage = (themeIds: string[]): void => {
+  try {
+    localStorage.setItem('garden_owned_themes', JSON.stringify(themeIds))
+  } catch {
+    // Игнорируем ошибки localStorage
+  }
+}
+
 interface ThemeShopProps {
   readonly isOpen: boolean
   readonly onClose: () => void
@@ -126,7 +144,13 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
           queryKey: ['themes', 'catalog'],
         })
 
+        // Принудительно обновляем локальное состояние
+        const currentOwned = loadOwnedThemesFromStorage()
+        const updatedOwned = [...currentOwned, themeId]
+        saveOwnedThemesToStorage(updatedOwned)
+
         console.log('✅ Theme purchased successfully!')
+        console.log('🎨 Updated owned themes:', updatedOwned)
         // Можно добавить toast уведомление
       } else {
         console.error('❌ Failed to buy theme:', result.error)
