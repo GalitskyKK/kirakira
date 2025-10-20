@@ -1317,10 +1317,33 @@ async function handleClaimDailyQuest(req, res) {
     const gemsEarned = result.gems_earned || 0
     const balance = result.balance || { sprouts: 0, gems: 0 }
 
+    // 🎯 Начисляем опыт за выполнение ежедневного квеста
+    let experienceEarned = 0
+    if (questRow.rewards && questRow.rewards.experience) {
+      const experienceResult = await awardExperience(
+        supabase,
+        parseInt(telegramId),
+        questRow.rewards.experience,
+        {
+          source: 'daily_quest_completion',
+          questId: questRow.id,
+          questType: questRow.quest_type,
+        }
+      )
+
+      if (experienceResult && experienceResult.success) {
+        experienceEarned = questRow.rewards.experience
+        console.log(
+          `🎯 Experience awarded for quest ${questRow.id}: ${experienceEarned} XP`
+        )
+      }
+    }
+
     console.log('✅ Quest claimed successfully:', {
       questId: questRow.id,
       sproutsEarned,
       gemsEarned,
+      experienceEarned,
       newBalance: balance,
     })
 
@@ -1353,6 +1376,7 @@ async function handleClaimDailyQuest(req, res) {
         rewards: {
           sprouts: sproutsEarned,
           gems: gemsEarned,
+          experience: experienceEarned,
         },
       },
     })
