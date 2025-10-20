@@ -213,7 +213,8 @@ async function handleSpend(req, res) {
       })
     }
 
-    const result = data[0]
+    // PostgreSQL функция возвращает объект, а не массив
+    const result = data
 
     // Проверяем успешность операции
     if (!result.success) {
