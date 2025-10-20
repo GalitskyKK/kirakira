@@ -3,7 +3,7 @@
  * Показывает доступные темы и позволяет их покупать
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Check, Lock, Leaf } from 'lucide-react'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
@@ -28,6 +28,22 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
   const currentUser = useUserStore(s => s.currentUser)
 
   const [purchasingTheme, setPurchasingTheme] = useState<string | null>(null)
+
+  // Блокируем скролл при открытии модалки
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+      document.body.style.paddingRight = '0px'
+    } else {
+      document.body.style.overflow = 'unset'
+      document.body.style.paddingRight = '0px'
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset'
+      document.body.style.paddingRight = '0px'
+    }
+  }, [isOpen])
 
   const handleBuyTheme = async (themeId: string) => {
     if (!currentUser?.telegramId) return
@@ -66,41 +82,41 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
+        onWheel={e => e.preventDefault()}
+        onTouchMove={e => e.preventDefault()}
       >
         <motion.div
-          className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900"
+          className="flex max-h-[80vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900"
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
+          <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700 sm:p-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
                 🎨 Магазин тем
               </h2>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Персонализируйте свой сад
               </p>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
               onClick={onClose}
-              className="h-8 w-8 p-0"
+              className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
             >
-              <X className="h-4 w-4" />
-            </Button>
+              <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+            </button>
           </div>
 
           {/* Content */}
-          <div className="max-h-[calc(90vh-120px)] overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6">
             {isLoadingThemes ? (
               <div className="flex items-center justify-center py-12">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
@@ -236,15 +252,15 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
           </div>
 
           {/* Footer */}
-          <div className="border-t border-gray-200 p-6 dark:border-gray-700">
+          <div className="flex-shrink-0 border-t border-gray-200 p-4 dark:border-gray-700 sm:p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Leaf className="h-5 w-5 text-green-500" />
+                <Leaf className="h-4 w-4 text-green-500" />
                 <span className="text-sm text-gray-600 dark:text-gray-400">
                   Ваш баланс: {userCurrency?.sprouts || 0} ростков
                 </span>
               </div>
-              <Button variant="outline" onClick={onClose}>
+              <Button variant="outline" onClick={onClose} size="sm">
                 Закрыть
               </Button>
             </div>
