@@ -7,7 +7,8 @@ import { motion } from 'framer-motion'
 import { Check, Lock, Leaf } from 'lucide-react'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
 import { useCurrencyStore } from '@/stores/currencyStore'
-import { useUserStore } from '@/stores/userStore'
+import { useUserSync } from '@/hooks/queries/useUserQueries'
+import { useTelegramId } from '@/hooks/useTelegramId'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button, Card } from '@/components/ui'
 
@@ -44,7 +45,11 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
     refetchOwnedThemes,
   } = useGardenTheme()
   const { userCurrency, spendCurrency } = useCurrencyStore()
-  const currentUser = useUserStore(s => s.currentUser)
+
+  // Используем правильный подход - React Query вместо Zustand
+  const telegramId = useTelegramId()
+  const { data: userData } = useUserSync(telegramId, !!telegramId)
+  const currentUser = userData?.user
   const queryClient = useQueryClient()
 
   const handleBuyTheme = async (themeId: string) => {
@@ -97,6 +102,13 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
   }
 
   const handleSelectTheme = (themeId: string) => {
+    console.log('🎨 ThemeSettings - handleSelectTheme:', {
+      themeId,
+      ownedThemeIds,
+      canUseTheme: canUseTheme(themeId),
+      currentUser: currentUser?.telegramId,
+    })
+
     if (canUseTheme(themeId)) {
       setGardenTheme(themeId)
     }
@@ -123,6 +135,16 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
             const isOwned = ownedThemeIds.includes(theme.id)
             const canBuy = canUseTheme(theme.id)
             const isSelected = currentTheme.id === theme.id
+
+            console.log('🎨 ThemeSettings - rendering theme:', {
+              themeId: theme.id,
+              themeName: theme.name,
+              isOwned,
+              canBuy,
+              isSelected,
+              ownedThemeIds,
+              isDefault: theme.isDefault,
+            })
 
             return (
               <motion.div
