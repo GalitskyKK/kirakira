@@ -4,7 +4,7 @@ import { ArrowLeft, Users, Calendar, Flame, MapPin, Info } from 'lucide-react'
 import { Button, Card, UserAvatar } from '@/components/ui'
 import { ShelfView, GardenStats } from '@/components/garden'
 import { useTelegram } from '@/hooks'
-import { useUpdateQuestProgress } from '@/hooks/queries/useDailyQuestQueries'
+import { useQuestIntegration } from '@/hooks/useQuestIntegration'
 import type {
   User,
   GardenElement,
@@ -66,13 +66,16 @@ export function FriendGardenView({
   onBack,
 }: FriendGardenViewProps) {
   const { hapticFeedback, showAlert } = useTelegram()
-  const updateQuestProgress = useUpdateQuestProgress()
+  const { questActions } = useQuestIntegration({
+    onQuestUpdated: (questType, isCompleted) => {
+      if (isCompleted) {
+        console.log(`🎉 Quest completed: ${questType}`)
+      }
+    },
+  })
 
   // 🔑 Отслеживаем, был ли уже обновлён квест для избежания повторных вызовов
   const questUpdatedRef = useRef(false)
-  // 🔑 Стабильная ссылка на updateQuestProgress для избежания пересоздания callback
-  const updateQuestProgressRef = useRef(updateQuestProgress)
-  updateQuestProgressRef.current = updateQuestProgress
 
   // Состояние для данных сада друга (изолировано от основного garden store)
   const [friendGarden, setFriendGarden] = useState<FriendGardenData | null>(
@@ -118,12 +121,8 @@ export function FriendGardenView({
       if (currentUser?.telegramId && !questUpdatedRef.current) {
         questUpdatedRef.current = true
         // Выполняем обновление квеста в фоне, не блокируя основной UI
-        updateQuestProgressRef.current
-          .mutateAsync({
-            telegramId: currentUser.telegramId,
-            questType: 'visit_friend_garden',
-            increment: 1,
-          })
+        questActions
+          .visitFriendGarden()
           .then(() => {
             console.log('✅ Visit friend garden quest updated')
           })

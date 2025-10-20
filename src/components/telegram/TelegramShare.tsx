@@ -4,7 +4,7 @@ import { Share2, Camera, Heart, Copy, MessageCircle } from 'lucide-react'
 import { useTelegram } from '@/hooks'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
-import { useUpdateQuestProgress } from '@/hooks/queries/useDailyQuestQueries'
+import { useQuestIntegration } from '@/hooks/useQuestIntegration'
 import { Button, Card } from '@/components/ui'
 import type { Garden, MoodEntry } from '@/types'
 import { authenticatedFetch } from '@/utils/apiClient'
@@ -24,7 +24,13 @@ export function TelegramShare({
     useTelegram()
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
-  const updateQuestProgress = useUpdateQuestProgress()
+  const { questActions } = useQuestIntegration({
+    onQuestUpdated: (questType, isCompleted) => {
+      if (isCompleted) {
+        console.log(`🎉 Quest completed: ${questType}`)
+      }
+    },
+  })
   const [isCapturing, setIsCapturing] = useState(false)
   const [lastSharedImage, setLastSharedImage] = useState<string | null>(null)
 
@@ -108,12 +114,8 @@ export function TelegramShare({
 
             // 🎯 Обновляем прогресс daily quest для поделиться садом (неблокирующе)
             if (userData?.user?.telegramId) {
-              updateQuestProgress
-                .mutateAsync({
-                  telegramId: userData.user.telegramId,
-                  questType: 'share_garden',
-                  increment: 1,
-                })
+              questActions
+                .shareGarden()
                 .then(() => {
                   console.log('✅ Share garden quest updated (text)')
                 })
@@ -138,7 +140,7 @@ export function TelegramShare({
     generateGardenDescription,
     showAlert,
     userData?.user?.telegramId,
-    updateQuestProgress,
+    questActions,
   ])
 
   // Шаринг скриншота сада
@@ -158,6 +160,21 @@ export function TelegramShare({
       const description = generateGardenDescription()
       shareGarden(imageUrl, description)
 
+      // 🎯 Обновляем прогресс daily quest для поделиться садом
+      if (userData?.user?.telegramId) {
+        questActions
+          .shareGarden()
+          .then(() => {
+            console.log('✅ Share garden quest updated (image)')
+          })
+          .catch(error => {
+            console.warn(
+              '⚠️ Failed to update share_garden quest (image):',
+              error
+            )
+          })
+      }
+
       hapticFeedback('success')
     } catch {
       hapticFeedback('error')
@@ -171,6 +188,8 @@ export function TelegramShare({
     generateGardenDescription,
     shareGarden,
     showAlert,
+    questActions,
+    userData?.user?.telegramId,
   ])
 
   // Копирование ссылки на бота

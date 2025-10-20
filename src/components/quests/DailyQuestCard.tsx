@@ -4,10 +4,7 @@
  */
 
 import { motion } from 'framer-motion'
-import {
-  useClaimDailyQuest,
-  useUpdateQuestProgress,
-} from '@/hooks/queries/useDailyQuestQueries'
+import { useClaimDailyQuest } from '@/hooks/queries/useDailyQuestQueries'
 import { useDailyQuestStore } from '@/stores/dailyQuestStore'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -38,7 +35,6 @@ export function DailyQuestCard({
   const { selectQuest, openQuestModal, showRewardAnimation } =
     useDailyQuestStore()
   const claimMutation = useClaimDailyQuest()
-  const updateMutation = useUpdateQuestProgress()
 
   // Вычисляем данные квеста
   const progress = getQuestProgress(quest)
@@ -73,18 +69,6 @@ export function DailyQuestCard({
   const handleQuestClick = () => {
     selectQuest(quest.id)
     openQuestModal()
-  }
-
-  const handleUpdateProgress = async () => {
-    try {
-      await updateMutation.mutateAsync({
-        telegramId,
-        questId: quest.id,
-        increment: 1,
-      })
-    } catch (error) {
-      console.error('Update progress error:', error)
-    }
   }
 
   // Определяем цвет карточки на основе статуса
@@ -177,19 +161,12 @@ export function DailyQuestCard({
           {/* Действия */}
           <div className="flex items-center justify-between pt-2">
             <div className="flex space-x-2">
+              {/* Показываем подсказку для активных квестов */}
               {quest.status === 'active' &&
                 quest.currentProgress < quest.targetValue && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={e => {
-                      e.stopPropagation()
-                      handleUpdateProgress()
-                    }}
-                    disabled={updateMutation.isPending}
-                  >
-                    {updateMutation.isPending ? 'Обновление...' : 'Обновить'}
-                  </Button>
+                  <div className="text-sm text-gray-500">
+                    💡 Выполните действие для обновления прогресса
+                  </div>
                 )}
             </div>
 

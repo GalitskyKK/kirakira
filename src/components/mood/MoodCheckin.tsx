@@ -6,6 +6,7 @@ import { PlantRenderer } from '@/components/garden/plants'
 import { Card, LoadingSpinner } from '@/components/ui'
 import { useMoodTracking } from '@/hooks/index.v2'
 import { useGardenState } from '@/hooks/index.v2'
+import { useQuestIntegration } from '@/hooks/useQuestIntegration'
 import type { MoodType, MoodIntensity, MoodEntry, GardenElement } from '@/types'
 
 interface MoodCheckinProps {
@@ -35,6 +36,14 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
     error: gardenError,
   } = useGardenState()
 
+  const { questActions } = useQuestIntegration({
+    onQuestUpdated: (questType, isCompleted) => {
+      if (isCompleted) {
+        console.log(`🎉 Quest completed: ${questType}`)
+      }
+    },
+  })
+
   const [showSuccess, setShowSuccess] = useState(false)
 
   const handleMoodSubmit = useCallback(
@@ -54,11 +63,16 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
         if (moodEntry) {
           onMoodSubmit?.(moodEntry)
 
+          // Обновляем квесты настроения
+          await questActions.recordMood(mood, !!note)
+
           if (!todaysMood && canUnlockToday()) {
             // Unlock garden element
             const element = await unlockElement(mood)
             if (element) {
               setUnlockedElement(element)
+              // Обновляем квесты сада
+              await questActions.collectElement()
             }
           }
 
