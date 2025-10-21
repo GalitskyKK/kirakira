@@ -261,6 +261,9 @@ export function ShelfView({
                     'shelf-base absolute inset-x-0 bottom-0',
                     isMobile ? 'h-10' : 'h-12' // Увеличенная высота полки
                   )}
+                  style={{
+                    borderRadius: theme.shelfRadius,
+                  }}
                 >
                   {/* Main shelf surface */}
                   <div
@@ -343,6 +346,8 @@ export function ShelfView({
                   style={{
                     background: theme.wallBackground,
                     borderRadius: theme.wallRadius,
+                    borderTopLeftRadius: theme.shelfRadius,
+                    borderTopRightRadius: theme.shelfRadius,
                   }}
                 >
                   {/* Wall texture */}
@@ -350,6 +355,8 @@ export function ShelfView({
                     className="absolute inset-0 opacity-30"
                     style={{
                       borderRadius: theme.wallRadius,
+                      borderTopLeftRadius: theme.shelfRadius,
+                      borderTopRightRadius: theme.shelfRadius,
                       backgroundImage: `
                       radial-gradient(circle at 25% 25%, rgba(255,255,255,0.2) 1px, transparent 1px),
                       radial-gradient(circle at 75% 75%, rgba(0,0,0,0.1) 1px, transparent 1px)
@@ -548,7 +555,11 @@ export function ShelfView({
 
                 {/* Enhanced shelf lighting effects */}
                 <motion.div
-                  className="shelf-lighting pointer-events-none absolute inset-0 overflow-hidden"
+                  className="shelf-lighting pointer-events-none absolute inset-0"
+                  style={{
+                    borderRadius: theme.shelfRadius,
+                    overflow: 'hidden',
+                  }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 0.7 }}
                   transition={{ delay: shelfIndex * 0.3 + 0.5 }}
