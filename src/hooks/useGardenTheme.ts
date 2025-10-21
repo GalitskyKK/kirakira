@@ -4,6 +4,7 @@ import { useTelegramTheme } from '@/hooks/useTelegram'
 import { useUserSync } from '@/hooks/queries/useUserQueries'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { authenticatedFetch } from '@/utils/apiClient'
+import { updateGardenTheme } from '@/api/gardenThemeService'
 
 // =============================
 // Типы
@@ -350,10 +351,28 @@ export function useGardenTheme() {
     }
   }, [])
 
-  const setGardenTheme = (id: string) => {
+  const setGardenTheme = async (id: string) => {
     if (THEMES.some(t => t.id === id)) {
+      // Сохраняем в localStorage
       localStorage.setItem(STORAGE_KEY, id)
       setThemeId(id)
+
+      // Сохраняем в базу данных если есть пользователь
+      if (currentUser?.telegramId) {
+        try {
+          const result = await updateGardenTheme(currentUser.telegramId, id)
+          if (!result.success) {
+            console.warn(
+              'Failed to save garden theme to database:',
+              result.error
+            )
+          } else {
+            console.log('✅ Garden theme saved to database:', id)
+          }
+        } catch (error) {
+          console.warn('Failed to save garden theme to database:', error)
+        }
+      }
     }
   }
 

@@ -5,6 +5,7 @@ import { ShelfElement } from './ShelfElement.tsx'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
 import type { GardenElement as GardenElementType, ViewMode } from '@/types'
 import { RarityLevel } from '@/types/garden'
+import type { GardenTheme } from '@/hooks/useGardenTheme'
 
 interface ShelfViewProps {
   elements: readonly GardenElementType[]
@@ -15,6 +16,7 @@ interface ShelfViewProps {
   onElementClick?: (element: GardenElementType) => void
   onElementLongPress?: (element: GardenElementType) => void // Долгое нажатие
   onSlotClick?: (shelfIndex: number, position: number) => void // Клик по слоту
+  friendTheme?: GardenTheme | null // Опциональная тема для сада друга
 }
 
 // Responsive constants - optimized to fit shelf width n
@@ -37,10 +39,14 @@ export function ShelfView({
   onElementClick,
   onElementLongPress,
   onSlotClick,
+  friendTheme,
 }: ShelfViewProps) {
   // Responsive design hook
   const [isMobile, setIsMobile] = useState(false)
-  const { theme } = useGardenTheme()
+  const { theme: defaultTheme } = useGardenTheme()
+
+  // Используем тему друга если она передана, иначе используем тему текущего пользователя
+  const theme = friendTheme ?? defaultTheme
 
   useEffect(() => {
     const checkMobile = () => {

@@ -104,7 +104,7 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
     }
   }
 
-  const handleSelectTheme = (themeId: string) => {
+  const handleSelectTheme = async (themeId: string) => {
     console.log('🎨 ThemeSettings - handleSelectTheme:', {
       themeId,
       ownedThemeIds,
@@ -113,7 +113,7 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
     })
 
     if (canUseTheme(themeId)) {
-      setGardenTheme(themeId)
+      await setGardenTheme(themeId)
     }
   }
 

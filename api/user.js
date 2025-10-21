@@ -705,6 +705,82 @@ async function handleGetStreakFreezes(req, res) {
 }
 
 /**
+ * 🎨 НОВЫЙ ЭНДПОИНТ: Обновление темы сада
+ * POST /api/user?action=update-garden-theme&telegramId=123
+ * Body: { gardenTheme: 'sunset' }
+ */
+async function handleUpdateGardenTheme(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' })
+  }
+
+  try {
+    const telegramId = parseInt(req.query.telegramId)
+    const { gardenTheme } = req.body
+
+    if (!telegramId) {
+      return res
+        .status(400)
+        .json({ success: false, error: 'Missing telegramId' })
+    }
+
+    if (!gardenTheme) {
+      return res
+        .status(400)
+        .json({ success: false, error: 'Missing gardenTheme' })
+    }
+
+    // Валидируем тему сада
+    const validThemes = ['light', 'dark', 'sunset', 'night', 'forest', 'aqua']
+    if (!validThemes.includes(gardenTheme)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid garden theme. Valid themes: ${validThemes.join(', ')}`,
+      })
+    }
+
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+    console.log(
+      `🎨 Updating garden theme for user ${telegramId} to ${gardenTheme}`
+    )
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({
+        garden_theme: gardenTheme,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('telegram_id', telegramId)
+      .select('garden_theme')
+      .single()
+
+    if (error) {
+      console.error('Failed to update garden theme:', error)
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to update garden theme',
+      })
+    }
+
+    console.log(
+      `✅ Garden theme updated for user ${telegramId}: ${data.garden_theme}`
+    )
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        gardenTheme: data.garden_theme,
+      },
+    })
+  } catch (error) {
+    console.error('Error in handleUpdateGardenTheme:', error)
+    return res
+      .status(500)
+      .json({ success: false, error: 'Internal server error' })
+  }
+}
+
+/**
  * 🔥 НОВЫЙ ЭНДПОИНТ: Проверка состояния стрика
  * GET /api/user?action=check-streak&telegramId=123
  */
@@ -835,10 +911,12 @@ async function protectedHandler(req, res) {
         return await handleResetStreak(req, res)
       case 'check-streak': // 🔥 НОВЫЙ ЭНДПОИНТ
         return await handleCheckStreak(req, res)
+      case 'update-garden-theme': // 🎨 НОВЫЙ ЭНДПОИНТ
+        return await handleUpdateGardenTheme(req, res)
       default:
         return res.status(400).json({
           success: false,
-          error: `Unknown action: ${action}. Available actions: stats, update-photo, use-streak-freeze, get-streak-freezes, reset-streak, check-streak`,
+          error: `Unknown action: ${action}. Available actions: stats, update-photo, use-streak-freeze, get-streak-freezes, reset-streak, check-streak, update-garden-theme`,
         })
     }
   } catch (error) {

@@ -181,9 +181,9 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
     }
   }
 
-  const handleSelectTheme = (themeId: string) => {
+  const handleSelectTheme = async (themeId: string) => {
     if (canUseTheme(themeId)) {
-      setGardenTheme(themeId)
+      await setGardenTheme(themeId)
     }
   }
 

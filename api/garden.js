@@ -444,7 +444,9 @@ async function handleViewFriendGarden(req, res) {
     // 2. Проверяем настройки приватности владельца сада
     const { data: ownerSettings, error: settingsError } = await supabase
       .from('users')
-      .select('first_name, last_name, username, photo_url, share_garden')
+      .select(
+        'first_name, last_name, username, photo_url, share_garden, garden_theme'
+      )
       .eq('telegram_id', friendTelegramId)
       .single()
 
@@ -504,6 +506,7 @@ async function handleViewFriendGarden(req, res) {
           currentStreak: friendStats?.current_streak || 0,
           totalElements: friendStats?.total_elements || gardenElements.length,
           gardenCreated: friendStats?.created_at || null,
+          gardenTheme: ownerSettings.garden_theme || 'light', // Добавляем тему сада друга
         },
         gardenElements: gardenElements.map(element => ({
           id: element.id,

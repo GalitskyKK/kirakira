@@ -6,6 +6,7 @@ import { ShelfView, GardenStats } from '@/components/garden'
 import { useTelegram } from '@/hooks'
 import { useQuestIntegration } from '@/hooks/useQuestIntegration'
 import { useDailyQuests } from '@/hooks/queries/useDailyQuestQueries'
+import { useFriendGardenTheme } from '@/hooks/useFriendGardenTheme'
 import type {
   User,
   GardenElement,
@@ -35,6 +36,7 @@ interface FriendInfo {
   readonly currentStreak: number
   readonly totalElements: number
   readonly gardenCreated?: string | null
+  readonly gardenTheme: string
 }
 
 interface FriendGardenElement {
@@ -181,6 +183,11 @@ export function FriendGardenView({
     questUpdatedRef.current = false
     void loadFriendGarden()
   }, [loadFriendGarden])
+
+  // 🎨 Получаем тему сада друга
+  const { theme: friendTheme } = useFriendGardenTheme(
+    friendGarden?.friendInfo.gardenTheme
+  )
 
   // 🎨 Конвертируем элементы друга в формат для рендерера
   // 🔑 ВАЖНО: Используем те же функции генерации, что и для собственного сада
@@ -371,6 +378,7 @@ export function FriendGardenView({
           elementBeingMoved={null} // Никогда не перемещаем элементы у друзей
           draggedElement={null}
           viewMode={ViewMode.OVERVIEW}
+          friendTheme={friendTheme} // Передаем тему сада друга
         />
       </Card>
 
