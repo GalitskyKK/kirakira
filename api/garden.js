@@ -572,40 +572,43 @@ async function handleUpgradeElement(req, res) {
       })
     }
 
+    // Универсальная обработка массива/объекта
+    const result = Array.isArray(data) ? data[0] : data
+
     // Проверяем результат функции
-    if (!data.success) {
-      console.log(`⚠️ Upgrade failed: ${data.error}`)
+    if (!result || !result.success) {
+      console.log(`⚠️ Upgrade failed: ${result?.error}`)
       return res.status(400).json({
         success: false,
-        error: data.error || 'Upgrade failed',
+        error: result?.error || 'Upgrade failed',
       })
     }
 
-    console.log(`✅ Element upgrade result:`, data)
+    console.log(`✅ Element upgrade result:`, result)
 
     // 🔍 ДЕТАЛЬНОЕ ЛОГИРОВАНИЕ ДЛЯ ОТЛАДКИ failed_attempts
     console.log('🔍 Upgrade details:', {
       elementId,
       telegramId,
-      upgraded: data.upgraded,
-      newRarity: data.newRarity,
-      progressBonus: data.progressBonus,
-      failedAttempts: data.failedAttempts,
-      cost: data.cost,
-      usedFree: data.usedFree,
+      upgraded: result.upgraded,
+      newRarity: result.newRarity,
+      progressBonus: result.progressBonus,
+      failedAttempts: result.failedAttempts,
+      cost: result.cost,
+      usedFree: result.usedFree,
     })
 
     res.status(200).json({
       success: true,
       data: {
-        upgraded: data.upgraded,
-        newRarity: data.newRarity,
-        xpReward: data.xpReward,
-        progressBonus: data.progressBonus,
-        failedAttempts: data.failedAttempts,
-        cost: data.cost,
-        usedFree: data.usedFree,
-        message: data.upgraded
+        upgraded: result.upgraded,
+        newRarity: result.newRarity,
+        xpReward: result.xpReward,
+        progressBonus: result.progressBonus,
+        failedAttempts: result.failedAttempts,
+        cost: result.cost,
+        usedFree: result.usedFree,
+        message: result.upgraded
           ? 'Element upgraded successfully'
           : 'Upgrade failed, progress increased',
       },
@@ -659,30 +662,33 @@ async function handleUpgradeInfo(req, res) {
       })
     }
 
+    // Универсальная обработка массива/объекта
+    const result = Array.isArray(data) ? data[0] : data
+
     // Проверяем результат функции
-    if (!data.success) {
-      console.log(`⚠️ Get upgrade info failed: ${data.error}`)
+    if (!result || !result.success) {
+      console.log(`⚠️ Get upgrade info failed: ${result?.error}`)
       return res.status(400).json({
         success: false,
-        error: data.error || 'Failed to get upgrade info',
+        error: result?.error || 'Failed to get upgrade info',
       })
     }
 
-    console.log(`✅ Upgrade info retrieved:`, data)
+    console.log(`✅ Upgrade info retrieved:`, result)
 
     res.status(200).json({
       success: true,
       data: {
-        id: data.id,
-        elementId: data.elementId,
-        telegramId: data.telegramId,
-        originalRarity: data.originalRarity,
-        currentRarity: data.currentRarity,
-        upgradeCount: data.upgradeCount || 0,
-        failedAttempts: data.failedAttempts || 0,
-        progressBonus: data.progressBonus || 0,
-        lastUpgradeAt: data.lastUpgradeAt,
-        createdAt: data.createdAt,
+        id: result.id,
+        elementId: result.elementId,
+        telegramId: result.telegramId,
+        originalRarity: result.originalRarity,
+        currentRarity: result.currentRarity,
+        upgradeCount: result.upgradeCount || 0,
+        failedAttempts: result.failedAttempts || 0,
+        progressBonus: result.progressBonus || 0,
+        lastUpgradeAt: result.lastUpgradeAt,
+        createdAt: result.createdAt,
       },
     })
   } catch (error) {

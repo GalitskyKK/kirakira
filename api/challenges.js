@@ -714,22 +714,25 @@ async function handleUpdateProgress(req, res) {
       })
     }
 
+    // Универсальная обработка массива/объекта
+    const result = Array.isArray(updateResult) ? updateResult[0] : updateResult
+
     // Проверяем результат обновления
-    if (!updateResult?.success) {
-      console.error('Progress update failed:', updateResult?.error)
+    if (!result?.success) {
+      console.error('Progress update failed:', result?.error)
       return res.status(400).json({
         success: false,
-        error: updateResult?.error || 'Ошибка обновления прогресса',
+        error: result?.error || 'Ошибка обновления прогресса',
       })
     }
 
     // Если челлендж выполнен, начисляем награды
-    if (updateResult.is_completed && updateResult.rewards?.success) {
-      console.log('🎉 Challenge completed! Rewards:', updateResult.rewards)
+    if (result.is_completed && result.rewards?.success) {
+      console.log('🎉 Challenge completed! Rewards:', result.rewards)
     }
 
     // Используем данные из результата обновления
-    const updatedParticipation = updateResult.participant
+    const updatedParticipation = result.participant
 
     // Получаем обновленный лидерборд
     const { data: leaderboard, error: leaderboardError } = await supabase.rpc(
@@ -1316,44 +1319,32 @@ async function handleClaimDailyQuest(req, res) {
       return res.status(400).json({ success: false, error: errorMessage })
     }
 
-    // 🔧 ИСПРАВЛЕНИЕ: Новая структура ответа от SQL функции
-    // Функция возвращает: { quest_row, sprouts_earned, gems_earned, balance }
-    const result = data?.[0]
+    // 🔧 ИСПРАВЛЕНИЕ: Функция возвращает объект квеста напрямую (тип daily_quests)
+    const questRow = Array.isArray(data) ? data[0] : data
 
-    if (!result || !result.quest_row) {
+    if (!questRow) {
       return res.status(404).json({
         success: false,
         error: 'Задание не найдено или уже получено.',
       })
     }
 
-    // Извлекаем данные из новой структуры
-    const questRow = result.quest_row
-    const sproutsEarned = result.sprouts_earned || 0
-    const gemsEarned = result.gems_earned || 0
-    const balance = result.balance || { sprouts: 0, gems: 0 }
+    // Извлекаем награды из квеста
+    const rewards = questRow.rewards || {}
+    const sproutsEarned = rewards.sprouts || 0
+    const gemsEarned = rewards.gems || 0
 
-    // 🎯 Начисляем опыт за выполнение ежедневного квеста
-    let experienceEarned = 0
-    if (questRow.rewards && questRow.rewards.experience) {
-      const experienceResult = await awardExperience(
-        supabase,
-        parseInt(telegramId),
-        questRow.rewards.experience,
-        {
-          source: 'daily_quest_completion',
-          questId: questRow.id,
-          questType: questRow.quest_type,
-        }
-      )
+    // Получаем текущий баланс пользователя
+    const { data: currencyData } = await supabase
+      .from('user_currency')
+      .select('sprouts, gems')
+      .eq('telegram_id', parseInt(telegramId))
+      .single()
 
-      if (experienceResult && experienceResult.success) {
-        experienceEarned = questRow.rewards.experience
-        console.log(
-          `🎯 Experience awarded for quest ${questRow.id}: ${experienceEarned} XP`
-        )
-      }
-    }
+    const balance = currencyData || { sprouts: 0, gems: 0 }
+
+    // 🎯 Опыт уже начислен функцией claim_daily_quest_reward
+    const experienceEarned = rewards.experience || 0
 
     console.log('✅ Quest claimed successfully:', {
       questId: questRow.id,
@@ -1451,7 +1442,7 @@ async function handleUpdateDailyProgress(req, res) {
           },
         })
       }
-      quest = questData?.[0]
+      quest = Array.isArray(questData) ? questData[0] : questData
     } else if (questType) {
       // Находим активный квест по типу
       const { data: quests, error: fetchError } = await supabase

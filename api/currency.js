@@ -110,17 +110,18 @@ async function handleEarn(req, res) {
       })
     }
 
-    // PostgreSQL функция возвращает массив с одним объектом
-    const result = data?.[0]
+    // PostgreSQL функция может возвращать массив или объект
+    const result = Array.isArray(data) ? data[0] : data
 
     console.log(`✅ Currency earned successfully:`, result)
 
+    // earn_currency возвращает: { success, new_balance, transaction_id }
     return res.status(200).json({
       success: true,
       data: {
-        balance_after: result.balance_after,
-        balance_before: result.balance_before,
-        amount_earned: result.amount_earned,
+        balance_after: result.new_balance,
+        balance_before: result.new_balance - amount, // Вычисляем из нового баланса
+        amount_earned: amount,
         transaction_id: result.transaction_id,
         currencyType,
         amount,
@@ -216,15 +217,15 @@ async function handleSpend(req, res) {
       })
     }
 
-    // PostgreSQL функция возвращает массив с одним объектом
-    const result = data?.[0]
+    // PostgreSQL функция может возвращать массив или объект
+    const result = Array.isArray(data) ? data[0] : data
 
     // Проверяем успешность операции
-    if (!result.success) {
+    if (!result || !result.success) {
       console.log(`⚠️ Insufficient funds for user ${telegramId}`)
       return res.status(400).json({
         success: false,
-        error: result.error_message || 'Insufficient funds',
+        error: result?.error || 'Insufficient funds',
       })
     }
 
@@ -668,16 +669,16 @@ async function handleBuyTheme(req, res) {
       })
     }
 
-    const spendData = spendResult?.[0]
+    const spendData = Array.isArray(spendResult) ? spendResult[0] : spendResult
 
     // Проверяем успешность операции
-    if (!spendData.success) {
+    if (!spendData || !spendData.success) {
       console.log(
-        `⚠️ Insufficient funds for theme purchase: ${spendData.error_message}`
+        `⚠️ Insufficient funds for theme purchase: ${spendData?.error}`
       )
       return res.status(400).json({
         success: false,
-        error: spendData.error_message || 'Insufficient funds',
+        error: spendData?.error || 'Insufficient funds',
       })
     }
 
@@ -705,7 +706,7 @@ async function handleBuyTheme(req, res) {
     console.log(`✅ Theme purchased successfully:`, {
       themeId,
       cost: theme.priceSprouts,
-      newBalance: spendData.new_balance,
+      newBalance: spendData.balance_after,
     })
 
     return res.status(200).json({
@@ -714,7 +715,7 @@ async function handleBuyTheme(req, res) {
         themeId,
         themeName: theme.name,
         cost: theme.priceSprouts,
-        newBalance: spendData.new_balance,
+        newBalance: spendData.balance_after,
         transactionId: spendData.transaction_id,
         purchaseId: purchaseData.id,
       },
