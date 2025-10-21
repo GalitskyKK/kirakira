@@ -130,7 +130,7 @@ export function CurrencyAnimation({
                   animate={{ scale: [0.5, 1.2, 1] }}
                   transition={{ duration: 0.4 }}
                 >
-                  +{amount.toLocaleString()}
+                  +{(amount ?? 0).toLocaleString()}
                 </motion.div>
                 {reason && (
                   <motion.div

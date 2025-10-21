@@ -195,7 +195,7 @@ function TransactionItem({
             }`}
           >
             {isEarn ? '+' : '-'}
-            {transaction.amount.toLocaleString()}
+            {(transaction.amount ?? 0).toLocaleString()}
           </span>
           <SingleCurrencyDisplay
             amount={0}
@@ -207,7 +207,7 @@ function TransactionItem({
 
         {/* Баланс после транзакции */}
         <span className="text-xs text-gray-400 dark:text-gray-500">
-          Баланс: {transaction.balanceAfter.toLocaleString()}
+          Баланс: {(transaction.balanceAfter ?? 0).toLocaleString()}
         </span>
       </div>
     </motion.div>

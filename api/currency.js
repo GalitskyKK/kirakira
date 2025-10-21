@@ -110,8 +110,8 @@ async function handleEarn(req, res) {
       })
     }
 
-    // PostgreSQL функция возвращает объект, а не массив
-    const result = data
+    // PostgreSQL функция возвращает массив с одним объектом
+    const result = data?.[0]
 
     console.log(`✅ Currency earned successfully:`, result)
 
@@ -216,8 +216,8 @@ async function handleSpend(req, res) {
       })
     }
 
-    // PostgreSQL функция возвращает объект, а не массив
-    const result = data
+    // PostgreSQL функция возвращает массив с одним объектом
+    const result = data?.[0]
 
     // Проверяем успешность операции
     if (!result.success) {
@@ -668,7 +668,7 @@ async function handleBuyTheme(req, res) {
       })
     }
 
-    const spendData = spendResult[0]
+    const spendData = spendResult?.[0]
 
     // Проверяем успешность операции
     if (!spendData.success) {

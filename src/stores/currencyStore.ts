@@ -179,7 +179,7 @@ export const useCurrencyStore = create<CurrencyStore>()(
 
         // Обновляем локальный баланс
         const { userCurrency } = get()
-        if (userCurrency) {
+        if (userCurrency && result.data.balance_after !== undefined) {
           const updatedCurrency: UserCurrency = {
             ...userCurrency,
             [currencyType]: result.data.balance_after,
@@ -197,6 +197,10 @@ export const useCurrencyStore = create<CurrencyStore>()(
 
           console.log(
             `✅ Currency earned. New balance: ${result.data.balance_after}`
+          )
+        } else if (result.data.balance_after === undefined) {
+          console.warn(
+            '⚠️ Warning: balance_after is undefined, not updating local state'
           )
         }
 
@@ -263,7 +267,7 @@ export const useCurrencyStore = create<CurrencyStore>()(
 
         // Обновляем локальный баланс
         const { userCurrency } = get()
-        if (userCurrency) {
+        if (userCurrency && result.data.balance_after !== undefined) {
           const updatedCurrency: UserCurrency = {
             ...userCurrency,
             [currencyType]: result.data.balance_after,
@@ -281,6 +285,10 @@ export const useCurrencyStore = create<CurrencyStore>()(
 
           console.log(
             `✅ Currency spent. New balance: ${result.data.balance_after}`
+          )
+        } else if (result.data.balance_after === undefined) {
+          console.warn(
+            '⚠️ Warning: balance_after is undefined, not updating local state'
           )
         }
 

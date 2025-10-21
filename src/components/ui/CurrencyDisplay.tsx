@@ -98,7 +98,7 @@ export function CurrencyDisplay({
       >
         <Leaf size={iconSizes[size]} className="text-green-500" />
         <span className="font-semibold text-gray-800 dark:text-gray-100">
-          {userCurrency.sprouts.toLocaleString()}
+          {(userCurrency.sprouts ?? 0).toLocaleString()}
         </span>
         {showLabels && variant === 'full' && (
           <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -118,7 +118,7 @@ export function CurrencyDisplay({
       >
         <Sparkles size={iconSizes[size]} className="text-purple-500" />
         <span className="font-semibold text-gray-800 dark:text-gray-100">
-          {userCurrency.gems.toLocaleString()}
+          {(userCurrency.gems ?? 0).toLocaleString()}
         </span>
         {showLabels && variant === 'full' && (
           <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -175,7 +175,7 @@ export function SingleCurrencyDisplay({
     >
       <Icon size={iconSizes[size]} className={color} />
       <span className="font-semibold text-gray-800 dark:text-gray-100">
-        {amount.toLocaleString()}
+        {(amount ?? 0).toLocaleString()}
       </span>
       {showLabel && (
         <span className="text-xs text-gray-500 dark:text-gray-400">
