@@ -954,26 +954,29 @@ async function awardExperience(
 
     const currentExperience = currentUser.experience || 0
     const currentLevel = currentUser.level || 1
-    const newExperience = currentExperience + experienceAmount
 
-    // Простая формула для уровня: level = floor(experience / 1000) + 1
-    const newLevel = Math.floor(newExperience / 1000) + 1
-    const leveledUp = newLevel > currentLevel
-
-    // Обновляем опыт и уровень пользователя
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({
-        experience: newExperience,
-        level: newLevel,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('telegram_id', telegramId)
+    // ✅ ИСПРАВЛЕНО: Используем правильную RPC функцию
+    const { data: experienceResult, error: updateError } = await supabase.rpc(
+      'add_user_experience',
+      {
+        p_telegram_id: telegramId,
+        p_experience_points: experienceAmount,
+      }
+    )
 
     if (updateError) {
       console.error('Error updating user experience:', updateError)
       return false
     }
+
+    if (!experienceResult?.success) {
+      console.error('Experience update failed:', experienceResult?.error)
+      return false
+    }
+
+    const newExperience = experienceResult.experience
+    const newLevel = experienceResult.level
+    const leveledUp = experienceResult.leveledUp
 
     // Логируем результат
     if (leveledUp) {
