@@ -40,6 +40,7 @@
     "canvas-confetti": "^1.9.3",
     "clsx": "^2.0.0",
     "date-fns": "^2.30.0",
+    "dotenv": "^17.2.3",
     "framer-motion": "^10.16.5",
     "lucide-react": "^0.294.0",
     "node-fetch": "^3.3.2",
