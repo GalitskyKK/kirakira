@@ -263,6 +263,12 @@ async function handleDetails(req, res) {
     // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
     const supabase = await getSupabaseClient(req.auth?.jwt)
 
+    console.log('🔑 SUPABASE CLIENT TYPE:', req.auth?.jwt ? 'JWT' : 'ANON')
+    console.log('🔑 AUTH DATA:', {
+      hasJwt: !!req.auth?.jwt,
+      telegramId: req.auth?.telegramId,
+    })
+
     // Получаем детали челленджа
     const { data: challenge, error: challengeError } = await supabase
       .from('challenges')
@@ -287,18 +293,23 @@ async function handleDetails(req, res) {
 
     // Ошибка участия не критична - пользователь может не участвовать
 
-    // Получаем лидерборд (с принудительным обновлением)
-    console.log('🔄 FORCING FRESH DB CONNECTION...')
-
-    // Принудительно создаем новое подключение
-    const freshSupabase = await getSupabaseClient()
-
-    const { data: leaderboard, error: leaderboardError } =
-      await freshSupabase.rpc('get_challenge_leaderboard_v3', {
+    // Получаем лидерборд
+    const { data: leaderboard, error: leaderboardError } = await supabase.rpc(
+      'get_challenge_leaderboard_v3',
+      {
         challenge_uuid: challengeId,
-      })
+      }
+    )
 
-    console.log('🎯 LEADERBOARD FROM SQL (FRESH):', leaderboard)
+    console.log('🎯 LEADERBOARD FROM SQL:', leaderboard)
+    console.log('🔍 FIRST ENTRY DETAILS:', leaderboard?.[0])
+    console.log('🔍 USER DATA IN FIRST ENTRY:', {
+      first_name: leaderboard?.[0]?.first_name,
+      last_name: leaderboard?.[0]?.last_name,
+      username: leaderboard?.[0]?.username,
+      photo_url: leaderboard?.[0]?.photo_url,
+      level: leaderboard?.[0]?.level,
+    })
 
     if (leaderboardError) {
       console.error('Leaderboard fetch error:', leaderboardError)
@@ -356,7 +367,15 @@ async function handleDetails(req, res) {
         }
       : undefined
 
-    const formattedLeaderboard = leaderboard.map((entry, index) => {
+    // ИСПРАВЛЕНИЕ: Для личных челленджей показываем только текущего пользователя
+    const filteredLeaderboard =
+      challenge.type === 'personal'
+        ? leaderboard.filter(
+            entry => entry.telegram_id === parseInt(telegramId)
+          )
+        : leaderboard
+
+    const formattedLeaderboard = filteredLeaderboard.map((entry, index) => {
       console.log(`🔍 RAW ENTRY ${index}:`, {
         telegram_id: entry.telegram_id,
         first_name: entry.first_name,
