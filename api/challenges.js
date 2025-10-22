@@ -399,6 +399,11 @@ async function handleDetails(req, res) {
         progressPercentage: parseFloat(entry.progress_percentage),
         rank: parseInt(entry.rank),
         isCurrentUser: entry.telegram_id === parseInt(telegramId),
+        // Дополнительная информация для групповых челленджей
+        teamProgress: entry.team_progress || 0,
+        personalContributionPercentage: parseFloat(
+          entry.personal_contribution_percentage || 0
+        ),
       }
     })
 
@@ -767,6 +772,11 @@ async function handleUpdateProgress(req, res) {
           progressPercentage: parseFloat(entry.progress_percentage || 0),
           rank: parseInt(entry.rank),
           isCurrentUser: entry.telegram_id === parseInt(telegramId),
+          // Дополнительная информация для групповых челленджей
+          teamProgress: entry.team_progress || 0,
+          personalContributionPercentage: parseFloat(
+            entry.personal_contribution_percentage || 0
+          ),
         }))
       : []
 
@@ -855,77 +865,34 @@ async function calculateInitialProgress(supabase, challengeId, telegramId) {
 
     switch (metric) {
       case 'garden_elements_count':
-        // Считаем элементы сада, добавленные после присоединения к челленджу
-        // Используем максимальную дату между началом челленджа и присоединением
-        const { data: participation } = await supabase
-          .from('challenge_participants')
-          .select('joined_at')
-          .eq('challenge_id', challengeId)
-          .eq('telegram_id', telegramId)
-          .single()
-
-        const joinedDate = participation?.joined_at
-          ? new Date(participation.joined_at)
-          : startDate
-        const maxDate = new Date(
-          Math.max(joinedDate.getTime(), startDate.getTime())
-        )
-
+        // Считаем элементы сада, добавленные после начала челленджа
         const { count: gardenCount } = await supabase
           .from('garden_elements')
           .select('*', { count: 'exact', head: true })
           .eq('telegram_id', telegramId)
-          .gte('unlock_date', maxDate.toISOString())
+          .gte('unlock_date', startDate.toISOString())
 
         current = gardenCount || 0
         break
 
       case 'mood_entries_count':
-        // Считаем записи настроения после присоединения к челленджу
-        const { data: participationMood } = await supabase
-          .from('challenge_participants')
-          .select('joined_at')
-          .eq('challenge_id', challengeId)
-          .eq('telegram_id', telegramId)
-          .single()
-
-        const joinedDateMood = participationMood?.joined_at
-          ? new Date(participationMood.joined_at)
-          : startDate
-        const maxDateMood = new Date(
-          Math.max(joinedDateMood.getTime(), startDate.getTime())
-        )
-
+        // Считаем записи настроения после начала челленджа
         const { count: moodCount } = await supabase
           .from('mood_entries')
           .select('*', { count: 'exact', head: true })
           .eq('telegram_id', telegramId)
-          .gte('created_at', maxDateMood.toISOString())
+          .gte('created_at', startDate.toISOString())
 
         current = moodCount || 0
         break
 
       case 'rare_elements_count':
-        // Считаем редкие элементы после присоединения к челленджу
-        const { data: participationRare } = await supabase
-          .from('challenge_participants')
-          .select('joined_at')
-          .eq('challenge_id', challengeId)
-          .eq('telegram_id', telegramId)
-          .single()
-
-        const joinedDateRare = participationRare?.joined_at
-          ? new Date(participationRare.joined_at)
-          : startDate
-        const maxDateRare = new Date(
-          Math.max(joinedDateRare.getTime(), startDate.getTime())
-        )
-
+        // Считаем редкие элементы после начала челленджа
         const { count: rareCount } = await supabase
           .from('garden_elements')
           .select('*', { count: 'exact', head: true })
           .eq('telegram_id', telegramId)
-          .gte('unlock_date', maxDateRare.toISOString())
+          .gte('unlock_date', startDate.toISOString())
           .in('rarity', ['rare', 'epic', 'legendary'])
 
         current = rareCount || 0
