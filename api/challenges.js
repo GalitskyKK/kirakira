@@ -200,19 +200,44 @@ async function handleList(req, res) {
       updatedAt: new Date(challenge.start_date).toISOString(),
     }))
 
-    const formattedParticipations = participations.map(p => ({
-      id: p.id,
-      challengeId: p.challenge_id,
-      telegramId: parseInt(telegramId),
-      status: p.status,
-      joinedAt: new Date(p.joined_at).toISOString(),
-      currentProgress: p.current_progress,
-      maxProgress: p.max_progress,
-      lastUpdateAt: new Date(p.last_update_at).toISOString(),
-      completedAt: p.completed_at
-        ? new Date(p.completed_at).toISOString()
-        : undefined,
-    }))
+    // Форматируем участия с вычислением teamProgress для групповых челленджей
+    const formattedParticipations = await Promise.all(
+      participations.map(async p => {
+        let teamProgress = undefined
+
+        // Для групповых челленджей вычисляем общий прогресс команды
+        const challenge = formattedChallenges.find(c => c.id === p.challenge_id)
+        if (challenge?.type === 'cooperative') {
+          const { data: teamData, error: teamError } = await supabase
+            .from('challenge_participants')
+            .select('current_progress')
+            .eq('challenge_id', p.challenge_id)
+            .in('status', ['joined', 'active', 'completed'])
+
+          if (!teamError && teamData) {
+            teamProgress = teamData.reduce(
+              (sum, participant) => sum + participant.current_progress,
+              0
+            )
+          }
+        }
+
+        return {
+          id: p.id,
+          challengeId: p.challenge_id,
+          telegramId: parseInt(telegramId),
+          status: p.status,
+          joinedAt: new Date(p.joined_at).toISOString(),
+          currentProgress: p.current_progress,
+          maxProgress: p.max_progress,
+          lastUpdateAt: new Date(p.last_update_at).toISOString(),
+          completedAt: p.completed_at
+            ? new Date(p.completed_at).toISOString()
+            : undefined,
+          teamProgress: teamProgress,
+        }
+      })
+    )
 
     console.log('📤 Sending response with:')
     console.log(`   Challenges: ${formattedChallenges.length}`)
@@ -862,10 +887,11 @@ async function handleUpdateProgress(req, res) {
 
 /**
  * Рассчитывает начальный прогресс пользователя для челленджа
+ * ИСПРАВЛЕНИЕ: Считаем прогресс с момента присоединения, а не с создания челленджа
  */
 async function calculateInitialProgress(supabase, challengeId, telegramId) {
   try {
-    // Получаем детали челленджа
+    // Получаем детали челленджа и участие пользователя
     const { data: challenge, error: challengeError } = await supabase
       .from('challenges')
       .select('requirements, start_date')
@@ -876,56 +902,103 @@ async function calculateInitialProgress(supabase, challengeId, telegramId) {
       return { current: 0, max: 0 }
     }
 
-    const requirements = challenge.requirements
-    const metric = requirements.metric
-    const startDate = new Date(challenge.start_date)
+    // Получаем дату присоединения пользователя к челленджу
+    const { data: participation, error: participationError } = await supabase
+      .from('challenge_participants')
+      .select('joined_at')
+      .eq('challenge_id', challengeId)
+      .eq('telegram_id', telegramId)
+      .single()
 
-    let current = 0
-
-    switch (metric) {
-      case 'garden_elements_count':
-        // Считаем элементы сада, добавленные после начала челленджа
-        const { count: gardenCount } = await supabase
-          .from('garden_elements')
-          .select('*', { count: 'exact', head: true })
-          .eq('telegram_id', telegramId)
-          .gte('unlock_date', startDate.toISOString())
-
-        current = gardenCount || 0
-        break
-
-      case 'mood_entries_count':
-        // Считаем записи настроения после начала челленджа
-        const { count: moodCount } = await supabase
-          .from('mood_entries')
-          .select('*', { count: 'exact', head: true })
-          .eq('telegram_id', telegramId)
-          .gte('created_at', startDate.toISOString())
-
-        current = moodCount || 0
-        break
-
-      case 'rare_elements_count':
-        // Считаем редкие элементы после начала челленджа
-        const { count: rareCount } = await supabase
-          .from('garden_elements')
-          .select('*', { count: 'exact', head: true })
-          .eq('telegram_id', telegramId)
-          .gte('unlock_date', startDate.toISOString())
-          .in('rarity', ['rare', 'epic', 'legendary'])
-
-        current = rareCount || 0
-        break
-
-      default:
-        current = 0
+    if (participationError || !participation) {
+      // Если участия нет, считаем с момента создания челленджа
+      console.log('No participation found, using challenge start date')
+      const startDate = new Date(challenge.start_date)
+      return await calculateProgressFromDate(
+        supabase,
+        telegramId,
+        challenge.requirements,
+        startDate
+      )
     }
 
-    return { current, max: Math.max(current, 0) }
+    const requirements = challenge.requirements
+    const challengeStartDate = new Date(challenge.start_date)
+    const joinedDate = new Date(participation.joined_at)
+
+    // ИСПРАВЛЕНИЕ: Используем более позднюю дату (присоединения или создания челленджа)
+    const countingFromDate = new Date(
+      Math.max(joinedDate.getTime(), challengeStartDate.getTime())
+    )
+
+    console.log(
+      `Calculating progress from: ${countingFromDate.toISOString()} (joined: ${joinedDate.toISOString()}, challenge: ${challengeStartDate.toISOString()})`
+    )
+
+    return await calculateProgressFromDate(
+      supabase,
+      telegramId,
+      requirements,
+      countingFromDate
+    )
   } catch (error) {
     console.error('Calculate initial progress error:', error)
     return { current: 0, max: 0 }
   }
+}
+
+/**
+ * Вспомогательная функция для подсчета прогресса с определенной даты
+ */
+async function calculateProgressFromDate(
+  supabase,
+  telegramId,
+  requirements,
+  fromDate
+) {
+  const metric = requirements.metric
+  let current = 0
+
+  switch (metric) {
+    case 'garden_elements_count':
+      // Считаем элементы сада, добавленные после указанной даты
+      const { count: gardenCount } = await supabase
+        .from('garden_elements')
+        .select('*', { count: 'exact', head: true })
+        .eq('telegram_id', telegramId)
+        .gte('unlock_date', fromDate.toISOString())
+
+      current = gardenCount || 0
+      break
+
+    case 'mood_entries_count':
+      // Считаем записи настроения после указанной даты
+      const { count: moodCount } = await supabase
+        .from('mood_entries')
+        .select('*', { count: 'exact', head: true })
+        .eq('telegram_id', telegramId)
+        .gte('created_at', fromDate.toISOString())
+
+      current = moodCount || 0
+      break
+
+    case 'rare_elements_count':
+      // Считаем редкие элементы после указанной даты
+      const { count: rareCount } = await supabase
+        .from('garden_elements')
+        .select('*', { count: 'exact', head: true })
+        .eq('telegram_id', telegramId)
+        .gte('unlock_date', fromDate.toISOString())
+        .in('rarity', ['rare', 'epic', 'legendary'])
+
+      current = rareCount || 0
+      break
+
+    default:
+      current = 0
+  }
+
+  return { current, max: Math.max(current, 0) }
 }
 
 /**

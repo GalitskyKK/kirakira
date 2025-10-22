@@ -68,6 +68,7 @@ export interface ChallengeParticipant {
   readonly maxProgress: number
   readonly lastUpdateAt: Date
   readonly completedAt?: Date | undefined
+  readonly teamProgress?: number // Общий прогресс команды (только для групповых)
 }
 
 export interface ChallengeLeaderboardEntry {

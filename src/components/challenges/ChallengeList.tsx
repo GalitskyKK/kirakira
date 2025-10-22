@@ -193,44 +193,92 @@ export function ChallengeList({ garden }: ChallengeListProps) {
                 {/* Прогресс пользователя */}
                 {isParticipating && participation && (
                   <div className="rounded-lg bg-gradient-to-r from-garden-50 to-green-50 p-3 dark:from-garden-900/20 dark:to-green-900/20">
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className="text-sm font-medium text-garden-700 dark:text-garden-300">
-                        Ваш прогресс
-                      </span>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {participation.currentProgress} /{' '}
-                        {challenge.requirements.targetValue}
-                      </span>
-                    </div>
-                    <div className="mb-1 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
-                      <div
-                        className="h-2 rounded-full bg-gradient-to-r from-garden-500 to-green-500 transition-all duration-500"
-                        style={{
-                          width: `${Math.min(
-                            (participation.currentProgress /
-                              challenge.requirements.targetValue) *
-                              100,
-                            100
-                          )}%`,
-                        }}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-garden-600 dark:text-garden-400">
-                        {Math.round(
-                          (participation.currentProgress /
-                            challenge.requirements.targetValue) *
-                            100
-                        )}
-                        % выполнено
-                      </span>
-                      {participation.status === 'completed' && (
-                        <div className="flex items-center space-x-1 text-green-600 dark:text-green-400">
-                          <CheckCircle className="h-3 w-3" />
-                          <span>Завершено!</span>
+                    {/* Для групповых челленджей показываем общий прогресс команды */}
+                    {challenge.type === 'cooperative' &&
+                    participation.teamProgress !== undefined ? (
+                      <>
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="text-sm font-medium text-garden-700 dark:text-garden-300">
+                            Прогресс команды
+                          </span>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {participation.teamProgress} /{' '}
+                            {challenge.requirements.targetValue}
+                          </span>
                         </div>
-                      )}
-                    </div>
+                        <div className="mb-1 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                          <div
+                            className="h-2 rounded-full bg-gradient-to-r from-garden-500 to-green-500 transition-all duration-500"
+                            style={{
+                              width: `${Math.min(
+                                (participation.teamProgress /
+                                  challenge.requirements.targetValue) *
+                                  100,
+                                100
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-garden-600 dark:text-garden-400">
+                            {Math.round(
+                              (participation.teamProgress /
+                                challenge.requirements.targetValue) *
+                                100
+                            )}
+                            % выполнено
+                          </span>
+                          {participation.status === 'completed' && (
+                            <div className="flex items-center space-x-1 text-green-600 dark:text-green-400">
+                              <CheckCircle className="h-3 w-3" />
+                              <span>Завершено!</span>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      /* Для личных челленджей показываем обычный прогресс */
+                      <>
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="text-sm font-medium text-garden-700 dark:text-garden-300">
+                            Ваш прогресс
+                          </span>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {participation.currentProgress} /{' '}
+                            {challenge.requirements.targetValue}
+                          </span>
+                        </div>
+                        <div className="mb-1 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                          <div
+                            className="h-2 rounded-full bg-gradient-to-r from-garden-500 to-green-500 transition-all duration-500"
+                            style={{
+                              width: `${Math.min(
+                                (participation.currentProgress /
+                                  challenge.requirements.targetValue) *
+                                  100,
+                                100
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-garden-600 dark:text-garden-400">
+                            {Math.round(
+                              (participation.currentProgress /
+                                challenge.requirements.targetValue) *
+                                100
+                            )}
+                            % выполнено
+                          </span>
+                          {participation.status === 'completed' && (
+                            <div className="flex items-center space-x-1 text-green-600 dark:text-green-400">
+                              <CheckCircle className="h-3 w-3" />
+                              <span>Завершено!</span>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
 
