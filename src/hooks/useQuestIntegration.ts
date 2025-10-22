@@ -126,24 +126,8 @@ export function useQuestIntegration(options: QuestIntegrationOptions = {}) {
     },
 
     // Garden quests
-    collectElement: (isRare: boolean = false) => {
-      if (isRare) {
-        return updateQuestProgress('collect_rare_element', 1)
-      }
+    collectElement: () => {
       return updateQuestProgress('collect_elements', 1)
-    },
-
-    upgradeElement: () => {
-      return updateQuestProgress('upgrade_element', 1)
-    },
-
-    // Social quests
-    visitFriendGarden: () => {
-      return updateQuestProgress('visit_friend_garden', 1)
-    },
-
-    shareGarden: () => {
-      return updateQuestProgress('share_garden', 1)
     },
 
     // Streak quests

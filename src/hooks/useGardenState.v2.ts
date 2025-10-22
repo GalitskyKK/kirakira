@@ -333,7 +333,7 @@ export function useGardenState() {
                 newElement.rarity === 'epic' ||
                 newElement.rarity === 'legendary'
               ) {
-                gardenQuests.push('collect_rare_element')
+                // gardenQuests.push('collect_rare_element') // Removed complex quest
               }
 
               for (const questType of gardenQuests) {

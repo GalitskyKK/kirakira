@@ -47,10 +47,10 @@ export type SproutEarnReason =
   | 'element_legendary'
   // Социальное
   | 'friend_visit_garden'
-  | 'visit_friend_garden'
-  | 'like_friend_garden'
-  | 'receive_like'
-  | 'share_garden'
+  | 'visit_friend_garden' // Removed complex quest
+  | 'like_friend_garden' // Removed complex quest
+  | 'receive_like' // Removed complex quest
+  | 'share_garden' // Removed complex quest
   | 'comment_on_garden'
   | 'receive_comment'
   | 'gift_to_friend'
@@ -233,10 +233,10 @@ export const SPROUT_REWARDS: Record<
 
   // Социальное
   friend_visit_garden: { amount: 5, description: 'Друг посетил твой сад' },
-  visit_friend_garden: { amount: 3, description: 'Посещение сада друга' },
-  like_friend_garden: { amount: 2, description: 'Лайк саду друга' },
-  receive_like: { amount: 5, description: 'Получен лайк' },
-  share_garden: { amount: 20, description: 'Поделился садом' },
+  visit_friend_garden: { amount: 3, description: 'Посещение сада друга' }, // Removed complex quest
+  like_friend_garden: { amount: 2, description: 'Лайк саду друга' }, // Removed complex quest
+  receive_like: { amount: 5, description: 'Получен лайк' }, // Removed complex quest
+  share_garden: { amount: 20, description: 'Поделился садом' }, // Removed complex quest
   comment_on_garden: { amount: 5, description: 'Комментарий на саду' },
   receive_comment: { amount: 8, description: 'Получен комментарий' },
   gift_to_friend: { amount: 10, description: 'Подарил другу' },

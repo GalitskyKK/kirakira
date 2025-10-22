@@ -58,18 +58,6 @@ export function validateQuestCondition(
     case 'collect_elements':
       return validateCollectElementQuest(quest, context)
 
-    case 'collect_rare_element':
-      return validateRareElementQuest(quest, context)
-
-    case 'upgrade_element':
-      return validateUpgradeElementQuest(quest, context)
-
-    case 'visit_friend_garden':
-      return validateVisitFriendQuest(quest, context)
-
-    case 'share_garden':
-      return validateShareGardenQuest(quest, context)
-
     case 'maintain_streak':
       return validateMaintainStreakQuest(quest, context)
 
@@ -150,75 +138,6 @@ function validateCollectElementQuest(
     }
   }
 
-  return {
-    isValid: true,
-    shouldIncrement: 1,
-  }
-}
-
-function validateRareElementQuest(
-  _quest: DailyQuest,
-  context: QuestValidationContext
-): QuestValidationResult {
-  // Для квеста сбора редких элементов проверяем, что элемент редкий
-  if (!context.isRareElement) {
-    return {
-      isValid: false,
-      reason: 'Element is not rare',
-      shouldIncrement: 0,
-    }
-  }
-
-  return {
-    isValid: true,
-    shouldIncrement: 1,
-  }
-}
-
-function validateUpgradeElementQuest(
-  _quest: DailyQuest,
-  context: QuestValidationContext
-): QuestValidationResult {
-  // Для квеста улучшения элементов проверяем, что элемент улучшен
-  if (!context.elementType) {
-    return {
-      isValid: false,
-      reason: 'No element upgraded',
-      shouldIncrement: 0,
-    }
-  }
-
-  return {
-    isValid: true,
-    shouldIncrement: 1,
-  }
-}
-
-function validateVisitFriendQuest(
-  _quest: DailyQuest,
-  context: QuestValidationContext
-): QuestValidationResult {
-  // Для квеста посещения сада друга проверяем, что сад друга посещен
-  if (!context.friendTelegramId) {
-    return {
-      isValid: false,
-      reason: 'No friend garden visited',
-      shouldIncrement: 0,
-    }
-  }
-
-  return {
-    isValid: true,
-    shouldIncrement: 1,
-  }
-}
-
-function validateShareGardenQuest(
-  _quest: DailyQuest,
-  _context: QuestValidationContext
-): QuestValidationResult {
-  // Для квеста шаринга сада проверяем, что сад поделен
-  // Контекст всегда валиден, так как вызов происходит только при реальном шаринге
   return {
     isValid: true,
     shouldIncrement: 1,

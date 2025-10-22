@@ -69,7 +69,7 @@ export function FriendGardenView({
   onBack,
 }: FriendGardenViewProps) {
   const { hapticFeedback, showAlert } = useTelegram()
-  const { questActions, updateQuestsWithValidation } = useQuestIntegration({
+  const { updateQuestsWithValidation } = useQuestIntegration({
     onQuestUpdated: (questType, isCompleted) => {
       if (isCompleted) {
         console.log(`🎉 Quest completed: ${questType}`)
@@ -150,19 +150,19 @@ export function FriendGardenView({
             })
         } else {
           // Fallback к старому методу если квесты не загружены
-          questActions
-            .visitFriendGarden()
-            .then(() => {
-              console.log('✅ Visit friend garden quest updated (fallback)')
-            })
-            .catch(error => {
-              console.warn(
-                '⚠️ Failed to update visit_friend_garden quest (fallback):',
-                error
-              )
-              // Сбрасываем флаг при ошибке, чтобы можно было повторить
-              questUpdatedRef.current = false
-            })
+          // questActions
+          //   .visitFriendGarden() // Removed complex quest
+          //   .then(() => {
+          //     console.log('✅ Visit friend garden quest updated (fallback)')
+          //   })
+          //   .catch(error => {
+          //     console.warn(
+          //       '⚠️ Failed to update visit_friend_garden quest (fallback):',
+          //       error
+          //     )
+          //     // Сбрасываем флаг при ошибке, чтобы можно было повторить
+          //     questUpdatedRef.current = false
+          //   })
         }
       }
     } catch (error) {

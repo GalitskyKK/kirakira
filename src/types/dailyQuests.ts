@@ -17,11 +17,6 @@ export type QuestType =
   | 'record_with_note' // Записать настроение с заметкой
   // Garden Quests (Сад)
   | 'collect_elements' // Получить новый элемент
-  | 'collect_rare_element' // Получить редкий элемент
-  | 'upgrade_element' // Улучшить элемент
-  // Social Quests (Социальное)
-  | 'visit_friend_garden' // Посетить сад друга
-  | 'share_garden' // Поделиться садом
   // Streak Quests (Стрики)
   | 'maintain_streak' // Поддержать стрик N дней
   | 'login_streak' // Войти в приложение
@@ -67,7 +62,7 @@ export interface QuestTemplate {
   readonly description: string
   readonly emoji: string
   readonly getTargetValue: (userLevel: number) => number
-  readonly getRewards: (userLevel: number, targetValue: number) => QuestRewards
+  readonly getRewards: (userLevel: number, targetValue?: number) => QuestRewards
   readonly weight: number // для рандомайзера
 }
 
@@ -404,10 +399,6 @@ export function isQuestType(value: string): value is QuestType {
     'record_specific_mood',
     'record_with_note',
     'collect_elements',
-    'collect_rare_element',
-    'upgrade_element',
-    'visit_friend_garden',
-    'share_garden',
     'maintain_streak',
     'login_streak',
   ]

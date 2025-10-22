@@ -190,7 +190,7 @@ export function useTelegram() {
                 body: JSON.stringify({
                   telegramId: user.telegramId,
                   experiencePoints: 25, // EXPERIENCE_REWARDS.SHARE_GARDEN
-                  reason: 'share_garden: garden screenshot shared',
+                  reason: 'share_garden: garden screenshot shared', // Removed complex quest
                 }),
               }
             )
@@ -207,14 +207,14 @@ export function useTelegram() {
               updateQuestProgress
                 .mutateAsync({
                   telegramId: user.telegramId,
-                  questType: 'share_garden',
+                  questType: 'share_garden', // Removed complex quest
                   increment: 1,
                 })
                 .then(() => {
                   console.log('✅ Share garden quest updated')
                 })
                 .catch(error => {
-                  console.warn('⚠️ Failed to update share_garden quest:', error)
+                  console.warn('⚠️ Failed to update share_garden quest:', error) // Removed complex quest
                 })
             }
           } catch (error) {

@@ -22,16 +22,17 @@ export const QUEST_TEMPLATES: Partial<Record<QuestType, QuestTemplate>> = {
   record_specific_mood: {
     type: 'record_specific_mood',
     category: 'mood',
-    name: 'Позитивное настроение',
-    description: 'Запиши настроение радости',
-    emoji: '😄',
+    name: 'Настроение дня',
+    description: 'Запиши настроение',
+    emoji: '😊',
     getTargetValue: () => 1,
-    getRewards: level => ({
-      sprouts: 40 + level * 3,
-      experience: 60 + level * 8,
-      description: `${40 + level * 3}🌿 + ${60 + level * 8} XP`,
+    getRewards: (level, targetValue = 1) => ({
+      sprouts: 30 * targetValue + level * 2,
+      gems: targetValue >= 3 && level >= 10 ? 1 : 0,
+      experience: 50 * targetValue + level * 5,
+      description: `Запиши настроение (${targetValue})`,
     }),
-    weight: 12,
+    weight: 8,
   },
 
   record_with_note: {
@@ -41,12 +42,13 @@ export const QUEST_TEMPLATES: Partial<Record<QuestType, QuestTemplate>> = {
     description: 'Запиши настроение с заметкой',
     emoji: '📝',
     getTargetValue: () => 1,
-    getRewards: level => ({
-      sprouts: 50 + level * 4,
-      experience: 75 + level * 10,
-      description: `${50 + level * 4}🌿 + ${75 + level * 10} XP`,
+    getRewards: (level, targetValue = 1) => ({
+      sprouts: 30 * targetValue + level * 2,
+      gems: targetValue >= 3 && level >= 10 ? 1 : 0,
+      experience: 50 * targetValue + level * 5,
+      description: `Запиши настроение с заметкой (${targetValue})`,
     }),
-    weight: 10,
+    weight: 6,
   },
 
   // ===============================================
@@ -56,81 +58,17 @@ export const QUEST_TEMPLATES: Partial<Record<QuestType, QuestTemplate>> = {
   collect_elements: {
     type: 'collect_elements',
     category: 'garden',
-    name: 'Новый элемент',
-    description: 'Получи новый элемент в саду',
+    name: 'Садовод',
+    description: 'Собери элемент',
     emoji: '🌱',
     getTargetValue: () => 1,
-    getRewards: level => ({
-      sprouts: 40 + level * 4,
-      experience: 60 + level * 8,
-      description: `${40 + level * 4}🌿 + ${60 + level * 8} XP`,
+    getRewards: (level, targetValue = 1) => ({
+      sprouts: 30 * targetValue + level * 2,
+      gems: targetValue >= 3 && level >= 10 ? 1 : 0,
+      experience: 50 * targetValue + level * 5,
+      description: `Собери элемент (${targetValue})`,
     }),
-    weight: 15,
-  },
-
-  collect_rare_element: {
-    type: 'collect_rare_element',
-    category: 'garden',
-    name: 'Редкая находка',
-    description: 'Получи редкий элемент',
-    emoji: '💎',
-    getTargetValue: () => 1,
-    getRewards: level => ({
-      sprouts: 80 + level * 8,
-      gems: level >= 10 ? 1 : 0,
-      experience: 120 + level * 15,
-      description: `${80 + level * 8}🌿 + ${120 + level * 15} XP${level >= 10 ? ' + 1💎' : ''}`,
-    }),
-    weight: 8,
-  },
-
-  upgrade_element: {
-    type: 'upgrade_element',
-    category: 'garden',
-    name: 'Улучшатель',
-    description: 'Улучши элемент в саду',
-    emoji: '⬆️',
-    getTargetValue: () => 1,
-    getRewards: level => ({
-      sprouts: 60 + level * 6,
-      experience: 90 + level * 12,
-      description: `${60 + level * 6}🌿 + ${90 + level * 12} XP`,
-    }),
-    weight: 6,
-  },
-
-  // ===============================================
-  // 👥 SOCIAL QUESTS (Социальное)
-  // ===============================================
-
-  visit_friend_garden: {
-    type: 'visit_friend_garden',
-    category: 'social',
-    name: 'Социальный садовод',
-    description: 'Посети сад друга',
-    emoji: '👥',
-    getTargetValue: () => 1,
-    getRewards: level => ({
-      sprouts: 50 + level * 5,
-      experience: 80 + level * 10,
-      description: `${50 + level * 5}🌿 + ${80 + level * 10} XP`,
-    }),
-    weight: 8,
-  },
-
-  share_garden: {
-    type: 'share_garden',
-    category: 'social',
-    name: 'Поделись красотой',
-    description: 'Поделись своим садом',
-    emoji: '📤',
-    getTargetValue: () => 1,
-    getRewards: level => ({
-      sprouts: 45 + level * 5,
-      experience: 70 + level * 9,
-      description: `${45 + level * 5}🌿 + ${70 + level * 9} XP`,
-    }),
-    weight: 6,
+    weight: 10,
   },
 
   // ===============================================
@@ -141,13 +79,14 @@ export const QUEST_TEMPLATES: Partial<Record<QuestType, QuestTemplate>> = {
     type: 'maintain_streak',
     category: 'streak',
     name: 'Постоянство',
-    description: 'Поддержи стрик {target} дней',
+    description: 'Поддержи стрик',
     emoji: '🔥',
-    getTargetValue: level => Math.min(1, Math.floor(level / 5)),
-    getRewards: (level, target) => ({
-      sprouts: 70 * target + level * 6,
-      experience: 100 * target + level * 12,
-      description: `${70 * target + level * 6}🌿 + ${100 * target + level * 12} XP`,
+    getTargetValue: () => 1,
+    getRewards: (level, targetValue = 1) => ({
+      sprouts: 30 * targetValue + level * 2,
+      gems: targetValue >= 3 && level >= 10 ? 1 : 0,
+      experience: 50 * targetValue + level * 5,
+      description: `Поддержи стрик (${targetValue})`,
     }),
     weight: 10,
   },
@@ -159,10 +98,11 @@ export const QUEST_TEMPLATES: Partial<Record<QuestType, QuestTemplate>> = {
     description: 'Войди в приложение',
     emoji: '🚪',
     getTargetValue: () => 1,
-    getRewards: level => ({
-      sprouts: 30 + level * 2,
-      experience: 50 + level * 5,
-      description: `${30 + level * 2}🌿 + ${50 + level * 5} XP`,
+    getRewards: (level, targetValue = 1) => ({
+      sprouts: 30 * targetValue + level * 2,
+      gems: targetValue >= 3 && level >= 10 ? 1 : 0,
+      experience: 50 * targetValue + level * 5,
+      description: `Войди в приложение (${targetValue})`,
     }),
     weight: 3,
   },

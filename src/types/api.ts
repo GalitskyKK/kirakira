@@ -110,7 +110,7 @@ export interface DatabaseUser {
   readonly created_at: string
   readonly updated_at: string
   readonly photo_url?: string
-  readonly share_garden: boolean
+  readonly share_garden: boolean // Removed complex quest
   readonly experience: number
   readonly level: number
   readonly privacy_settings: Record<string, boolean>

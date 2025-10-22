@@ -107,7 +107,7 @@ export function TelegramShare({
               body: JSON.stringify({
                 telegramId: userData.user.telegramId,
                 experiencePoints: 25, // EXPERIENCE_REWARDS.SHARE_GARDEN
-                reason: 'share_garden: text description shared',
+                reason: 'share_garden: text description shared', // Removed complex quest
               }),
             }
           )
@@ -132,23 +132,23 @@ export function TelegramShare({
                   })
                   .catch(error => {
                     console.warn(
-                      '⚠️ Failed to update share_garden quest with validation (text):',
+                      '⚠️ Failed to update share_garden quest with validation (text):', // Removed complex quest
                       error
                     )
                   })
               } else {
                 // Fallback к старому методу если квесты не загружены
-                questActions
-                  .shareGarden()
-                  .then(() => {
-                    console.log('✅ Share garden quest updated (fallback text)')
-                  })
-                  .catch(error => {
-                    console.warn(
-                      '⚠️ Failed to update share_garden quest (fallback text):',
-                      error
-                    )
-                  })
+                // questActions
+                //   .shareGarden() // Removed complex quest
+                //   .then(() => {
+                //     console.log('✅ Share garden quest updated (fallback text)')
+                //   })
+                //   .catch((error: any) => {
+                //     console.warn(
+                //       '⚠️ Failed to update share_garden quest (fallback text):', // Removed complex quest
+                //       error
+                //     )
+                //   })
               }
             }
           }
@@ -203,23 +203,23 @@ export function TelegramShare({
             })
             .catch(error => {
               console.warn(
-                '⚠️ Failed to update share_garden quest with validation (image):',
+                '⚠️ Failed to update share_garden quest with validation (image):', // Removed complex quest
                 error
               )
             })
         } else {
           // Fallback к старому методу если квесты не загружены
-          questActions
-            .shareGarden()
-            .then(() => {
-              console.log('✅ Share garden quest updated (fallback image)')
-            })
-            .catch(error => {
-              console.warn(
-                '⚠️ Failed to update share_garden quest (fallback image):',
-                error
-              )
-            })
+          // questActions
+          //   .shareGarden() // Removed complex quest
+          //   .then(() => {
+          //     console.log('✅ Share garden quest updated (fallback image)')
+          //   })
+          //   .catch((error: any) => {
+          //     console.warn(
+          //       '⚠️ Failed to update share_garden quest (fallback image):', // Removed complex quest
+          //       error
+          //     )
+          //   })
         }
       }
 

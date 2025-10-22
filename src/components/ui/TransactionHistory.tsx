@@ -274,10 +274,10 @@ function formatReason(reason: string): string {
 
     // Социальное
     friend_visit_garden: 'Посещение сада',
-    visit_friend_garden: 'Посетил друга',
-    like_friend_garden: 'Лайк саду',
-    receive_like: 'Получен лайк',
-    share_garden: 'Поделился садом',
+    visit_friend_garden: 'Посетил друга', // Removed complex quest
+    like_friend_garden: 'Лайк саду', // Removed complex quest
+    receive_like: 'Получен лайк', // Removed complex quest
+    share_garden: 'Поделился садом', // Removed complex quest
 
     // Челленджи
     complete_daily_quest: 'Дневное задание',
