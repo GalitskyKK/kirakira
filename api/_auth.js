@@ -153,7 +153,7 @@ export function withAuth(handler) {
     )
     res.setHeader(
       'Access-Control-Allow-Headers',
-      'Content-Type, Authorization, X-Admin-Key'
+      'Content-Type, Authorization, X-Admin-Key, X-Bot-Secret'
     )
     res.setHeader('Access-Control-Allow-Credentials', 'true')
     res.setHeader('Access-Control-Max-Age', '86400')
@@ -163,7 +163,30 @@ export function withAuth(handler) {
       return res.status(200).end()
     }
 
-    // Проверяем аутентификацию
+    // 🔑 СПЕЦИАЛЬНЫЙ СЛУЧАЙ: Проверяем запросы от бота
+    const botSecret = req.headers['x-bot-secret']
+    const EXPECTED_BOT_SECRET = process.env.TELEGRAM_BOT_SECRET
+
+    console.log(
+      `🔍 Middleware bot check: received=${botSecret ? 'SET' : 'MISSING'}, expected=${EXPECTED_BOT_SECRET ? 'SET' : 'MISSING'}`
+    )
+    console.log(`🔍 Bot secret match: ${botSecret === EXPECTED_BOT_SECRET}`)
+
+    if (botSecret === EXPECTED_BOT_SECRET) {
+      console.log(
+        '🤖 Bot request detected in middleware, bypassing authentication'
+      )
+      // Для бота создаем фиктивную аутентификацию
+      req.auth = {
+        authorized: true,
+        telegramId: null, // Будет определен в handler
+        userData: null,
+        jwt: null,
+      }
+      return handler(req, res)
+    }
+
+    // Проверяем аутентификацию для обычных пользователей
     const auth = await authenticateTelegramUser(req)
 
     if (!auth.authorized) {

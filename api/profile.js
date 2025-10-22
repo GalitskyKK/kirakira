@@ -323,6 +323,10 @@ async function protectedHandler(req, res) {
           h.toLowerCase().includes('bot') || h.toLowerCase().includes('secret')
       )
     )
+    console.log(`🔍 All headers:`, req.headers)
+    console.log(`🔍 Bot secret received: "${botSecret}"`)
+    console.log(`🔍 Expected secret: "${EXPECTED_BOT_SECRET}"`)
+    console.log(`🔍 Match: ${botSecret === EXPECTED_BOT_SECRET}`)
 
     if (botSecret === EXPECTED_BOT_SECRET) {
       console.log('🤖 Bot request detected, bypassing authentication')
