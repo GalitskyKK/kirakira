@@ -902,35 +902,19 @@ async function calculateInitialProgress(supabase, challengeId, telegramId) {
       return { current: 0, max: 0 }
     }
 
-    // Получаем дату присоединения пользователя к челленджу
-    const { data: participation, error: participationError } = await supabase
-      .from('challenge_participants')
-      .select('joined_at')
-      .eq('challenge_id', challengeId)
-      .eq('telegram_id', telegramId)
-      .single()
-
-    if (participationError || !participation) {
-      // Если участия нет, считаем с момента создания челленджа
-      console.log('No participation found, using challenge start date')
-      const startDate = new Date(challenge.start_date)
-      return await calculateProgressFromDate(
-        supabase,
-        telegramId,
-        challenge.requirements,
-        startDate
-      )
-    }
-
+    // ИСПРАВЛЕНИЕ: При присоединении к челленджу используем текущее время
+    // как дату присоединения (участие еще не создано)
+    const joinedDate = new Date()
     const requirements = challenge.requirements
-    const challengeStartDate = new Date(challenge.start_date)
-    const joinedDate = new Date(participation.joined_at)
 
-    // ИСПРАВЛЕНИЕ: Используем дату присоединения пользователя
+    console.log(
+      `Calculating initial progress from: ${joinedDate.toISOString()} (joining now)`
+    )
+
     const countingFromDate = joinedDate
 
     console.log(
-      `Calculating progress from: ${countingFromDate.toISOString()} (joined: ${joinedDate.toISOString()}, challenge started: ${challengeStartDate.toISOString()})`
+      `Calculating progress from: ${countingFromDate.toISOString()} (joined: ${joinedDate.toISOString()})`
     )
 
     return await calculateProgressFromDate(
