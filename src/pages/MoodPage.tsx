@@ -157,7 +157,7 @@ export function MoodPage() {
                   Выполняйте и получайте награды
                 </div>
               </div>
-              <div className="text-2xl">🎯</div>
+              <div className="text-2xl">🏆</div>
             </div>
           </button>
 

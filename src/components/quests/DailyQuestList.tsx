@@ -100,7 +100,7 @@ export function DailyQuestList({
     return (
       <div className={`p-4 ${className}`}>
         <Card className="p-8 text-center dark:bg-gray-800">
-          <div className="mb-4 text-6xl">🎯</div>
+          <div className="mb-4 text-6xl">🏆</div>
           <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
             Нет заданий на сегодня
           </h3>

@@ -28,16 +28,16 @@ export function QuestsPage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="min-h-screen bg-gray-50"
+      className="min-h-screen bg-gray-50 dark:bg-gray-900"
     >
       {/* Заголовок страницы */}
-      <div className="border-b bg-white shadow-sm">
+      <div className="border-b bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
         <div className="px-4 py-6">
           <motion.h1
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}
-            className="text-2xl font-bold text-gray-900"
+            className="text-2xl font-bold text-gray-900 dark:text-gray-100"
           >
             Ежедневные задания
           </motion.h1>
@@ -45,7 +45,7 @@ export function QuestsPage() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.2 }}
-            className="mt-1 text-gray-600"
+            className="mt-1 text-gray-600 dark:text-gray-400"
           >
             Выполняйте задания и получайте награды каждый день
           </motion.p>

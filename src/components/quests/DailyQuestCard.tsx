@@ -75,13 +75,13 @@ export function DailyQuestCard({
   const getCardColor = () => {
     switch (quest.status) {
       case 'completed':
-        return 'border-green-200 bg-green-50'
+        return 'border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20'
       case 'claimed':
-        return 'border-purple-200 bg-purple-50'
+        return 'border-purple-200 bg-purple-50 dark:border-purple-700 dark:bg-purple-900/20'
       case 'expired':
-        return 'border-red-200 bg-red-50'
+        return 'border-red-200 bg-red-50 dark:border-red-700 dark:bg-red-900/20'
       default:
-        return 'border-gray-200 bg-white'
+        return 'border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'
     }
   }
 
@@ -108,12 +108,14 @@ export function DailyQuestCard({
           {/* Заголовок и статус */}
           <div className="flex items-start justify-between">
             <div className="flex items-center space-x-3">
-              <div className="text-2xl">{quest.metadata?.emoji || '🎯'}</div>
+              <div className="text-2xl">{quest.metadata?.emoji || '🏆'}</div>
               <div>
-                <h3 className="font-semibold text-gray-900">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">
                   {quest.metadata?.name || 'Задание'}
                 </h3>
-                <p className="text-sm text-gray-600">{description}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {description}
+                </p>
               </div>
             </div>
 
@@ -129,8 +131,8 @@ export function DailyQuestCard({
           {/* Прогресс */}
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Прогресс</span>
-              <span className="font-medium">
+              <span className="text-gray-600 dark:text-gray-400">Прогресс</span>
+              <span className="font-medium text-gray-900 dark:text-gray-100">
                 {quest.currentProgress} / {quest.targetValue}
               </span>
             </div>
@@ -142,17 +144,19 @@ export function DailyQuestCard({
               color={getProgressColor()}
             />
 
-            <div className="text-xs text-gray-500">{progress}% выполнено</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              {progress}% выполнено
+            </div>
           </div>
 
           {/* Награды */}
           <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 dark:text-gray-400">
               <span className="font-medium">Награда:</span> {rewardsText}
             </div>
 
             {timeRemaining > 0 && (
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-gray-500 dark:text-gray-400">
                 Осталось: {timeRemainingText}
               </div>
             )}
@@ -164,7 +168,7 @@ export function DailyQuestCard({
               {/* Показываем подсказку для активных квестов */}
               {quest.status === 'active' &&
                 quest.currentProgress < quest.targetValue && (
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
                     💡 Выполните действие для обновления прогресса
                   </div>
                 )}
@@ -185,13 +189,13 @@ export function DailyQuestCard({
             )}
 
             {quest.status === 'claimed' && (
-              <div className="text-sm font-medium text-green-600">
+              <div className="text-sm font-medium text-green-600 dark:text-green-400">
                 ✅ Награда получена
               </div>
             )}
 
             {quest.status === 'expired' && (
-              <div className="text-sm font-medium text-red-600">
+              <div className="text-sm font-medium text-red-600 dark:text-red-400">
                 ⏰ Время истекло
               </div>
             )}

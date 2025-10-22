@@ -266,8 +266,8 @@ export function ElementShowcase() {
                       transition={{ delay: index * 0.05 }}
                       className={`group relative rounded-lg border-2 p-4 text-center transition-all hover:shadow-lg ${
                         element.isPremium
-                          ? 'border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50 hover:border-yellow-400'
-                          : 'border-gray-200 bg-white hover:border-gray-300'
+                          ? 'border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50 hover:border-yellow-400 dark:border-yellow-600 dark:from-yellow-900/20 dark:to-orange-900/20 dark:hover:border-yellow-500'
+                          : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600'
                       }`}
                     >
                       {element.isPremium && (
@@ -284,14 +284,14 @@ export function ElementShowcase() {
                           name={element.name}
                         />
                       </div>
-                      <h3 className="mb-1 font-medium text-gray-800">
+                      <h3 className="mb-1 font-medium text-gray-800 dark:text-gray-200">
                         {element.fullName}
                       </h3>
-                      <p className="mb-2 text-xs text-gray-600">
+                      <p className="mb-2 text-xs text-gray-600 dark:text-gray-400">
                         {element.description}
                       </p>
                       {element.season && (
-                        <div className="mb-1 inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
+                        <div className="mb-1 inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
                           🌿 {getSeasonName(element.season)}
                         </div>
                       )}

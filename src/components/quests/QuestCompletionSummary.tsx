@@ -153,17 +153,19 @@ export function QuestCompletionSummary({
         {/* Детальная статистика */}
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="text-center">
-            <div className="text-lg font-semibold text-green-600">
+            <div className="text-lg font-semibold text-green-600 dark:text-green-400">
               {completedCount}
             </div>
-            <div className="text-gray-600">Выполнено</div>
+            <div className="text-gray-600 dark:text-gray-400">Выполнено</div>
           </div>
 
           <div className="text-center">
-            <div className="text-lg font-semibold text-blue-600">
+            <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
               {unclaimedQuests.length}
             </div>
-            <div className="text-gray-600">Готово к получению</div>
+            <div className="text-gray-600 dark:text-gray-400">
+              Готово к получению
+            </div>
           </div>
         </div>
 
@@ -173,13 +175,13 @@ export function QuestCompletionSummary({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="rounded-lg border border-red-200 bg-red-50 p-3"
+            className="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-700 dark:bg-red-900/20"
           >
             <div className="text-center">
-              <div className="mb-1 text-sm font-semibold text-red-700">
+              <div className="mb-1 text-sm font-semibold text-red-700 dark:text-red-400">
                 Не успели выполнить ({expiredQuests.length})
               </div>
-              <div className="text-xs text-red-600">
+              <div className="text-xs text-red-600 dark:text-red-400">
                 {expiredQuests
                   .map(quest => quest.metadata?.name || 'Задание')
                   .join(', ')}
@@ -195,24 +197,24 @@ export function QuestCompletionSummary({
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
-              className="font-semibold text-green-600"
+              className="font-semibold text-green-600 dark:text-green-400"
             >
               🎉 Идеальный день! Все задания выполнены!
             </motion.div>
           ) : percentage >= 80 ? (
-            <div className="font-medium text-blue-600">
+            <div className="font-medium text-blue-600 dark:text-blue-400">
               🔥 Отличная работа! Почти все готово!
             </div>
           ) : percentage >= 60 ? (
-            <div className="font-medium text-yellow-600">
+            <div className="font-medium text-yellow-600 dark:text-yellow-400">
               💪 Хороший прогресс! Продолжайте в том же духе!
             </div>
           ) : percentage >= 40 ? (
-            <div className="font-medium text-orange-600">
+            <div className="font-medium text-orange-600 dark:text-orange-400">
               🌱 Неплохо! Еще немного усилий!
             </div>
           ) : (
-            <div className="font-medium text-red-600">
+            <div className="font-medium text-red-600 dark:text-red-400">
               🚀 Время начать! У вас есть все шансы!
             </div>
           )}

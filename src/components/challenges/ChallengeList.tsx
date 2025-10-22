@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Trophy, Target, Clock, CheckCircle, Eye } from 'lucide-react'
+import { Trophy, Clock, CheckCircle, Eye } from 'lucide-react'
 import { useTelegram } from '@/hooks'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
@@ -118,9 +118,11 @@ export function ChallengeList({ garden }: ChallengeListProps) {
   if (activeChallenges.length === 0) {
     return (
       <Card className="p-6 text-center">
-        <Target className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-        <h3 className="mb-2 text-lg font-medium">Нет активных челленджей</h3>
-        <p className="text-gray-600">
+        <Trophy className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+        <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-gray-100">
+          Нет активных челленджей
+        </h3>
+        <p className="text-gray-600 dark:text-gray-400">
           Новые вызовы появятся скоро. Следите за обновлениями!
         </p>
       </Card>
@@ -291,7 +293,7 @@ export function ChallengeList({ garden }: ChallengeListProps) {
                     </span>
                   </span>
                   <span className="flex items-center space-x-1">
-                    <Target className="h-3 w-3" />
+                    <Trophy className="h-3 w-3" />
                     <span>Цель: {challenge.requirements.targetValue}</span>
                   </span>
                   {challenge.rewards.title && (

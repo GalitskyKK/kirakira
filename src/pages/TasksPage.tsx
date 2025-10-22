@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Target, Calendar } from 'lucide-react'
+import { Trophy, Calendar } from 'lucide-react'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { DailyQuestList } from '@/components/quests'
 import { ChallengeList } from '@/components/challenges/ChallengeList'
@@ -33,7 +33,7 @@ export function TasksPage() {
       <div className="flex space-x-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
         {[
           { id: 'daily', label: 'Ежедневные', icon: Calendar },
-          { id: 'challenges', label: 'Челленджи', icon: Target },
+          { id: 'challenges', label: 'Челленджи', icon: Trophy },
         ].map(tab => {
           const Icon = tab.icon
           return (
