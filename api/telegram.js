@@ -18,14 +18,30 @@
  */
 async function getUserStats(telegramUserId) {
   try {
+    const botSecret =
+      process.env.TELEGRAM_BOT_SECRET || process.env.VITE_TELEGRAM_BOT_SECRET
+
+    console.log(`🔑 Bot secret status: ${botSecret ? 'SET' : 'MISSING'}`)
+    console.log(
+      `🔗 Making API request to: ${MINI_APP_URL}/api/profile?action=get_profile&telegramId=${telegramUserId}`
+    )
+
+    if (!botSecret) {
+      console.error(
+        '❌ TELEGRAM_BOT_SECRET not configured! Bot cannot authenticate with API.'
+      )
+      console.error(
+        'Please set TELEGRAM_BOT_SECRET environment variable in Vercel settings.'
+      )
+      return getDefaultStats()
+    }
+
     // Запрашиваем реальную статистику из API с секретным ключом бота
     const response = await fetch(
       `${MINI_APP_URL}/api/profile?action=get_profile&telegramId=${telegramUserId}`,
       {
         headers: {
-          'x-bot-secret':
-            process.env.TELEGRAM_BOT_SECRET ||
-            process.env.VITE_TELEGRAM_BOT_SECRET,
+          'x-bot-secret': botSecret,
         },
       }
     )
