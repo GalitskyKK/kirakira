@@ -2,11 +2,13 @@
 
 A meditative Progressive Web App (PWA) where your daily emotions bloom into a unique digital garden. Track your mood, watch your garden grow, and discover the beauty of emotional awareness through interactive plant elements.
 
-![Main Page](public/main_page.png)
-![Garden Page](public/garden-page.png)
-![Mood Page](public/quests-page.png)
-![Profile Page](public/user-page.png)
-![Friends Page](public/friends-page.png)
+<div align="center">
+  <img src="public/main_page.png" width="200" alt="Main Page" />
+  <img src="public/garden-page.png" width="200" alt="Garden Page" />
+  <img src="public/quests-page.png" width="200" alt="Mood Page" />
+  <img src="public/user-page.png" width="200" alt="Profile Page" />
+  <img src="public/friends-page.png" width="200" alt="Friends Page" />
+</div>
 
 ## 🌸 About
 
