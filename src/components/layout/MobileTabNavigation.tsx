@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Leaf, Heart, Users, User, Target } from 'lucide-react'
+import { Leaf, Heart, Users, User, Trophy } from 'lucide-react'
 
 interface Tab {
   id: string
@@ -28,7 +28,7 @@ const TABS: Tab[] = [
   {
     id: 'tasks',
     path: '/mobile/tasks',
-    icon: <Target className="h-5 w-5" />,
+    icon: <Trophy className="h-5 w-5" />,
   },
   {
     id: 'community',
