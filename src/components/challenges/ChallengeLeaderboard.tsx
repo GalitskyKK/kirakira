@@ -112,10 +112,24 @@ export function ChallengeLeaderboard({
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           🏆 Лидерборд
         </h3>
-        <span className="text-sm text-gray-500 dark:text-gray-400">
-          {leaderboard.length} участник
-          {leaderboard.length === 1 ? '' : leaderboard.length < 5 ? 'а' : 'ов'}
-        </span>
+        <div className="text-right">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
+            {leaderboard.length} участник
+            {leaderboard.length === 1
+              ? ''
+              : leaderboard.length < 5
+                ? 'а'
+                : 'ов'}
+          </span>
+          {challenge.type === 'cooperative' &&
+            leaderboard.length > 0 &&
+            leaderboard[0]?.teamProgress !== undefined && (
+              <div className="text-xs text-gray-400 dark:text-gray-500">
+                Команда: {leaderboard[0].teamProgress} /{' '}
+                {challenge.requirements.targetValue}
+              </div>
+            )}
+        </div>
       </div>
 
       {/* Топ 3 */}
@@ -183,7 +197,10 @@ export function ChallengeLeaderboard({
                     {entry.progress}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {Math.round(entry.progressPercentage)}%
+                    {challenge.type === 'cooperative' &&
+                    entry.personalContributionPercentage !== undefined
+                      ? `${Math.round(entry.personalContributionPercentage)}% в команде`
+                      : `${Math.round(entry.progressPercentage)}%`}
                   </div>
                 </div>
               </motion.div>
@@ -254,7 +271,10 @@ export function ChallengeLeaderboard({
                     {entry.progress}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {Math.round(entry.progressPercentage)}%
+                    {challenge.type === 'cooperative' &&
+                    entry.personalContributionPercentage !== undefined
+                      ? `${Math.round(entry.personalContributionPercentage)}% в команде`
+                      : `${Math.round(entry.progressPercentage)}%`}
                   </div>
                 </div>
               </motion.div>
@@ -285,7 +305,10 @@ export function ChallengeLeaderboard({
                 {currentUserEntry.progress}
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400">
-                {Math.round(currentUserEntry.progressPercentage)}%
+                {challenge.type === 'cooperative' &&
+                currentUserEntry.personalContributionPercentage !== undefined
+                  ? `${Math.round(currentUserEntry.personalContributionPercentage)}% в команде`
+                  : `${Math.round(currentUserEntry.progressPercentage)}%`}
               </div>
             </div>
           </div>

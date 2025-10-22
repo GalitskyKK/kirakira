@@ -84,6 +84,8 @@ export interface ChallengeLeaderboardEntry {
   readonly progressPercentage: number
   readonly rank: number
   readonly isCurrentUser: boolean
+  readonly teamProgress?: number // Общий прогресс команды (только для групповых)
+  readonly personalContributionPercentage?: number // Вклад в команду (только для групповых)
 }
 
 export interface ChallengeProgress {

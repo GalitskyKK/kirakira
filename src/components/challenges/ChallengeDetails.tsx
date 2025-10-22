@@ -273,36 +273,113 @@ export function ChallengeDetails({
               animate={{ opacity: 1, y: 0 }}
               className="rounded-lg bg-gradient-to-r from-garden-50 to-green-50 p-4 dark:from-garden-900/20 dark:to-green-900/20"
             >
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-medium text-garden-700 dark:text-garden-300">
-                  Ваш прогресс
-                </span>
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {currentProgress.progress} /{' '}
-                  {currentChallenge.requirements.targetValue}
-                </span>
-              </div>
-              <div className="mb-2 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
-                <motion.div
-                  className="h-2 rounded-full bg-gradient-to-r from-garden-500 to-green-500"
-                  initial={{ width: 0 }}
-                  animate={{
-                    width: `${Math.min(currentProgress.progressPercentage, 100)}%`,
-                  }}
-                  transition={{ duration: 1, ease: 'easeOut' }}
-                />
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-garden-600 dark:text-garden-400">
-                  {Math.round(currentProgress.progressPercentage)}% выполнено
-                </span>
-                {currentProgress.isCompleted && (
-                  <div className="flex items-center space-x-1 text-green-600 dark:text-green-400">
-                    <CheckCircle className="h-3 w-3" />
-                    <span>Завершено!</span>
-                  </div>
+              {/* Для групповых челленджей показываем общий прогресс команды */}
+              {currentChallenge.type === 'cooperative' &&
+                currentLeaderboard.length > 0 && (
+                  <>
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-sm font-medium text-garden-700 dark:text-garden-300">
+                        Прогресс команды
+                      </span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {currentLeaderboard[0]?.teamProgress || 0} /{' '}
+                        {currentChallenge.requirements.targetValue}
+                      </span>
+                    </div>
+                    <div className="mb-2 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                      <motion.div
+                        className="h-2 rounded-full bg-gradient-to-r from-garden-500 to-green-500"
+                        initial={{ width: 0 }}
+                        animate={{
+                          width: `${Math.min(currentLeaderboard[0]?.progressPercentage || 0, 100)}%`,
+                        }}
+                        transition={{ duration: 1, ease: 'easeOut' }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-garden-600 dark:text-garden-400">
+                        {Math.round(
+                          currentLeaderboard[0]?.progressPercentage || 0
+                        )}
+                        % выполнено
+                      </span>
+                      {currentProgress.isCompleted && (
+                        <div className="flex items-center space-x-1 text-green-600 dark:text-green-400">
+                          <CheckCircle className="h-3 w-3" />
+                          <span>Завершено!</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Ваш вклад в команду */}
+                    <div className="mt-3 rounded-lg bg-white/50 p-3 dark:bg-gray-800/50">
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                          Ваш вклад
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-gray-500">
+                          {currentProgress.progress} /{' '}
+                          {currentChallenge.requirements.targetValue}
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                        <motion.div
+                          className="h-1.5 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"
+                          initial={{ width: 0 }}
+                          animate={{
+                            width: `${Math.min(currentProgress.progressPercentage, 100)}%`,
+                          }}
+                          transition={{
+                            duration: 1,
+                            ease: 'easeOut',
+                            delay: 0.5,
+                          }}
+                        />
+                      </div>
+                      <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        {Math.round(currentProgress.progressPercentage)}% от
+                        цели
+                      </div>
+                    </div>
+                  </>
                 )}
-              </div>
+
+              {/* Для личных челленджей показываем обычный прогресс */}
+              {currentChallenge.type !== 'cooperative' && (
+                <>
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm font-medium text-garden-700 dark:text-garden-300">
+                      Ваш прогресс
+                    </span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      {currentProgress.progress} /{' '}
+                      {currentChallenge.requirements.targetValue}
+                    </span>
+                  </div>
+                  <div className="mb-2 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
+                    <motion.div
+                      className="h-2 rounded-full bg-gradient-to-r from-garden-500 to-green-500"
+                      initial={{ width: 0 }}
+                      animate={{
+                        width: `${Math.min(currentProgress.progressPercentage, 100)}%`,
+                      }}
+                      transition={{ duration: 1, ease: 'easeOut' }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-garden-600 dark:text-garden-400">
+                      {Math.round(currentProgress.progressPercentage)}%
+                      выполнено
+                    </span>
+                    {currentProgress.isCompleted && (
+                      <div className="flex items-center space-x-1 text-green-600 dark:text-green-400">
+                        <CheckCircle className="h-3 w-3" />
+                        <span>Завершено!</span>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </motion.div>
           )}
 
