@@ -18,9 +18,16 @@
  */
 async function getUserStats(telegramUserId) {
   try {
-    // Запрашиваем реальную статистику из API
+    // Запрашиваем реальную статистику из API с секретным ключом бота
     const response = await fetch(
-      `${MINI_APP_URL}/api/profile?action=get_profile&telegramId=${telegramUserId}`
+      `${MINI_APP_URL}/api/profile?action=get_profile&telegramId=${telegramUserId}`,
+      {
+        headers: {
+          'x-bot-secret':
+            process.env.TELEGRAM_BOT_SECRET ||
+            process.env.VITE_TELEGRAM_BOT_SECRET,
+        },
+      }
     )
 
     if (!response.ok) {
@@ -75,8 +82,14 @@ async function checkTodayMoodExists(telegramUserId) {
     console.log(`🔍 Checking mood for user ${telegramUserId} on ${today}`)
     console.log(`🔗 API URL: ${apiUrl}`)
 
-    // Используем правильный API endpoint с action=history
-    const response = await fetch(apiUrl)
+    // Используем правильный API endpoint с action=history и секретным ключом бота
+    const response = await fetch(apiUrl, {
+      headers: {
+        'x-bot-secret':
+          process.env.TELEGRAM_BOT_SECRET ||
+          process.env.VITE_TELEGRAM_BOT_SECRET,
+      },
+    })
 
     console.log(`📡 API Response status: ${response.status}`)
 

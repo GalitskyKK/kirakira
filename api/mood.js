@@ -503,6 +503,80 @@ async function protectedHandler(req, res) {
       })
     }
 
+    // 🔑 СПЕЦИАЛЬНЫЙ СЛУЧАЙ: Проверяем запросы от бота
+    const botSecret = req.headers['x-bot-secret']
+    const EXPECTED_BOT_SECRET = process.env.TELEGRAM_BOT_SECRET
+
+    if (botSecret === EXPECTED_BOT_SECRET) {
+      console.log('🤖 Bot request detected, bypassing authentication')
+
+      // Для запросов от бота используем SERVICE_ROLE_KEY напрямую
+      const supabase = await getSupabaseClient(null) // null = использует SERVICE_ROLE_KEY
+
+      // Обрабатываем только history для бота
+      if (action === 'history') {
+        const { telegramId, limit, offset = 0 } = req.query
+
+        if (!telegramId) {
+          return res.status(400).json({
+            success: false,
+            error: 'Missing required parameter: telegramId',
+          })
+        }
+
+        console.log(
+          `📖 Loading mood history from Supabase for user ${telegramId} (bot request)`
+        )
+
+        // Строим запрос
+        let query = supabase
+          .from('mood_entries')
+          .select('*')
+          .eq('telegram_id', telegramId)
+          .order('mood_date', { ascending: false })
+
+        // Добавляем лимит и оффсет если указаны
+        if (limit) {
+          query = query.limit(parseInt(limit))
+        }
+        if (offset) {
+          query = query.range(
+            parseInt(offset),
+            parseInt(offset) + parseInt(limit || 100) - 1
+          )
+        }
+
+        const { data, error } = await query
+
+        if (error) {
+          console.error('Supabase mood history fetch failed:', error)
+          return res.status(500).json({
+            success: false,
+            error: 'Failed to fetch mood history',
+          })
+        }
+
+        console.log(
+          `✅ Loaded ${data.length} mood entries for user ${telegramId}`
+        )
+
+        return res.status(200).json({
+          success: true,
+          data: {
+            moodHistory: data,
+            total: data.length,
+            storage: 'supabase',
+          },
+        })
+      }
+
+      // Для других действий от бота возвращаем ошибку
+      return res.status(403).json({
+        success: false,
+        error: 'Bot can only access history action',
+      })
+    }
+
     // 🔐 Проверяем что пользователь работает со своими данными
     const requestedTelegramId = req.query.telegramId || req.body.telegramUserId
 

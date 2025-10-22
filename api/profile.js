@@ -309,6 +309,84 @@ async function protectedHandler(req, res) {
   try {
     const { action } = req.query
 
+    // 🔑 СПЕЦИАЛЬНЫЙ СЛУЧАЙ: Проверяем запросы от бота
+    const botSecret = req.headers['x-bot-secret']
+    const EXPECTED_BOT_SECRET = process.env.TELEGRAM_BOT_SECRET
+
+    if (botSecret === EXPECTED_BOT_SECRET) {
+      console.log('🤖 Bot request detected, bypassing authentication')
+
+      // Для запросов от бота используем SERVICE_ROLE_KEY напрямую
+      const supabase = await getSupabaseClient(null) // null = использует SERVICE_ROLE_KEY
+
+      // Обрабатываем только get_profile для бота
+      if (action === 'get_profile') {
+        const telegramId = req.query.telegramId || req.body.telegramId
+
+        if (!telegramId) {
+          return res.status(400).json({
+            success: false,
+            error: 'Missing telegramId',
+          })
+        }
+
+        // Получаем или создаем пользователя
+        const user = await ensureUser(parseInt(telegramId))
+
+        // Вычисляем статистику
+        const stats = await calculateUserStats(user)
+
+        // Проверяем достижения
+        const achievementUpdates = await checkAndUpdateAchievements(
+          user.telegram_id
+        )
+
+        // Получаем актуальные достижения пользователя
+        const { data: userAchievements, error: achievementsError } =
+          await supabase
+            .from('user_achievements')
+            .select(
+              `
+            achievement_id,
+            is_unlocked,
+            progress,
+            unlocked_at,
+            achievements!inner (
+              name,
+              description,
+              emoji,
+              category,
+              rarity
+            )
+          `
+            )
+            .eq('telegram_id', user.telegram_id)
+
+        if (achievementsError) {
+          console.error('Error fetching achievements:', achievementsError)
+        }
+
+        return res.status(200).json({
+          success: true,
+          data: {
+            user: {
+              ...user,
+              registration_date: user.registration_date || user.created_at,
+            },
+            stats,
+            achievements: userAchievements || [],
+            newlyUnlocked: achievementUpdates.filter(a => a.newly_unlocked),
+          },
+        })
+      }
+
+      // Для других действий от бота возвращаем ошибку
+      return res.status(403).json({
+        success: false,
+        error: 'Bot can only access get_profile action',
+      })
+    }
+
     // Для большинства действий проверяем что пользователь работает со своими данными
     const requestedTelegramId = req.query.telegramId || req.body.telegramId
     const authenticatedTelegramId = req.auth.telegramId
