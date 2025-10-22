@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { MoodCheckin } from '@/components/mood'
 import {
   CurrencyDisplay,
@@ -14,6 +15,7 @@ import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 
 export function MoodPage() {
+  const navigate = useNavigate()
   const { garden, gardenStats } = useGardenState()
   const { canCheckinToday } = useMoodTracking()
   // Получаем данные пользователя через React Query
@@ -126,7 +128,7 @@ export function MoodPage() {
         {/* Quick Actions */}
         <div className="space-y-3">
           <button
-            onClick={() => (window.location.href = '/mobile/garden')}
+            onClick={() => navigate('/mobile/garden')}
             className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
           >
             <div className="flex items-center justify-between">
@@ -145,7 +147,7 @@ export function MoodPage() {
           </button>
 
           <button
-            onClick={() => (window.location.href = '/mobile/tasks')}
+            onClick={() => navigate('/mobile/tasks')}
             className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
           >
             <div className="flex items-center justify-between">
@@ -162,7 +164,7 @@ export function MoodPage() {
           </button>
 
           <button
-            onClick={() => (window.location.href = '/mobile/community')}
+            onClick={() => navigate('/mobile/community')}
             className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
           >
             <div className="flex items-center justify-between">
@@ -179,7 +181,7 @@ export function MoodPage() {
           </button>
 
           <button
-            onClick={() => (window.location.href = '/mobile/stats')}
+            onClick={() => navigate('/mobile/stats')}
             className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
           >
             <div className="flex items-center justify-between">
