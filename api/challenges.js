@@ -293,9 +293,8 @@ async function handleDetails(req, res) {
     // Принудительно создаем новое подключение
     const freshSupabase = await getSupabaseClient()
 
-    // Используем новую функцию с поддержкой групповых челленджей
     const { data: leaderboard, error: leaderboardError } =
-      await freshSupabase.rpc('get_challenge_leaderboard_v4', {
+      await freshSupabase.rpc('get_challenge_leaderboard_v3', {
         challenge_uuid: challengeId,
       })
 
@@ -697,9 +696,9 @@ async function handleUpdateProgress(req, res) {
       `📊 Updating progress: ${participation.current_progress} → ${newValue}`
     )
 
-    // Обновляем прогресс через улучшенную функцию БД с поддержкой групповых челленджей
+    // Обновляем прогресс через улучшенную функцию БД
     const { data: updateResult, error: updateError } = await supabase.rpc(
-      'update_challenge_progress_v3',
+      'update_challenge_progress_v2',
       {
         p_participant_id: participation.id,
         p_new_progress: newValue,
@@ -737,7 +736,7 @@ async function handleUpdateProgress(req, res) {
 
     // Получаем обновленный лидерборд
     const { data: leaderboard, error: leaderboardError } = await supabase.rpc(
-      'get_challenge_leaderboard_v4',
+      'get_challenge_leaderboard_v3',
       { challenge_uuid: challengeId }
     )
 
