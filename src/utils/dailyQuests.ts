@@ -90,22 +90,6 @@ export const QUEST_TEMPLATES: Partial<Record<QuestType, QuestTemplate>> = {
     }),
     weight: 10,
   },
-
-  login_streak: {
-    type: 'login_streak',
-    category: 'streak',
-    name: 'Ежедневный визит',
-    description: 'Войди в приложение',
-    emoji: '🚪',
-    getTargetValue: () => 1,
-    getRewards: (level, targetValue = 1) => ({
-      sprouts: 30 * targetValue + level * 2,
-      gems: targetValue >= 3 && level >= 10 ? 1 : 0,
-      experience: 50 * targetValue + level * 5,
-      description: `Войди в приложение (${targetValue})`,
-    }),
-    weight: 3,
-  },
 } as const
 
 // ===============================================

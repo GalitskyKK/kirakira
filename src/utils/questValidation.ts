@@ -61,9 +61,6 @@ export function validateQuestCondition(
     case 'maintain_streak':
       return validateMaintainStreakQuest(quest, context)
 
-    case 'login_streak':
-      return validateLoginStreakQuest(quest, context)
-
     default:
       return {
         isValid: false,
@@ -160,25 +157,6 @@ function validateMaintainStreakQuest(
   return {
     isValid: true,
     shouldIncrement: context.streakDays,
-  }
-}
-
-function validateLoginStreakQuest(
-  _quest: DailyQuest,
-  context: QuestValidationContext
-): QuestValidationResult {
-  // Для квеста входа в приложение проверяем, что пользователь вошел
-  if (!context.isLogin) {
-    return {
-      isValid: false,
-      reason: 'No login detected',
-      shouldIncrement: 0,
-    }
-  }
-
-  return {
-    isValid: true,
-    shouldIncrement: 1,
   }
 }
 

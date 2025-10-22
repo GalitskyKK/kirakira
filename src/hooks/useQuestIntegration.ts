@@ -134,10 +134,6 @@ export function useQuestIntegration(options: QuestIntegrationOptions = {}) {
     maintainStreak: (days: number = 1) => {
       return updateQuestProgress('maintain_streak', days)
     },
-
-    loginStreak: () => {
-      return updateQuestProgress('login_streak', 1)
-    },
   }
 
   return {

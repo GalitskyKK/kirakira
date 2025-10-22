@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTelegram } from '@/hooks'
 import { useUserSync } from '@/hooks/index.v2'
 import { useUserClientStore } from '@/hooks/index.v2'
-import { useUpdateQuestProgress } from '@/hooks/queries/useDailyQuestQueries'
 import {
   InitializationState,
   InitializationStage,
@@ -35,7 +34,6 @@ export function useAppInitialization(
 
   const { user: telegramUser } = useTelegram()
   const { completeOnboarding } = useUserClientStore()
-  const updateQuestProgress = useUpdateQuestProgress()
 
   // Используем React Query для синхронизации пользователя
   const { data: userData, isLoading: userLoading } = useUserSync(
@@ -117,20 +115,6 @@ export function useAppInitialization(
       updateProgress(InitializationStage.DAILY_QUESTS_CHECK, 85)
       if (userData?.user?.telegramId) {
         logIfDev('🎯 Проверка ежедневных заданий...')
-
-        // Обновляем прогресс login_streak при входе в приложение (неблокирующе)
-        updateQuestProgress
-          .mutateAsync({
-            telegramId: userData.user.telegramId,
-            questType: 'login_streak',
-            increment: 1,
-          })
-          .then(() => {
-            logIfDev('✅ Login streak quest updated')
-          })
-          .catch(error => {
-            console.warn('⚠️ Failed to update login_streak quest:', error)
-          })
 
         // Daily quests будут загружены автоматически через React Query
         // когда компонент DailyQuestList будет отрендерен

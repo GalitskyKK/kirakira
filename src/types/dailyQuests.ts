@@ -19,7 +19,6 @@ export type QuestType =
   | 'collect_elements' // Получить новый элемент
   // Streak Quests (Стрики)
   | 'maintain_streak' // Поддержать стрик N дней
-  | 'login_streak' // Войти в приложение
 
 // ===============================================
 // 📊 ИНТЕРФЕЙСЫ
@@ -318,7 +317,7 @@ export function formatTimeRemaining(expiresAt: Date | string): string {
  */
 export function formatQuestRewards(rewards: QuestRewards): string {
   const parts = [`${rewards.sprouts}🌿`, `${rewards.experience} XP`]
-  if (rewards.gems && rewards.gems > 0) {
+  if (rewards.gems != null && rewards.gems > 0) {
     parts.splice(1, 0, `${rewards.gems}💎`)
   }
   return parts.join(' + ')
@@ -400,7 +399,6 @@ export function isQuestType(value: string): value is QuestType {
     'record_with_note',
     'collect_elements',
     'maintain_streak',
-    'login_streak',
   ]
   return validTypes.includes(value as QuestType)
 }
