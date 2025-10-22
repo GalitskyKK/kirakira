@@ -293,8 +293,9 @@ async function handleDetails(req, res) {
     // Принудительно создаем новое подключение
     const freshSupabase = await getSupabaseClient()
 
+    // Используем новую функцию с поддержкой групповых челленджей
     const { data: leaderboard, error: leaderboardError } =
-      await freshSupabase.rpc('get_challenge_leaderboard_v3', {
+      await freshSupabase.rpc('get_challenge_leaderboard_v4', {
         challenge_uuid: challengeId,
       })
 
@@ -696,9 +697,9 @@ async function handleUpdateProgress(req, res) {
       `📊 Updating progress: ${participation.current_progress} → ${newValue}`
     )
 
-    // Обновляем прогресс через улучшенную функцию БД
+    // Обновляем прогресс через улучшенную функцию БД с поддержкой групповых челленджей
     const { data: updateResult, error: updateError } = await supabase.rpc(
-      'update_challenge_progress_v2',
+      'update_challenge_progress_v3',
       {
         p_participant_id: participation.id,
         p_new_progress: newValue,
@@ -736,7 +737,7 @@ async function handleUpdateProgress(req, res) {
 
     // Получаем обновленный лидерборд
     const { data: leaderboard, error: leaderboardError } = await supabase.rpc(
-      'get_challenge_leaderboard_v3',
+      'get_challenge_leaderboard_v4',
       { challenge_uuid: challengeId }
     )
 
@@ -855,34 +856,77 @@ async function calculateInitialProgress(supabase, challengeId, telegramId) {
 
     switch (metric) {
       case 'garden_elements_count':
-        // Считаем элементы сада, добавленные после начала челленджа
+        // Считаем элементы сада, добавленные после присоединения к челленджу
+        // Используем максимальную дату между началом челленджа и присоединением
+        const { data: participation } = await supabase
+          .from('challenge_participants')
+          .select('joined_at')
+          .eq('challenge_id', challengeId)
+          .eq('telegram_id', telegramId)
+          .single()
+
+        const joinedDate = participation?.joined_at
+          ? new Date(participation.joined_at)
+          : startDate
+        const maxDate = new Date(
+          Math.max(joinedDate.getTime(), startDate.getTime())
+        )
+
         const { count: gardenCount } = await supabase
           .from('garden_elements')
           .select('*', { count: 'exact', head: true })
           .eq('telegram_id', telegramId)
-          .gte('unlock_date', startDate.toISOString())
+          .gte('unlock_date', maxDate.toISOString())
 
         current = gardenCount || 0
         break
 
       case 'mood_entries_count':
-        // Считаем записи настроения после начала челленджа
+        // Считаем записи настроения после присоединения к челленджу
+        const { data: participationMood } = await supabase
+          .from('challenge_participants')
+          .select('joined_at')
+          .eq('challenge_id', challengeId)
+          .eq('telegram_id', telegramId)
+          .single()
+
+        const joinedDateMood = participationMood?.joined_at
+          ? new Date(participationMood.joined_at)
+          : startDate
+        const maxDateMood = new Date(
+          Math.max(joinedDateMood.getTime(), startDate.getTime())
+        )
+
         const { count: moodCount } = await supabase
           .from('mood_entries')
           .select('*', { count: 'exact', head: true })
           .eq('telegram_id', telegramId)
-          .gte('created_at', startDate.toISOString())
+          .gte('created_at', maxDateMood.toISOString())
 
         current = moodCount || 0
         break
 
       case 'rare_elements_count':
-        // Считаем редкие элементы после начала челленджа
+        // Считаем редкие элементы после присоединения к челленджу
+        const { data: participationRare } = await supabase
+          .from('challenge_participants')
+          .select('joined_at')
+          .eq('challenge_id', challengeId)
+          .eq('telegram_id', telegramId)
+          .single()
+
+        const joinedDateRare = participationRare?.joined_at
+          ? new Date(participationRare.joined_at)
+          : startDate
+        const maxDateRare = new Date(
+          Math.max(joinedDateRare.getTime(), startDate.getTime())
+        )
+
         const { count: rareCount } = await supabase
           .from('garden_elements')
           .select('*', { count: 'exact', head: true })
           .eq('telegram_id', telegramId)
-          .gte('unlock_date', startDate.toISOString())
+          .gte('unlock_date', maxDateRare.toISOString())
           .in('rarity', ['rare', 'epic', 'legendary'])
 
         current = rareCount || 0
