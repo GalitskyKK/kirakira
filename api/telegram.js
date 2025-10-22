@@ -21,17 +21,9 @@ async function getUserStats(telegramUserId) {
     const botSecret =
       process.env.TELEGRAM_BOT_SECRET || process.env.VITE_TELEGRAM_BOT_SECRET
 
-    console.log(`🔑 Bot secret status: ${botSecret ? 'SET' : 'MISSING'}`)
-    console.log(
-      `🔗 Making API request to: ${MINI_APP_URL}/api/profile?action=get_profile&telegramId=${telegramUserId}`
-    )
-
     if (!botSecret) {
       console.error(
         '❌ TELEGRAM_BOT_SECRET not configured! Bot cannot authenticate with API.'
-      )
-      console.error(
-        'Please set TELEGRAM_BOT_SECRET environment variable in Vercel settings.'
       )
       return getDefaultStats()
     }
@@ -95,8 +87,7 @@ async function checkTodayMoodExists(telegramUserId) {
     const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
     const apiUrl = `${MINI_APP_URL}/api/mood?action=history&telegramId=${telegramUserId}&limit=50`
 
-    console.log(`🔍 Checking mood for user ${telegramUserId} on ${today}`)
-    console.log(`🔗 API URL: ${apiUrl}`)
+    // Отладочная информация убрана для чистоты логов
 
     // Используем правильный API endpoint с action=history и секретным ключом бота
     const response = await fetch(apiUrl, {
@@ -107,27 +98,15 @@ async function checkTodayMoodExists(telegramUserId) {
       },
     })
 
-    console.log(`📡 API Response status: ${response.status}`)
-
     if (!response.ok) {
       console.warn(`❌ Mood API request failed: ${response.status}`)
-
       // Fallback: проверяем через Supabase напрямую
-      console.log(`🔄 Trying direct Supabase check as fallback...`)
       return await checkTodayMoodDirectly(telegramUserId, today)
     }
 
     const result = await response.json()
-    console.log(
-      `📦 API Response data: ${JSON.stringify({
-        success: result.success,
-        dataLength: result.data?.moodHistory?.length || 0,
-        hasData: !!result.data?.moodHistory,
-      })}`
-    )
 
     if (!result.success || !result.data?.moodHistory) {
-      console.log(`❌ No valid mood data in API response`)
       // Fallback: проверяем через Supabase напрямую
       return await checkTodayMoodDirectly(telegramUserId, today)
     }
@@ -135,13 +114,8 @@ async function checkTodayMoodExists(telegramUserId) {
     // Проверяем есть ли запись за сегодня
     const todayEntry = result.data.moodHistory.find(entry => {
       const entryDate = new Date(entry.mood_date).toISOString().split('T')[0]
-      console.log(`📅 Comparing entry date ${entryDate} with today ${today}`)
       return entryDate === today
     })
-
-    console.log(
-      `🎯 Mood check result: ${todayEntry ? 'FOUND' : 'NOT FOUND'} for user ${telegramUserId} on ${today}`
-    )
 
     return !!todayEntry
   } catch (error) {
@@ -159,10 +133,6 @@ async function checkTodayMoodExists(telegramUserId) {
  */
 async function checkTodayMoodDirectly(telegramUserId, today) {
   try {
-    console.log(
-      `🔄 Direct Supabase check for user ${telegramUserId} on ${today}`
-    )
-
     const { createClient } = await import('@supabase/supabase-js')
     const supabase = createClient(
       process.env.SUPABASE_URL,
@@ -182,10 +152,6 @@ async function checkTodayMoodDirectly(telegramUserId, today) {
     }
 
     const hasEntry = data && data.length > 0
-    console.log(
-      `🎯 Direct Supabase result: ${hasEntry ? 'FOUND' : 'NOT FOUND'}`
-    )
-
     return hasEntry
   } catch (error) {
     console.error('❌ Direct Supabase check error:', error)

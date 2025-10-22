@@ -167,10 +167,7 @@ export function withAuth(handler) {
     const botSecret = req.headers['x-bot-secret']
     const EXPECTED_BOT_SECRET = process.env.TELEGRAM_BOT_SECRET
 
-    console.log(
-      `🔍 Middleware bot check: received=${botSecret ? 'SET' : 'MISSING'}, expected=${EXPECTED_BOT_SECRET ? 'SET' : 'MISSING'}`
-    )
-    console.log(`🔍 Bot secret match: ${botSecret === EXPECTED_BOT_SECRET}`)
+    // Отладочная информация убрана для чистоты логов
 
     if (botSecret === EXPECTED_BOT_SECRET) {
       console.log(

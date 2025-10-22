@@ -524,9 +524,7 @@ async function protectedHandler(req, res) {
           })
         }
 
-        console.log(
-          `📖 Loading mood history from Supabase for user ${telegramId} (bot request)`
-        )
+        // Отладочная информация убрана для чистоты логов
 
         // Строим запрос
         let query = supabase
@@ -556,9 +554,7 @@ async function protectedHandler(req, res) {
           })
         }
 
-        console.log(
-          `✅ Loaded ${data.length} mood entries for user ${telegramId}`
-        )
+        // Отладочная информация убрана для чистоты логов
 
         return res.status(200).json({
           success: true,

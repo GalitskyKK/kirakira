@@ -313,20 +313,7 @@ async function protectedHandler(req, res) {
     const botSecret = req.headers['x-bot-secret']
     const EXPECTED_BOT_SECRET = process.env.TELEGRAM_BOT_SECRET
 
-    console.log(
-      `🔍 Bot auth check: received=${botSecret ? 'SET' : 'MISSING'}, expected=${EXPECTED_BOT_SECRET ? 'SET' : 'MISSING'}`
-    )
-    console.log(
-      `🔍 Headers:`,
-      Object.keys(req.headers).filter(
-        h =>
-          h.toLowerCase().includes('bot') || h.toLowerCase().includes('secret')
-      )
-    )
-    console.log(`🔍 All headers:`, req.headers)
-    console.log(`🔍 Bot secret received: "${botSecret}"`)
-    console.log(`🔍 Expected secret: "${EXPECTED_BOT_SECRET}"`)
-    console.log(`🔍 Match: ${botSecret === EXPECTED_BOT_SECRET}`)
+    // Отладочная информация убрана для чистоты логов
 
     if (botSecret === EXPECTED_BOT_SECRET) {
       console.log('🤖 Bot request detected, bypassing authentication')
