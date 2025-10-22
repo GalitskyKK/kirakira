@@ -119,10 +119,7 @@ export function useChallengeIntegration() {
       }
 
       // Используем дату присоединения как точку отсчета
-      const joinedTime = participation.joinedAt.getTime()
-      const challengeStartTime = challenge.startDate.getTime()
-      const maxTime = Math.max(joinedTime, challengeStartTime)
-      const startDate = new Date(maxTime)
+      const startDate = participation.joinedAt
 
       // Считаем метрики с момента присоединения/начала челленджа
       const challengeMetrics = calculateChallengeMetrics(startDate)
@@ -182,12 +179,7 @@ export function useChallengeIntegration() {
       }
 
       // Используем дату присоединения как точку отсчета
-      const startDate = new Date(
-        Math.max(
-          participation.joinedAt.getTime(),
-          challenge.startDate.getTime()
-        )
-      )
+      const startDate = participation.joinedAt
 
       const challengeMetrics = calculateChallengeMetrics(startDate)
       const metric = challenge.requirements.metric
@@ -262,15 +254,11 @@ export function useChallengeIntegration() {
         continue
       }
 
-      const joinedTime = participation.joinedAt.getTime()
-      const challengeStartTime = challenge.startDate.getTime()
-      const maxTime = Math.max(joinedTime, challengeStartTime)
-      const startDate = new Date(maxTime)
+      const startDate = participation.joinedAt
 
       console.log(`🔄 Recalculating ${challenge.title}`)
-      console.log(`🔄 Joined time: ${joinedTime}`)
-      console.log(`🔄 Challenge start time: ${challengeStartTime}`)
-      console.log(`🔄 Max time: ${maxTime}`)
+      console.log(`🔄 Joined time: ${participation.joinedAt.getTime()}`)
+      console.log(`🔄 Challenge start time: ${challenge.startDate.getTime()}`)
       console.log(`🔄 Start date: ${startDate.toISOString()}`)
 
       const challengeMetrics = calculateChallengeMetrics(startDate)

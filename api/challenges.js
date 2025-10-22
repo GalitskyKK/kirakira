@@ -926,13 +926,11 @@ async function calculateInitialProgress(supabase, challengeId, telegramId) {
     const challengeStartDate = new Date(challenge.start_date)
     const joinedDate = new Date(participation.joined_at)
 
-    // ИСПРАВЛЕНИЕ: Используем более позднюю дату (присоединения или создания челленджа)
-    const countingFromDate = new Date(
-      Math.max(joinedDate.getTime(), challengeStartDate.getTime())
-    )
+    // ИСПРАВЛЕНИЕ: Используем дату присоединения пользователя
+    const countingFromDate = joinedDate
 
     console.log(
-      `Calculating progress from: ${countingFromDate.toISOString()} (joined: ${joinedDate.toISOString()}, challenge: ${challengeStartDate.toISOString()})`
+      `Calculating progress from: ${countingFromDate.toISOString()} (joined: ${joinedDate.toISOString()}, challenge started: ${challengeStartDate.toISOString()})`
     )
 
     return await calculateProgressFromDate(
