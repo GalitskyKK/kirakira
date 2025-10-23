@@ -51,7 +51,7 @@ export function MobileTabNavigation({ className }: MobileTabNavigationProps) {
         'border-t border-gray-200 bg-white shadow-2xl',
         'dark:border-gray-700 dark:bg-gray-900',
         'fixed bottom-0 left-0 right-0 z-[9999]',
-        'safe-area-inset-bottom backdrop-blur-md', // For iPhone safe area
+        'safe-area-inset-bottom backdrop-blur-md', // For iPhone safe area g
         className
       )}
       style={{
