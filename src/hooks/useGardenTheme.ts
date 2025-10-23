@@ -30,6 +30,12 @@ export interface GardenTheme {
   readonly wallRadius: string
   // Анимации/частицы
   readonly particleDensity: number
+  // Анимации (только для дорогих тем)
+  readonly hasAnimations?: boolean
+  readonly shelfAnimation?: string // CSS animation для полок
+  readonly particleAnimation?: string // CSS animation для частиц
+  readonly glowAnimation?: string // CSS animation для свечения
+  readonly animationDuration?: string // Длительность анимации
   // Commerce
   readonly priceSprouts: number
   readonly isDefault: boolean
@@ -180,6 +186,12 @@ const THEMES: readonly GardenTheme[] = [
       '0 4px 6px -1px rgba(255, 0, 128, 0.4), 0 2px 4px -1px rgba(0, 245, 255, 0.3), 0 0 20px rgba(255, 0, 128, 0.2), 0 0 40px rgba(0, 245, 255, 0.1)',
     wallRadius: '0.25rem',
     particleDensity: 35,
+    hasAnimations: true,
+    shelfAnimation: 'cyberpunk-shelf-pulse 3s ease-in-out infinite',
+    particleAnimation:
+      'cyberpunk-particle-glow 2s ease-in-out infinite alternate',
+    glowAnimation: 'cyberpunk-glow-pulse 4s ease-in-out infinite',
+    animationDuration: '3s',
     priceSprouts: 1000,
     isDefault: false,
   },
@@ -188,19 +200,25 @@ const THEMES: readonly GardenTheme[] = [
     name: 'Космос',
     isDark: true,
     containerBackground:
-      'linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #0e172a 75%, #020617 100%)',
+      'linear-gradient(135deg, #000033 0%, #000066 25%, #1a1a2e 50%, #16213e 75%, #0f0f23 100%)',
     wallBackground:
-      'linear-gradient(180deg, #3b82f6 0%, #1d4ed8 30%, #1e40af 60%, #1e3a8a 100%)',
-    particleFrom: '#60a5fa',
-    particleTo: '#a78bfa',
-    shelfSurface: 'linear-gradient(to bottom, #1e3a8a, #1e40af, #1d4ed8)',
-    shelfEdge: 'linear-gradient(to bottom, #1d4ed8, #1e40af, #1e3a8a)',
-    shelfSupport: 'linear-gradient(to bottom, #1e40af, #1e3a8a)',
+      'linear-gradient(180deg, #4a5568 0%, #2d3748 40%, #1a202c 70%, #000033 100%)',
+    particleFrom: '#87ceeb',
+    particleTo: '#ffd700',
+    shelfSurface: 'linear-gradient(to bottom, #4a5568, #2d3748, #1a202c)',
+    shelfEdge: 'linear-gradient(to bottom, #2d3748, #1a202c, #000033)',
+    shelfSupport: 'linear-gradient(to bottom, #4a5568, #2d3748)',
     shelfRadius: '0.75rem',
     shelfShadow:
-      '0 4px 6px -1px rgba(59, 130, 246, 0.4), 0 2px 4px -1px rgba(59, 130, 246, 0.3), 0 0 20px rgba(96, 165, 250, 0.2), 0 0 40px rgba(167, 139, 250, 0.1)',
+      '0 4px 6px -1px rgba(135, 206, 235, 0.4), 0 2px 4px -1px rgba(135, 206, 235, 0.3), 0 0 20px rgba(255, 215, 0, 0.2), 0 0 40px rgba(135, 206, 235, 0.1)',
     wallRadius: '0.75rem',
-    particleDensity: 25,
+    particleDensity: 30,
+    hasAnimations: true,
+    shelfAnimation: 'space-shelf-shimmer 5s ease-in-out infinite',
+    particleAnimation:
+      'space-particle-twinkle 3s ease-in-out infinite alternate',
+    glowAnimation: 'space-glow-aurora 6s ease-in-out infinite',
+    animationDuration: '5s',
     priceSprouts: 1200,
     isDefault: false,
   },
@@ -222,6 +240,11 @@ const THEMES: readonly GardenTheme[] = [
       '0 4px 6px -1px rgba(168, 85, 247, 0.4), 0 2px 4px -1px rgba(168, 85, 247, 0.3), 0 0 30px rgba(251, 191, 36, 0.2), 0 0 50px rgba(236, 72, 153, 0.15)',
     wallRadius: '1.5rem',
     particleDensity: 25,
+    hasAnimations: true,
+    shelfAnimation: 'magic-shelf-sparkle 4s ease-in-out infinite',
+    particleAnimation: 'magic-particle-float 3s ease-in-out infinite alternate',
+    glowAnimation: 'magic-glow-aura 5s ease-in-out infinite',
+    animationDuration: '4s',
     priceSprouts: 900,
     isDefault: false,
   },

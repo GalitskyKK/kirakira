@@ -180,7 +180,10 @@ export function ShelfView({
       <div className="absolute left-0 right-0 top-0 h-full min-h-[650px] sm:min-h-[700px] lg:min-h-[750px]">
         <div
           className="absolute inset-0"
-          style={{ background: theme.containerBackground }}
+          style={{
+            background: theme.containerBackground,
+            animation: theme.hasAnimations ? theme.glowAnimation : undefined,
+          }}
         />
 
         {/* Subtle wood grain texture */}
@@ -207,6 +210,9 @@ export function ShelfView({
               left: `${10 + Math.random() * 80}%`,
               top: `${10 + Math.random() * 80}%`,
               background: `linear-gradient(90deg, ${theme.particleFrom}, ${theme.particleTo})`,
+              animation: theme.hasAnimations
+                ? theme.particleAnimation
+                : undefined,
             }}
             animate={{
               y: [0, -30, 0],
@@ -278,6 +284,9 @@ export function ShelfView({
                       background: theme.shelfSurface,
                       borderRadius: theme.shelfRadius,
                       boxShadow: theme.shelfShadow,
+                      animation: theme.hasAnimations
+                        ? theme.shelfAnimation
+                        : undefined,
                     }}
                   >
                     {/* Wood grain details */}
