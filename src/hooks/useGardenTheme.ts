@@ -162,6 +162,69 @@ const THEMES: readonly GardenTheme[] = [
     priceSprouts: 800,
     isDefault: false,
   },
+  {
+    id: 'cyberpunk',
+    name: 'Киберпанк',
+    isDark: true,
+    containerBackground:
+      'linear-gradient(135deg, #000000 0%, #0a0a0a 25%, #1a0a2e 50%, #16213e 75%, #0f0f23 100%)',
+    wallBackground:
+      'linear-gradient(180deg, #ff0080 0%, #e94560 30%, #00f5ff 60%, #ff6b6b 100%)',
+    particleFrom: '#00f5ff',
+    particleTo: '#ff0080',
+    shelfSurface: 'linear-gradient(to bottom, #ff0080, #00f5ff, #ff6b6b)',
+    shelfEdge: 'linear-gradient(to bottom, #ff6b6b, #ff0080, #00f5ff)',
+    shelfSupport: 'linear-gradient(to bottom, #00f5ff, #ff0080)',
+    shelfRadius: '0.125rem',
+    shelfShadow:
+      '0 4px 6px -1px rgba(255, 0, 128, 0.6), 0 2px 4px -1px rgba(0, 245, 255, 0.4), 0 0 30px rgba(255, 0, 128, 0.3), 0 0 60px rgba(0, 245, 255, 0.2)',
+    wallRadius: '0.125rem',
+    particleDensity: 35,
+    priceSprouts: 1000,
+    isDefault: false,
+  },
+  {
+    id: 'space',
+    name: 'Космос',
+    isDark: true,
+    containerBackground:
+      'linear-gradient(135deg, #000033 0%, #000066 25%, #1a1a2e 50%, #16213e 75%, #0f0f23 100%)',
+    wallBackground:
+      'linear-gradient(180deg, #4a5568 0%, #2d3748 40%, #1a202c 70%, #000033 100%)',
+    particleFrom: '#87ceeb',
+    particleTo: '#ffd700',
+    shelfSurface: 'linear-gradient(to bottom, #4a5568, #2d3748, #1a202c)',
+    shelfEdge: 'linear-gradient(to bottom, #2d3748, #1a202c, #000033)',
+    shelfSupport: 'linear-gradient(to bottom, #4a5568, #2d3748)',
+    shelfRadius: '0.5rem',
+    shelfShadow:
+      '0 4px 6px -1px rgba(135, 206, 235, 0.4), 0 2px 4px -1px rgba(135, 206, 235, 0.3), 0 0 20px rgba(255, 215, 0, 0.2), 0 0 40px rgba(135, 206, 235, 0.1)',
+    wallRadius: '0.5rem',
+    particleDensity: 30,
+    priceSprouts: 1200,
+    isDefault: false,
+  },
+  {
+    id: 'magic',
+    name: 'Магия',
+    isDark: false,
+    containerBackground:
+      'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 25%, #e9d5ff 50%, #ddd6fe 75%, #c4b5fd 100%)',
+    wallBackground:
+      'linear-gradient(180deg, #a855f7 0%, #9333ea 30%, #7c3aed 60%, #6d28d9 100%)',
+    particleFrom: '#fbbf24',
+    particleTo: '#ec4899',
+    shelfSurface: 'linear-gradient(to bottom, #a855f7, #9333ea, #7c3aed)',
+    shelfEdge: 'linear-gradient(to bottom, #7c3aed, #6d28d9, #5b21b6)',
+    shelfSupport: 'linear-gradient(to bottom, #9333ea, #7c3aed)',
+    shelfRadius: '1.5rem',
+    shelfShadow:
+      '0 4px 6px -1px rgba(168, 85, 247, 0.4), 0 2px 4px -1px rgba(168, 85, 247, 0.3), 0 0 30px rgba(251, 191, 36, 0.2), 0 0 50px rgba(236, 72, 153, 0.15)',
+    wallRadius: '1.5rem',
+    particleDensity: 25,
+    priceSprouts: 900,
+    isDefault: false,
+  },
 ]
 
 const STORAGE_KEY = 'gardenThemeId'

@@ -731,7 +731,17 @@ async function handleUpdateGardenTheme(req, res) {
     }
 
     // Валидируем тему сада
-    const validThemes = ['light', 'dark', 'sunset', 'night', 'forest', 'aqua']
+    const validThemes = [
+      'light',
+      'dark',
+      'sunset',
+      'night',
+      'forest',
+      'aqua',
+      'cyberpunk',
+      'space',
+      'magic',
+    ]
     if (!validThemes.includes(gardenTheme)) {
       return res.status(400).json({
         success: false,

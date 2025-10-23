@@ -527,6 +527,14 @@ async function handleListThemes(req, res) {
       { id: 'night', name: 'Ночное небо', priceSprouts: 600, isDefault: false },
       { id: 'forest', name: 'Лесная', priceSprouts: 700, isDefault: false },
       { id: 'aqua', name: 'Морская', priceSprouts: 800, isDefault: false },
+      {
+        id: 'cyberpunk',
+        name: 'Киберпанк',
+        priceSprouts: 1000,
+        isDefault: false,
+      },
+      { id: 'space', name: 'Космос', priceSprouts: 1200, isDefault: false },
+      { id: 'magic', name: 'Магия', priceSprouts: 900, isDefault: false },
     ]
 
     console.log(`✅ Themes fetched for user ${telegramId}:`, {
@@ -581,6 +589,14 @@ async function handleBuyTheme(req, res) {
       { id: 'night', name: 'Ночное небо', priceSprouts: 600, isDefault: false },
       { id: 'forest', name: 'Лесная', priceSprouts: 700, isDefault: false },
       { id: 'aqua', name: 'Морская', priceSprouts: 800, isDefault: false },
+      {
+        id: 'cyberpunk',
+        name: 'Киберпанк',
+        priceSprouts: 1000,
+        isDefault: false,
+      },
+      { id: 'space', name: 'Космос', priceSprouts: 1200, isDefault: false },
+      { id: 'magic', name: 'Магия', priceSprouts: 900, isDefault: false },
     ]
 
     const theme = themes.find(t => t.id === themeId)
