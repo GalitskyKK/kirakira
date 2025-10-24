@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useTelegram } from '@/hooks'
 import { useUserSync } from '@/hooks/index.v2'
-import { useUserClientStore } from '@/hooks/index.v2'
 import {
   InitializationState,
   InitializationStage,
@@ -33,7 +33,7 @@ export function useAppInitialization(
   })
 
   const { user: telegramUser } = useTelegram()
-  const { completeOnboarding } = useUserClientStore()
+  const queryClient = useQueryClient()
 
   // Используем React Query для синхронизации пользователя
   const { data: userData, isLoading: userLoading } = useUserSync(
@@ -64,13 +64,37 @@ export function useAppInitialization(
   const logIfDev = useCallback(
     (message: string, data?: unknown) => {
       if (finalConfig.isDevelopment) {
-        console.log(message, data || '')
+        console.log(message, data ?? '')
       }
     },
     [finalConfig.isDevelopment]
   )
 
-  const initialize = useCallback(async () => {
+  // ✅ Синхронизация челленджей при инициализации - ТОЛЬКО ЧТЕНИЕ данных
+  const syncChallengesOnInit = useCallback(async () => {
+    if (!telegramUser?.telegramId || !userData?.user) {
+      logIfDev('⚠️ Cannot sync challenges: missing telegramId or userData')
+      return
+    }
+
+    try {
+      logIfDev('🔄 Loading challenges on app initialization...')
+
+      // ✅ ТОЛЬКО ЧТЕНИЕ: Инвалидируем кеш для загрузки актуальных данных
+      // React Query автоматически загрузит данные через useChallengeList
+      await queryClient.invalidateQueries({
+        queryKey: ['challenge', 'list', telegramUser.telegramId],
+      })
+
+      logIfDev(
+        '✅ Challenges cache invalidated - React Query will fetch fresh data'
+      )
+    } catch (error) {
+      console.error('❌ Challenge sync error:', error)
+    }
+  }, [telegramUser?.telegramId, userData?.user, queryClient, logIfDev])
+
+  const initialize = useCallback(() => {
     if (state.isLoading) return // Предотвращаем повторные запуски
 
     logIfDev('🚀 Начало инициализации приложения')
@@ -120,6 +144,13 @@ export function useAppInitialization(
         // когда компонент DailyQuestList будет отрендерен
       }
 
+      // ✅ Синхронизируем челленджи после успешной инициализации
+      updateProgress(InitializationStage.CHALLENGES_SYNC, 90)
+      if (userData?.user?.telegramId) {
+        logIfDev('🏆 Синхронизация челленджей...')
+        syncChallengesOnInit().catch(console.error)
+      }
+
       updateProgress(InitializationStage.COMPLETED, 100)
       logIfDev('🎉 Инициализация завершена успешно')
     } catch (error) {
@@ -132,16 +163,17 @@ export function useAppInitialization(
     state.isLoading,
     telegramUser,
     userData,
-    completeOnboarding,
+    userLoading,
     updateProgress,
     logIfDev,
+    syncChallengesOnInit,
   ])
 
   // Автоматический запуск инициализации при монтировании
   useEffect(() => {
     if (state.stage === InitializationStage.IDLE) {
       const timeoutId = setTimeout(() => {
-        void initialize()
+        initialize()
       }, 100) // Небольшая задержка для стабилизации
 
       // Таймаут безопасности

@@ -15,6 +15,7 @@ export enum InitializationStage {
   USER_SYNC = 'user_sync',
   STORES_SYNC = 'stores_sync',
   DAILY_QUESTS_CHECK = 'daily_quests_check',
+  CHALLENGES_SYNC = 'challenges_sync',
   COMPLETED = 'completed',
   FAILED = 'failed',
 }
