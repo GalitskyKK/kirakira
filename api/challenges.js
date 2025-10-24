@@ -1631,6 +1631,281 @@ async function handleUpdateDailyProgress(req, res) {
 }
 
 // ===============================================
+// 🧮 ACTION: CALCULATE-PROGRESS - Серверный расчет прогресса
+// ===============================================
+async function handleCalculateProgress(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  try {
+    const { challengeId, telegramId } = req.body
+
+    console.log(
+      `🧮 CALCULATE_PROGRESS: challengeId=${challengeId}, telegramId=${telegramId}`
+    )
+
+    if (!challengeId || !telegramId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameters: challengeId, telegramId',
+      })
+    }
+
+    // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+
+    // Получаем участие пользователя
+    const { data: participation, error: participationError } = await supabase
+      .from('challenge_participants')
+      .select(
+        `
+        id,
+        challenge_id,
+        telegram_id,
+        joined_at,
+        challenges (
+          id,
+          requirements,
+          start_date,
+          end_date,
+          status
+        )
+      `
+      )
+      .eq('challenge_id', challengeId)
+      .eq('telegram_id', parseInt(telegramId))
+      .neq('status', 'dropped')
+      .single()
+
+    if (participationError || !participation) {
+      return res.status(404).json({
+        success: false,
+        error: 'Участие в челлендже не найдено',
+      })
+    }
+
+    const challenge = participation.challenges
+    if (!challenge || challenge.status !== 'active') {
+      return res.status(400).json({
+        success: false,
+        error: 'Челлендж не активен',
+      })
+    }
+
+    // Рассчитываем прогресс на сервере с даты присоединения
+    const joinedDate = new Date(participation.joined_at)
+    const newProgress = await calculateProgressFromDate(
+      supabase,
+      parseInt(telegramId),
+      challenge.requirements,
+      joinedDate
+    )
+
+    console.log(
+      `🧮 Server calculated progress: ${newProgress.current} (from ${joinedDate.toISOString()})`
+    )
+
+    // Обновляем прогресс в базе данных
+    const { error: updateError } = await supabase
+      .from('challenge_participants')
+      .update({
+        current_progress: newProgress.current,
+        max_progress: newProgress.max,
+        last_update_at: new Date().toISOString(),
+      })
+      .eq('id', participation.id)
+
+    if (updateError) {
+      console.error('Failed to update participation:', updateError)
+      return res.status(500).json({
+        success: false,
+        error: 'Ошибка обновления прогресса',
+      })
+    }
+
+    // Проверяем завершение челленджа
+    const targetValue = challenge.requirements.targetValue
+    const isCompleted = newProgress.current >= targetValue
+
+    if (isCompleted && participation.status !== 'completed') {
+      await supabase
+        .from('challenge_participants')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+        })
+        .eq('id', participation.id)
+
+      console.log(
+        `🎉 User ${telegramId} completed challenge: ${challenge.title}`
+      )
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        progress: newProgress.current,
+        maxProgress: newProgress.max,
+        isCompleted,
+        calculatedFrom: joinedDate.toISOString(),
+        message: 'Прогресс рассчитан на сервере',
+      },
+    })
+  } catch (error) {
+    console.error('Calculate progress error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    })
+  }
+}
+
+// ===============================================
+// 🚀 ACTION: CALCULATE-ALL-PROGRESS - Оптимизированный расчет всех челленджей
+// ===============================================
+async function handleCalculateAllProgress(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  try {
+    const { telegramId, challengeIds } = req.body
+
+    console.log(
+      `🚀 CALCULATE_ALL_PROGRESS: telegramId=${telegramId}, challenges=${challengeIds?.length || 0}`
+    )
+
+    if (!telegramId || !challengeIds || !Array.isArray(challengeIds)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameters: telegramId, challengeIds',
+      })
+    }
+
+    // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+
+    let updatedChallenges = 0
+    const results = []
+
+    // Обрабатываем все челленджи одним запросом
+    for (const challengeId of challengeIds) {
+      try {
+        // Получаем участие пользователя
+        const { data: participation, error: participationError } =
+          await supabase
+            .from('challenge_participants')
+            .select(
+              `
+            id,
+            challenge_id,
+            telegram_id,
+            joined_at,
+            challenges (
+              id,
+              requirements,
+              start_date,
+              end_date,
+              status
+            )
+          `
+            )
+            .eq('challenge_id', challengeId)
+            .eq('telegram_id', parseInt(telegramId))
+            .neq('status', 'dropped')
+            .single()
+
+        if (participationError || !participation) {
+          console.log(`⚠️ Participation not found for challenge ${challengeId}`)
+          continue
+        }
+
+        const challenge = participation.challenges
+        if (!challenge || challenge.status !== 'active') {
+          console.log(`⚠️ Challenge ${challengeId} not active`)
+          continue
+        }
+
+        // Рассчитываем прогресс на сервере с даты присоединения
+        const joinedDate = new Date(participation.joined_at)
+        const newProgress = await calculateProgressFromDate(
+          supabase,
+          parseInt(telegramId),
+          challenge.requirements,
+          joinedDate
+        )
+
+        // Обновляем прогресс в базе данных
+        const { error: updateError } = await supabase
+          .from('challenge_participants')
+          .update({
+            current_progress: newProgress.current,
+            max_progress: newProgress.max,
+            last_update_at: new Date().toISOString(),
+          })
+          .eq('id', participation.id)
+
+        if (updateError) {
+          console.error(
+            `❌ Failed to update challenge ${challengeId}:`,
+            updateError
+          )
+          continue
+        }
+
+        // Проверяем завершение челленджа
+        const targetValue = challenge.requirements.targetValue
+        const isCompleted = newProgress.current >= targetValue
+
+        if (isCompleted && participation.status !== 'completed') {
+          await supabase
+            .from('challenge_participants')
+            .update({
+              status: 'completed',
+              completed_at: new Date().toISOString(),
+            })
+            .eq('id', participation.id)
+
+          console.log(
+            `🎉 User ${telegramId} completed challenge: ${challenge.title}`
+          )
+        }
+
+        results.push({
+          challengeId,
+          progress: newProgress.current,
+          isCompleted,
+        })
+
+        updatedChallenges++
+      } catch (error) {
+        console.error(`❌ Error processing challenge ${challengeId}:`, error)
+      }
+    }
+
+    console.log(
+      `✅ Updated ${updatedChallenges} out of ${challengeIds.length} challenges`
+    )
+
+    res.status(200).json({
+      success: true,
+      data: {
+        updatedChallenges,
+        results,
+        message: `Прогресс рассчитан для ${updatedChallenges} челленджей`,
+      },
+    })
+  } catch (error) {
+    console.error('Calculate all progress error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    })
+  }
+}
+
+// ===============================================
 // 🔄 ACTION: RECALCULATE-PROGRESS - Пересчет прогресса
 // ===============================================
 async function handleRecalculateProgress(req, res) {
@@ -1821,6 +2096,10 @@ async function protectedHandler(req, res) {
         return await handleUpdateDailyProgress(req, res)
       case 'recalculate-progress':
         return await handleRecalculateProgress(req, res)
+      case 'calculate-progress':
+        return await handleCalculateProgress(req, res)
+      case 'calculate-all-progress':
+        return await handleCalculateAllProgress(req, res)
       default:
         return res.status(400).json({
           success: false,

@@ -4,6 +4,7 @@
  */
 
 import { useCallback, useRef, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import type { ChallengeMetric, GardenElement, MoodEntry } from '@/types'
 import {
   useGardenSync,
@@ -13,15 +14,11 @@ import {
 } from '@/hooks/queries'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
-
-interface ChallengeProgressUpdate {
-  readonly challengeId: string
-  readonly metric: ChallengeMetric
-  readonly newValue: number
-}
+import { authenticatedFetch } from '@/utils/apiClient'
 
 export function useChallengeIntegration() {
   const telegramId = useTelegramId()
+  const queryClient = useQueryClient()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
   const userId = userData?.user?.id
 
@@ -96,7 +93,7 @@ export function useChallengeIntegration() {
     )
   }, [userParticipations])
 
-  // Основная функция обновления прогресса
+  // Основная функция обновления прогресса - оптимизированная версия
   const updateChallengeProgress = useCallback(async () => {
     if (!currentUser?.telegramId) {
       return
@@ -108,62 +105,56 @@ export function useChallengeIntegration() {
       return false
     }
 
-    const updates: ChallengeProgressUpdate[] = []
+    try {
+      console.log(
+        `🧮 Requesting server calculation for ${activeParticipations.length} challenges`
+      )
 
-    // Проходим по всем активным участиям
-    for (const participation of activeParticipations) {
-      // Находим челлендж из React Query данных
-      const challenge = challenges.find(c => c.id === participation.challengeId)
-      if (!challenge) {
-        continue
+      // ✅ УЛУЧШЕНИЕ: Один запрос для всех челленджей с правильной аутентификацией
+      const response = await authenticatedFetch(
+        '/api/challenges?action=calculate-all-progress',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            telegramId: currentUser.telegramId,
+            challengeIds: activeParticipations.map(p => p.challengeId),
+          }),
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
-      // Используем дату присоединения как точку отсчета
-      const startDate = participation.joinedAt
+      const result = await response.json()
 
-      // Считаем метрики с момента присоединения/начала челленджа
-      const challengeMetrics = calculateChallengeMetrics(startDate)
-      const metric = challenge.requirements.metric
-      const currentValue = challengeMetrics[metric]
-      const targetValue = challenge.requirements.targetValue
+      if (result.success) {
+        console.log(
+          `✅ Server calculated progress for ${result.data.updatedChallenges} challenges`
+        )
 
-      // Ограничиваем прогресс целевым значением
-      const cappedValue = Math.min(currentValue, targetValue)
-
-      // Проверяем, изменилось ли значение и не уменьшился ли прогресс
-      if (
-        cappedValue !== participation.currentProgress &&
-        cappedValue >= participation.currentProgress
-      ) {
-        updates.push({
-          challengeId: participation.challengeId,
-          metric,
-          newValue: cappedValue,
+        // ✅ УЛУЧШЕНИЕ: Инвалидируем кеш только при успехе
+        queryClient.invalidateQueries({
+          queryKey: ['challenges', currentUser.telegramId],
         })
-      }
-    }
 
-    // Выполняем обновления через React Query для автоматической инвалидации кеша
-    for (const update of updates) {
-      try {
-        await updateProgressMutationRef.current.mutateAsync({
-          challengeId: update.challengeId,
-          telegramId: currentUser.telegramId,
-          metric: update.metric,
-          value: update.newValue,
-        })
-      } catch (error) {
-        console.error(`❌ Failed to update challenge progress:`, error)
+        return true
+      } else {
+        console.error(`❌ Server calculation failed: ${result.error}`)
+        return false
       }
+    } catch (error) {
+      console.error(`❌ Failed to request server calculation:`, error)
+      // ✅ УЛУЧШЕНИЕ: Показываем пользователю ошибку
+      if (error instanceof Error) {
+        console.error(`Network error: ${error.message}`)
+      }
+      return false
     }
-
-    return updates.length > 0
-  }, [
-    currentUser,
-    calculateChallengeMetrics,
-    getActiveParticipations,
-    challenges,
-  ])
+  }, [currentUser, getActiveParticipations, queryClient])
 
   // Функция для принудительного обновления всех челленджей
   const forceUpdateAllChallenges = useCallback(async () => {
