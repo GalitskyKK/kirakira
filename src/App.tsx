@@ -148,7 +148,7 @@ function App() {
   }
 
   // Show loading state during initialization
-  if (initState.isLoading || userStoreLoading || userLoading) {
+  if (initState.isLoading) {
     // 🔍 ОТЛАДКА ЭКРАНА ЗАГРУЗКИ (только в dev режиме)
     if (isDevelopment) {
       console.log('🔍 РЕНДЕРИМ ЭКРАН ЗАГРУЗКИ:', {

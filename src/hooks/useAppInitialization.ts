@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTelegram } from '@/hooks'
 import { useUserSync } from '@/hooks/index.v2'
@@ -38,13 +38,11 @@ export function useAppInitialization(
   // Используем React Query для синхронизации пользователя
   const { data: userData, isLoading: userLoading } = useUserSync(
     telegramUser?.telegramId,
-    !!telegramUser?.telegramId
+    Boolean(telegramUser?.telegramId)
   )
 
-  const userLoadingRef = useRef(userLoading)
-  useEffect(() => {
-    userLoadingRef.current = userLoading
-  }, [userLoading])
+  // Отслеживаем все критические зависимости для завершения инициализации
+  const [allDependenciesReady, setAllDependenciesReady] = useState(false)
 
   const updateProgress = useCallback(
     (stage: InitializationStage, progress: number, error?: string | null) => {
@@ -60,6 +58,33 @@ export function useAppInitialization(
     },
     []
   )
+
+  // Проверяем готовность всех критических зависимостей
+  useEffect(() => {
+    const checkDependencies = () => {
+      // В Telegram режиме ждем готовности Telegram и загрузки пользователя
+      if (finalConfig.enableTelegram && Boolean(telegramUser?.telegramId)) {
+        const telegramReady = Boolean(telegramUser)
+        const userDataReady = !userLoading && Boolean(userData?.user)
+
+        if (telegramReady && userDataReady) {
+          setAllDependenciesReady(true)
+          return true
+        }
+        return false
+      }
+
+      // В браузерном режиме - только базовая готовность
+      if (!finalConfig.enableTelegram) {
+        setAllDependenciesReady(true)
+        return true
+      }
+
+      return false
+    }
+
+    checkDependencies()
+  }, [telegramUser, userLoading, userData, finalConfig.enableTelegram])
 
   const logIfDev = useCallback(
     (message: string, data?: unknown) => {
@@ -83,7 +108,7 @@ export function useAppInitialization(
       // ✅ ТОЛЬКО ЧТЕНИЕ: Инвалидируем кеш для загрузки актуальных данных
       // React Query автоматически загрузит данные через useChallengeList
       await queryClient.invalidateQueries({
-        queryKey: ['challenge', 'list', telegramUser.telegramId],
+        queryKey: ['challenge', 'list', telegramUser?.telegramId],
       })
 
       logIfDev(
@@ -151,8 +176,14 @@ export function useAppInitialization(
         syncChallengesOnInit().catch(console.error)
       }
 
-      updateProgress(InitializationStage.COMPLETED, 100)
-      logIfDev('🎉 Инициализация завершена успешно')
+      // ⚠️ КРИТИЧЕСКОЕ ИЗМЕНЕНИЕ: Не завершаем инициализацию, пока не готовы все зависимости
+      if (allDependenciesReady) {
+        updateProgress(InitializationStage.COMPLETED, 100)
+        logIfDev('🎉 Инициализация завершена успешно')
+      } else {
+        logIfDev('⏳ Ожидание готовности всех зависимостей...')
+        updateProgress(InitializationStage.STORES_SYNC, 95)
+      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown initialization error'
@@ -164,6 +195,7 @@ export function useAppInitialization(
     telegramUser,
     userData,
     userLoading,
+    allDependenciesReady,
     updateProgress,
     logIfDev,
     syncChallengesOnInit,
@@ -203,6 +235,25 @@ export function useAppInitialization(
     updateProgress,
     logIfDev,
     finalConfig.timeout,
+  ])
+
+  // Перезапускаем инициализацию, когда зависимости станут готовы
+  useEffect(() => {
+    if (
+      allDependenciesReady &&
+      state.stage === InitializationStage.STORES_SYNC &&
+      state.progress === 95
+    ) {
+      logIfDev('🔄 Зависимости готовы - завершаем инициализацию')
+      updateProgress(InitializationStage.COMPLETED, 100)
+      logIfDev('🎉 Инициализация завершена успешно')
+    }
+  }, [
+    allDependenciesReady,
+    state.stage,
+    state.progress,
+    updateProgress,
+    logIfDev,
   ])
 
   return {
