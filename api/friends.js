@@ -111,6 +111,11 @@ async function handleList(req, res) {
     // Инициализируем Supabase клиент
     // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
     const supabase = await getSupabaseClient(req.auth?.jwt)
+
+    // 🔑 Для получения данных других пользователей используем admin клиент
+    const { createAdminSupabaseClient } = await import('./_jwt.js')
+    const adminSupabase = await createAdminSupabaseClient()
+
     const result = {}
 
     // Получаем принятых друзей
@@ -143,10 +148,11 @@ async function handleList(req, res) {
 
     // Получаем входящие запросы дружбы
     if (type === 'all' || type === 'incoming') {
-      const { data: incomingRequests, error: incomingError } = await supabase
-        .from('friendships')
-        .select(
-          `
+      const { data: incomingRequests, error: incomingError } =
+        await adminSupabase
+          .from('friendships')
+          .select(
+            `
           id,
           requester_telegram_id,
           created_at,
@@ -158,10 +164,10 @@ async function handleList(req, res) {
             photo_url
           )
         `
-        )
-        .eq('addressee_telegram_id', telegramId)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
+          )
+          .eq('addressee_telegram_id', telegramId)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false })
 
       if (incomingError) {
         console.error('Incoming requests fetch error:', incomingError)
@@ -177,13 +183,13 @@ async function handleList(req, res) {
           const requesterTelegramId = request.requester_telegram_id
 
           // Получаем статистику сада
-          const { data: gardenStats } = await supabase
+          const { data: gardenStats } = await adminSupabase
             .from('garden_elements')
             .select('id')
             .eq('telegram_id', requesterTelegramId)
 
           // Получаем статистику настроения
-          const { data: moodStats } = await supabase
+          const { data: moodStats } = await adminSupabase
             .from('mood_entries')
             .select('id')
             .eq('telegram_id', requesterTelegramId)
@@ -211,10 +217,11 @@ async function handleList(req, res) {
 
     // Получаем исходящие запросы дружбы
     if (type === 'all' || type === 'outgoing') {
-      const { data: outgoingRequests, error: outgoingError } = await supabase
-        .from('friendships')
-        .select(
-          `
+      const { data: outgoingRequests, error: outgoingError } =
+        await adminSupabase
+          .from('friendships')
+          .select(
+            `
           id,
           addressee_telegram_id,
           status,
@@ -227,10 +234,10 @@ async function handleList(req, res) {
             photo_url
           )
         `
-        )
-        .eq('requester_telegram_id', telegramId)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
+          )
+          .eq('requester_telegram_id', telegramId)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false })
 
       if (outgoingError) {
         console.error('Outgoing requests fetch error:', outgoingError)
@@ -1017,20 +1024,32 @@ async function protectedHandler(req, res) {
     }
 
     // 🔐 Проверяем что пользователь работает со своими данными
-    const requestedTelegramId =
-      req.query.telegramId ||
-      req.query.searcherTelegramId ||
-      req.body.requesterTelegramId ||
-      req.body.telegramId
+    // Исключение для respond-request - пользователь может подтверждать заявки, адресованные ему
+    if (action !== 'respond-request') {
+      const requestedTelegramId =
+        req.query.telegramId ||
+        req.query.searcherTelegramId ||
+        req.body.requesterTelegramId ||
+        req.body.telegramId
 
-    if (
-      requestedTelegramId &&
-      !verifyTelegramId(requestedTelegramId, req.auth.telegramId)
-    ) {
-      return res.status(403).json({
-        success: false,
-        error: 'Forbidden: You can only access your own data',
-      })
+      if (
+        requestedTelegramId &&
+        !verifyTelegramId(requestedTelegramId, req.auth.telegramId)
+      ) {
+        return res.status(403).json({
+          success: false,
+          error: 'Forbidden: You can only access your own data',
+        })
+      }
+    } else {
+      // Для respond-request проверяем, что пользователь подтверждает заявку, адресованную ему
+      const { telegramId } = req.body
+      if (telegramId && !verifyTelegramId(telegramId, req.auth.telegramId)) {
+        return res.status(403).json({
+          success: false,
+          error: 'Forbidden: You can only respond to requests addressed to you',
+        })
+      }
     }
 
     // Роутинг по действиям
