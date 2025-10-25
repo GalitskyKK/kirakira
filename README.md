@@ -199,20 +199,6 @@ src/
 - **Gesture Support**: Touch-friendly interactions
 - **Accessibility**: Respects `prefers-reduced-motion`
 
-## 🌐 Deployment
-
-### Vercel (Recommended)
-
-1. Connect your GitHub repository to Vercel
-2. Set environment variables in Vercel dashboard
-3. Deploy automatically on push to main branch
-
-### Manual Deployment
-
-1. Build the project: `npm run build`
-2. Deploy the `dist` folder to your hosting provider
-3. Configure environment variables
-
 ## 🤝 Contributing
 
 1. Fork the repository
