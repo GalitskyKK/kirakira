@@ -151,7 +151,7 @@ export function MobileTabNavigation({ className }: MobileTabNavigationProps) {
                 </motion.div>
               )}
 
-              {/* Red notification dot for available rewards */}
+              {/* Red notification dot for available reward */}
               {showNotification && tab.count === undefined && (
                 <motion.div
                   className={clsx(
