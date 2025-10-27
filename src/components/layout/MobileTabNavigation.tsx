@@ -93,6 +93,7 @@ export function MobileTabNavigation({ className }: MobileTabNavigationProps) {
                 'flex flex-1 flex-col items-center justify-center',
                 'relative min-h-[56px] px-1 py-2',
                 'transition-all duration-300',
+                'focus:outline-none',
                 isActive
                   ? 'text-kira-500 dark:text-kira-400'
                   : 'hover:text-kira-400 dark:hover:text-kira-300 text-neutral-500 dark:text-neutral-400'
@@ -179,14 +180,16 @@ export function MobileTabNavigation({ className }: MobileTabNavigationProps) {
                 />
               )}
 
-              {/* Ripple effect - iridescent glow */}
-              <motion.div
-                className="absolute inset-0 rounded-lg"
-                whileTap={{
-                  backgroundColor: 'rgba(217, 70, 239, 0.15)',
-                }}
-                transition={{ duration: 0.2 }}
-              />
+              {/* Ripple effect - только при нажатии, без постоянной заливки */}
+              {false && (
+                <motion.div
+                  className="absolute inset-0 rounded-lg"
+                  whileTap={{
+                    backgroundColor: 'rgba(217, 70, 239, 0.15)',
+                  }}
+                  transition={{ duration: 0.2 }}
+                />
+              )}
             </motion.button>
           )
         })}

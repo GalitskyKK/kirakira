@@ -32,8 +32,8 @@ function AchievementBadge({
     <motion.div
       className={`rounded-lg border p-3 transition-all ${
         isUnlocked
-          ? 'border-garden-200 bg-gradient-to-br from-garden-50 to-green-50 dark:border-garden-700 dark:from-garden-900/30 dark:to-green-900/30'
-          : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800'
+          ? 'glass-card border-kira-200 dark:border-kira-700'
+          : 'glass-card border-neutral-200 dark:border-neutral-700'
       }`}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
