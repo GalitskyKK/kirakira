@@ -155,9 +155,10 @@ export function MobileTabNavigation({ className }: MobileTabNavigationProps) {
               {showNotification && tab.count === undefined && (
                 <motion.div
                   className={clsx(
-                    'absolute -right-1 -top-1',
-                    'h-2 w-2 rounded-full',
-                    'bg-red-500'
+                    'absolute right-0 top-0',
+                    'h-2.5 w-2.5 rounded-full',
+                    'bg-red-500 ring-2 ring-white',
+                    'dark:ring-gray-900'
                   )}
                   initial={{ scale: 0 }}
                   animate={{ scale: [0, 1.2, 1] }}
