@@ -56,10 +56,10 @@ export function MobileTabNavigation({ className }: MobileTabNavigationProps) {
     hasValidTelegramId
   )
 
-  // Проверяем наличие доступных наград: либо статус completed у любого квеста, либо доступный бонус
+  // Проверяем наличие доступных наград: только квесты со статусом 'completed'
+  // (бонусы за челленджи выдаются автоматически, поэтому исключаем canClaimBonus)
   const hasAvailableRewards = questsData
-    ? questsData.quests.some(quest => quest.status === 'completed') ||
-      (questsData.canClaimBonus ?? false)
+    ? questsData.quests.some(quest => quest.status === 'completed')
     : false
 
   return (
