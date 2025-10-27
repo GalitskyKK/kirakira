@@ -109,7 +109,7 @@ export function MoodSelector({
   }
 
   return (
-    <Card className={className} padding="lg">
+    <Card className={className} padding="lg" variant="glass">
       {/* Минимальный индикатор прогресса */}
       <div className="mb-3">
         <div className="flex items-center justify-center space-x-1">
@@ -119,15 +119,15 @@ export function MoodSelector({
                 className={clsx(
                   'h-1.5 w-1.5 rounded-full transition-colors',
                   step === s
-                    ? 'bg-garden-500'
+                    ? 'bg-kira-500'
                     : index <
                         (['mood', 'intensity', 'note'] as const).indexOf(step)
-                      ? 'bg-garden-300'
-                      : 'bg-gray-300'
+                      ? 'bg-kira-300'
+                      : 'bg-neutral-300 dark:bg-neutral-600'
                 )}
               />
               {index < 2 && (
-                <div className="mx-1 h-0.5 w-2 rounded-full bg-gray-200" />
+                <div className="mx-1 h-0.5 w-2 rounded-full bg-neutral-200 dark:bg-neutral-700" />
               )}
             </div>
           ))}
@@ -161,8 +161,8 @@ export function MoodSelector({
                     className={clsx(
                       'flex flex-col items-center justify-center rounded-xl border-2 p-4 transition-all hover:scale-105',
                       selectedMood === mood
-                        ? 'border-garden-500 bg-garden-50 shadow-md dark:bg-garden-900/30'
-                        : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800'
+                        ? 'border-kira-500 bg-kira-50/50 dark:bg-kira-900/30 shadow-md'
+                        : 'border-neutral-200 bg-white hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800'
                     )}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -172,8 +172,8 @@ export function MoodSelector({
                       className={clsx(
                         'text-sm font-medium',
                         selectedMood === mood
-                          ? 'text-garden-700 dark:text-garden-300'
-                          : 'text-gray-700 dark:text-gray-300'
+                          ? 'text-kira-700 dark:text-kira-300'
+                          : 'text-neutral-700 dark:text-neutral-300'
                       )}
                     >
                       {config.label}
@@ -206,8 +206,8 @@ export function MoodSelector({
                     className={clsx(
                       'w-full rounded-xl border-2 p-4 text-left transition-all hover:scale-[1.02]',
                       selectedIntensity === intensity
-                        ? 'border-garden-500 bg-garden-50 shadow-md dark:bg-garden-900/30'
-                        : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800'
+                        ? 'border-kira-500 bg-kira-50/50 dark:bg-kira-900/30 shadow-md'
+                        : 'border-neutral-200 bg-white hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800'
                     )}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -218,13 +218,13 @@ export function MoodSelector({
                           className={clsx(
                             'font-medium',
                             selectedIntensity === intensity
-                              ? 'text-garden-700 dark:text-garden-300'
-                              : 'text-gray-900 dark:text-gray-100'
+                              ? 'text-kira-700 dark:text-kira-300'
+                              : 'text-neutral-900 dark:text-neutral-100'
                           )}
                         >
                           {labels[intensity - 1]}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400">
                           Интенсивность: {intensity}/3
                         </p>
                       </div>
@@ -235,8 +235,8 @@ export function MoodSelector({
                             className={clsx(
                               'h-2 w-2 rounded-full',
                               i < (intensity as number)
-                                ? 'bg-garden-500'
-                                : 'bg-gray-300 dark:bg-gray-600'
+                                ? 'bg-kira-500'
+                                : 'bg-neutral-300 dark:bg-neutral-600'
                             )}
                           />
                         ))}
@@ -265,18 +265,18 @@ export function MoodSelector({
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.2 }}
           >
-            <h3 className="mb-4 text-center text-lg font-semibold text-gray-900 dark:text-gray-100">
+            <h3 className="mb-4 text-center text-lg font-semibold text-neutral-900 dark:text-neutral-100">
               Добавить заметку? (необязательно)
             </h3>
             <textarea
               value={note}
               onChange={e => setNote(e.target.value)}
               placeholder="Что вы чувствуете сегодня?"
-              className="w-full rounded-xl border-2 border-gray-200 bg-white p-4 text-gray-900 placeholder-gray-400 transition-colors focus:border-garden-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+              className="focus:border-kira-500 w-full rounded-xl border-2 border-neutral-200 bg-white p-4 text-neutral-900 placeholder-neutral-400 transition-colors focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500"
               rows={4}
               maxLength={200}
             />
-            <p className="mb-4 mt-1 text-right text-xs text-gray-500">
+            <p className="mb-4 mt-1 text-right text-xs text-neutral-500">
               {note.length}/200
             </p>
             <div className="flex space-x-2">
@@ -307,7 +307,7 @@ export function MoodSelector({
         todaysMood?.mood &&
         todaysMood.mood in MOOD_CONFIG && (
           <motion.div
-            className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/30"
+            className="glass-card mt-6 rounded-xl border border-garden-200/50 bg-garden-50/50 p-4 dark:border-garden-700/50 dark:bg-garden-900/20"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
           >
@@ -316,15 +316,15 @@ export function MoodSelector({
                 {MOOD_CONFIG[todaysMood.mood].emoji}
               </div>
               <div>
-                <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                <p className="text-sm font-medium text-garden-800 dark:text-garden-200">
                   {MOOD_CONFIG[todaysMood.mood].label}
                 </p>
-                <p className="text-xs text-green-600 dark:text-green-300">
+                <p className="text-xs text-garden-600 dark:text-garden-300">
                   Интенсивность:{' '}
                   {['Слабо', 'Умеренно', 'Сильно'][todaysMood.intensity - 1]}
                 </p>
                 {(todaysMood.note ?? '').length > 0 && (
-                  <p className="mt-1 text-xs text-green-700 dark:text-green-300">
+                  <p className="mt-1 text-xs text-garden-700 dark:text-garden-300">
                     "{todaysMood.note}"
                   </p>
                 )}

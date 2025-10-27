@@ -43,7 +43,7 @@ export function HomePage() {
 
   // Desktop layout
   return (
-    <div className="min-h-screen bg-gradient-to-br from-garden-50 to-green-50">
+    <div className="from-kira-50 min-h-screen bg-gradient-to-br via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
       <div className="container mx-auto max-w-7xl px-4 py-6">
         {/* Header */}
         <motion.div
@@ -52,9 +52,26 @@ export function HomePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="mb-2 text-4xl font-bold text-gray-900">🌸 KiraKira</h1>
-          <p className="text-lg text-gray-600">Ваш цифровой сад эмоций</p>
-          <p className="mt-1 text-sm text-gray-500">
+          <motion.h1
+            className="from-kira-600 via-kira-500 mb-2 bg-gradient-to-r to-garden-500 bg-clip-text text-5xl font-bold text-transparent"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            KiraKira
+          </motion.h1>
+          <motion.p
+            className="mb-2 text-2xl text-neutral-700 dark:text-neutral-300"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            きらきら
+          </motion.p>
+          <p className="text-lg text-neutral-600 dark:text-neutral-400">
+            Ваш цифровой сад эмоций
+          </p>
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-500">
             {formatDate(new Date(), 'EEEE, dd MMMM yyyy', 'ru')}
           </p>
         </motion.div>
@@ -72,18 +89,22 @@ export function HomePage() {
 
             {/* Quick Stats */}
             <div className="mb-6 grid grid-cols-2 gap-3">
-              <Card padding="sm" className="text-center">
-                <div className="mb-1 text-2xl text-garden-600">
+              <Card padding="sm" className="glass-card text-center">
+                <div className="mb-1 text-3xl font-bold text-garden-600 dark:text-garden-400">
                   {gardenStats.totalElements}
                 </div>
-                <div className="text-xs text-gray-600">Растений</div>
+                <div className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
+                  Растений
+                </div>
               </Card>
 
-              <Card padding="sm" className="text-center">
-                <div className="mb-1 text-2xl text-orange-600">
+              <Card padding="sm" className="glass-card text-center">
+                <div className="text-kira-600 dark:text-kira-400 mb-1 text-3xl font-bold">
                   {streakCount}
                 </div>
-                <div className="text-xs text-gray-600">Дней подряд</div>
+                <div className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
+                  Дней подряд
+                </div>
               </Card>
             </div>
 
