@@ -79,7 +79,7 @@ export function TransactionHistory({
           <Filter size={16} className="text-gray-500" />
 
           {/* Фильтр по типу транзакции */}
-          <div className="flex rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+          <div className="glass-card flex rounded-2xl p-1.5">
             <FilterButton
               active={filter === 'all'}
               onClick={() => setFilter('all')}
@@ -101,7 +101,7 @@ export function TransactionHistory({
           </div>
 
           {/* Фильтр по валюте */}
-          <div className="flex rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+          <div className="glass-card flex rounded-2xl p-1.5">
             <FilterButton
               active={currencyFilter === 'all'}
               onClick={() => setCurrencyFilter('all')}
@@ -231,10 +231,10 @@ function FilterButton({
   return (
     <button
       onClick={onClick}
-      className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+      className={`rounded-xl px-3 py-1.5 text-xs font-medium transition-all ${
         active
-          ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white'
-          : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
+          ? 'text-kira-600 dark:text-kira-400 bg-white shadow-md dark:bg-neutral-800'
+          : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100'
       }`}
     >
       {children}

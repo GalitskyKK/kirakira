@@ -19,9 +19,9 @@ export function LoadingSpinner({
   }
 
   const colorClasses = {
-    primary: 'text-garden-500',
+    primary: 'text-kira-500',
     white: 'text-white',
-    gray: 'text-gray-400',
+    gray: 'text-neutral-400',
   }
 
   return (
@@ -75,7 +75,7 @@ export function LoadingOverlay({
         <motion.div
           className={clsx(
             'absolute inset-0 z-10',
-            'bg-white/80 backdrop-blur-sm dark:bg-gray-900/80',
+            'bg-white/80 backdrop-blur-sm dark:bg-neutral-900/80',
             'flex flex-col items-center justify-center',
             'rounded-2xl'
           )}
@@ -87,7 +87,7 @@ export function LoadingOverlay({
           <LoadingSpinner size="lg" />
           {message && (
             <motion.p
-              className="mt-3 text-sm font-medium text-gray-600 dark:text-gray-400"
+              className="mt-3 text-sm font-medium text-neutral-600 dark:text-neutral-400"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -137,7 +137,7 @@ export function Skeleton({
   return (
     <motion.div
       className={clsx(
-        'bg-gray-200 dark:bg-gray-700',
+        'bg-neutral-200 dark:bg-neutral-700',
         variantClasses[variant],
         className
       )}

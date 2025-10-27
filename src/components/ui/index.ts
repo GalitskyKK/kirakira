@@ -27,3 +27,5 @@ export {
 export { StreakFreezeIndicator } from './StreakFreezeIndicator'
 export { StreakFreezeModal } from './StreakFreezeModal'
 export { ThemeShop } from './ThemeShop'
+export { SparkleEffect } from './SparkleEffect'
+export { TextTyping } from './TextTyping'

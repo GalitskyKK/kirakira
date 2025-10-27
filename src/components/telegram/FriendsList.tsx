@@ -517,7 +517,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
       </div>
 
       {/* Табы */}
-      <div className="flex space-x-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+      <div className="glass-card flex space-x-1.5 rounded-2xl p-1.5">
         {[
           {
             id: 'friends',
@@ -543,10 +543,10 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                   tab.id as 'friends' | 'find' | 'invites' | 'requests'
                 )
               }
-              className={`relative flex flex-1 items-center justify-center space-x-1 rounded-md px-1 py-2 text-xs font-medium transition-colors sm:px-2 sm:text-sm ${
+              className={`relative flex flex-1 items-center justify-center space-x-1 rounded-xl px-1 py-2 text-xs font-medium transition-all sm:px-2 sm:text-sm ${
                 activeView === tab.id
-                  ? 'bg-white text-blue-600 shadow-sm dark:bg-gray-700 dark:text-blue-400'
-                  : 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100'
+                  ? 'text-kira-600 dark:text-kira-400 bg-white shadow-md dark:bg-neutral-800'
+                  : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100'
               }`}
             >
               <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
