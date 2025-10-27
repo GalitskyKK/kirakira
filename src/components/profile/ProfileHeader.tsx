@@ -99,7 +99,7 @@ export function ProfileHeader({ user, stats }: ProfileHeaderProps) {
 
   return (
     <motion.div
-      className="rounded-2xl border border-gray-200 bg-gradient-to-br from-garden-50 to-green-50 p-6 dark:border-gray-700 dark:from-garden-900/30 dark:to-green-900/30"
+      className="glass-card rounded-3xl border border-neutral-200/50 p-6 dark:border-neutral-700/50"
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}

@@ -62,11 +62,26 @@ export function useAppInitialization(
   // Проверяем готовность всех критических зависимостей
   useEffect(() => {
     const checkDependencies = () => {
-      // В DEV режиме пропускаем инициализацию к базе
-      if (finalConfig.isDevelopment) {
-        setAllDependenciesReady(true)
-        return true
-      }
+      // В DEV режиме пропускаем проверку БД, но ждем загрузки пользователя
+      // if (
+      //   finalConfig.isDevelopment &&
+      //   finalConfig.enableTelegram &&
+      //   Boolean(telegramUser?.telegramId)
+      // ) {
+        // В dev режиме ждем только загрузки пользователя
+      //   const userDataReady = !userLoading && Boolean(userData?.user)
+      //   if (userDataReady) {
+      //     setAllDependenciesReady(true)
+      //     return true
+      //   }
+      //   return false
+      // }
+
+      // В DEV режиме без Telegram сразу готовы
+      // if (finalConfig.isDevelopment && !finalConfig.enableTelegram) {
+      //   setAllDependenciesReady(true)
+      //   return true
+      // }
 
       // В Telegram режиме ждем готовности Telegram и загрузки пользователя
       if (finalConfig.enableTelegram && Boolean(telegramUser?.telegramId)) {
@@ -95,7 +110,7 @@ export function useAppInitialization(
     userLoading,
     userData,
     finalConfig.enableTelegram,
-    finalConfig.isDevelopment,
+    // finalConfig.isDevelopment,
   ])
 
   const logIfDev = useCallback(
