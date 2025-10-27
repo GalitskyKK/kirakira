@@ -13,7 +13,7 @@ export function TelegramStatus() {
   const [isVisible, setIsVisible] = useState(true)
 
   useEffect(() => {
-    // Скрываем через 4 секунды после монтирования
+    // Скрываем через 4 секунды после монтировани
     const timer = setTimeout(() => {
       setIsVisible(false)
     }, 4000)
