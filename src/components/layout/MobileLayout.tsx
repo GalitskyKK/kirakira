@@ -37,10 +37,8 @@ export function MobileLayout() {
       className="from-kira-50 relative min-h-screen bg-gradient-to-br via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900"
       style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}
     >
-      {/* Telegram Status - Always visible */}
-      <div className="p-3 pb-0 sm:p-4">
-        <TelegramStatus />
-      </div>
+      {/* Telegram Status - Absolute positioned */}
+      <TelegramStatus />
 
       {/* Content Area - React Router Outlet */}
       <div className="relative overflow-x-hidden">
