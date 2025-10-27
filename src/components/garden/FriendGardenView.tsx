@@ -25,6 +25,7 @@ import {
   getElementColor,
   getElementScale,
 } from '@/utils/elementNames'
+import { getCurrentSeason } from '@/utils/elementGeneration'
 
 // Типы для данных друга и его сада
 interface FriendInfo {
@@ -215,6 +216,9 @@ export function FriendGardenView({
       )
       const scale = getElementScale(characteristicsSeed)
 
+      // 🍂 Определяем сезон на основе даты разблокировки элемента
+      const seasonalVariant = getCurrentSeason(new Date(element.unlockDate))
+
       return {
         id: element.id,
         type: element.type,
@@ -222,6 +226,7 @@ export function FriendGardenView({
         unlockDate: new Date(element.unlockDate),
         moodInfluence: element.moodInfluence,
         rarity: element.rarity,
+        seasonalVariant, // 🍂 Добавляем сезонную расцветку
         name,
         description,
         emoji,

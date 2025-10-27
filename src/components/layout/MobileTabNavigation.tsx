@@ -2,6 +2,8 @@ import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Leaf, Heart, Users, User, Trophy } from 'lucide-react'
+import { useTelegramId } from '@/hooks/useTelegramId'
+import { useDailyQuests } from '@/hooks/queries/useDailyQuestQueries'
 
 interface Tab {
   id: string
@@ -45,6 +47,17 @@ const TABS: Tab[] = [
 export function MobileTabNavigation({ className }: MobileTabNavigationProps) {
   const navigate = useNavigate()
   const location = useLocation()
+  const telegramId = useTelegramId()
+
+  // Проверяем наличие доступных наград за квесты
+  const { data: questsData } = useDailyQuests(telegramId ?? 0, !!telegramId)
+
+  // Проверяем наличие доступных наград: либо статус completed у любого квеста, либо доступный бонус
+  const hasAvailableRewards = questsData
+    ? questsData.quests.some(quest => quest.status === 'completed') ||
+      (questsData.canClaimBonus ?? false)
+    : false
+
   return (
     <div
       className={clsx(
@@ -65,6 +78,7 @@ export function MobileTabNavigation({ className }: MobileTabNavigationProps) {
       <div className="flex">
         {TABS.map(tab => {
           const isActive = location.pathname === tab.path
+          const showNotification = tab.id === 'tasks' && hasAvailableRewards
 
           return (
             <motion.button
@@ -135,6 +149,25 @@ export function MobileTabNavigation({ className }: MobileTabNavigationProps) {
                 >
                   {tab.count}
                 </motion.div>
+              )}
+
+              {/* Red notification dot for available rewards */}
+              {showNotification && tab.count === undefined && (
+                <motion.div
+                  className={clsx(
+                    'absolute -right-1 -top-1',
+                    'h-2 w-2 rounded-full',
+                    'bg-red-500'
+                  )}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: [0, 1.2, 1] }}
+                  transition={{
+                    type: 'spring',
+                    stiffness: 300,
+                    damping: 20,
+                    delay: 0.2,
+                  }}
+                />
               )}
 
               {/* Ripple effect */}
