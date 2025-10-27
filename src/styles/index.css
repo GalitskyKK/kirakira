@@ -122,6 +122,57 @@
     display: inline-block;
     margin-right: 8px;
   }
+
+  /* Shimmer animation for gradient text */
+  @keyframes shimmer {
+    0%,
+    100% {
+      background-position: 0% center;
+    }
+    50% {
+      background-position: 200% center;
+    }
+  }
+
+  /* Smooth gradient flow animation for text */
+  @keyframes gradient-flow {
+    0% {
+      background-position: 0% center;
+    }
+    25% {
+      background-position: 25% center;
+    }
+    50% {
+      background-position: 100% center;
+    }
+    75% {
+      background-position: 150% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+
+  /* Ultra-smooth gradient animation - no sharp line */
+  @keyframes gradient-smooth {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  /* Smooth shimmer without sharp edge */
+  @keyframes shimmer-smooth {
+    0% {
+      background-position: -100% 50%;
+    }
+    100% {
+      background-position: 200% 50%;
+    }
+  }
 }
 
 /* =============================

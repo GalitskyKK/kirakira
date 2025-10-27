@@ -65,8 +65,8 @@ export function MobileTabNavigation({ className }: MobileTabNavigationProps) {
   return (
     <div
       className={clsx(
-        'border-t border-neutral-200/50 bg-white/80 shadow-2xl backdrop-blur-xl',
-        'dark:border-neutral-700/50 dark:bg-neutral-900/80',
+        'border-t border-neutral-200/50 bg-white/90 backdrop-blur-xl',
+        'dark:border-neutral-700/50 dark:bg-neutral-900/90',
         'fixed bottom-0 left-0 right-0 z-[9999]',
         'safe-area-inset-bottom',
         className
@@ -77,6 +77,8 @@ export function MobileTabNavigation({ className }: MobileTabNavigationProps) {
         left: 0,
         right: 0,
         zIndex: 9999,
+        boxShadow:
+          '0 -8px 32px -8px rgba(0, 0, 0, 0.12), 0 -2px 8px rgba(0, 0, 0, 0.04)',
       }}
     >
       <div className="flex">
@@ -115,40 +117,22 @@ export function MobileTabNavigation({ className }: MobileTabNavigationProps) {
                 </motion.div>
               )}
 
-              {/* Icon with sparkle effect when active */}
+              {/* Icon - без пульсирующей точки (активный индикатор уже есть полоса) */}
               <motion.div
                 className="relative mb-1"
                 animate={
                   isActive
                     ? {
-                        scale: [1, 1.15, 1],
-                        rotate: [0, 5, 0],
+                        scale: [1, 1.1, 1],
                       }
                     : {}
                 }
                 transition={{
-                  duration: 0.5,
+                  duration: 0.3,
                   ease: 'easeInOut',
                 }}
               >
                 {tab.icon}
-                {/* Sparkle effect */}
-                {isActive && (
-                  <motion.div
-                    className="absolute -right-1 -top-1 h-2 w-2 rounded-full"
-                    animate={{
-                      opacity: [0.5, 1, 0.5],
-                      scale: [0.8, 1.2, 0.8],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                    }}
-                  >
-                    <div className="bg-kira-400 animate-sparkle h-full w-full rounded-full" />
-                  </motion.div>
-                )}
               </motion.div>
 
               {/* No labels - icons only */}

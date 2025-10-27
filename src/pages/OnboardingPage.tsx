@@ -221,7 +221,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
   const isLastStep = currentStep === ONBOARDING_STEPS.length - 1
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-garden-50 to-blue-50 p-2 dark:from-gray-900 dark:to-gray-800 sm:p-4">
+    <div className="from-kira-50 flex min-h-screen items-center justify-center bg-gradient-to-br via-garden-50 to-neutral-50 p-2 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900 sm:p-4">
       <div className="mx-auto w-full max-w-2xl">
         {/* Progress indicators */}
         <div className="mb-8 flex justify-center">

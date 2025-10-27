@@ -33,15 +33,18 @@ export function MobileLayout() {
   }, [currentUser?.telegramId, loadCurrency])
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-garden-50 to-green-50 pb-20 dark:from-gray-900 dark:to-gray-800 sm:pb-24">
+    <div
+      className="from-kira-50 relative min-h-screen bg-gradient-to-br via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900"
+      style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}
+    >
       {/* Telegram Status - Always visible */}
       <div className="p-3 pb-0 sm:p-4">
         <TelegramStatus />
       </div>
 
       {/* Content Area - React Router Outlet */}
-      <div className="relative overflow-hidden">
-        <div className="w-full px-3 sm:px-4">
+      <div className="relative overflow-x-hidden">
+        <div className="w-full px-3 pb-6 sm:px-4">
           <Outlet />
         </div>
       </div>

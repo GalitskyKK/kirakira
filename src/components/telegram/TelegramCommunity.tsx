@@ -46,7 +46,7 @@ export function TelegramCommunity({ garden: _garden }: TelegramCommunityProps) {
   return (
     <div className="space-y-4">
       {/* Упрощенные табы - только 2 */}
-      <div className="flex space-x-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+      <div className="glass-card flex space-x-1.5 rounded-2xl p-1.5">
         {[
           { id: 'social', label: 'Социальные', icon: Heart },
           { id: 'groups', label: 'Группы', icon: Users },
@@ -56,10 +56,10 @@ export function TelegramCommunity({ garden: _garden }: TelegramCommunityProps) {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as 'social' | 'groups')}
-              className={`flex flex-1 items-center justify-center space-x-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              className={`flex flex-1 items-center justify-center space-x-2 rounded-xl px-3 py-2 text-sm font-medium transition-all ${
                 activeTab === tab.id
-                  ? 'bg-white text-blue-600 shadow-sm dark:bg-gray-700 dark:text-blue-400'
-                  : 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100'
+                  ? 'text-kira-600 dark:text-kira-400 bg-white shadow-md dark:bg-neutral-800'
+                  : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100'
               }`}
             >
               <Icon className="h-4 w-4" />

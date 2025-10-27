@@ -42,12 +42,12 @@ export function ProfilePage() {
   if (!currentUser) {
     return (
       <div className="p-6">
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-6 text-center dark:border-gray-700 dark:bg-gray-800">
+        <div className="glass-card rounded-3xl border border-neutral-200/50 p-6 text-center dark:border-neutral-700/50">
           <div className="mb-4 text-6xl">😔</div>
-          <h2 className="mb-2 text-xl font-bold text-gray-900 dark:text-gray-100">
+          <h2 className="mb-2 text-xl font-bold text-neutral-900 dark:text-neutral-100">
             Пользователь не найден
           </h2>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-neutral-600 dark:text-neutral-400">
             Пожалуйста, авторизуйтесь для просмотра профиля
           </p>
         </div>
@@ -59,7 +59,7 @@ export function ProfilePage() {
   if (profileError != null) {
     return (
       <div className="p-6">
-        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/30">
+        <div className="glass-card rounded-3xl border border-red-200/50 bg-red-50/50 p-6 text-center dark:border-red-800/50 dark:bg-red-900/20">
           <div className="mb-4 text-6xl">🌸</div>
           <h2 className="mb-2 text-xl font-bold text-red-900 dark:text-red-200">
             Упс! Что-то пошло не так

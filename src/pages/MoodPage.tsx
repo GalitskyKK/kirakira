@@ -7,6 +7,7 @@ import {
   StreakFreezeIndicator,
   StreakFreezeModal,
   ThemeShop,
+  TextTyping,
 } from '@/components/ui'
 import { useGardenState, useMoodTracking } from '@/hooks/index.v2'
 import { useStreakFreeze } from '@/hooks/useStreakFreeze'
@@ -49,14 +50,14 @@ export function MoodPage() {
       <div className="space-y-6 p-4">
         {/* Quick Status - serene minimalism */}
         <div className="text-center">
-          <motion.h1
-            className="text-kira-600 dark:text-kira-400 mb-2 text-3xl font-bold"
+          <motion.div
+            className="mb-2 text-3xl font-bold"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            KiraKira
-          </motion.h1>
+            <TextTyping className="" />
+          </motion.div>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
             {!canCheckinToday() ? 'Настроение отмечено' : 'Как дела сегодня?'}
           </p>
