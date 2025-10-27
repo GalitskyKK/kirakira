@@ -37,7 +37,7 @@ export function TelegramStatus() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.9 }}
           transition={{ duration: 0.3 }}
-          className="glass-card fixed left-1/2 top-3 z-50 flex -translate-x-1/2 items-center gap-1.5 rounded-full px-2 py-0.5 shadow-lg"
+          className="glass-card fixed left-3 top-3 z-50 flex -translate-x-1/2 items-center gap-1.5 rounded-full px-2 py-0.5 shadow-lg"
           style={{
             fontSize: '10px',
           }}
