@@ -199,8 +199,8 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
         exit={{ opacity: 0 }}
         onClick={onClose}
       >
-        {/* Overlay that excludes navbar */}
-        <div className="absolute inset-x-0 bottom-[72px] top-0 bg-black/50 backdrop-blur-sm" />
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
         <motion.div
           className="relative flex max-h-[80vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900"
           initial={{ scale: 0.9, opacity: 0 }}

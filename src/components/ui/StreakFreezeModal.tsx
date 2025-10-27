@@ -50,8 +50,8 @@ export function StreakFreezeModal({
             onClick={onClose}
             style={{ paddingBottom: '72px' }}
           >
-            {/* Overlay that excludes navbar */}
-            <div className="absolute inset-x-0 bottom-[72px] top-0 bg-black/60 backdrop-blur-sm" />
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -121,8 +121,8 @@ export function StreakFreezeModal({
           onClick={onClose}
           style={{ paddingBottom: '72px' }}
         >
-          {/* Overlay that excludes navbar */}
-          <div className="absolute inset-x-0 bottom-[72px] top-0 bg-black/60 backdrop-blur-sm" />
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
