@@ -78,7 +78,7 @@ export function MobileTabNavigation({ className }: MobileTabNavigationProps) {
         right: 0,
         zIndex: 9999,
         boxShadow:
-          '0 -8px 32px -8px rgba(0, 0, 0, 0.12), 0 -2px 8px rgba(0, 0, 0, 0.04)',
+          '0 -8px 32px -8px rgba(0, 0, 0, 0.02), 0 -2px 8px rgba(0, 0, 0, 0.04)',
       }}
     >
       <div className="flex">

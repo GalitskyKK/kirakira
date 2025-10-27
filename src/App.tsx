@@ -168,10 +168,12 @@ function App() {
 
     const bgClass = isTelegramEnv
       ? 'bg-[var(--tg-bg-color,#ffffff)]'
-      : 'from-kira-50 min-h-screen bg-gradient-to-br via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900'
+      : 'from-kira-50 bg-gradient-to-br via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900'
 
     return (
-      <div className={`flex items-center justify-center ${bgClass}`}>
+      <div
+        className={`flex min-h-screen items-center justify-center ${bgClass}`}
+      >
         <motion.div
           className="text-center"
           initial={{ opacity: 0, scale: 0.9 }}
