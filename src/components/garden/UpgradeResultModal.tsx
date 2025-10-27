@@ -4,6 +4,7 @@
  */
 
 import { motion, AnimatePresence } from 'framer-motion'
+import { createPortal } from 'react-dom'
 import { type GardenElement, type RarityLevel } from '@/types/garden'
 import { CheckCircle, XCircle, Sparkles } from 'lucide-react'
 import { useState, useEffect } from 'react'
@@ -63,6 +64,7 @@ export function UpgradeResultModal({
   }, [isOpen, success, newRarity]) // ✅ Включаем все зависимости
 
   if (!isOpen) return null
+  if (typeof window === 'undefined') return null
 
   const getRarityLabel = (rarity: RarityLevel): string => {
     switch (rarity) {
@@ -98,7 +100,7 @@ export function UpgradeResultModal({
     }
   }
 
-  return (
+  return createPortal(
     <AnimatePresence mode="wait">
       {/* Анимация улучшения (поверх модалки) */}
       {showAnimation && newRarity !== undefined && newRarity !== null && (
@@ -243,6 +245,7 @@ export function UpgradeResultModal({
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   )
 }

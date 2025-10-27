@@ -4,6 +4,7 @@
  */
 
 import { motion, AnimatePresence } from 'framer-motion'
+import { createPortal } from 'react-dom'
 import {
   type GardenElement,
   RarityLevel,
@@ -101,7 +102,10 @@ export function UpgradeConfirmModal({
     }
   }
 
-  return (
+  if (!isOpen) return null
+  if (typeof window === 'undefined') return null
+
+  return createPortal(
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
         {/* Backdrop */}
@@ -317,6 +321,7 @@ export function UpgradeConfirmModal({
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   )
 }
