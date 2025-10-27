@@ -2,51 +2,125 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-/* Custom fonts */
+/* Custom fonts - modern, clean typography */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
 
-/* Base styles */
+/* Base styles - serene yet dynamic */
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;
   }
 
   body {
-    @apply bg-white text-gray-900;
+    @apply bg-neutral-50 text-neutral-900;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background: linear-gradient(135deg, #fdf4ff 0%, #f0fdfa 50%, #fff7ed 100%);
   }
 
-  /* Темная тема для body */
+  /* Темная тема для body - organic, evolving */
   :root.dark body {
-    @apply bg-gray-900 text-gray-100;
+    @apply bg-neutral-900 text-neutral-100;
+    background: linear-gradient(135deg, #171717 0%, #262626 50%, #1f1f1f 100%);
   }
 
   * {
-    @apply border-gray-200;
+    @apply border-neutral-200;
   }
 
   /* Темная тема для границ */
   :root.dark * {
-    @apply border-gray-700;
+    @apply border-neutral-700;
   }
 
-  /* Focus styles */
+  /* Focus styles - iridescent glow */
   *:focus {
-    @apply outline-none;
+    @apply ring-kira-400 outline-none ring-2 ring-opacity-30;
   }
 
-  /* Scrollbar styles */
+  /* Scrollbar styles - minimal, clean */
   ::-webkit-scrollbar {
     @apply w-2;
   }
 
   ::-webkit-scrollbar-track {
-    @apply rounded-full bg-gray-100 dark:bg-gray-800;
+    @apply rounded-full bg-neutral-100 dark:bg-neutral-800;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500;
+    @apply bg-kira-300 hover:bg-kira-400 dark:bg-kira-600 dark:hover:bg-kira-500 rounded-full;
+  }
+}
+
+/* Sparkle effects - subtle glittering (kira = glittering) */
+@layer utilities {
+  .sparkle-container {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .sparkle-effect {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: linear-gradient(45deg, #d946ef, #8b5cf6, #e879f9);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: sparkle 3s ease-in-out infinite;
+  }
+
+  /* Iridescent shimmer gradient */
+  .iridescent-gradient {
+    background: linear-gradient(
+      135deg,
+      #d946ef 0%,
+      #8b5cf6 25%,
+      #e879f9 50%,
+      #8b5cf6 75%,
+      #d946ef 100%
+    );
+    background-size: 400% 400%;
+    animation: shimmer 3s linear infinite;
+  }
+
+  /* Glassmorphism for modern cards */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+
+  .dark .glass-card {
+    background: rgba(17, 17, 17, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Floating animation */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  /* Glow effect for interactive elements */
+  .glow-on-hover {
+    transition: all 0.3s ease;
+  }
+
+  .glow-on-hover:hover {
+    box-shadow: 0 0 20px rgba(217, 70, 239, 0.3);
+  }
+
+  /* Empty state styling - seeds theme */
+  .empty-state {
+    @apply text-neutral-400;
+    font-style: italic;
+  }
+
+  .empty-state::before {
+    content: '🌱';
+    display: inline-block;
+    margin-right: 8px;
   }
 }
 

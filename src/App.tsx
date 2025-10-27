@@ -168,7 +168,7 @@ function App() {
 
     const bgClass = isTelegramEnv
       ? 'bg-[var(--tg-bg-color,#ffffff)]'
-      : 'bg-gradient-to-br from-garden-50 to-green-50'
+      : 'bg-gradient-to-br from-kira-50 via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900'
 
     return (
       <div
@@ -180,12 +180,24 @@ function App() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="mb-4 text-6xl">🌸</div>
-          <h1 className="mb-4 text-2xl font-bold text-[var(--tg-text-color,#000000)]">
+          <motion.div
+            className="mb-4 text-6xl"
+            animate={{
+              y: [0, -10, 0],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          >
+            ✨
+          </motion.div>
+          <h1 className="from-kira-600 via-kira-500 mb-6 bg-gradient-to-r to-garden-500 bg-clip-text text-4xl font-bold text-transparent">
             KiraKira
           </h1>
           <LoadingSpinner size="lg" />
-          <p className="mt-4 text-[var(--tg-hint-color,#666666)]">
+          <p className="mt-4 text-neutral-600 dark:text-neutral-400">
             {isTelegramEnv
               ? '🌱 Инициализируем ваш эмоциональный сад...'
               : 'Загружаем ваш сад...'}
@@ -194,13 +206,13 @@ function App() {
           {/* Прогресс бар инициализации */}
           {initState.progress > 0 && (
             <div className="mt-4 w-full max-w-xs">
-              <div className="mb-2 flex justify-between text-xs text-[var(--tg-hint-color,#666666)]">
+              <div className="mb-2 flex justify-between text-xs text-neutral-600 dark:text-neutral-400">
                 <span>Прогресс</span>
                 <span>{initState.progress}%</span>
               </div>
-              <div className="h-2 w-full rounded-full bg-gray-200">
+              <div className="h-2 w-full rounded-full bg-neutral-200 dark:bg-neutral-700">
                 <div
-                  className="h-2 rounded-full bg-gradient-to-r from-green-400 to-blue-500 transition-all duration-300"
+                  className="from-kira-400 via-kira-500 h-2 rounded-full bg-gradient-to-r to-garden-400 transition-all duration-300"
                   style={{ width: `${initState.progress}%` }}
                 />
               </div>
@@ -209,11 +221,11 @@ function App() {
 
           {/* Дружелюбное приветствие для Telegram пользователей в проде */}
           {isTelegramEnv && telegramUser && !isDevelopment && (
-            <div className="mt-4 rounded-lg bg-blue-100/50 p-3">
-              <p className="text-sm text-[var(--tg-hint-color,#666666)] dark:text-gray-100">
+            <div className="glass-card mt-4 rounded-2xl p-4">
+              <p className="text-sm text-neutral-700 dark:text-neutral-200">
                 👋 Добро пожаловать, {telegramUser.firstName}!
               </p>
-              <p className="mt-1 text-xs text-[var(--tg-hint-color,#666666)] dark:text-gray-100">
+              <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-300">
                 🔄 Подготавливаем ваш персональный сад
               </p>
             </div>
@@ -221,7 +233,7 @@ function App() {
 
           {/* 🔍 РАСШИРЕННАЯ ДИАГНОСТИКА - только в development режиме */}
           {isDevelopment && isTelegramEnv && (
-            <div className="mt-4 space-y-2 rounded-lg bg-yellow-100/50 p-3 text-xs">
+            <div className="glass-card mt-4 space-y-2 rounded-2xl bg-yellow-50/50 p-3 text-xs dark:bg-yellow-900/20">
               <div className="font-semibold">
                 🔍 Диагностика Telegram (Dev Mode):
               </div>
@@ -289,11 +301,11 @@ function App() {
 
           {/* Приветствие в dev режиме с дополнительной информацией */}
           {isDevelopment && isTelegramEnv && telegramUser && (
-            <div className="mt-4 rounded-lg bg-green-100/50 p-3">
-              <p className="text-sm text-[var(--tg-hint-color,#666666)] dark:text-gray-100">
+            <div className="glass-card mt-4 rounded-2xl p-3">
+              <p className="text-sm text-neutral-700 dark:text-neutral-200">
                 👋 Добро пожаловать, {telegramUser.firstName}!
               </p>
-              <p className="mt-1 text-xs text-[var(--tg-hint-color,#666666)] dark:text-gray-100">
+              <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-300">
                 🔄 Автоматическая синхронизация через Telegram
               </p>
             </div>
@@ -319,7 +331,7 @@ function App() {
       console.log('🔍 РЕНДЕРИМ ERROR STATE')
     }
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-red-50 to-orange-50">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-red-50 via-orange-50 to-neutral-50 dark:from-neutral-900 dark:to-neutral-800">
         <motion.div
           className="mx-auto max-w-md p-8 text-center"
           initial={{ opacity: 0, y: 20 }}
@@ -327,22 +339,24 @@ function App() {
           transition={{ duration: 0.5 }}
         >
           <div className="mb-4 text-6xl">⚠️</div>
-          <h1 className="mb-4 text-2xl font-bold text-gray-900">
+          <h1 className="mb-4 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
             Ошибка инициализации
           </h1>
-          <p className="mb-6 text-gray-600">{initState.error}</p>
+          <p className="mb-6 text-neutral-600 dark:text-neutral-400">
+            {initState.error}
+          </p>
           <div className="space-y-3">
             {initState.canRetry && (
               <button
                 onClick={() => initState.initialize()}
-                className="w-full rounded-lg bg-blue-500 px-6 py-3 text-white transition-colors hover:bg-blue-600"
+                className="bg-kira-500 hover:bg-kira-600 w-full rounded-2xl px-6 py-3 text-white transition-all hover:shadow-lg"
               >
                 🔄 Попробовать снова
               </button>
             )}
             <button
               onClick={() => window.location.reload()}
-              className="w-full rounded-lg bg-red-500 px-6 py-3 text-white transition-colors hover:bg-red-600"
+              className="w-full rounded-2xl bg-red-500 px-6 py-3 text-white transition-all hover:bg-red-600 hover:shadow-lg"
             >
               ⚡ Перезагрузить страницу
             </button>

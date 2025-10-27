@@ -30,28 +30,28 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
 
     const variantClasses = {
       default: [
-        'bg-white dark:bg-gray-800',
-        'border border-gray-200 dark:border-gray-700',
-        hover && 'hover:border-garden-300 dark:hover:border-garden-600',
+        'bg-white dark:bg-neutral-900',
+        'border border-neutral-200 dark:border-neutral-700',
+        hover && 'hover:border-kira-300 dark:hover:border-kira-600',
         clickable && 'cursor-pointer',
       ],
       elevated: [
-        'bg-white dark:bg-gray-800',
-        'shadow-lg dark:shadow-gray-900/25',
-        hover && 'hover:shadow-xl dark:hover:shadow-gray-900/50',
+        'bg-white dark:bg-neutral-900',
+        'shadow-lg dark:shadow-neutral-900/40',
+        hover && 'hover:shadow-xl dark:hover:shadow-neutral-900/60',
         clickable && 'cursor-pointer',
       ],
       outlined: [
         'bg-transparent',
-        'border-2 border-garden-300 dark:border-garden-600',
-        hover && 'hover:border-garden-400 dark:hover:border-garden-500',
+        'border-2 border-kira-300 dark:border-kira-600',
+        hover && 'hover:border-kira-400 dark:hover:border-kira-500',
         clickable && 'cursor-pointer',
       ],
       glass: [
-        'bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm',
-        'border border-white/20 dark:border-gray-700/50',
-        'shadow-lg dark:shadow-gray-900/25',
-        hover && 'hover:bg-white/90 dark:hover:bg-gray-900/90',
+        'bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl',
+        'border border-white/30 dark:border-neutral-700/50',
+        'shadow-xl dark:shadow-neutral-900/40',
+        hover && 'hover:bg-white/90 dark:hover:bg-neutral-900/90',
         clickable && 'cursor-pointer',
       ],
     }
@@ -108,8 +108,8 @@ export function CardHeader({ children, className }: CardHeaderProps) {
   return (
     <div
       className={clsx(
-        'border-b border-gray-200 px-4 py-3 dark:border-gray-700',
-        'font-semibold text-gray-900 dark:text-gray-100',
+        'border-b border-neutral-200 px-4 py-3 dark:border-neutral-700',
+        'font-semibold text-neutral-900 dark:text-neutral-100',
         className
       )}
     >
@@ -136,8 +136,8 @@ export function CardFooter({ children, className }: CardFooterProps) {
   return (
     <div
       className={clsx(
-        'border-t border-gray-200 px-4 py-3 dark:border-gray-700',
-        'bg-gray-50 dark:bg-gray-800',
+        'border-t border-neutral-200 px-4 py-3 dark:border-neutral-700',
+        'bg-neutral-50 dark:bg-neutral-800',
         className
       )}
     >

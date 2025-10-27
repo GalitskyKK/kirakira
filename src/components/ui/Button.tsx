@@ -38,31 +38,32 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantClasses = {
       primary: [
-        'bg-garden-500 text-white',
-        'hover:bg-garden-600 focus:ring-garden-500',
-        'disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:text-gray-500 dark:disabled:text-gray-400',
-        'shadow-sm hover:shadow-md dark:shadow-gray-900/25',
+        'bg-kira-500 text-white',
+        'hover:bg-kira-600 focus:ring-kira-500',
+        'disabled:bg-neutral-300 dark:disabled:bg-neutral-600 disabled:text-neutral-500 dark:disabled:text-neutral-400',
+        'shadow-lg hover:shadow-xl dark:shadow-neutral-900/25',
+        'relative overflow-hidden',
       ],
       secondary: [
-        'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100',
-        'hover:bg-gray-200 dark:hover:bg-gray-600 focus:ring-gray-500',
-        'disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:text-gray-400',
+        'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100',
+        'hover:bg-neutral-200 dark:hover:bg-neutral-700 focus:ring-neutral-500',
+        'disabled:bg-neutral-50 dark:disabled:bg-neutral-900 disabled:text-neutral-400',
       ],
       outline: [
-        'border-garden-300 dark:border-garden-600 text-garden-700 dark:text-garden-300 bg-transparent',
-        'hover:bg-garden-50 dark:hover:bg-garden-900/30 focus:ring-garden-500',
-        'disabled:border-gray-200 dark:disabled:border-gray-700 disabled:text-gray-400',
+        'border-kira-300 dark:border-kira-600 text-kira-700 dark:text-kira-300 bg-transparent',
+        'hover:bg-kira-50 dark:hover:bg-kira-900/30 focus:ring-kira-500',
+        'disabled:border-neutral-200 dark:disabled:border-neutral-700 disabled:text-neutral-400',
       ],
       ghost: [
-        'text-garden-700 dark:text-garden-300 bg-transparent',
-        'hover:bg-garden-50 dark:hover:bg-garden-900/30 focus:ring-garden-500',
-        'disabled:text-gray-400',
+        'text-kira-700 dark:text-kira-300 bg-transparent',
+        'hover:bg-kira-50 dark:hover:bg-kira-900/30 focus:ring-kira-500',
+        'disabled:text-neutral-400',
       ],
       danger: [
         'bg-red-500 text-white',
         'hover:bg-red-600 focus:ring-red-500',
-        'disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:text-gray-500 dark:disabled:text-gray-400',
-        'shadow-sm hover:shadow-md dark:shadow-gray-900/25',
+        'disabled:bg-neutral-300 dark:disabled:bg-neutral-600 disabled:text-neutral-500 dark:disabled:text-neutral-400',
+        'shadow-lg hover:shadow-xl dark:shadow-neutral-900/25',
       ],
     }
 
@@ -88,8 +89,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           className
         )}
         disabled={disabledState}
-        {...(!disabledState && { whileTap: { scale: 0.98 } })}
-        {...(!disabledState && { whileHover: { scale: 1.02 } })}
+        {...(!disabledState && { whileTap: { scale: 0.95 } })}
+        {...(!disabledState && { whileHover: { scale: 1.03 } })}
         transition={{
           type: 'spring',
           stiffness: 400,

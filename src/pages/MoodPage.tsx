@@ -47,20 +47,25 @@ export function MoodPage() {
   return (
     <>
       <div className="space-y-6 p-4">
-        {/* Quick Status */}
+        {/* Quick Status - serene minimalism */}
         <div className="text-center">
-          <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-gray-100">
-            🌸 KiraKira
-          </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <motion.h1
+            className="text-kira-600 dark:text-kira-400 mb-2 text-3xl font-bold"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            KiraKira
+          </motion.h1>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
             {!canCheckinToday() ? 'Настроение отмечено' : 'Как дела сегодня?'}
           </p>
 
-          {/* Currency Display + Streak Freezes - общий контейнер */}
-          <div className="mt-3 flex items-center justify-center">
-            <div className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-green-500/10 via-purple-500/10 to-blue-500/10 px-4 py-2 text-sm">
+          {/* Currency Display + Streak Freezes - общий контейнер - modern glass */}
+          <div className="mt-4 flex items-center justify-center">
+            <div className="glass-card flex items-center gap-3 rounded-2xl px-4 py-2 text-sm">
               <div
-                className="cursor-pointer rounded-lg px-2 py-1 transition-all hover:from-green-500/20 hover:via-blue-500/20 hover:to-purple-500/20"
+                className="hover:bg-kira-50 dark:hover:bg-kira-950/30 cursor-pointer rounded-xl px-2 py-1 transition-all"
                 onClick={() => setIsThemeShopOpen(true)}
               >
                 <CurrencyDisplay
@@ -73,7 +78,7 @@ export function MoodPage() {
 
               {/* Разделитель */}
               {freezeData && (
-                <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
+                <div className="h-6 w-px bg-neutral-300 dark:bg-neutral-600" />
               )}
 
               {/* 🧊 Заморозки стрика */}
@@ -104,98 +109,116 @@ export function MoodPage() {
         {/* Mood Check-in */}
         <MoodCheckin />
 
-        {/* Quick Stats Cards */}
+        {/* Quick Stats Cards - soft pastels */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-gradient-to-br from-garden-50 to-green-50 p-4 dark:from-garden-900/30 dark:to-green-900/30">
-            <div className="text-2xl font-bold text-garden-600 dark:text-garden-400">
+          <motion.div
+            className="glass-card rounded-3xl bg-gradient-to-br from-garden-100/50 to-garden-200/30 p-5 dark:from-garden-900/40 dark:to-garden-800/40"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <div className="text-3xl font-bold text-garden-600 dark:text-garden-400">
               {gardenStats.totalElements}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
               Растений
             </div>
-          </div>
+          </motion.div>
 
-          <div className="rounded-2xl bg-gradient-to-br from-orange-50 to-yellow-50 p-4 dark:from-orange-900/30 dark:to-yellow-900/30">
-            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+          <motion.div
+            className="glass-card from-kira-100/50 to-kira-200/30 dark:from-kira-900/40 dark:to-kira-800/40 rounded-3xl bg-gradient-to-br p-5"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <div className="text-kira-600 dark:text-kira-400 text-3xl font-bold">
               {garden?.streak ?? 0}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
               Дней подряд
             </div>
-          </div>
+          </motion.div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Quick Actions - glass cards */}
         <div className="space-y-3">
-          <button
+          <motion.button
             onClick={() => navigate('/mobile/garden')}
-            className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+            className="glass-card w-full rounded-3xl p-4 text-left transition-all hover:bg-white/90 dark:hover:bg-neutral-900/90"
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
           >
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-medium text-gray-900 dark:text-gray-100">
+                <div className="font-semibold text-neutral-900 dark:text-neutral-100">
                   Мой сад
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="text-sm text-neutral-600 dark:text-neutral-400">
                   {gardenStats.totalElements > 0
                     ? `${gardenStats.totalElements} растений`
                     : 'Вырастите первое растение'}
                 </div>
               </div>
-              <div className="text-2xl">🌱</div>
+              <div className="text-3xl">🌱</div>
             </div>
-          </button>
+          </motion.button>
 
-          <button
+          <motion.button
             onClick={() => navigate('/mobile/tasks')}
-            className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+            className="glass-card w-full rounded-3xl p-4 text-left transition-all hover:bg-white/90 dark:hover:bg-neutral-900/90"
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
           >
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-medium text-gray-900 dark:text-gray-100">
+                <div className="font-semibold text-neutral-900 dark:text-neutral-100">
                   Ежедневные задания
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="text-sm text-neutral-600 dark:text-neutral-400">
                   Выполняйте и получайте награды
                 </div>
               </div>
-              <div className="text-2xl">🏆</div>
+              <div className="text-3xl">🏆</div>
             </div>
-          </button>
+          </motion.button>
 
-          <button
+          <motion.button
             onClick={() => navigate('/mobile/community')}
-            className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+            className="glass-card w-full rounded-3xl p-4 text-left transition-all hover:bg-white/90 dark:hover:bg-neutral-900/90"
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
           >
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-medium text-gray-900 dark:text-gray-100">
+                <div className="font-semibold text-neutral-900 dark:text-neutral-100">
                   Комьюнити
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="text-sm text-neutral-600 dark:text-neutral-400">
                   Челленджи и друзья
                 </div>
               </div>
-              <div className="text-2xl">👥</div>
+              <div className="text-3xl">👥</div>
             </div>
-          </button>
+          </motion.button>
 
-          <button
+          <motion.button
             onClick={() => navigate('/mobile/stats')}
-            className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+            className="glass-card w-full rounded-3xl p-4 text-left transition-all hover:bg-white/90 dark:hover:bg-neutral-900/90"
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
           >
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-medium text-gray-900 dark:text-gray-100">
+                <div className="font-semibold text-neutral-900 dark:text-neutral-100">
                   Статистика
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="text-sm text-neutral-600 dark:text-neutral-400">
                   Аналитика настроения
                 </div>
               </div>
-              <div className="text-2xl">📊</div>
+              <div className="text-3xl">📊</div>
             </div>
-          </button>
+          </motion.button>
         </div>
 
         {/* 🧊 Модалка заморозки стрика */}
