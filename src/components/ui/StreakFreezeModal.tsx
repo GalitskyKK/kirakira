@@ -46,15 +46,18 @@ export function StreakFreezeModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
             onClick={onClose}
+            style={{ paddingBottom: '72px' }}
           >
+            {/* Overlay that excludes navbar */}
+            <div className="absolute inset-x-0 bottom-[72px] top-0 bg-black/60 backdrop-blur-sm" />
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={e => e.stopPropagation()}
-              className="relative w-full max-w-md rounded-2xl bg-gradient-to-b from-gray-800 to-gray-900 p-6 shadow-2xl"
+              className="relative z-10 w-full max-w-md rounded-2xl bg-gradient-to-b from-gray-800 to-gray-900 p-6 shadow-2xl"
             >
               {/* Закрыть */}
               <button
@@ -114,15 +117,18 @@ export function StreakFreezeModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
           onClick={onClose}
+          style={{ paddingBottom: '72px' }}
         >
+          {/* Overlay that excludes navbar */}
+          <div className="absolute inset-x-0 bottom-[72px] top-0 bg-black/60 backdrop-blur-sm" />
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             onClick={e => e.stopPropagation()}
-            className="relative w-full max-w-md rounded-2xl bg-gradient-to-b from-gray-800 to-gray-900 p-6 shadow-2xl"
+            className="relative z-10 w-full max-w-md rounded-2xl bg-gradient-to-b from-gray-800 to-gray-900 p-6 shadow-2xl"
           >
             {/* Закрыть */}
             <button

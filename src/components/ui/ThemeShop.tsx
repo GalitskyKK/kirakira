@@ -192,15 +192,17 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
         data-modal="theme-shop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
       >
+        {/* Overlay that excludes navbar */}
+        <div className="absolute inset-x-0 bottom-[72px] top-0 bg-black/50 backdrop-blur-sm" />
         <motion.div
-          className="flex max-h-[80vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900"
+          className="relative flex max-h-[80vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900"
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}

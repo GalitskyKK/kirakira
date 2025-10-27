@@ -104,7 +104,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Overlay */}
             <motion.div
-              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              className="absolute inset-x-0 bottom-[72px] top-0 bg-black/50 backdrop-blur-sm"
               variants={overlayVariants}
               initial="hidden"
               animate="visible"
