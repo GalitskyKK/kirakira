@@ -2,11 +2,10 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Users, Calendar, Flame, MapPin, Info } from 'lucide-react'
 import { Button, Card, UserAvatar } from '@/components/ui'
-import { ShelfView, GardenStats, GardenRoomManager } from '@/components/garden'
+import { GardenStats, GardenRoomManager } from '@/components/garden'
 import { useTelegram } from '@/hooks'
 import { useQuestIntegration } from '@/hooks/useQuestIntegration'
 import { useDailyQuests } from '@/hooks/queries/useDailyQuestQueries'
-import { useFriendGardenTheme } from '@/hooks/useFriendGardenTheme'
 import type {
   User,
   GardenElement,
@@ -97,10 +96,13 @@ export function FriendGardenView({
   const [currentRoomIndex, setCurrentRoomIndex] = useState(0)
 
   // Обработчик изменения комнаты
-  const handleRoomChange = useCallback((newRoomIndex: number) => {
-    setCurrentRoomIndex(newRoomIndex)
-    hapticFeedback('light')
-  }, [hapticFeedback])
+  const handleRoomChange = useCallback(
+    (newRoomIndex: number) => {
+      setCurrentRoomIndex(newRoomIndex)
+      hapticFeedback('light')
+    },
+    [hapticFeedback]
+  )
 
   // 📡 Загрузка данных сада друга
   const loadFriendGarden = useCallback(async () => {
@@ -130,6 +132,8 @@ export function FriendGardenView({
 
       console.log(`✅ Friend garden loaded:`, result.data)
       setFriendGarden(result.data)
+      // Сбрасываем индекс комнаты при загрузке нового сада
+      setCurrentRoomIndex(0)
       hapticFeedback('success')
 
       // 🎯 Обновляем прогресс daily quest для посещения сада друга с умной валидацией
@@ -192,11 +196,6 @@ export function FriendGardenView({
     questUpdatedRef.current = false
     void loadFriendGarden()
   }, [loadFriendGarden])
-
-  // 🎨 Получаем тему сада друга
-  const { theme: friendTheme } = useFriendGardenTheme(
-    friendGarden?.friendInfo.gardenTheme
-  )
 
   // 🎨 Конвертируем элементы друга в формат для рендерера
   // 🔑 ВАЖНО: Используем те же функции генерации, что и для собственного сада
@@ -368,7 +367,7 @@ export function FriendGardenView({
               Сад {friendGarden.friendInfo.firstName}
             </h2>
             <p className="text-sm text-gray-600">
-              {friendGarden.total} растений • Полка друга
+              {friendGarden.total} растений • Сад друга
             </p>
           </div>
           <div className="flex items-center space-x-2 text-sm text-gray-600">
