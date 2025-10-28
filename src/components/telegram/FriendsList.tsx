@@ -545,7 +545,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
               }
               className={`relative flex flex-1 items-center justify-center space-x-1 rounded-xl px-1 py-2 text-xs font-medium transition-all sm:px-2 sm:text-sm ${
                 activeView === tab.id
-                  ? 'text-kira-600 dark:text-kira-400 bg-white shadow-md dark:bg-neutral-800'
+                  ? 'bg-white text-kira-600 shadow-md dark:bg-neutral-800 dark:text-kira-400'
                   : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100'
               }`}
             >
@@ -742,7 +742,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
           >
             <div className="text-center">
               <h3 className="text-lg font-semibold">Запросы дружбы</h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Управляйте входящими и исходящими запросами
               </p>
             </div>

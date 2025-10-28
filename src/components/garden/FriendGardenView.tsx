@@ -460,8 +460,10 @@ export function FriendGardenView({
           <div className="mb-4 text-gray-400">
             <span className="text-4xl">🌱</span>
           </div>
-          <h4 className="mb-2 font-medium">Сад пуст</h4>
-          <p className="text-sm text-gray-600">
+          <h4 className="mb-2 font-medium text-gray-900 dark:text-gray-100">
+            Сад пуст
+          </h4>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             {friendGarden.friendInfo.firstName} ещё не добавил элементы в свой
             сад
           </p>

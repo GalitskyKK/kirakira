@@ -36,7 +36,7 @@ export function TelegramCommunity({ garden: _garden }: TelegramCommunityProps) {
       <Card className="p-6 text-center">
         <Users className="mx-auto mb-4 h-12 w-12 text-blue-500" />
         <h3 className="mb-2 text-lg font-semibold">Комьюнити</h3>
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-400">
           Социальные функции доступны только в Telegram Mini App
         </p>
       </Card>
@@ -58,7 +58,7 @@ export function TelegramCommunity({ garden: _garden }: TelegramCommunityProps) {
               onClick={() => setActiveTab(tab.id as 'social' | 'groups')}
               className={`flex flex-1 items-center justify-center space-x-2 rounded-xl px-3 py-2 text-sm font-medium transition-all ${
                 activeTab === tab.id
-                  ? 'text-kira-600 dark:text-kira-400 bg-white shadow-md dark:bg-neutral-800'
+                  ? 'bg-white text-kira-600 shadow-md dark:bg-neutral-800 dark:text-kira-400'
                   : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100'
               }`}
             >
@@ -94,7 +94,7 @@ export function TelegramCommunity({ garden: _garden }: TelegramCommunityProps) {
           >
             <div className="mb-4 text-center">
               <h3 className="text-lg font-semibold">Групповые активности</h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Создавайте совместные сады и групповые челленджи
               </p>
             </div>
@@ -107,7 +107,7 @@ export function TelegramCommunity({ garden: _garden }: TelegramCommunityProps) {
                 </div>
                 <div className="min-w-0 flex-1">
                   <h4 className="font-medium">Создать групповой сад</h4>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     Пригласите семью или друзей создать общий эмоциональный сад
                   </p>
                 </div>
@@ -125,7 +125,7 @@ export function TelegramCommunity({ garden: _garden }: TelegramCommunityProps) {
               <div className="text-center">
                 <Zap className="mx-auto mb-3 h-8 w-8 text-yellow-500" />
                 <h4 className="mb-2 font-medium">Скоро появится!</h4>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Мы работаем над групповыми садами, семейными челленджами и
                   совместной статистикой
                 </p>

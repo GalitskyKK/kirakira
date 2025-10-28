@@ -267,10 +267,10 @@ export function TelegramTestSuite() {
         >
           <Smartphone className="mx-auto h-16 w-16 text-blue-500" />
         </motion.div>
-        <h1 className="mb-2 text-3xl font-bold text-gray-900">
+        <h1 className="mb-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
           Telegram WebApp Test Suite
         </h1>
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-400">
           Проверка совместимости с Telegram Mini Apps API
         </p>
       </div>
@@ -312,7 +312,7 @@ export function TelegramTestSuite() {
 
       {/* Результаты тестов */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-gray-900">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
           Результаты тестов ({tests.filter(t => t.status === 'pass').length}/
           {tests.length} прошли)
         </h2>
@@ -328,8 +328,12 @@ export function TelegramTestSuite() {
               <div className="flex items-start space-x-3">
                 {getStatusIcon(test.status)}
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">{test.name}</h3>
-                  <p className="mt-1 text-sm text-gray-600">{test.message}</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                    {test.name}
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    {test.message}
+                  </p>
                 </div>
               </div>
             </Card>
@@ -339,25 +343,31 @@ export function TelegramTestSuite() {
 
       {/* Информация о среде */}
       <Card className="bg-gray-50 p-6">
-        <h3 className="mb-3 font-semibold text-gray-900">Информация о среде</h3>
+        <h3 className="mb-3 font-semibold text-gray-900 dark:text-gray-100">
+          Информация о среде
+        </h3>
         <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
           <div>
             <strong>User Agent:</strong>
-            <p className="break-all text-gray-600">{navigator.userAgent}</p>
+            <p className="break-all text-gray-600 dark:text-gray-400">
+              {navigator.userAgent}
+            </p>
           </div>
           <div>
             <strong>Window Location:</strong>
-            <p className="break-all text-gray-600">{window.location.href}</p>
+            <p className="break-all text-gray-600 dark:text-gray-400">
+              {window.location.href}
+            </p>
           </div>
           <div>
             <strong>Screen Size:</strong>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
               {window.screen.width}x{window.screen.height}
             </p>
           </div>
           <div>
             <strong>Viewport Size:</strong>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
               {window.innerWidth}x{window.innerHeight}
             </p>
           </div>

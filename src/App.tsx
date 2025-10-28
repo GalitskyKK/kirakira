@@ -193,7 +193,7 @@ function App() {
           >
             ✨
           </motion.div>
-          <h1 className="from-kira-600 via-kira-500 mb-6 bg-gradient-to-r to-garden-500 bg-clip-text text-4xl font-bold text-transparent">
+          <h1 className="mb-6 bg-gradient-to-r from-kira-600 via-kira-500 to-garden-500 bg-clip-text text-4xl font-bold text-transparent">
             KiraKira
           </h1>
           <LoadingSpinner size="lg" />
@@ -212,7 +212,7 @@ function App() {
               </div>
               <div className="h-2 w-full rounded-full bg-neutral-200 dark:bg-neutral-700">
                 <div
-                  className="from-kira-400 via-kira-500 h-2 rounded-full bg-gradient-to-r to-garden-400 transition-all duration-300"
+                  className="h-2 rounded-full bg-gradient-to-r from-kira-400 via-kira-500 to-garden-400 transition-all duration-300"
                   style={{ width: `${initState.progress}%` }}
                 />
               </div>
@@ -349,7 +349,7 @@ function App() {
             {initState.canRetry && (
               <button
                 onClick={() => initState.initialize()}
-                className="bg-kira-500 hover:bg-kira-600 w-full rounded-2xl px-6 py-3 text-white transition-all hover:shadow-lg"
+                className="w-full rounded-2xl bg-kira-500 px-6 py-3 text-white transition-all hover:bg-kira-600 hover:shadow-lg"
               >
                 🔄 Попробовать снова
               </button>

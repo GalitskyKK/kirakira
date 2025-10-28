@@ -29,7 +29,7 @@ export function StreakFreezeIndicator({
         <span className="text-lg">❄️</span>
         <span
           className={`text-sm font-semibold ${
-            manual > 0 ? 'text-blue-400' : 'text-gray-500'
+            manual > 0 ? 'text-blue-400' : 'text-gray-500 dark:text-gray-400'
           }`}
         >
           {manual}

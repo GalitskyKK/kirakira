@@ -24,16 +24,16 @@ function StreakDebugPage({ onBack }: StreakDebugPageProps) {
                   onClick={onBack}
                   className="rounded-lg p-2 transition-colors hover:bg-white/50"
                 >
-                  <ArrowLeft className="h-6 w-6 text-gray-600" />
+                  <ArrowLeft className="h-6 w-6 text-gray-600 dark:text-gray-400" />
                 </button>
               )}
               <div className="flex items-center space-x-3">
                 <Bug className="h-8 w-8 text-red-500" />
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                     Отладка стриков
                   </h1>
-                  <p className="text-gray-600">
+                  <p className="text-gray-600 dark:text-gray-400">
                     Диагностика проблем с подсчетом стриков настроений
                   </p>
                 </div>

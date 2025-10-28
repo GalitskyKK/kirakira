@@ -139,10 +139,10 @@ export function GardenView({ className }: GardenViewProps) {
         <div className="flex h-full items-center justify-center p-8">
           <div className="text-center">
             <div className="mb-4 text-6xl">🌱</div>
-            <h3 className="mb-2 text-lg font-semibold text-gray-900">
+            <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
               Ваш сад пуст
             </h3>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
               Отметьте свое настроение, чтобы вырастить первое растение!
             </p>
           </div>

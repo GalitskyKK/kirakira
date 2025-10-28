@@ -33,7 +33,9 @@ export function RoomNavigator({
       className={clsx(
         'flex items-center justify-between gap-4',
         'rounded-lg px-4 py-3 shadow-sm backdrop-blur-sm transition-colors',
-        isMovingElement ? 'bg-blue-50 ring-2 ring-blue-400' : 'bg-white/80',
+        isMovingElement
+          ? 'bg-blue-50 ring-2 ring-blue-400 dark:bg-blue-900/20 dark:ring-blue-300'
+          : 'bg-white/80 dark:bg-gray-800/80',
         className
       )}
     >
@@ -55,8 +57,8 @@ export function RoomNavigator({
         className={clsx(
           'flex h-10 w-10 items-center justify-center rounded-full transition-all',
           canNavigatePrev
-            ? 'bg-garden-100 text-garden-700 hover:bg-garden-200 active:scale-95'
-            : 'cursor-not-allowed bg-gray-100 text-gray-400'
+            ? 'bg-garden-100 text-garden-700 hover:bg-garden-200 active:scale-95 dark:bg-garden-800 dark:text-garden-300 dark:hover:bg-garden-700'
+            : 'cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500'
         )}
         {...(canNavigatePrev ? { whileTap: { scale: 0.9 } } : {})}
         aria-label="Предыдущая комната"
@@ -73,7 +75,7 @@ export function RoomNavigator({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 10 }}
           transition={{ duration: 0.3 }}
-          className="text-sm font-semibold text-gray-900"
+          className="text-sm font-semibold text-gray-900 dark:text-gray-100"
         >
           {roomName}
         </motion.div>
@@ -100,7 +102,7 @@ export function RoomNavigator({
                   isActive && 'h-2 w-6 bg-garden-500',
                   !isActive && 'h-2 w-2 hover:scale-125',
                   isPrevious && 'bg-garden-300',
-                  isNext && 'bg-gray-300'
+                  isNext && 'bg-gray-300 dark:bg-gray-600'
                 )}
                 whileHover={{ scale: isActive ? 1 : 1.2 }}
                 whileTap={{ scale: 0.9 }}
@@ -126,8 +128,8 @@ export function RoomNavigator({
         className={clsx(
           'flex h-10 w-10 items-center justify-center rounded-full transition-all',
           canNavigateNext
-            ? 'bg-garden-100 text-garden-700 hover:bg-garden-200 active:scale-95'
-            : 'cursor-not-allowed bg-gray-100 text-gray-400'
+            ? 'bg-garden-100 text-garden-700 hover:bg-garden-200 active:scale-95 dark:bg-garden-800 dark:text-garden-300 dark:hover:bg-garden-700'
+            : 'cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500'
         )}
         {...(canNavigateNext ? { whileTap: { scale: 0.9 } } : {})}
         aria-label="Следующая комната"

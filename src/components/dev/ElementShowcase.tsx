@@ -192,7 +192,7 @@ export function ElementShowcase() {
           <h1 className="mb-4 text-4xl font-bold text-gray-800">
             🌿 Все элементы сада KiraKira
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-gray-600 dark:text-gray-400">
             Полная коллекция из {ALL_ELEMENTS.length} элементов с системой
             редкости и сезонными вариациями
           </p>
@@ -229,7 +229,9 @@ export function ElementShowcase() {
                 <div className="font-medium" style={{ color: info.color }}>
                   {info.label}
                 </div>
-                <div className="text-sm text-gray-500">{info.chance}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  {info.chance}
+                </div>
               </div>
             ))}
           </div>

@@ -76,7 +76,7 @@ export function TransactionHistory({
       {/* Фильтры */}
       {showFilters && (
         <div className="flex flex-wrap items-center gap-2">
-          <Filter size={16} className="text-gray-500" />
+          <Filter size={16} className="text-gray-500 dark:text-gray-400" />
 
           {/* Фильтр по типу транзакции */}
           <div className="glass-card flex rounded-2xl p-1.5">
@@ -233,7 +233,7 @@ function FilterButton({
       onClick={onClick}
       className={`rounded-xl px-3 py-1.5 text-xs font-medium transition-all ${
         active
-          ? 'text-kira-600 dark:text-kira-400 bg-white shadow-md dark:bg-neutral-800'
+          ? 'bg-white text-kira-600 shadow-md dark:bg-neutral-800 dark:text-kira-400'
           : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100'
       }`}
     >

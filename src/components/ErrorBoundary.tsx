@@ -50,7 +50,7 @@ export class ErrorBoundary extends React.Component<
             className={`flex min-h-screen items-center justify-center p-4 ${
               isTelegramEnv
                 ? 'bg-[var(--tg-bg-color,#ffffff)] text-[var(--tg-text-color,#000000)]'
-                : 'bg-gradient-to-br from-purple-50 to-pink-50 text-gray-900'
+                : 'bg-gradient-to-br from-purple-50 to-pink-50 text-gray-900 dark:from-purple-900/20 dark:to-pink-900/20 dark:text-gray-100'
             }`}
           >
             <div className="mx-auto max-w-md text-center">
@@ -64,8 +64,8 @@ export class ErrorBoundary extends React.Component<
                 </p>
               </div>
 
-              <div className="mb-6 rounded-2xl bg-white/50 p-6 backdrop-blur-sm">
-                <p className="text-sm text-gray-600">
+              <div className="mb-6 rounded-2xl bg-white/50 p-6 backdrop-blur-sm dark:bg-gray-800/50">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   🌱 Ваш эмоциональный сад временно недоступен, но все ваши
                   данные сохранены в безопасности
                 </p>

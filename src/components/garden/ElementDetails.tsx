@@ -194,7 +194,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
                     { locale: ru }
                   )}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   {formatDistanceToNow(
                     currentElement.unlockDate instanceof Date
                       ? currentElement.unlockDate

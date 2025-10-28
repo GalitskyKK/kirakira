@@ -100,7 +100,7 @@ export function GardenStats({ garden }: GardenStatsProps) {
   }
 
   const rarityColors: Record<string, string> = {
-    common: 'text-gray-600',
+    common: 'text-gray-600 dark:text-gray-400',
     uncommon: 'text-green-600',
     rare: 'text-blue-600',
     epic: 'text-purple-600',

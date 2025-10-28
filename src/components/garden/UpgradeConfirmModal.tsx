@@ -54,7 +54,7 @@ export function UpgradeConfirmModal({
   const getRarityColor = (rarity: RarityLevel): string => {
     switch (rarity) {
       case 'common':
-        return 'text-gray-600'
+        return 'text-gray-600 dark:text-gray-400'
       case 'uncommon':
         return 'text-green-600'
       case 'rare':
@@ -64,7 +64,7 @@ export function UpgradeConfirmModal({
       case 'legendary':
         return 'text-yellow-600'
       default:
-        return 'text-gray-600'
+        return 'text-gray-600 dark:text-gray-400'
     }
   }
 

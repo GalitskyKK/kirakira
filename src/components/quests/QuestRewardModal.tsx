@@ -105,7 +105,7 @@ export function QuestRewardModal({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
-                className="mb-2 text-2xl font-bold text-gray-900"
+                className="mb-2 text-2xl font-bold text-gray-900 dark:text-gray-100"
               >
                 Награда получена!
               </motion.h2>
@@ -115,7 +115,7 @@ export function QuestRewardModal({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
-                className="mb-6 text-gray-600"
+                className="mb-6 text-gray-600 dark:text-gray-400"
               >
                 {rewards.description}
               </motion.p>
@@ -133,7 +133,9 @@ export function QuestRewardModal({
                   <span className="text-xl font-semibold text-green-600">
                     +{rewards.sprouts}
                   </span>
-                  <span className="text-gray-600">ростков</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    ростков
+                  </span>
                 </div>
 
                 {/* Кристаллы */}
@@ -143,7 +145,9 @@ export function QuestRewardModal({
                     <span className="text-xl font-semibold text-purple-600">
                       +{rewards.gems}
                     </span>
-                    <span className="text-gray-600">кристаллов</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      кристаллов
+                    </span>
                   </div>
                 )}
 
@@ -153,7 +157,9 @@ export function QuestRewardModal({
                   <span className="text-xl font-semibold text-yellow-600">
                     +{rewards.experience}
                   </span>
-                  <span className="text-gray-600">опыта</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    опыта
+                  </span>
                 </div>
               </motion.div>
 
@@ -176,7 +182,7 @@ export function QuestRewardModal({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 1 }}
-                className="mt-4 text-xs text-gray-500"
+                className="mt-4 text-xs text-gray-500 dark:text-gray-400"
               >
                 Закроется автоматически через 3 секунды
               </motion.div>
