@@ -6,6 +6,7 @@ import { GardenStats, GardenRoomManager } from '@/components/garden'
 import { useTelegram } from '@/hooks'
 import { useQuestIntegration } from '@/hooks/useQuestIntegration'
 import { useDailyQuests } from '@/hooks/queries/useDailyQuestQueries'
+import { useFriendGardenTheme } from '@/hooks/useFriendGardenTheme'
 import type {
   User,
   GardenElement,
@@ -196,6 +197,11 @@ export function FriendGardenView({
     questUpdatedRef.current = false
     void loadFriendGarden()
   }, [loadFriendGarden])
+
+  // 🎨 Получаем тему сада друга
+  const { theme: friendTheme } = useFriendGardenTheme(
+    friendGarden?.friendInfo.gardenTheme
+  )
 
   // 🎨 Конвертируем элементы друга в формат для рендерера
   // 🔑 ВАЖНО: Используем те же функции генерации, что и для собственного сада
@@ -392,6 +398,7 @@ export function FriendGardenView({
           viewMode={ViewMode.OVERVIEW}
           currentRoomIndex={currentRoomIndex}
           onRoomChange={handleRoomChange}
+          friendTheme={friendTheme} // Передаем тему сада друга
         />
       </Card>
 

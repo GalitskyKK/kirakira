@@ -5,6 +5,7 @@ import { ShelfView } from './ShelfView'
 import { RoomNavigator } from './RoomNavigator'
 import type { GardenElement, ViewMode } from '@/types'
 import { ROOM_TRANSITION_DURATION, SHELVES_PER_ROOM } from '@/types'
+import type { GardenTheme } from '@/hooks/useGardenTheme'
 
 interface GardenRoomManagerProps {
   readonly elements: readonly GardenElement[]
@@ -17,6 +18,7 @@ interface GardenRoomManagerProps {
   readonly onElementClick?: (element: GardenElement) => void
   readonly onElementLongPress?: (element: GardenElement) => void
   readonly onSlotClick?: (shelfIndex: number, position: number) => void
+  readonly friendTheme?: GardenTheme | null // Опциональная тема для сада друга
 }
 
 /**
@@ -41,6 +43,7 @@ export function GardenRoomManager({
   onElementClick,
   onElementLongPress,
   onSlotClick,
+  friendTheme,
 }: GardenRoomManagerProps) {
   // Используем хук для управления комнатами
   const { rooms, currentRoom, navigation } = useGardenRooms({
@@ -195,6 +198,7 @@ export function GardenRoomManager({
               draggedElement={draggedElement ?? null}
               elementBeingMoved={elementBeingMoved ?? null}
               viewMode={viewMode}
+              friendTheme={friendTheme ?? null}
               {...(onElementClick ? { onElementClick } : {})}
               {...(onElementLongPress ? { onElementLongPress } : {})}
               {...(onSlotClick ? { onSlotClick: handleSlotClick } : {})}
