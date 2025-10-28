@@ -181,7 +181,8 @@ function App() {
           transition={{ duration: 0.5 }}
         >
           <motion.div
-            className="mb-4 text-6xl"
+            className="mx-auto mb-4"
+            style={{ width: '120px', height: '120px' }}
             animate={{
               y: [0, -10, 0],
             }}
@@ -191,7 +192,11 @@ function App() {
               ease: 'easeInOut',
             }}
           >
-            ✨
+            <img
+              src="/logo.png"
+              alt="KiraKira"
+              className="h-full w-full object-contain drop-shadow-lg dark:drop-shadow-[0_4px_12px_rgba(255,255,255,0.1)]"
+            />
           </motion.div>
           <h1 className="mb-6 bg-gradient-to-r from-kira-600 via-kira-500 to-garden-500 bg-clip-text text-4xl font-bold text-transparent">
             KiraKira

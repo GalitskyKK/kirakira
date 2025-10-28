@@ -89,6 +89,28 @@
         transition: opacity 0.5s ease-out;
       }
 
+      /* Dark theme support */
+      @media (prefers-color-scheme: dark) {
+        #loading {
+          background: linear-gradient(
+            135deg,
+            #1f1f2e 0%,
+            #171722 50%,
+            #1a1a24 100%
+          );
+        }
+        .loading-content {
+          color: #f5f5f5;
+        }
+        .loading-subtitle {
+          color: #a3a3a3;
+        }
+        .loading-spinner {
+          border: 3px solid #3a3a3a;
+          border-top: 3px solid #a855f7;
+        }
+      }
+
       #loading.hidden {
         opacity: 0;
         pointer-events: none;
@@ -100,9 +122,23 @@
       }
 
       .loading-icon {
-        font-size: 4rem;
-        margin-bottom: 1rem;
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 1.5rem;
         animation: float 2s ease-in-out infinite;
+      }
+
+      .loading-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .loading-icon img {
+          filter: drop-shadow(0 4px 12px rgba(255, 255, 255, 0.1));
+        }
       }
 
       .loading-title {
@@ -166,7 +202,9 @@
     <!-- Loading screen -->
     <div id="loading">
       <div class="loading-content">
-        <div class="loading-icon">✨</div>
+        <div class="loading-icon">
+          <img src="/logo.png" alt="KiraKira" />
+        </div>
         <div class="loading-title">KiraKira</div>
         <div class="loading-subtitle">Загружаем ваш сад...</div>
         <div class="loading-spinner"></div>
