@@ -54,7 +54,7 @@ export function QuestRewardModal({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="relative mx-4 max-w-md overflow-hidden rounded-2xl bg-white p-8 text-center"
+            className="relative mx-4 max-w-md overflow-hidden rounded-2xl bg-white p-8 text-center dark:bg-gray-800"
           >
             {/* Confetti эффект */}
             <div className="pointer-events-none absolute inset-0">
@@ -130,7 +130,7 @@ export function QuestRewardModal({
                 {/* Ростки */}
                 <div className="flex items-center justify-center space-x-2">
                   <span className="text-2xl">🌿</span>
-                  <span className="text-xl font-semibold text-green-600">
+                  <span className="text-xl font-semibold text-green-600 dark:text-green-400">
                     +{rewards.sprouts}
                   </span>
                   <span className="text-gray-600 dark:text-gray-400">
@@ -142,7 +142,7 @@ export function QuestRewardModal({
                 {rewards.gems && rewards.gems > 0 && (
                   <div className="flex items-center justify-center space-x-2">
                     <span className="text-2xl">💎</span>
-                    <span className="text-xl font-semibold text-purple-600">
+                    <span className="text-xl font-semibold text-purple-600 dark:text-purple-400">
                       +{rewards.gems}
                     </span>
                     <span className="text-gray-600 dark:text-gray-400">
@@ -154,7 +154,7 @@ export function QuestRewardModal({
                 {/* Опыт */}
                 <div className="flex items-center justify-center space-x-2">
                   <span className="text-2xl">⭐</span>
-                  <span className="text-xl font-semibold text-yellow-600">
+                  <span className="text-xl font-semibold text-yellow-600 dark:text-yellow-400">
                     +{rewards.experience}
                   </span>
                   <span className="text-gray-600 dark:text-gray-400">

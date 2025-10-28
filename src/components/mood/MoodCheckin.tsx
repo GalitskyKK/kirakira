@@ -150,7 +150,7 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
 
           {unlockedElement && (
             <motion.div
-              className="relative mt-6 overflow-hidden rounded-2xl border border-garden-200 bg-gradient-to-br from-garden-50 to-emerald-50 p-6"
+              className="relative mt-6 overflow-hidden rounded-2xl border border-garden-200 bg-gradient-to-br from-garden-50 to-emerald-50 p-6 dark:border-garden-700 dark:from-garden-900/20 dark:to-emerald-900/20"
               initial={{ opacity: 0, scale: 0.8, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{
@@ -209,7 +209,7 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
                   <Sparkles size={24} className="text-garden-600" />
                 </motion.div>
                 <motion.span
-                  className="text-lg font-bold text-garden-800"
+                  className="text-lg font-bold text-garden-800 dark:text-garden-200"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.9 }}
