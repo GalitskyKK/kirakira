@@ -43,6 +43,7 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
   joy: {
     color: '#fbbf24',
     emoji: '😊',
+    imagePath: '/emotes/joy.png',
     label: 'Радость',
     description: 'Чувствую себя счастливо и энергично',
     elementTypes: [
@@ -56,6 +57,7 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
   calm: {
     color: '#06b6d4',
     emoji: '😌',
+    imagePath: '/emotes/calm.png',
     label: 'Спокойствие',
     description: 'Ощущаю умиротворение и баланс',
     elementTypes: [
@@ -68,6 +70,7 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
   stress: {
     color: '#ef4444',
     emoji: '😵‍💫',
+    imagePath: '/emotes/stress.png',
     label: 'Стресс',
     description: 'Чувствую напряжение и беспокойство',
     elementTypes: [
@@ -80,6 +83,7 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
   sadness: {
     color: '#3b82f6',
     emoji: '😔',
+    imagePath: '/emotes/sad.png',
     label: 'Грусть',
     description: 'Ощущаю печаль или меланхолию',
     elementTypes: [
@@ -92,6 +96,7 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
   anger: {
     color: '#dc2626',
     emoji: '😠',
+    imagePath: '/emotes/anger.png',
     label: 'Гнев',
     description: 'Чувствую раздражение или злость',
     elementTypes: [
@@ -104,6 +109,7 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
   anxiety: {
     color: '#8b5cf6',
     emoji: '😰',
+    imagePath: '/emotes/anxiety.png',
     label: 'Тревога',
     description: 'Ощущаю беспокойство и волнение',
     elementTypes: [
@@ -119,6 +125,7 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
 export interface MoodConfig {
   readonly color: string
   readonly emoji: string
+  readonly imagePath: string
   readonly label: string
   readonly description: string
   readonly elementTypes: readonly ElementType[]

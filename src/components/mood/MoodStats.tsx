@@ -4,6 +4,7 @@ import { TrendingUp, Calendar, Target, Award } from 'lucide-react'
 import { Card } from '@/components/ui'
 import { useMoodTracking } from '@/hooks/index.v2'
 import { MOOD_CONFIG } from '@/types/mood'
+import { MoodImage } from './MoodImage'
 import type { MoodType, MoodEntry } from '@/types'
 
 interface MoodStatsProps {
@@ -150,10 +151,10 @@ export function MoodStats({ className }: MoodStatsProps) {
                   transition={{ delay: index * 0.1 }}
                 >
                   <div
-                    className="flex h-6 w-6 items-center justify-center rounded-full text-xs"
+                    className="flex h-6 w-6 items-center justify-center rounded-full"
                     style={{ backgroundColor: `${data.color}20` }}
                   >
-                    {data.emoji}
+                    <MoodImage mood={data.mood} size={16} />
                   </div>
                   <div
                     className="w-2 rounded-t"
@@ -187,7 +188,7 @@ export function MoodStats({ className }: MoodStatsProps) {
                   transition={{ delay: index * 0.1 }}
                 >
                   <div className="flex items-center space-x-2">
-                    <span className="text-lg">{config.emoji}</span>
+                    <MoodImage mood={mood} size={20} />
                     <span className="text-sm text-gray-700 dark:text-gray-300">
                       {config.label}
                     </span>
@@ -227,9 +228,7 @@ export function MoodStats({ className }: MoodStatsProps) {
                   Паттерн настроения
                 </p>
                 <div className="mb-2 flex items-center space-x-2">
-                  <span className="text-lg">
-                    {MOOD_CONFIG[moodRecommendation.mood].emoji}
-                  </span>
+                  <MoodImage mood={moodRecommendation.mood} size={20} />
                   <span className="text-sm text-gray-700 dark:text-gray-300">
                     {MOOD_CONFIG[moodRecommendation.mood].label}
                   </span>

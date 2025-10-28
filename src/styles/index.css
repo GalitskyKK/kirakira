@@ -35,7 +35,7 @@
 
   /* Focus styles - iridescent glow */
   *:focus {
-    @apply ring-kira-400 outline-none ring-2 ring-opacity-30;
+    @apply outline-none ring-2 ring-kira-400 ring-opacity-30;
   }
 
   /* Scrollbar styles - minimal, clean */
@@ -48,7 +48,7 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-kira-300 hover:bg-kira-400 dark:bg-kira-600 dark:hover:bg-kira-500 rounded-full;
+    @apply rounded-full bg-kira-300 hover:bg-kira-400 dark:bg-kira-600 dark:hover:bg-kira-500;
   }
 }
 
@@ -172,6 +172,101 @@
     100% {
       background-position: 200% 50%;
     }
+  }
+
+  /* Mood-specific gradient animations */
+  @keyframes mood-gradient-wave {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  /* Joy gradient - warm, energetic */
+  .mood-gradient-joy {
+    background: linear-gradient(
+      135deg,
+      rgba(251, 191, 36, 0.15) 0%,
+      rgba(245, 158, 11, 0.2) 25%,
+      rgba(251, 191, 36, 0.15) 50%,
+      rgba(245, 158, 11, 0.2) 75%,
+      rgba(251, 191, 36, 0.15) 100%
+    );
+    background-size: 200% 200%;
+    animation: mood-gradient-wave 8s ease-in-out infinite;
+  }
+
+  /* Calm gradient - cool, peaceful */
+  .mood-gradient-calm {
+    background: linear-gradient(
+      135deg,
+      rgba(6, 182, 212, 0.15) 0%,
+      rgba(8, 145, 178, 0.2) 25%,
+      rgba(6, 182, 212, 0.15) 50%,
+      rgba(8, 145, 178, 0.2) 75%,
+      rgba(6, 182, 212, 0.15) 100%
+    );
+    background-size: 200% 200%;
+    animation: mood-gradient-wave 8s ease-in-out infinite;
+  }
+
+  /* Stress gradient - intense, dynamic */
+  .mood-gradient-stress {
+    background: linear-gradient(
+      135deg,
+      rgba(239, 68, 68, 0.15) 0%,
+      rgba(220, 38, 38, 0.2) 25%,
+      rgba(239, 68, 68, 0.15) 50%,
+      rgba(220, 38, 38, 0.2) 75%,
+      rgba(239, 68, 68, 0.15) 100%
+    );
+    background-size: 200% 200%;
+    animation: mood-gradient-wave 6s ease-in-out infinite;
+  }
+
+  /* Sadness gradient - deep, contemplative */
+  .mood-gradient-sadness {
+    background: linear-gradient(
+      135deg,
+      rgba(59, 130, 246, 0.15) 0%,
+      rgba(37, 99, 235, 0.2) 25%,
+      rgba(59, 130, 246, 0.15) 50%,
+      rgba(37, 99, 235, 0.2) 75%,
+      rgba(59, 130, 246, 0.15) 100%
+    );
+    background-size: 200% 200%;
+    animation: mood-gradient-wave 10s ease-in-out infinite;
+  }
+
+  /* Anger gradient - fiery, passionate */
+  .mood-gradient-anger {
+    background: linear-gradient(
+      135deg,
+      rgba(220, 38, 38, 0.15) 0%,
+      rgba(185, 28, 28, 0.2) 25%,
+      rgba(220, 38, 38, 0.15) 50%,
+      rgba(185, 28, 28, 0.2) 75%,
+      rgba(220, 38, 38, 0.15) 100%
+    );
+    background-size: 200% 200%;
+    animation: mood-gradient-wave 5s ease-in-out infinite;
+  }
+
+  /* Anxiety gradient - mysterious, swirling */
+  .mood-gradient-anxiety {
+    background: linear-gradient(
+      135deg,
+      rgba(139, 92, 246, 0.15) 0%,
+      rgba(124, 58, 237, 0.2) 25%,
+      rgba(139, 92, 246, 0.15) 50%,
+      rgba(124, 58, 237, 0.2) 75%,
+      rgba(139, 92, 246, 0.15) 100%
+    );
+    background-size: 200% 200%;
+    animation: mood-gradient-wave 7s ease-in-out infinite;
   }
 }
 

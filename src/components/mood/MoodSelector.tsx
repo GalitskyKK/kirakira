@@ -4,6 +4,7 @@ import { clsx } from 'clsx'
 import { useMoodTracking } from '@/hooks/index.v2'
 import { Button, Card } from '@/components/ui'
 import { MOOD_CONFIG } from '@/types/mood'
+import { MoodImage } from './MoodImage'
 import type { MoodType, MoodIntensity } from '@/types'
 
 interface MoodSelectorProps {
@@ -69,7 +70,7 @@ export function MoodSelector({
       <Card className={className} padding="lg">
         <div className="text-center">
           <div className="mb-4">
-            <div className="mb-3 text-6xl">{moodConfig.emoji}</div>
+            <MoodImage mood={todaysMood.mood} size={96} className="mb-3" />
             <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
               Настроение отмечено
             </h3>
@@ -80,7 +81,7 @@ export function MoodSelector({
 
           <div className="mb-4 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/30">
             <div className="mb-3 flex items-center justify-center space-x-3">
-              <span className="text-3xl">{moodConfig.emoji}</span>
+              <MoodImage mood={todaysMood.mood} size={48} />
               <div className="text-left">
                 <p className="font-semibold text-green-800 dark:text-green-200">
                   {moodConfig.label}
@@ -159,25 +160,33 @@ export function MoodSelector({
                     key={mood}
                     onClick={() => handleMoodSelect(mood)}
                     className={clsx(
-                      'flex flex-col items-center justify-center rounded-xl border-2 p-4 transition-all hover:scale-105',
+                      'relative flex flex-col items-center justify-center overflow-hidden rounded-xl border-2 p-4 transition-all hover:scale-105',
                       selectedMood === mood
-                        ? 'border-kira-500 bg-kira-50/50 dark:bg-kira-900/30 shadow-md'
+                        ? 'border-kira-500 bg-kira-50/50 shadow-md dark:bg-kira-900/30'
                         : 'border-neutral-200 bg-white hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800'
                     )}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <span className="mb-2 text-4xl">{config.emoji}</span>
-                    <span
-                      className={clsx(
-                        'text-sm font-medium',
-                        selectedMood === mood
-                          ? 'text-kira-700 dark:text-kira-300'
-                          : 'text-neutral-700 dark:text-neutral-300'
-                      )}
-                    >
-                      {config.label}
-                    </span>
+                    {/* Переливающийся фон */}
+                    <div
+                      className={`absolute inset-0 rounded-xl mood-gradient-${mood}`}
+                    />
+
+                    {/* Контент поверх фона */}
+                    <div className="relative z-10 flex flex-col items-center">
+                      <MoodImage mood={mood} size={56} className="mb-2" />
+                      <span
+                        className={clsx(
+                          'text-sm font-medium',
+                          selectedMood === mood
+                            ? 'text-kira-700 dark:text-kira-300'
+                            : 'text-neutral-700 dark:text-neutral-300'
+                        )}
+                      >
+                        {config.label}
+                      </span>
+                    </div>
                   </motion.button>
                 )
               })}
@@ -206,7 +215,7 @@ export function MoodSelector({
                     className={clsx(
                       'w-full rounded-xl border-2 p-4 text-left transition-all hover:scale-[1.02]',
                       selectedIntensity === intensity
-                        ? 'border-kira-500 bg-kira-50/50 dark:bg-kira-900/30 shadow-md'
+                        ? 'border-kira-500 bg-kira-50/50 shadow-md dark:bg-kira-900/30'
                         : 'border-neutral-200 bg-white hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800'
                     )}
                     whileHover={{ scale: 1.02 }}
@@ -272,7 +281,7 @@ export function MoodSelector({
               value={note}
               onChange={e => setNote(e.target.value)}
               placeholder="Что вы чувствуете сегодня?"
-              className="focus:border-kira-500 w-full rounded-xl border-2 border-neutral-200 bg-white p-4 text-neutral-900 placeholder-neutral-400 transition-colors focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500"
+              className="w-full rounded-xl border-2 border-neutral-200 bg-white p-4 text-neutral-900 placeholder-neutral-400 transition-colors focus:border-kira-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500"
               rows={4}
               maxLength={200}
             />
@@ -312,9 +321,7 @@ export function MoodSelector({
             animate={{ opacity: 1, y: 0 }}
           >
             <div className="flex items-center space-x-3">
-              <div className="text-2xl">
-                {MOOD_CONFIG[todaysMood.mood].emoji}
-              </div>
+              <MoodImage mood={todaysMood.mood} size={32} />
               <div>
                 <p className="text-sm font-medium text-garden-800 dark:text-garden-200">
                   {MOOD_CONFIG[todaysMood.mood].label}
@@ -355,7 +362,7 @@ export function MoodIcon({
         backgroundColor: `${config.color}20`,
       }}
     >
-      <span style={{ fontSize: size * 0.6 }}>{config.emoji}</span>
+      <MoodImage mood={mood} size={size * 0.6} />
     </div>
   )
 }
