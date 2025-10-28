@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Users, Calendar, Flame, MapPin, Info } from 'lucide-react'
 import { Button, Card, UserAvatar } from '@/components/ui'
-import { ShelfView, GardenStats } from '@/components/garden'
+import { ShelfView, GardenStats, GardenRoomManager } from '@/components/garden'
 import { useTelegram } from '@/hooks'
 import { useQuestIntegration } from '@/hooks/useQuestIntegration'
 import { useDailyQuests } from '@/hooks/queries/useDailyQuestQueries'
@@ -93,6 +93,14 @@ export function FriendGardenView({
   const [selectedElement, setSelectedElement] = useState<GardenElement | null>(
     null
   )
+  // Состояние для управления комнатами сада друга
+  const [currentRoomIndex, setCurrentRoomIndex] = useState(0)
+
+  // Обработчик изменения комнаты
+  const handleRoomChange = useCallback((newRoomIndex: number) => {
+    setCurrentRoomIndex(newRoomIndex)
+    hapticFeedback('light')
+  }, [hapticFeedback])
 
   // 📡 Загрузка данных сада друга
   const loadFriendGarden = useCallback(async () => {
@@ -370,9 +378,9 @@ export function FriendGardenView({
         </div>
       </Card>
 
-      {/* Рендер сада (только для просмотра) */}
+      {/* Рендер сада с поддержкой комнат (только для просмотра) */}
       <Card className="p-2 md:p-4">
-        <ShelfView
+        <GardenRoomManager
           elements={convertedElements}
           selectedElement={
             convertedElements.find(e => e.id === selectedElement?.id) || null
@@ -383,7 +391,8 @@ export function FriendGardenView({
           elementBeingMoved={null} // Никогда не перемещаем элементы у друзей
           draggedElement={null}
           viewMode={ViewMode.OVERVIEW}
-          friendTheme={friendTheme} // Передаем тему сада друга
+          currentRoomIndex={currentRoomIndex}
+          onRoomChange={handleRoomChange}
         />
       </Card>
 

@@ -104,8 +104,6 @@ export function useAppInitialization(
       return false
     }
 
-    setAllDependenciesReady(true)
-
     checkDependencies()
   }, [
     telegramUser,
