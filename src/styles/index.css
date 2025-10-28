@@ -33,9 +33,9 @@
     @apply border-neutral-700;
   }
 
-  /* Focus styles - iridescent glow */
+  /* Убираем все outline и ring эффекты при фокусе */
   *:focus {
-    @apply outline-none ring-2 ring-kira-400 ring-opacity-30;
+    @apply outline-none ring-0;
   }
 
   /* Scrollbar styles - minimal, clean */

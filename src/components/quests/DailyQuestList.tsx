@@ -202,11 +202,11 @@ export function DailyQuestList({
       </AnimatePresence>
 
       {/* Кнопка обновления */}
-      <div className="flex justify-center pt-4">
+      {/* <div className="flex justify-center pt-4">
         <Button onClick={() => refetch()} variant="outline" size="sm">
           Обновить задания
         </Button>
-      </div>
+      </div> */}
     </div>
   )
 }
