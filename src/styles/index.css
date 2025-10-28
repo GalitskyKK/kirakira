@@ -174,29 +174,49 @@
     }
   }
 
-  /* Mood-specific gradient animations */
-  @keyframes mood-gradient-wave {
-    0%,
-    100% {
+  /* Smooth mood gradient animation - subtle shimmer */
+  @keyframes mood-gradient-shimmer {
+    0% {
       background-position: 0% 50%;
     }
     50% {
       background-position: 100% 50%;
     }
+    100% {
+      background-position: 0% 50%;
+    }
   }
 
-  /* Joy gradient - warm, energetic */
+  /* Joy gradient - warm, more visible */
   .mood-gradient-joy {
     background: linear-gradient(
       135deg,
       rgba(251, 191, 36, 0.15) 0%,
       rgba(245, 158, 11, 0.2) 25%,
-      rgba(251, 191, 36, 0.15) 50%,
+      rgba(132, 204, 22, 0.15) 50%,
       rgba(245, 158, 11, 0.2) 75%,
       rgba(251, 191, 36, 0.15) 100%
     );
     background-size: 200% 200%;
-    animation: mood-gradient-wave 8s ease-in-out infinite;
+    animation: mood-gradient-shimmer 12s ease-in-out infinite;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  /* Dark theme Joy gradient */
+  .dark .mood-gradient-joy {
+    background: linear-gradient(
+      135deg,
+      rgba(251, 191, 36, 0.2) 0%,
+      rgba(245, 158, 11, 0.25) 25%,
+      rgba(132, 204, 22, 0.2) 50%,
+      rgba(245, 158, 11, 0.25) 75%,
+      rgba(251, 191, 36, 0.2) 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
   }
 
   /* Calm gradient - cool, peaceful */
@@ -205,26 +225,62 @@
       135deg,
       rgba(6, 182, 212, 0.15) 0%,
       rgba(8, 145, 178, 0.2) 25%,
-      rgba(6, 182, 212, 0.15) 50%,
+      rgba(52, 211, 153, 0.15) 50%,
       rgba(8, 145, 178, 0.2) 75%,
       rgba(6, 182, 212, 0.15) 100%
     );
     background-size: 200% 200%;
-    animation: mood-gradient-wave 8s ease-in-out infinite;
+    animation: mood-gradient-shimmer 14s ease-in-out infinite;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
   }
 
-  /* Stress gradient - intense, dynamic */
+  /* Dark theme Calm gradient */
+  .dark .mood-gradient-calm {
+    background: linear-gradient(
+      135deg,
+      rgba(6, 182, 212, 0.2) 0%,
+      rgba(8, 145, 178, 0.25) 25%,
+      rgba(52, 211, 153, 0.2) 50%,
+      rgba(8, 145, 178, 0.25) 75%,
+      rgba(6, 182, 212, 0.2) 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  /* Stress gradient - intense but controlled */
   .mood-gradient-stress {
     background: linear-gradient(
       135deg,
       rgba(239, 68, 68, 0.15) 0%,
       rgba(220, 38, 38, 0.2) 25%,
-      rgba(239, 68, 68, 0.15) 50%,
+      rgba(244, 114, 182, 0.15) 50%,
       rgba(220, 38, 38, 0.2) 75%,
       rgba(239, 68, 68, 0.15) 100%
     );
     background-size: 200% 200%;
-    animation: mood-gradient-wave 6s ease-in-out infinite;
+    animation: mood-gradient-shimmer 10s ease-in-out infinite;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  /* Dark theme Stress gradient */
+  .dark .mood-gradient-stress {
+    background: linear-gradient(
+      135deg,
+      rgba(239, 68, 68, 0.2) 0%,
+      rgba(220, 38, 38, 0.25) 25%,
+      rgba(244, 114, 182, 0.2) 50%,
+      rgba(220, 38, 38, 0.25) 75%,
+      rgba(239, 68, 68, 0.2) 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
   }
 
   /* Sadness gradient - deep, contemplative */
@@ -233,26 +289,62 @@
       135deg,
       rgba(59, 130, 246, 0.15) 0%,
       rgba(37, 99, 235, 0.2) 25%,
-      rgba(59, 130, 246, 0.15) 50%,
+      rgba(236, 72, 153, 0.15) 50%,
       rgba(37, 99, 235, 0.2) 75%,
       rgba(59, 130, 246, 0.15) 100%
     );
     background-size: 200% 200%;
-    animation: mood-gradient-wave 10s ease-in-out infinite;
+    animation: mood-gradient-shimmer 16s ease-in-out infinite;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
   }
 
-  /* Anger gradient - fiery, passionate */
+  /* Dark theme Sadness gradient */
+  .dark .mood-gradient-sadness {
+    background: linear-gradient(
+      135deg,
+      rgba(59, 130, 246, 0.2) 0%,
+      rgba(37, 99, 235, 0.25) 25%,
+      rgba(236, 72, 153, 0.2) 50%,
+      rgba(37, 99, 235, 0.25) 75%,
+      rgba(59, 130, 246, 0.2) 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  /* Anger gradient - fiery but controlled */
   .mood-gradient-anger {
     background: linear-gradient(
       135deg,
       rgba(220, 38, 38, 0.15) 0%,
       rgba(185, 28, 28, 0.2) 25%,
-      rgba(220, 38, 38, 0.15) 50%,
+      rgba(249, 115, 22, 0.15) 50%,
       rgba(185, 28, 28, 0.2) 75%,
       rgba(220, 38, 38, 0.15) 100%
     );
     background-size: 200% 200%;
-    animation: mood-gradient-wave 5s ease-in-out infinite;
+    animation: mood-gradient-shimmer 8s ease-in-out infinite;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  /* Dark theme Anger gradient */
+  .dark .mood-gradient-anger {
+    background: linear-gradient(
+      135deg,
+      rgba(220, 38, 38, 0.2) 0%,
+      rgba(185, 28, 28, 0.25) 25%,
+      rgba(249, 115, 22, 0.2) 50%,
+      rgba(185, 28, 28, 0.25) 75%,
+      rgba(220, 38, 38, 0.2) 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
   }
 
   /* Anxiety gradient - mysterious, swirling */
@@ -261,12 +353,30 @@
       135deg,
       rgba(139, 92, 246, 0.15) 0%,
       rgba(124, 58, 237, 0.2) 25%,
-      rgba(139, 92, 246, 0.15) 50%,
+      rgba(132, 204, 22, 0.15) 50%,
       rgba(124, 58, 237, 0.2) 75%,
       rgba(139, 92, 246, 0.15) 100%
     );
     background-size: 200% 200%;
-    animation: mood-gradient-wave 7s ease-in-out infinite;
+    animation: mood-gradient-shimmer 13s ease-in-out infinite;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  /* Dark theme Anxiety gradient */
+  .dark .mood-gradient-anxiety {
+    background: linear-gradient(
+      135deg,
+      rgba(139, 92, 246, 0.2) 0%,
+      rgba(124, 58, 237, 0.25) 25%,
+      rgba(132, 204, 22, 0.2) 50%,
+      rgba(124, 58, 237, 0.25) 75%,
+      rgba(139, 92, 246, 0.2) 100%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
   }
 }
 

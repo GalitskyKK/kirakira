@@ -160,28 +160,44 @@ export function MoodSelector({
                     key={mood}
                     onClick={() => handleMoodSelect(mood)}
                     className={clsx(
-                      'relative flex flex-col items-center justify-center overflow-hidden rounded-xl border-2 p-4 transition-all hover:scale-105',
+                      'relative flex flex-col items-center justify-center overflow-hidden rounded-xl border-2 p-4 transition-all duration-300 hover:scale-105',
                       selectedMood === mood
-                        ? 'border-kira-500 bg-kira-50/50 shadow-md dark:bg-kira-900/30'
-                        : 'border-neutral-200 bg-white hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800'
+                        ? 'border-kira-500 bg-white/90 shadow-lg backdrop-blur-sm dark:bg-neutral-800/90'
+                        : 'border-neutral-200 bg-white hover:border-neutral-300 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800 dark:hover:border-neutral-600'
                     )}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    style={{
+                      boxShadow:
+                        selectedMood === mood
+                          ? '0 8px 25px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                          : '0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                    }}
                   >
-                    {/* Переливающийся фон */}
+                    {/* Переливающийся фон с анимацией - более видимый */}
                     <div
-                      className={`absolute inset-0 rounded-xl mood-gradient-${mood}`}
+                      className={clsx(
+                        'absolute inset-0 rounded-xl opacity-40 dark:opacity-50',
+                        mood === 'joy' && 'mood-gradient-joy',
+                        mood === 'calm' && 'mood-gradient-calm',
+                        mood === 'stress' && 'mood-gradient-stress',
+                        mood === 'sadness' && 'mood-gradient-sadness',
+                        mood === 'anger' && 'mood-gradient-anger',
+                        mood === 'anxiety' && 'mood-gradient-anxiety'
+                      )}
                     />
 
-                    {/* Контент поверх фона */}
+                    {/* Контент поверх фона с лучшим контрастом */}
                     <div className="relative z-10 flex flex-col items-center">
-                      <MoodImage mood={mood} size={56} className="mb-2" />
+                      <div className="mb-2 rounded-full bg-white/90 p-3 shadow-md backdrop-blur-sm dark:bg-neutral-600/90 dark:shadow-lg">
+                        <MoodImage mood={mood} size={48} />
+                      </div>
                       <span
                         className={clsx(
-                          'text-sm font-medium',
+                          'text-sm font-medium drop-shadow-sm',
                           selectedMood === mood
-                            ? 'text-kira-700 dark:text-kira-300'
-                            : 'text-neutral-700 dark:text-neutral-300'
+                            ? 'text-kira-800 dark:text-kira-200'
+                            : 'text-neutral-800 dark:text-neutral-200'
                         )}
                       >
                         {config.label}
