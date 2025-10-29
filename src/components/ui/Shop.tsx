@@ -109,47 +109,37 @@ export function Shop({ isOpen, onClose, initialTab = 'themes' }: ShopProps) {
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex-shrink-0 border-b border-gray-200 p-4 dark:border-gray-700 sm:p-6">
+          <div className="flex-shrink-0 border-b border-gray-200 p-4 dark:border-gray-700">
             <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
-                  🛒 Магазин
-                </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Персонализация и улучшения для вашего сада
-                </p>
-              </div>
-              <button
-                onClick={onClose}
-                className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-                aria-label="Закрыть магазин"
-              >
-                <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-              </button>
-            </div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
+                🛒 Магазин
+              </h2>
 
-            {/* Balance Display */}
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 p-3 dark:from-green-900/20 dark:to-emerald-900/20">
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Ростки
-                </p>
-                <div className="mt-1 flex items-center gap-2">
-                  <Leaf className="h-4 w-4 text-green-500" />
-                  <span className="text-xl font-bold text-gray-900 dark:text-white">
-                    {userCurrency?.sprouts || 0}
-                  </span>
-                </div>
-              </div>
+              <div className="flex items-center gap-3">
+                {/* Balance Display - Компактная версия */}
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 px-2.5 py-1.5 dark:from-green-900/20 dark:to-emerald-900/20">
+                    <Leaf className="h-4 w-4 text-green-500" />
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">
+                      {userCurrency?.sprouts || 0}
+                    </span>
+                  </div>
 
-              <div className="rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 p-3 dark:from-blue-900/20 dark:to-cyan-900/20">
-                <p className="text-xs text-gray-600 dark:text-gray-400">Гемы</p>
-                <div className="mt-1 flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-blue-500" />
-                  <span className="text-xl font-bold text-gray-900 dark:text-white">
-                    {userCurrency?.gems || 0}
-                  </span>
+                  <div className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 px-2.5 py-1.5 dark:from-blue-900/20 dark:to-cyan-900/20">
+                    <Zap className="h-4 w-4 text-blue-500" />
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">
+                      {userCurrency?.gems || 0}
+                    </span>
+                  </div>
                 </div>
+
+                <button
+                  onClick={onClose}
+                  className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                  aria-label="Закрыть магазин"
+                >
+                  <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                </button>
               </div>
             </div>
           </div>

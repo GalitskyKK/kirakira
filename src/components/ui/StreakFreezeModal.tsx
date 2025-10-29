@@ -284,7 +284,7 @@ export function StreakFreezeModal({
                   disabled={isLoading}
                   fullWidth
                   variant="secondary"
-                  className="border border-green-500/50 bg-green-500/10 hover:bg-green-500/20"
+                  className="border border-green-500/50 bg-green-500/10 hover:bg-green-500/20 dark:border-green-400/50 dark:bg-green-400/10 dark:hover:bg-green-400/20"
                 >
                   <span className="mr-2 text-lg">🛒</span>
                   Купить{' '}

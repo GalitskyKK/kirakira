@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Snowflake, Leaf, Zap, Info, Check } from 'lucide-react'
+import { Snowflake, Check, Leaf, Zap } from 'lucide-react'
 import { useCurrencyStore } from '@/stores/currencyStore'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { buyStreakFreeze } from '@/api/streakFreezeService'
@@ -145,13 +145,13 @@ export function FreezeShopSection() {
       )}
 
       {/* Info Alert - Компактная версия */}
-      <div className="mb-4 flex gap-2 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-xs text-gray-700 dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-gray-300">
+      {/* <div className="mb-4 flex gap-2 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-xs text-gray-700 dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-gray-300">
         <Info className="h-4 w-4 flex-shrink-0 text-yellow-600 dark:text-yellow-500" />
         <p>
           Заморозки защищают стрик. Ручные - вручную, авто - автоматически при
           пропуске.
         </p>
-      </div>
+      </div> */}
 
       {/* Freeze Products Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -347,11 +347,11 @@ export function FreezeShopSection() {
       </div>
 
       {/* Additional Info */}
-      <div className="mt-6 rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
-        <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
+      <div className="mt-4 rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+        <h4 className="mb-1 font-medium text-gray-900 dark:text-white">
           💡 Полезная информация
         </h4>
-        <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+        <ul className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
           <li>
             • Ручные заморозки можно накапливать до {freezeData?.max || 3} штук
             (зависит от уровня)
