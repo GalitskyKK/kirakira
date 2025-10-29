@@ -23,8 +23,11 @@ export function MoodPage() {
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
   const currentUser = userData?.user
-  const { loadCurrency } = useCurrencyStore()
+  const { userCurrency, loadCurrency } = useCurrencyStore()
   const [isThemeShopOpen, setIsThemeShopOpen] = useState(false)
+  const [shopInitialTab, setShopInitialTab] = useState<'themes' | 'freezes'>(
+    'themes'
+  )
 
   // 🧊 Заморозки стрика
   const {
@@ -235,7 +238,18 @@ export function MoodPage() {
             }}
             onUseFreeze={useFreeze}
             onResetStreak={resetStreak as (() => Promise<void>) | undefined}
+            onBuyFreeze={() => {
+              closeModal()
+              setShopInitialTab('freezes')
+              setIsThemeShopOpen(true)
+            }}
             isLoading={freezeLoading}
+            {...(userCurrency && {
+              userCurrency: {
+                sprouts: userCurrency.sprouts,
+                gems: userCurrency.gems,
+              },
+            })}
           />
         )}
       </div>
@@ -243,7 +257,11 @@ export function MoodPage() {
       {/* Shop Modal - вынесен за пределы space-y-6 */}
       <Shop
         isOpen={isThemeShopOpen}
-        onClose={() => setIsThemeShopOpen(false)}
+        onClose={() => {
+          setIsThemeShopOpen(false)
+          setShopInitialTab('themes')
+        }}
+        initialTab={shopInitialTab}
       />
     </>
   )

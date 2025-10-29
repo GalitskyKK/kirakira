@@ -20,6 +20,10 @@ interface StreakFreezeModalProps {
   readonly onResetStreak?: (() => Promise<void>) | undefined
   readonly onBuyFreeze?: () => void
   readonly isLoading?: boolean
+  readonly userCurrency?: {
+    readonly sprouts: number
+    readonly gems: number
+  }
 }
 
 export function StreakFreezeModal({
@@ -32,10 +36,18 @@ export function StreakFreezeModal({
   onResetStreak,
   onBuyFreeze,
   isLoading = false,
+  userCurrency,
 }: StreakFreezeModalProps) {
   const hasEnoughManual = availableFreezes.manual >= missedDays
   const hasAuto = availableFreezes.auto > 0
   const canRecover = missedDays <= 7
+
+  // Проверяем, хватает ли денег на покупку заморозки
+  // Стоимость: 500 sprouts за ручную, 1000 за авто
+  const manualFreezeCost = 500
+  const canAffordManualFreeze =
+    userCurrency && userCurrency.sprouts >= manualFreezeCost * missedDays
+  const showBuyButton = !hasEnoughManual && !hasAuto && canAffordManualFreeze
 
   // Если пропущено больше 7 дней - стрик потерян безвозвратно
   if (missedDays > 7) {
@@ -266,16 +278,18 @@ export function StreakFreezeModal({
               )}
 
               {/* Купить в магазине */}
-              {!hasEnoughManual && onBuyFreeze && (
+              {showBuyButton && onBuyFreeze && (
                 <Button
                   onClick={onBuyFreeze}
                   disabled={isLoading}
                   fullWidth
                   variant="secondary"
-                  className="border border-blue-500/50"
+                  className="border border-green-500/50 bg-green-500/10 hover:bg-green-500/20"
                 >
                   <span className="mr-2 text-lg">🛒</span>
-                  Купить заморозку в магазине
+                  Купить{' '}
+                  {missedDays > 1 ? `${missedDays} заморозок` : 'заморозку'} (
+                  {manualFreezeCost * missedDays} 🌿)
                 </Button>
               )}
 

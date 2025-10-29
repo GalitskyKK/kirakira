@@ -5,10 +5,12 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Palette, Snowflake, Sparkles } from 'lucide-react'
+import { X, Palette, Snowflake, Sparkles, Leaf, Zap } from 'lucide-react'
 
 import { ThemeShopSection } from './ThemeShopSection'
 import { FreezeShopSection } from './FreezeShopSection'
+import { useCurrencyStore } from '@/stores/currencyStore'
+import { useTelegramId } from '@/hooks/useTelegramId'
 
 export interface ShopProps {
   readonly isOpen: boolean
@@ -33,6 +35,15 @@ const SHOP_TABS: readonly TabConfig[] = [
 
 export function Shop({ isOpen, onClose, initialTab = 'themes' }: ShopProps) {
   const [activeTab, setActiveTab] = useState<ShopTab>(initialTab)
+  const { userCurrency, loadCurrency } = useCurrencyStore()
+  const telegramId = useTelegramId()
+
+  // Загружаем валюту при открытии
+  useEffect(() => {
+    if (isOpen && telegramId) {
+      void loadCurrency(telegramId)
+    }
+  }, [isOpen, telegramId, loadCurrency])
 
   // Блокируем скролл при открытии модалки
   useEffect(() => {
@@ -98,22 +109,49 @@ export function Shop({ isOpen, onClose, initialTab = 'themes' }: ShopProps) {
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700 sm:p-6">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
-                🛒 Магазин
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Персонализация и улучшения для вашего сада
-              </p>
+          <div className="flex-shrink-0 border-b border-gray-200 p-4 dark:border-gray-700 sm:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
+                  🛒 Магазин
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Персонализация и улучшения для вашего сада
+                </p>
+              </div>
+              <button
+                onClick={onClose}
+                className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                aria-label="Закрыть магазин"
+              >
+                <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+              </button>
             </div>
-            <button
-              onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-              aria-label="Закрыть магазин"
-            >
-              <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-            </button>
+
+            {/* Balance Display */}
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 p-3 dark:from-green-900/20 dark:to-emerald-900/20">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Ростки
+                </p>
+                <div className="mt-1 flex items-center gap-2">
+                  <Leaf className="h-4 w-4 text-green-500" />
+                  <span className="text-xl font-bold text-gray-900 dark:text-white">
+                    {userCurrency?.sprouts || 0}
+                  </span>
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 p-3 dark:from-blue-900/20 dark:to-cyan-900/20">
+                <p className="text-xs text-gray-600 dark:text-gray-400">Гемы</p>
+                <div className="mt-1 flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-blue-500" />
+                  <span className="text-xl font-bold text-gray-900 dark:text-white">
+                    {userCurrency?.gems || 0}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Tabs */}

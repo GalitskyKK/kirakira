@@ -119,22 +119,6 @@ export function ThemeShopSection() {
 
   return (
     <div className="p-4 sm:p-6">
-      {/* Balance Display */}
-      <div className="mb-6 flex items-center justify-between rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 p-4 dark:from-green-900/20 dark:to-emerald-900/20">
-        <div>
-          <p className="text-sm text-gray-600 dark:text-gray-400">Ваш баланс</p>
-          <div className="mt-1 flex items-center gap-2">
-            <Leaf className="h-5 w-5 text-green-500" />
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">
-              {userCurrency?.sprouts || 0}
-            </span>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              ростков
-            </span>
-          </div>
-        </div>
-      </div>
-
       {/* Themes Grid */}
       {isLoadingThemes ? (
         <div className="flex items-center justify-center py-12">

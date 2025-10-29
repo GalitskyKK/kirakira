@@ -33,7 +33,7 @@ export function FreezeShopSection() {
       setFreezeData({
         manual: userData.user.stats.streakFreezes || 0,
         auto: userData.user.stats.autoFreezes || 0,
-        max: 10, // TODO: получать из уровня пользователя
+        max: 5, // TODO: получать из уровня пользователя
         canAccumulate: true,
       })
     }
@@ -114,73 +114,43 @@ export function FreezeShopSection() {
 
   return (
     <div className="p-4 sm:p-6">
-      {/* Balance Display */}
-      <div className="mb-6 grid grid-cols-2 gap-4">
-        <div className="rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 p-4 dark:from-green-900/20 dark:to-emerald-900/20">
-          <p className="text-sm text-gray-600 dark:text-gray-400">Ростки</p>
-          <div className="mt-1 flex items-center gap-2">
-            <Leaf className="h-5 w-5 text-green-500" />
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">
-              {userCurrency?.sprouts || 0}
-            </span>
-          </div>
-        </div>
-
-        <div className="rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 p-4 dark:from-blue-900/20 dark:to-cyan-900/20">
-          <p className="text-sm text-gray-600 dark:text-gray-400">Гемы</p>
-          <div className="mt-1 flex items-center gap-2">
-            <Zap className="h-5 w-5 text-blue-500" />
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">
-              {userCurrency?.gems || 0}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Current Freezes Status */}
+      {/* Current Freezes Status - Компактная версия */}
       {freezeData && (
-        <div className="mb-6 rounded-lg border-2 border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-          <h3 className="mb-3 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
-            <Snowflake className="h-5 w-5 text-blue-500" />
-            Ваши заморозки
-          </h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Ручные заморозки
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {freezeData.manual}
-                <span className="text-sm font-normal text-gray-500">
-                  {' '}
-                  / {freezeData.max}
-                </span>
-              </p>
+        <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Snowflake className="h-4 w-4 text-blue-500" />
+              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                Ваши заморозки
+              </span>
             </div>
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Авто-заморозки
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {freezeData.auto}
-              </p>
+            <div className="flex gap-4 text-sm">
+              <div>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Ручные:{' '}
+                </span>
+                <span className="font-bold text-gray-900 dark:text-white">
+                  {freezeData.manual}/{freezeData.max}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-600 dark:text-gray-400">Авто: </span>
+                <span className="font-bold text-gray-900 dark:text-white">
+                  {freezeData.auto}
+                </span>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Info Banner */}
-      <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20">
-        <div className="flex gap-3">
-          <Info className="h-5 w-5 flex-shrink-0 text-yellow-600 dark:text-yellow-500" />
-          <div className="text-sm text-gray-700 dark:text-gray-300">
-            <p className="mb-1 font-medium">О заморозках стрика</p>
-            <p className="text-gray-600 dark:text-gray-400">
-              Заморозки защищают ваш стрик при пропуске дня. Ручные используются
-              вручную, авто-заморозки срабатывают автоматически.
-            </p>
-          </div>
-        </div>
+      {/* Info Alert - Компактная версия */}
+      <div className="mb-4 flex gap-2 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-xs text-gray-700 dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-gray-300">
+        <Info className="h-4 w-4 flex-shrink-0 text-yellow-600 dark:text-yellow-500" />
+        <p>
+          Заморозки защищают стрик. Ручные - вручную, авто - автоматически при
+          пропуске.
+        </p>
       </div>
 
       {/* Freeze Products Grid */}
