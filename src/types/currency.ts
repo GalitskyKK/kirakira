@@ -108,7 +108,8 @@ export type CurrencySpendReason =
   | 'rearrange_token'
   | 'rearrange_unlimited_day'
   | 'streak_protection'
-  | 'streak_freeze'
+  | 'streak_freeze' // Покупка 1 ручной заморозки
+  | 'auto_streak_freeze' // Покупка 1 авто-заморозки
   | 'mood_reroll'
   // Улучшение элементов
   | 'upgrade_to_uncommon'
@@ -338,7 +339,12 @@ export const SHOP_COSTS: Record<CurrencySpendReason, ShopItemCost> = {
   rearrange_token: { sprouts: 50 },
   rearrange_unlimited_day: { sprouts: 200 },
   streak_protection: { sprouts: 300 },
-  streak_freeze: { sprouts: 500 },
+  // 🧊 ЗАМОРОЗКИ СТРИКА (можно менять валюту по необходимости)
+  streak_freeze: { sprouts: 500 }, // Ручная заморозка (1 шт)
+  auto_streak_freeze: { sprouts: 1000 }, // Авто-заморозка (1 шт) - дороже
+  // Альтернативная конфигурация за гемы (закомментировано):
+  // streak_freeze: { gems: 5 },
+  // auto_streak_freeze: { gems: 10 },
   mood_reroll: { sprouts: 75 },
 
   // Улучшение элементов

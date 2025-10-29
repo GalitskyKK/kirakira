@@ -705,6 +705,189 @@ async function handleGetStreakFreezes(req, res) {
 }
 
 /**
+ * 🛒 Покупка заморозок стрика
+ * POST /api/user?action=buy-streak-freeze
+ * Body: { telegramId, freezeType: 'manual' | 'auto', quantity?: number }
+ */
+async function handleBuyStreakFreeze(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' })
+  }
+
+  try {
+    const { telegramId, freezeType = 'manual', quantity = 1 } = req.body
+
+    if (!telegramId) {
+      return res
+        .status(400)
+        .json({ success: false, error: 'Missing telegramId' })
+    }
+
+    // 🔒 ПРОВЕРКА БЕЗОПАСНОСТИ: Пользователь может покупать только для себя
+    if (!verifyTelegramId(telegramId, req.auth?.telegramId)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden: You can only buy freezes for yourself',
+      })
+    }
+
+    if (!['manual', 'auto'].includes(freezeType)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid freezeType. Must be manual or auto',
+      })
+    }
+
+    if (quantity < 1 || quantity > 10) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid quantity. Must be between 1 and 10',
+      })
+    }
+
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+
+    console.log(
+      `🛒 Buying ${quantity}x ${freezeType} freeze for user ${telegramId}`
+    )
+
+    // 🧊 КОНФИГУРАЦИЯ СТОИМОСТИ (легко меняется)
+    const FREEZE_COSTS = {
+      manual: { sprouts: 500, gems: 0 }, // 🌿 Текущая валюта: ростки
+      auto: { sprouts: 1000, gems: 0 }, // 🌿 Текущая валюта: ростки
+      // Альтернатива за гемы (раскомментировать при необходимости):
+      // manual: { sprouts: 0, gems: 5 },
+      // auto: { sprouts: 0, gems: 10 },
+    }
+
+    const cost = FREEZE_COSTS[freezeType]
+    const currencyType = cost.gems > 0 ? 'gems' : 'sprouts'
+    const totalCost = (cost[currencyType] || 0) * quantity
+
+    // Получаем текущие данные пользователя
+    const { data: user, error: fetchError } = await supabase
+      .from('users')
+      .select('streak_freezes, auto_freezes, level')
+      .eq('telegram_id', telegramId)
+      .single()
+
+    if (fetchError || !user) {
+      console.error('Error fetching user:', fetchError)
+      return res.status(404).json({ success: false, error: 'User not found' })
+    }
+
+    // Получаем максимальное накопление из уровня
+    const { data: levelData } = await supabase
+      .from('gardener_levels')
+      .select('max_streak_freezes')
+      .eq('level', user.level || 1)
+      .single()
+
+    const maxFreezes = levelData?.max_streak_freezes ?? 3
+
+    // Проверяем, можно ли купить (для ручных заморозок есть лимит)
+    if (freezeType === 'manual') {
+      const newAmount = user.streak_freezes + quantity
+      if (newAmount > maxFreezes) {
+        return res.status(400).json({
+          success: false,
+          error: `Превышен лимит накопления (макс: ${maxFreezes}). Текущее количество: ${user.streak_freezes}`,
+          data: {
+            current: user.streak_freezes,
+            max: maxFreezes,
+            canBuy: maxFreezes - user.streak_freezes,
+          },
+        })
+      }
+    }
+
+    // Списываем валюту через RPC функцию
+    const { data: spendResult, error: spendError } = await supabase.rpc(
+      'spend_currency',
+      {
+        p_telegram_id: telegramId,
+        p_currency_type: currencyType,
+        p_amount: totalCost,
+        p_reason:
+          freezeType === 'manual' ? 'streak_freeze' : 'auto_streak_freeze',
+        p_description: `Покупка ${quantity}x ${freezeType === 'manual' ? 'заморозка' : 'авто-заморозка'} стрика`,
+        p_metadata: { freezeType, quantity },
+      }
+    )
+
+    if (spendError) {
+      console.error('❌ Error spending currency:', spendError)
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to process payment',
+      })
+    }
+
+    const spendData = Array.isArray(spendResult) ? spendResult[0] : spendResult
+
+    // Проверяем успешность операции
+    if (!spendData || !spendData.success) {
+      console.log(`⚠️ Insufficient funds for user ${telegramId}`)
+      return res.status(400).json({
+        success: false,
+        error: spendData?.error || 'Недостаточно средств',
+      })
+    }
+
+    // Начисляем заморозки
+    const updates = {}
+    if (freezeType === 'manual') {
+      updates.streak_freezes = Math.min(
+        user.streak_freezes + quantity,
+        maxFreezes
+      )
+    } else {
+      updates.auto_freezes = (user.auto_freezes || 0) + quantity
+    }
+
+    const { data: updated, error: updateError } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('telegram_id', telegramId)
+      .select('streak_freezes, auto_freezes')
+      .single()
+
+    if (updateError) {
+      console.error('Error updating freezes:', updateError)
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to add freezes',
+      })
+    }
+
+    console.log(
+      `✅ Successfully bought ${quantity}x ${freezeType} freeze. New amounts: manual=${updated.streak_freezes}, auto=${updated.auto_freezes}`
+    )
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        freezeType,
+        quantityBought: quantity,
+        newAmount:
+          freezeType === 'manual'
+            ? updated.streak_freezes
+            : updated.auto_freezes,
+        totalCost,
+        currencyUsed: currencyType,
+        newBalance: spendData.balance_after,
+        transactionId: spendData.transaction_id,
+      },
+    })
+  } catch (error) {
+    console.error('Error in handleBuyStreakFreeze:', error)
+    return res
+      .status(500)
+      .json({ success: false, error: 'Internal server error' })
+  }
+}
+
+/**
  * 🎨 НОВЫЙ ЭНДПОИНТ: Обновление темы сада
  * POST /api/user?action=update-garden-theme&telegramId=123
  * Body: { gardenTheme: 'sunset' }
@@ -915,6 +1098,8 @@ async function protectedHandler(req, res) {
         return await handleUpdatePhoto(req, res)
       case 'use-streak-freeze':
         return await handleUseStreakFreeze(req, res)
+      case 'buy-streak-freeze':
+        return await handleBuyStreakFreeze(req, res)
       case 'get-streak-freezes':
         return await handleGetStreakFreezes(req, res)
       case 'reset-streak':
@@ -926,7 +1111,7 @@ async function protectedHandler(req, res) {
       default:
         return res.status(400).json({
           success: false,
-          error: `Unknown action: ${action}. Available actions: stats, update-photo, use-streak-freeze, get-streak-freezes, reset-streak, check-streak, update-garden-theme`,
+          error: `Unknown action: ${action}. Available actions: stats, update-photo, use-streak-freeze, buy-streak-freeze, get-streak-freezes, reset-streak, check-streak, update-garden-theme`,
         })
     }
   } catch (error) {

@@ -23,3 +23,6 @@ export * from './streakFreezeService'
 
 // Daily Quest Service
 export * from './dailyQuestService'
+
+// Streak Freeze Service
+export * from './streakFreezeService'

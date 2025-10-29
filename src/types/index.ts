@@ -8,6 +8,7 @@ export type * from './initialization'
 export type * from './challenges'
 export type * from './currency'
 export type * from './dailyQuests'
+export type * from './streakFreeze'
 
 // Re-export enums and constants (can't use "export type *" for these)
 export {
@@ -29,6 +30,14 @@ export { MoodIntensity, MOOD_CONFIG } from './mood'
 export { AchievementCategory } from './user'
 
 export { InitializationStage } from './initialization'
+
+export {
+  FREEZE_SHOP_CONFIG,
+  FREEZE_DESCRIPTIONS,
+  getFreezeCost,
+  getFreezeCurrencyType,
+  getFreezeCurrencyLabel,
+} from './streakFreeze'
 
 // Common utility types
 export type DeepReadonly<T> = {

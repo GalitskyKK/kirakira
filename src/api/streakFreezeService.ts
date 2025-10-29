@@ -1,197 +1,293 @@
-import { apiGet, apiPost } from '@/utils/apiClient'
-
 /**
- * 🧊 API сервис для работы с заморозками стрика
+ * 🧊 API SERVICE: Работа с заморозками стрика
+ * Полный набор функций для управления заморозками
  */
 
+import { authenticatedFetch } from '@/utils/apiClient'
+import type {
+  BuyStreakFreezeRequest,
+  BuyStreakFreezeResponse,
+} from '@/types/streakFreeze'
+
+// ============================================
+// ТИПЫ ДЛЯ API ЗАПРОСОВ И ОТВЕТОВ
+// ============================================
+
 export interface StreakFreezeData {
-  readonly manual: number // Обычные заморозки
-  readonly auto: number // Авто-заморозки
-  readonly max: number // Максимальное накопление
+  readonly manual: number
+  readonly auto: number
+  readonly max: number
   readonly canAccumulate: boolean
 }
 
-export interface UseStreakFreezeParams {
+interface ApplyStreakFreezeRequest {
   readonly telegramId: number
-  readonly freezeType: 'auto' | 'manual'
+  readonly freezeType: 'manual' | 'auto'
   readonly missedDays: number
 }
 
-export interface UseStreakFreezeResponse {
+interface ApplyStreakFreezeResponse {
   readonly success: boolean
-  readonly freezeType: 'auto' | 'manual'
+  readonly data?: {
+    readonly freezeType: 'manual' | 'auto'
+    readonly missedDays: number
+    readonly remaining: {
+      readonly manual: number
+      readonly auto: number
+    }
+    readonly currentStreak: number
+  }
+  readonly error?: string
+}
+
+interface ResetStreakRequest {
+  readonly telegramId: number
+}
+
+interface ResetStreakResponse {
+  readonly success: boolean
+  readonly data?: {
+    readonly currentStreak: number
+    readonly longestStreak: number
+    readonly message: string
+  }
+  readonly error?: string
+}
+
+interface CheckStreakResponse {
+  readonly success: boolean
+  readonly data?: {
+    readonly missedDays: number
+    readonly currentStreak: number
+    readonly streakState: 'ok' | 'at_risk' | 'broken'
+    readonly lastCheckin: string | null
+  }
+  readonly error?: string
+}
+
+// ============================================
+// API ФУНКЦИИ
+// ============================================
+
+/**
+ * Получает данные о заморозках стрика пользователя
+ */
+export async function getStreakFreezes(
+  telegramId: number
+): Promise<StreakFreezeData> {
+  try {
+    const response = await authenticatedFetch(
+      `/api/user?action=get-streak-freezes&telegramId=${telegramId}`
+    )
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch freezes: ${response.status}`)
+    }
+
+    const result = (await response.json()) as {
+      success: boolean
+      data?: StreakFreezeData
+      error?: string
+    }
+
+    if (!result.success || !result.data) {
+      throw new Error(result.error || 'Failed to get streak freezes')
+    }
+
+    return result.data
+  } catch (error) {
+    console.error('❌ Error getting streak freezes:', error)
+    // Возвращаем дефолтные значения при ошибке
+    return {
+      manual: 0,
+      auto: 0,
+      max: 3,
+      canAccumulate: true,
+    }
+  }
+}
+
+/**
+ * Применяет заморозку стрика (использует одну заморозку)
+ */
+export async function applyStreakFreeze(
+  request: ApplyStreakFreezeRequest
+): Promise<{
+  readonly freezeType: 'manual' | 'auto'
   readonly missedDays: number
   readonly remaining: {
     readonly manual: number
     readonly auto: number
   }
   readonly currentStreak: number
-  readonly error?: string
+}> {
+  try {
+    const response = await authenticatedFetch(
+      '/api/user?action=use-streak-freeze',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+      }
+    )
+
+    if (!response.ok) {
+      const errorData = (await response.json()) as { error?: string }
+      throw new Error(
+        errorData.error || `HTTP ${response.status}: ${response.statusText}`
+      )
+    }
+
+    const result = (await response.json()) as ApplyStreakFreezeResponse
+
+    if (!result.success || !result.data) {
+      throw new Error(result.error || 'Failed to apply streak freeze')
+    }
+
+    console.log('✅ Streak freeze applied successfully:', result.data)
+
+    return result.data
+  } catch (error) {
+    console.error('❌ Error applying streak freeze:', error)
+    throw error
+  }
 }
 
-export interface ResetStreakParams {
-  readonly telegramId: number
-}
-
-export interface ResetStreakResponse {
-  readonly success: boolean
+/**
+ * Сбрасывает стрик пользователя
+ */
+export async function resetStreak(request: ResetStreakRequest): Promise<{
   readonly currentStreak: number
   readonly longestStreak: number
   readonly message: string
-  readonly error?: string
-}
-
-/**
- * Получить количество заморозок стрика
- */
-export async function getStreakFreezes(
-  telegramId: number
-): Promise<StreakFreezeData> {
+}> {
   try {
-    const response = await apiGet<{
-      success: boolean
-      data: StreakFreezeData
-      error?: string
-    }>(`/api/user?action=get-streak-freezes&telegramId=${telegramId}`)
+    const response = await authenticatedFetch('/api/user?action=reset-streak', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    })
 
-    if (!response.success || !response.data) {
-      throw new Error(response.error ?? 'Failed to fetch streak freezes')
+    if (!response.ok) {
+      const errorData = (await response.json()) as { error?: string }
+      throw new Error(
+        errorData.error || `HTTP ${response.status}: ${response.statusText}`
+      )
     }
 
-    return response.data
+    const result = (await response.json()) as ResetStreakResponse
+
+    if (!result.success || !result.data) {
+      throw new Error(result.error || 'Failed to reset streak')
+    }
+
+    console.log('✅ Streak reset successfully:', result.data)
+
+    return result.data
   } catch (error) {
-    console.error('Error getting streak freezes:', error)
+    console.error('❌ Error resetting streak:', error)
     throw error
   }
 }
 
 /**
- * Использовать заморозку стрика
+ * Проверяет состояние стрика пользователя
  */
-export async function applyStreakFreeze(
-  params: UseStreakFreezeParams
-): Promise<UseStreakFreezeResponse> {
-  try {
-    const response = await apiPost<{
-      success: boolean
-      data: UseStreakFreezeResponse
-      error?: string
-    }>('/api/user?action=use-streak-freeze', params)
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error ?? 'Failed to use streak freeze')
-    }
-
-    return response.data
-  } catch (error) {
-    console.error('Error using streak freeze:', error)
-    throw error
-  }
-}
-
-/**
- * Сбросить стрик (без использования заморозок)
- */
-export async function resetStreak(
-  params: ResetStreakParams
-): Promise<ResetStreakResponse> {
-  try {
-    const response = await apiPost<{
-      success: boolean
-      data: ResetStreakResponse
-      error?: string
-    }>('/api/user?action=reset-streak', params)
-
-    if (!response.success || !response.data) {
-      throw new Error(response.error ?? 'Failed to reset streak')
-    }
-
-    return response.data
-  } catch (error) {
-    console.error('Error resetting streak:', error)
-    throw error
-  }
-}
-
-/**
- * Проверить нужна ли заморозка стрика
- * @returns количество пропущенных дней (0 если не нужна заморозка)
- */
-export function checkMissedDays(
-  lastMoodDate: Date | null,
-  currentDate: Date = new Date()
-): number {
-  if (!lastMoodDate) return 0
-
-  const lastMood = new Date(lastMoodDate)
-  lastMood.setHours(0, 0, 0, 0)
-
-  const today = new Date(currentDate)
-  today.setHours(0, 0, 0, 0)
-
-  const diffTime = today.getTime() - lastMood.getTime()
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-
-  // Если последняя запись была вчера или сегодня - всё ОК
-  if (diffDays <= 1) return 0
-
-  // Возвращаем количество пропущенных дней (без сегодняшнего)
-  return diffDays - 1
-}
-
-/**
- * Проверить можно ли восстановить стрик
- */
-export function canRecoverStreak(missedDays: number): boolean {
-  return missedDays > 0 && missedDays <= 7
-}
-
-/**
- * Получить тип заморозки для автоматического использования
- * Приоритет: авто > обычная
- */
-export function getRecommendedFreezeType(
-  missedDays: number,
-  availableFreezes: { manual: number; auto: number }
-): 'auto' | 'manual' | null {
-  // Авто-заморозка только для 1 пропущенного дня
-  if (missedDays === 1 && availableFreezes.auto > 0) {
-    return 'auto'
-  }
-
-  // Обычная заморозка если достаточно
-  if (availableFreezes.manual >= missedDays) {
-    return 'manual'
-  }
-
-  return null
-}
-
-// 🔥 НОВЫЙ СЕРВИС
-export interface CheckStreakResponse {
+export async function checkStreak(telegramId: number): Promise<{
   readonly missedDays: number
   readonly currentStreak: number
   readonly streakState: 'ok' | 'at_risk' | 'broken'
   readonly lastCheckin: string | null
-}
-
-export async function checkStreak(
-  telegramId: number
-): Promise<CheckStreakResponse> {
+}> {
   try {
-    const response = await apiGet<{
-      success: boolean
-      data: CheckStreakResponse
-      error?: string
-    }>(`/api/user?action=check-streak&telegramId=${telegramId}`)
+    const response = await authenticatedFetch(
+      `/api/user?action=check-streak&telegramId=${telegramId}`
+    )
 
-    if (!response.success || !response.data) {
-      throw new Error(response.error ?? 'Failed to check streak')
+    if (!response.ok) {
+      throw new Error(`Failed to check streak: ${response.status}`)
     }
 
-    return response.data
+    const result = (await response.json()) as CheckStreakResponse
+
+    if (!result.success || !result.data) {
+      throw new Error(result.error || 'Failed to check streak')
+    }
+
+    return result.data
   } catch (error) {
-    console.error('Error checking streak:', error)
-    throw error
+    console.error('❌ Error checking streak:', error)
+    // Возвращаем безопасные дефолтные значения
+    return {
+      missedDays: 0,
+      currentStreak: 0,
+      streakState: 'ok',
+      lastCheckin: null,
+    }
+  }
+}
+
+/**
+ * Определяет рекомендуемый тип заморозки на основе пропущенных дней
+ */
+export function getRecommendedFreezeType(
+  missedDays: number,
+  freezeData: StreakFreezeData
+): 'auto' | 'manual' | null {
+  // Если заморозки не нужны
+  if (missedDays <= 0) return null
+
+  // Авто-заморозка приоритетнее и покрывает ровно 1 день
+  if (missedDays === 1 && freezeData.auto > 0) {
+    return 'auto'
+  }
+
+  // Если есть достаточно ручных заморозок
+  if (freezeData.manual >= missedDays) {
+    return 'manual'
+  }
+
+  // Если ничего не доступно
+  return null
+}
+
+/**
+ * Покупка заморозок стрика
+ */
+export async function buyStreakFreeze(
+  request: BuyStreakFreezeRequest
+): Promise<BuyStreakFreezeResponse> {
+  try {
+    const response = await authenticatedFetch(
+      '/api/user?action=buy-streak-freeze',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+      }
+    )
+
+    if (!response.ok) {
+      const errorData = (await response.json()) as { error?: string }
+      throw new Error(
+        errorData.error || `HTTP ${response.status}: ${response.statusText}`
+      )
+    }
+
+    const result = (await response.json()) as BuyStreakFreezeResponse
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to buy streak freeze')
+    }
+
+    console.log('✅ Streak freeze purchased successfully:', result.data)
+
+    return result
+  } catch (error) {
+    console.error('❌ Error buying streak freeze:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
   }
 }

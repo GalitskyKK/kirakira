@@ -6,7 +6,7 @@ import {
   CurrencyDisplay,
   StreakFreezeIndicator,
   StreakFreezeModal,
-  ThemeShop,
+  Shop,
   TextTyping,
 } from '@/components/ui'
 import { useGardenState, useMoodTracking } from '@/hooks/index.v2'
@@ -66,7 +66,7 @@ export function MoodPage() {
           <div className="mt-4 flex items-center justify-center">
             <div className="glass-card flex items-center gap-3 rounded-2xl px-4 py-2 text-sm">
               <div
-                className="hover:bg-kira-50 dark:hover:bg-kira-950/30 cursor-pointer rounded-xl px-2 py-1 transition-all"
+                className="dark:hover:bg-kira-950/30 cursor-pointer rounded-xl px-2 py-1 transition-all hover:bg-kira-50"
                 onClick={() => setIsThemeShopOpen(true)}
               >
                 <CurrencyDisplay
@@ -127,12 +127,12 @@ export function MoodPage() {
           </motion.div>
 
           <motion.div
-            className="glass-card from-kira-100/50 to-kira-200/30 dark:from-kira-900/40 dark:to-kira-800/40 rounded-3xl bg-gradient-to-br p-5"
+            className="glass-card rounded-3xl bg-gradient-to-br from-kira-100/50 to-kira-200/30 p-5 dark:from-kira-900/40 dark:to-kira-800/40"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <div className="text-kira-600 dark:text-kira-400 text-3xl font-bold">
+            <div className="text-3xl font-bold text-kira-600 dark:text-kira-400">
               {garden?.streak ?? 0}
             </div>
             <div className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
@@ -240,8 +240,8 @@ export function MoodPage() {
         )}
       </div>
 
-      {/* Theme Shop Modal - вынесен за пределы space-y-6 */}
-      <ThemeShop
+      {/* Shop Modal - вынесен за пределы space-y-6 */}
+      <Shop
         isOpen={isThemeShopOpen}
         onClose={() => setIsThemeShopOpen(false)}
       />

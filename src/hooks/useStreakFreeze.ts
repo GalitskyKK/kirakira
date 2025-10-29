@@ -10,7 +10,7 @@ import {
   getStreakFreezes,
   type StreakFreezeData,
   getRecommendedFreezeType,
-} from '@/api/streakFreezeService'
+} from '@/api'
 
 /**
  * 🧊 Хук для работы с заморозками стрика (V2 - Серверная логика + React Query)
