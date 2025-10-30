@@ -9,6 +9,7 @@ interface StoneSVGProps {
   isSelected?: boolean
   isHovered?: boolean
   name?: string
+  isVisible?: boolean
 }
 
 export function StoneSVG({
@@ -19,6 +20,7 @@ export function StoneSVG({
   isSelected = false,
   isHovered: _isHovered = false,
   name = 'Stone',
+  isVisible = true,
 }: StoneSVGProps) {
   const getRarityGlow = () => {
     switch (rarity) {
@@ -83,6 +85,7 @@ export function StoneSVG({
   }
 
   const seasonalColors = getSeasonalColors()
+  const repeatInf = isVisible ? Infinity : 0
 
   // Определяем тип камня по имени
   const isGravel =
@@ -536,7 +539,7 @@ export function StoneSVG({
             }}
             transition={{
               duration: 2,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 2.5,
             }}
           >
@@ -614,7 +617,7 @@ export function StoneSVG({
                   transition={{
                     duration: 3,
                     delay: 3 + i * 0.5,
-                    repeat: Infinity,
+                    repeat: repeatInf,
                   }}
                 />
               )
@@ -633,7 +636,7 @@ export function StoneSVG({
               }}
               transition={{
                 duration: 2,
-                repeat: Infinity,
+                repeat: repeatInf,
                 delay: 3.5,
               }}
             />
@@ -666,7 +669,7 @@ export function StoneSVG({
                   }}
                   transition={{
                     duration: 1.5,
-                    repeat: Infinity,
+                    repeat: repeatInf,
                     delay: 4 + i * 0.4,
                   }}
                 />
@@ -693,7 +696,7 @@ export function StoneSVG({
             }}
             transition={{
               duration: 4,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 3,
             }}
           />
@@ -837,7 +840,7 @@ export function StoneSVG({
                   height="1"
                   fill={seasonalColors.decoration}
                   animate={{ opacity: [0.3, 1, 0.3] }}
-                  transition={{ duration: 4, repeat: Infinity, delay: 1 }}
+                  transition={{ duration: 4, repeat: repeatInf, delay: 1 }}
                 />
                 <motion.rect
                   x="20"
@@ -846,7 +849,7 @@ export function StoneSVG({
                   height="1"
                   fill={seasonalColors.decoration}
                   animate={{ opacity: [0.3, 1, 0.3] }}
-                  transition={{ duration: 4, repeat: Infinity, delay: 2 }}
+                  transition={{ duration: 4, repeat: repeatInf, delay: 2 }}
                 />
                 <rect
                   x="10"

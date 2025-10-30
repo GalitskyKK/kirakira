@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
 
 interface GrassSVGProps {
@@ -9,6 +10,7 @@ interface GrassSVGProps {
   isSelected?: boolean
   isHovered?: boolean
   name?: string
+  isVisible?: boolean
 }
 
 export function GrassSVG({
@@ -19,6 +21,7 @@ export function GrassSVG({
   isSelected = false,
   isHovered: _isHovered = false,
   name = 'Grass',
+  isVisible = true,
 }: GrassSVGProps) {
   const getRarityGlow = () => {
     switch (rarity) {
@@ -72,6 +75,14 @@ export function GrassSVG({
   }
 
   const seasonalColors = getSeasonalColors()
+  const repeatInf = isVisible ? Infinity : 0
+  const hashDelay = useMemo(() => {
+    const src = String(name ?? '')
+    let h = 0
+    for (let i = 0; i < src.length; i++) h = (h * 31 + src.charCodeAt(i)) | 0
+    const base = Math.abs(h % 300) / 1000 // 0..0.299
+    return 0.05 + base // 0.05..0.349s
+  }, [name])
 
   // Определяем тип элемента по имени
   const isMoss = name === 'Мох'
@@ -95,7 +106,7 @@ export function GrassSVG({
         type: 'spring',
         stiffness: 300,
         damping: 20,
-        delay: Math.random() * 0.3,
+        delay: hashDelay,
       }}
     >
       <motion.svg
@@ -453,7 +464,7 @@ export function GrassSVG({
             }}
             transition={{
               duration: 2,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 2,
             }}
           >
@@ -492,7 +503,7 @@ export function GrassSVG({
             }}
             transition={{
               duration: 3,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 2,
             }}
           >
@@ -532,7 +543,7 @@ export function GrassSVG({
             }}
             transition={{
               duration: 3,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 2,
               stagger: 0.3,
             }}
@@ -551,7 +562,7 @@ export function GrassSVG({
             }}
             transition={{
               duration: 4,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 2,
             }}
           >
@@ -606,7 +617,7 @@ export function GrassSVG({
           }}
           transition={{
             duration: 3,
-            repeat: Infinity,
+            repeat: repeatInf,
             ease: 'easeInOut',
           }}
           style={{
@@ -640,7 +651,7 @@ export function GrassSVG({
                   }}
                   transition={{
                     duration: 2,
-                    repeat: Infinity,
+                    repeat: repeatInf,
                     delay: i * 0.2,
                     ease: 'easeInOut',
                   }}

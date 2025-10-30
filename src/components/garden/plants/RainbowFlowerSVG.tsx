@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 import { RarityLevel } from '@/types'
 
 interface RainbowFlowerSVGProps {
@@ -8,6 +9,7 @@ interface RainbowFlowerSVGProps {
   isSelected?: boolean
   isHovered?: boolean
   name?: string
+  isVisible?: boolean
 }
 
 export function RainbowFlowerSVG({
@@ -17,6 +19,7 @@ export function RainbowFlowerSVG({
   isSelected = false,
   isHovered: _isHovered = false,
   name: _name = 'Rainbow Flower',
+  isVisible = true,
 }: RainbowFlowerSVGProps) {
   const getRarityGlow = () => {
     switch (rarity) {
@@ -45,6 +48,22 @@ export function RainbowFlowerSVG({
     '#ec4899', // pink
   ]
 
+  const repeatInf = isVisible ? Infinity : 0
+  const pseudoRandom = (seed: number): number => {
+    const x = Math.sin(seed) * 10000
+    return x - Math.floor(x)
+  }
+  const rainbowParticles = useMemo(() => {
+    const count = 12
+    const items = [] as Array<{ key: number; left: string; top: string }>
+    for (let i = 0; i < count; i++) {
+      const left = 20 + pseudoRandom(1100 + i) * 60
+      const top = 20 + pseudoRandom(1200 + i) * 60
+      items.push({ key: i, left: `${left}%`, top: `${top}%` })
+    }
+    return items
+  }, [])
+
   return (
     <motion.div
       className="pixel-container relative flex items-center justify-center"
@@ -70,27 +89,17 @@ export function RainbowFlowerSVG({
     >
       {/* Rainbow particles floating */}
       <div className="pointer-events-none absolute inset-0">
-        {Array.from({ length: 12 }, (_, i) => (
+        {rainbowParticles.map((p, i) => (
           <motion.div
-            key={i}
+            key={p.key}
             className="absolute h-1 w-1 rounded-full"
             style={{
               background: rainbowColors[i % rainbowColors.length],
-              left: `${20 + Math.random() * 60}%`,
-              top: `${20 + Math.random() * 60}%`,
+              left: p.left,
+              top: p.top,
             }}
-            animate={{
-              scale: [0, 1, 0],
-              opacity: [0, 1, 0],
-              rotate: [0, 360],
-              y: [0, -20, 0],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              delay: i * 0.2,
-              ease: 'easeInOut',
-            }}
+            animate={{ scale: [0, 1, 0], opacity: [0, 1, 0], rotate: [0, 360], y: [0, -20, 0] }}
+            transition={{ duration: 3, repeat: repeatInf, delay: i * 0.2, ease: 'easeInOut' }}
           />
         ))}
       </div>
@@ -137,7 +146,7 @@ export function RainbowFlowerSVG({
             }}
             transition={{
               duration: 4,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 2,
             }}
           />
@@ -163,7 +172,7 @@ export function RainbowFlowerSVG({
             }}
             transition={{
               duration: 3,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 2.5,
             }}
           />
@@ -182,7 +191,7 @@ export function RainbowFlowerSVG({
             }}
             transition={{
               duration: 3,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 3,
             }}
           />
@@ -264,7 +273,7 @@ export function RainbowFlowerSVG({
             }}
             transition={{
               duration: 4,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 2,
             }}
           />
@@ -284,7 +293,7 @@ export function RainbowFlowerSVG({
             }}
             transition={{
               duration: 5,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 2.5,
             }}
           />
@@ -305,7 +314,7 @@ export function RainbowFlowerSVG({
           }}
           transition={{
             duration: 8,
-            repeat: Infinity,
+            repeat: repeatInf,
             ease: 'linear',
           }}
           style={{
@@ -332,7 +341,7 @@ export function RainbowFlowerSVG({
                 }}
                 transition={{
                   duration: 2,
-                  repeat: Infinity,
+                  repeat: repeatInf,
                   delay: 1.5 + i * 0.25,
                 }}
               />
@@ -364,8 +373,8 @@ export function RainbowFlowerSVG({
                 opacity: [0.5, 1, 0.5],
               }}
               transition={{
-                fill: { duration: 6, repeat: Infinity },
-                opacity: { duration: 2, repeat: Infinity },
+                fill: { duration: 6, repeat: repeatInf },
+                opacity: { duration: 2, repeat: repeatInf },
                 delay: 2 + i * 0.5,
               }}
             />
@@ -382,7 +391,7 @@ export function RainbowFlowerSVG({
               }}
               transition={{
                 duration: 6,
-                repeat: Infinity,
+                repeat: repeatInf,
                 ease: 'linear',
               }}
               style={{
@@ -409,7 +418,7 @@ export function RainbowFlowerSVG({
                     }}
                     transition={{
                       duration: 2,
-                      repeat: Infinity,
+                      repeat: repeatInf,
                       delay: 3 + i * 0.1,
                     }}
                   />
@@ -451,15 +460,15 @@ export function RainbowFlowerSVG({
               transition={{
                 opacity: {
                   duration: 1.5,
-                  repeat: Infinity,
+                  repeat: repeatInf,
                   delay: 2.5 + i * 0.3,
                 },
                 scale: {
                   duration: 1.5,
-                  repeat: Infinity,
+                  repeat: repeatInf,
                   delay: 2.5 + i * 0.3,
                 },
-                fill: { duration: 4, repeat: Infinity, delay: 3 + i * 0.2 },
+                fill: { duration: 4, repeat: repeatInf, delay: 3 + i * 0.2 },
               }}
             />
           )
@@ -478,9 +487,9 @@ export function RainbowFlowerSVG({
           opacity: [0.4, 0.8, 0.4],
         }}
         transition={{
-          rotate: { duration: 4, repeat: Infinity, ease: 'linear' },
-          scale: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
-          opacity: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+          rotate: { duration: 4, repeat: repeatInf, ease: 'linear' },
+          scale: { duration: 2, repeat: repeatInf, ease: 'easeInOut' },
+          opacity: { duration: 2, repeat: repeatInf, ease: 'easeInOut' },
         }}
       />
     </motion.div>

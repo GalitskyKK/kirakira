@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
 import { FlowerSVG } from './FlowerSVG'
 import { TreeSVG } from './TreeSVG'
 import { CrystalSVG } from './CrystalSVG'
@@ -35,6 +36,24 @@ export function PlantRenderer({
   // Применяем масштаб элемента для разнообразия
   const actualSize = Math.round(size * (element.scale ?? 1.0))
 
+  // Ленивая активация анимаций по видимости
+  const rootRef = useRef<HTMLDivElement | null>(null)
+  const [isVisible, setIsVisible] = useState<boolean>(true)
+
+  useEffect(() => {
+    if (!rootRef.current) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          setIsVisible(entry.isIntersecting)
+        }
+      },
+      { root: null, rootMargin: '0px', threshold: 0.05 }
+    )
+    observer.observe(rootRef.current)
+    return () => observer.disconnect()
+  }, [])
+
   const renderPlant = () => {
     const commonProps = {
       size: actualSize,
@@ -44,6 +63,7 @@ export function PlantRenderer({
       isSelected,
       isHovered,
       name: element.name,
+      isVisible,
     }
 
     switch (element.type) {
@@ -93,7 +113,7 @@ export function PlantRenderer({
   }
 
   return (
-    <div className="relative">
+    <div ref={rootRef} className="relative">
       <motion.div
         className="cursor-pointer"
         onClick={onClick}

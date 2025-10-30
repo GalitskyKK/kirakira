@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
 
 interface DecorationSVGProps {
@@ -9,6 +10,7 @@ interface DecorationSVGProps {
   isSelected?: boolean
   isHovered?: boolean
   name?: string
+  isVisible?: boolean
 }
 
 export function DecorationSVG({
@@ -19,6 +21,7 @@ export function DecorationSVG({
   isSelected = false,
   isHovered: _isHovered = false,
   name = 'Decoration',
+  isVisible = true,
 }: DecorationSVGProps) {
   const getRarityGlow = () => {
     switch (rarity) {
@@ -77,6 +80,32 @@ export function DecorationSVG({
   }
 
   const seasonalColors = getSeasonalColors()
+  const repeatInf = isVisible ? Infinity : 0
+
+  // Мемоизация позиций для вращающихся искр и легендарных эффектов
+  const defaultSparkles = useMemo(() => {
+    const radius = 12
+    return Array.from({ length: 6 }, (_, i) => {
+      const angle = i * 60
+      const x = 16 + Math.cos((angle * Math.PI) / 180) * radius
+      const y = 16 + Math.sin((angle * Math.PI) / 180) * radius
+      return { x, y }
+    })
+  }, [])
+
+  const legendaryDecorationSparkles = useMemo(
+    () => [
+      { x: 4, y: 8 },
+      { x: 28, y: 12 },
+      { x: 2, y: 20 },
+      { x: 30, y: 24 },
+      { x: 8, y: 2 },
+      { x: 24, y: 4 },
+      { x: 12, y: 30 },
+      { x: 20, y: 28 },
+    ],
+    []
+  )
 
   // Определяем тип украшения по имени
   const isFirefly = name === 'Светлячок'
@@ -149,7 +178,7 @@ export function DecorationSVG({
               }}
               transition={{
                 duration: 2,
-                repeat: Infinity,
+                repeat: repeatInf,
                 ease: 'easeInOut',
               }}
             />
@@ -170,7 +199,7 @@ export function DecorationSVG({
             }}
             transition={{
               duration: 0.2,
-              repeat: Infinity,
+              repeat: repeatInf,
               ease: 'easeInOut',
             }}
             style={{
@@ -234,7 +263,7 @@ export function DecorationSVG({
             }}
             transition={{
               duration: 2,
-              repeat: Infinity,
+              repeat: repeatInf,
               ease: 'easeInOut',
               delay: 0.5,
             }}
@@ -296,7 +325,7 @@ export function DecorationSVG({
             }}
             transition={{
               duration: 2,
-              repeat: Infinity,
+              repeat: repeatInf,
               ease: 'easeInOut',
             }}
             style={{
@@ -730,7 +759,7 @@ export function DecorationSVG({
             }}
             transition={{
               duration: 3,
-              repeat: Infinity,
+              repeat: repeatInf,
               ease: 'easeInOut',
             }}
           >
@@ -936,7 +965,7 @@ export function DecorationSVG({
               }}
               transition={{
                 duration: 2,
-                repeat: Infinity,
+                repeat: repeatInf,
               }}
             />
           )}
@@ -2156,40 +2185,33 @@ export function DecorationSVG({
           }}
           transition={{
             duration: 8,
-            repeat: Infinity,
+            repeat: repeatInf,
             ease: 'linear',
           }}
           style={{
             transformOrigin: '16px 16px',
           }}
         >
-          {Array.from({ length: 6 }, (_, i) => {
-            const angle = i * 60
-            const radius = 12
-            const x = 16 + Math.cos((angle * Math.PI) / 180) * radius
-            const y = 16 + Math.sin((angle * Math.PI) / 180) * radius
-
-            return (
-              <motion.rect
-                key={`sparkle-${i}`}
-                x={x}
-                y={y}
-                width="1"
-                height="1"
-                fill={seasonalColors.accent}
-                animate={{
-                  opacity: [0.3, 1, 0.3],
-                  scale: [0.5, 1, 0.5],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  delay: i * 0.3,
-                  ease: 'easeInOut',
-                }}
-              />
-            )
-          })}
+          {defaultSparkles.map((pos, i) => (
+            <motion.rect
+              key={`sparkle-${i}`}
+              x={pos.x}
+              y={pos.y}
+              width="1"
+              height="1"
+              fill={seasonalColors.accent}
+              animate={{
+                opacity: [0.3, 1, 0.3],
+                scale: [0.5, 1, 0.5],
+              }}
+              transition={{
+                duration: 2,
+                repeat: repeatInf,
+                delay: i * 0.3,
+                ease: 'easeInOut',
+              }}
+            />
+          ))}
         </motion.g>
 
         {/* Seasonal decorations */}
@@ -2201,7 +2223,7 @@ export function DecorationSVG({
             }}
             transition={{
               duration: 3,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 2,
             }}
           >
@@ -2262,7 +2284,7 @@ export function DecorationSVG({
             }}
             transition={{
               duration: 2,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 2,
             }}
           >
@@ -2325,40 +2347,25 @@ export function DecorationSVG({
             />
 
             {/* Legendary sparkles */}
-            {Array.from({ length: 8 }, (_, i) => {
-              const positions = [
-                { x: 4, y: 8 },
-                { x: 28, y: 12 },
-                { x: 2, y: 20 },
-                { x: 30, y: 24 },
-                { x: 8, y: 2 },
-                { x: 24, y: 4 },
-                { x: 12, y: 30 },
-                { x: 20, y: 28 },
-              ]
-              const pos = positions[i]
-              if (!pos) return null
-
-              return (
-                <motion.rect
-                  key={`legendary-sparkle-${i}`}
-                  x={pos.x}
-                  y={pos.y}
-                  width="1"
-                  height="1"
-                  fill="#ffffff"
-                  animate={{
-                    opacity: [0, 1, 0],
-                    scale: [0, 1, 0],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    delay: 3.5 + i * 0.2,
-                  }}
-                />
-              )
-            })}
+            {legendaryDecorationSparkles.map((pos, i) => (
+              <motion.rect
+                key={`legendary-sparkle-${i}`}
+                x={pos.x}
+                y={pos.y}
+                width="1"
+                height="1"
+                fill="#ffffff"
+                animate={{
+                  opacity: [0, 1, 0],
+                  scale: [0, 1, 0],
+                }}
+              transition={{
+                duration: 1.5,
+                repeat: repeatInf,
+                delay: 3.5 + i * 0.2,
+              }}
+              />
+            ))}
           </motion.g>
         )}
       </motion.svg>
@@ -2376,7 +2383,7 @@ export function DecorationSVG({
           }}
           transition={{
             duration: 3,
-            repeat: Infinity,
+            repeat: repeatInf,
             ease: 'easeInOut',
           }}
         />

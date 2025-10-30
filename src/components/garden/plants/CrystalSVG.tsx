@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
 
 interface CrystalSVGProps {
@@ -9,6 +10,7 @@ interface CrystalSVGProps {
   isSelected?: boolean
   isHovered?: boolean
   name?: string
+  isVisible?: boolean
 }
 
 export function CrystalSVG({
@@ -19,6 +21,7 @@ export function CrystalSVG({
   isSelected = false,
   isHovered: _isHovered = false,
   name: _name = 'Crystal',
+  isVisible = true,
 }: CrystalSVGProps) {
   const getRarityGlow = () => {
     switch (rarity) {
@@ -83,6 +86,22 @@ export function CrystalSVG({
   }
 
   const seasonalColors = getSeasonalColors()
+  const repeatInf = isVisible ? Infinity : 0
+  const pseudoRandom = (seed: number): number => {
+    const x = Math.sin(seed) * 10000
+    return x - Math.floor(x)
+  }
+  const energyParticles = useMemo(() => {
+    const count = 8
+    const items = [] as Array<{ key: number; left: string; top: string; dx: number }>
+    for (let i = 0; i < count; i++) {
+      const left = 30 + pseudoRandom(800 + i) * 40
+      const top = 20 + pseudoRandom(900 + i) * 60
+      const dx = (pseudoRandom(1000 + i) - 0.5) * 40
+      items.push({ key: i, left: `${left}%`, top: `${top}%`, dx })
+    }
+    return items
+  }, [])
 
   return (
     <motion.div
@@ -110,27 +129,13 @@ export function CrystalSVG({
     >
       {/* Energy particles */}
       <div className="pointer-events-none absolute inset-0">
-        {Array.from({ length: 8 }, (_, i) => (
+        {energyParticles.map((p, i) => (
           <motion.div
-            key={i}
+            key={p.key}
             className="absolute h-1 w-1 rounded-full"
-            style={{
-              background: color,
-              left: `${30 + Math.random() * 40}%`,
-              top: `${20 + Math.random() * 60}%`,
-            }}
-            animate={{
-              y: [0, -30, 0],
-              x: [0, (Math.random() - 0.5) * 40, 0],
-              opacity: [0, 1, 0],
-              scale: [0.5, 1.5, 0.5],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              delay: i * 0.4,
-              ease: 'easeInOut',
-            }}
+            style={{ background: color, left: p.left, top: p.top }}
+            animate={{ y: [0, -30, 0], x: [0, p.dx, 0], opacity: [0, 1, 0], scale: [0.5, 1.5, 0.5] }}
+            transition={{ duration: 3, repeat: repeatInf, delay: i * 0.4, ease: 'easeInOut' }}
           />
         ))}
       </div>
@@ -354,11 +359,11 @@ export function CrystalSVG({
               opacity: [0.4, 1, 0.4],
               scaleY: [1, 1.1, 1],
             }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
+              transition={{
+                duration: 2,
+                repeat: repeatInf,
+                ease: 'easeInOut',
+              }}
           />
 
           {/* Inner glow pixels */}
@@ -615,11 +620,11 @@ export function CrystalSVG({
           scale: [1, 1.2, 1],
           opacity: [0.2, 0.5, 0.2],
         }}
-        transition={{
-          rotate: { duration: 8, repeat: Infinity, ease: 'linear' },
-          scale: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
-          opacity: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
-        }}
+          transition={{
+            rotate: { duration: 8, repeat: repeatInf, ease: 'linear' },
+            scale: { duration: 3, repeat: repeatInf, ease: 'easeInOut' },
+            opacity: { duration: 3, repeat: repeatInf, ease: 'easeInOut' },
+          }}
       />
     </motion.div>
   )

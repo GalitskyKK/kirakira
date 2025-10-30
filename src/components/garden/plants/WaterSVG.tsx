@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
 
 interface WaterSVGProps {
@@ -9,6 +10,7 @@ interface WaterSVGProps {
   isSelected?: boolean
   isHovered?: boolean
   name?: string
+  isVisible?: boolean
 }
 
 export function WaterSVG({
@@ -19,6 +21,7 @@ export function WaterSVG({
   isSelected = false,
   isHovered: _isHovered = false,
   name = 'Water',
+  isVisible = true,
 }: WaterSVGProps) {
   const getRarityGlow = () => {
     switch (rarity) {
@@ -71,6 +74,36 @@ export function WaterSVG({
   }
 
   const seasonalColors = getSeasonalColors()
+  const repeatInf = isVisible ? Infinity : 0
+  // Предварительно мемоизированные позиции для повторяющихся элементов,
+  // чтобы не пересоздавать массивы и объекты на каждом рендере
+  const pondReflectionPositions = useMemo(
+    () => [
+      { x: 12, y: 20 },
+      { x: 18, y: 18 },
+      { x: 14, y: 22 },
+      { x: 20, y: 20 },
+      { x: 16, y: 24 },
+      { x: 10, y: 18 },
+      { x: 22, y: 24 },
+      { x: 8, y: 26 },
+    ],
+    []
+  )
+
+  const legendaryPondSparkles = useMemo(
+    () => [
+      { x: 4, y: 20 },
+      { x: 28, y: 24 },
+      { x: 16, y: 10 },
+      { x: 6, y: 28 },
+      { x: 26, y: 16 },
+      { x: 14, y: 30 },
+    ],
+    []
+  )
+
+  const springDropsIndices = useMemo(() => Array.from({ length: 6 }, (_, i) => i), [])
 
   // Определяем тип воды по названию
   const isPuddle = name === 'Лужа'
@@ -418,7 +451,7 @@ export function WaterSVG({
           </motion.g>
 
           {/* Water droplets */}
-          {Array.from({ length: 6 }, (_, i) => (
+          {springDropsIndices.map((i) => (
             <motion.rect
               key={`spring-drop-${i}`}
               x={12 + i * 2}
@@ -433,7 +466,7 @@ export function WaterSVG({
               }}
               transition={{
                 duration: 2,
-                repeat: Infinity,
+                repeat: repeatInf,
                 delay: 1 + i * 0.2,
                 ease: 'easeOut',
               }}
@@ -922,11 +955,11 @@ export function WaterSVG({
             scale: [1, 1.1, 1],
             opacity: [0.3, 0.8, 0.3],
           }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            delay: 1,
-          }}
+            transition={{
+              duration: 3,
+              repeat: repeatInf,
+              delay: 1,
+            }}
         >
           {/* Concentric ripples */}
           <rect
@@ -956,41 +989,26 @@ export function WaterSVG({
         </motion.g>
 
         {/* Water surface reflections */}
-        {Array.from({ length: 8 }, (_, i) => {
-          const positions = [
-            { x: 12, y: 20 },
-            { x: 18, y: 18 },
-            { x: 14, y: 22 },
-            { x: 20, y: 20 },
-            { x: 16, y: 24 },
-            { x: 10, y: 18 },
-            { x: 22, y: 24 },
-            { x: 8, y: 26 },
-          ]
-          const pos = positions[i]
-          if (!pos) return null
-
-          return (
-            <motion.rect
-              key={`reflection-${i}`}
-              x={pos.x}
-              y={pos.y}
-              width="1"
-              height="1"
-              fill="#ffffff"
-              opacity="0.8"
-              animate={{
-                opacity: [0.4, 0.9, 0.4],
-                scale: [0.8, 1.2, 0.8],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                delay: 1.5 + i * 0.2,
-              }}
-            />
-          )
-        })}
+        {pondReflectionPositions.map((pos, i) => (
+          <motion.rect
+            key={`reflection-${i}`}
+            x={pos.x}
+            y={pos.y}
+            width="1"
+            height="1"
+            fill="#ffffff"
+            opacity="0.8"
+            animate={{
+              opacity: [0.4, 0.9, 0.4],
+              scale: [0.8, 1.2, 0.8],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              delay: 1.5 + i * 0.2,
+            }}
+          />
+        ))}
 
         {/* Seasonal effects */}
         {season === SeasonalVariant.WINTER && (
@@ -1040,7 +1058,7 @@ export function WaterSVG({
             }}
             transition={{
               duration: 2,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 2,
             }}
           >
@@ -1152,38 +1170,25 @@ export function WaterSVG({
             />
 
             {/* Legendary sparkles around pond */}
-            {Array.from({ length: 6 }, (_, i) => {
-              const positions = [
-                { x: 4, y: 20 },
-                { x: 28, y: 24 },
-                { x: 16, y: 10 },
-                { x: 6, y: 28 },
-                { x: 26, y: 16 },
-                { x: 14, y: 30 },
-              ]
-              const pos = positions[i]
-              if (!pos) return null
-
-              return (
-                <motion.rect
-                  key={`legendary-sparkle-${i}`}
-                  x={pos.x}
-                  y={pos.y}
-                  width="1"
-                  height="1"
-                  fill="#ffffff"
-                  animate={{
-                    opacity: [0, 1, 0],
-                    scale: [0, 1, 0],
-                  }}
+            {legendaryPondSparkles.map((pos, i) => (
+              <motion.rect
+                key={`legendary-sparkle-${i}`}
+                x={pos.x}
+                y={pos.y}
+                width="1"
+                height="1"
+                fill="#ffffff"
+                animate={{
+                  opacity: [0, 1, 0],
+                  scale: [0, 1, 0],
+                }}
                   transition={{
                     duration: 1.5,
-                    repeat: Infinity,
+                    repeat: repeatInf,
                     delay: 3.5 + i * 0.3,
                   }}
-                />
-              )
-            })}
+              />
+            ))}
           </motion.g>
         )}
       </motion.svg>

@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 import { RarityLevel } from '@/types'
 
 interface GlowingCrystalSVGProps {
@@ -8,6 +9,7 @@ interface GlowingCrystalSVGProps {
   isSelected?: boolean
   isHovered?: boolean
   name?: string
+  isVisible?: boolean
 }
 
 export function GlowingCrystalSVG({
@@ -17,6 +19,7 @@ export function GlowingCrystalSVG({
   isSelected = false,
   isHovered: _isHovered = false,
   name: _name = 'Glowing Crystal',
+  isVisible = true,
 }: GlowingCrystalSVGProps) {
   const getRarityGlow = () => {
     switch (rarity) {
@@ -32,6 +35,23 @@ export function GlowingCrystalSVG({
         return color
     }
   }
+
+  const repeatInf = isVisible ? Infinity : 0
+  const pseudoRandom = (seed: number): number => {
+    const x = Math.sin(seed) * 10000
+    return x - Math.floor(x)
+  }
+  const energyParticles = useMemo(() => {
+    const count = 15
+    const items = [] as Array<{ key: number; left: string; top: string; dx: number }>
+    for (let i = 0; i < count; i++) {
+      const left = 25 + pseudoRandom(1300 + i) * 50
+      const top = 15 + pseudoRandom(1400 + i) * 70
+      const dx = (pseudoRandom(1500 + i) - 0.5) * 50
+      items.push({ key: i, left: `${left}%`, top: `${top}%`, dx })
+    }
+    return items
+  }, [])
 
   return (
     <motion.div
@@ -59,27 +79,13 @@ export function GlowingCrystalSVG({
     >
       {/* Intense energy particles */}
       <div className="pointer-events-none absolute inset-0">
-        {Array.from({ length: 15 }, (_, i) => (
+        {energyParticles.map((p, i) => (
           <motion.div
-            key={i}
+            key={p.key}
             className="absolute h-1 w-1 rounded-full"
-            style={{
-              background: color,
-              left: `${25 + Math.random() * 50}%`,
-              top: `${15 + Math.random() * 70}%`,
-            }}
-            animate={{
-              y: [0, -40, 0],
-              x: [0, (Math.random() - 0.5) * 50, 0],
-              opacity: [0, 1, 0],
-              scale: [0.5, 2, 0.5],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              delay: i * 0.2,
-              ease: 'easeInOut',
-            }}
+            style={{ background: color, left: p.left, top: p.top }}
+            animate={{ y: [0, -40, 0], x: [0, p.dx, 0], opacity: [0, 1, 0], scale: [0.5, 2, 0.5] }}
+            transition={{ duration: 3, repeat: repeatInf, delay: i * 0.2, ease: 'easeInOut' }}
           />
         ))}
       </div>
@@ -109,7 +115,7 @@ export function GlowingCrystalSVG({
           }}
           transition={{
             scaleX: { duration: 0.8, delay: 0.5 },
-            opacity: { duration: 2, repeat: Infinity },
+            opacity: { duration: 2, repeat: repeatInf },
           }}
         />
 
@@ -313,7 +319,7 @@ export function GlowingCrystalSVG({
             }}
             transition={{
               duration: 1.5,
-              repeat: Infinity,
+              repeat: repeatInf,
               ease: 'easeInOut',
             }}
           />
@@ -365,7 +371,7 @@ export function GlowingCrystalSVG({
             }}
             transition={{
               duration: 1,
-              repeat: Infinity,
+              repeat: repeatInf,
               ease: 'easeInOut',
             }}
           />
@@ -378,7 +384,7 @@ export function GlowingCrystalSVG({
           }}
           transition={{
             duration: 2,
-            repeat: Infinity,
+            repeat: repeatInf,
             delay: 2,
           }}
         >
@@ -466,7 +472,7 @@ export function GlowingCrystalSVG({
           }}
           transition={{
             duration: 4,
-            repeat: Infinity,
+            repeat: repeatInf,
             ease: 'linear',
           }}
           style={{
@@ -501,7 +507,7 @@ export function GlowingCrystalSVG({
                 }}
                 transition={{
                   duration: 2,
-                  repeat: Infinity,
+                  repeat: repeatInf,
                   delay: 2.5 + i * 0.3,
                 }}
               />
@@ -529,7 +535,7 @@ export function GlowingCrystalSVG({
               }}
               transition={{
                 duration: 3,
-                repeat: Infinity,
+                repeat: repeatInf,
                 delay: 3,
               }}
             />
@@ -567,7 +573,7 @@ export function GlowingCrystalSVG({
                   }}
                   transition={{
                     duration: 1.5,
-                    repeat: Infinity,
+                    repeat: repeatInf,
                     delay: 3.5 + i * 0.2,
                   }}
                 />
@@ -616,7 +622,7 @@ export function GlowingCrystalSVG({
             }}
             transition={{
               duration: 2,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 3,
               ease: 'easeInOut',
             }}
@@ -636,7 +642,7 @@ export function GlowingCrystalSVG({
             }}
             transition={{
               duration: 2.5,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 3.5,
             }}
           />
@@ -655,9 +661,9 @@ export function GlowingCrystalSVG({
           opacity: [0.4, 0.8, 0.4],
         }}
         transition={{
-          rotate: { duration: 6, repeat: Infinity, ease: 'linear' },
-          scale: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
-          opacity: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+          rotate: { duration: 6, repeat: repeatInf, ease: 'linear' },
+          scale: { duration: 2, repeat: repeatInf, ease: 'easeInOut' },
+          opacity: { duration: 2, repeat: repeatInf, ease: 'easeInOut' },
         }}
       />
     </motion.div>

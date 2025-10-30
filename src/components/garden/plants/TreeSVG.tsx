@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
 
 interface TreeSVGProps {
@@ -9,6 +10,7 @@ interface TreeSVGProps {
   isSelected?: boolean
   isHovered?: boolean
   name?: string
+  isVisible?: boolean
 }
 
 export function TreeSVG({
@@ -19,6 +21,7 @@ export function TreeSVG({
   isSelected = false,
   isHovered: _isHovered = false,
   name = 'Tree',
+  isVisible = true,
 }: TreeSVGProps) {
   // Определяем тип дерева по имени
   const isSprout = name === 'Росток'
@@ -82,6 +85,13 @@ export function TreeSVG({
   }
 
   const seasonalColors = getSeasonalColors()
+
+  // Деторминатор для стабильных псевдослучайных значений (чтобы не пересоздавать layout)
+  const pseudoRandom = (seed: number): number => {
+    const x = Math.sin(seed) * 10000
+    return x - Math.floor(x)
+  }
+  const repeatInf = isVisible ? Infinity : 0
 
   // Пиксельное дерево в зависимости от типа
   if (isSprout) {
@@ -606,28 +616,35 @@ export function TreeSVG({
       {/* Wind particles for legendary trees */}
       {(rarity === RarityLevel.LEGENDARY || rarity === RarityLevel.EPIC) && (
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          {Array.from({ length: 8 }, (_, i) => (
-            <motion.div
-              key={i}
-              className="absolute h-1 w-1 rounded-full bg-green-300"
-              style={{
-                left: `${10 + Math.random() * 80}%`,
-                top: `${10 + Math.random() * 30}%`,
-              }}
-              animate={{
-                x: [0, 50, -20, 0],
-                y: [0, -20, 10, 0],
-                opacity: [0, 1, 0.5, 0],
-                scale: [0.5, 1, 0.8, 0.5],
-              }}
+          {useMemo(() => {
+            const count = 8
+            const items = [] as Array<{ key: number; left: string; top: string }>
+            for (let i = 0; i < count; i++) {
+              const left = 10 + pseudoRandom(100 + i) * 80
+              const top = 10 + pseudoRandom(200 + i) * 30
+              items.push({ key: i, left: `${left}%`, top: `${top}%` })
+            }
+            return items
+          }, [])
+            .map((p, i) => (
+              <motion.div
+                key={p.key}
+                className="absolute h-1 w-1 rounded-full bg-green-300"
+                style={{ left: p.left, top: p.top }}
+                animate={{
+                  x: [0, 50, -20, 0],
+                  y: [0, -20, 10, 0],
+                  opacity: [0, 1, 0.5, 0],
+                  scale: [0.5, 1, 0.8, 0.5],
+                }}
               transition={{
                 duration: 4,
-                repeat: Infinity,
+                repeat: repeatInf,
                 delay: i * 0.5,
                 ease: 'easeInOut',
               }}
-            />
-          ))}
+              />
+            ))}
         </div>
       )}
 

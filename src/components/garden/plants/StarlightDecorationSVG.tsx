@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 import { RarityLevel } from '@/types'
 
 interface StarlightDecorationSVGProps {
@@ -8,6 +9,7 @@ interface StarlightDecorationSVGProps {
   isSelected?: boolean
   isHovered?: boolean
   name?: string
+  isVisible?: boolean
 }
 
 export function StarlightDecorationSVG({
@@ -17,6 +19,7 @@ export function StarlightDecorationSVG({
   isSelected = false,
   isHovered: _isHovered = false,
   name: _name = 'Starlight Decoration',
+  isVisible = true,
 }: StarlightDecorationSVGProps) {
   const getRarityGlow = () => {
     switch (rarity) {
@@ -32,6 +35,39 @@ export function StarlightDecorationSVG({
         return color
     }
   }
+
+  const repeatInf = isVisible ? Infinity : 0
+  const pseudoRandom = (seed: number): number => {
+    const x = Math.sin(seed) * 10000
+    return x - Math.floor(x)
+  }
+  const starlightParticles = useMemo(() => {
+    const count = 16
+    const items = [] as Array<{
+      key: number
+      left: string
+      top: string
+      dx: number
+    }>
+    for (let i = 0; i < count; i++) {
+      const left = 20 + pseudoRandom(2000 + i) * 60
+      const top = 10 + pseudoRandom(2100 + i) * 80
+      const dx = (pseudoRandom(2200 + i) - 0.5) * 40
+      items.push({ key: i, left: `${left}%`, top: `${top}%`, dx })
+    }
+    return items
+  }, [])
+
+  const twinkleTimings = useMemo(() => {
+    const count = 10
+    const items = [] as Array<{ dur: number; delay: number }>
+    for (let i = 0; i < count; i++) {
+      const dur = 1 + pseudoRandom(2300 + i) * 2 // 1..3
+      const delay = 2 + pseudoRandom(2400 + i) * 3 // 2..5
+      items.push({ dur, delay })
+    }
+    return items
+  }, [])
 
   return (
     <motion.div
@@ -59,24 +95,21 @@ export function StarlightDecorationSVG({
     >
       {/* Starlight particles */}
       <div className="pointer-events-none absolute inset-0">
-        {Array.from({ length: 16 }, (_, i) => (
+        {starlightParticles.map((p, i) => (
           <motion.div
-            key={i}
+            key={p.key}
             className="absolute h-1 w-1 rounded-full bg-yellow-300"
-            style={{
-              left: `${20 + Math.random() * 60}%`,
-              top: `${10 + Math.random() * 80}%`,
-            }}
+            style={{ left: p.left, top: p.top }}
             animate={{
               y: [0, -30, 0],
-              x: [0, (Math.random() - 0.5) * 40, 0],
+              x: [0, p.dx, 0],
               opacity: [0, 1, 0],
               scale: [0.5, 1.5, 0.5],
               rotate: [0, 360],
             }}
             transition={{
               duration: 4,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: i * 0.2,
               ease: 'easeInOut',
             }}
@@ -109,7 +142,7 @@ export function StarlightDecorationSVG({
           }}
           transition={{
             scaleX: { duration: 0.8, delay: 0.3 },
-            opacity: { duration: 2.5, repeat: Infinity },
+            opacity: { duration: 2.5, repeat: repeatInf },
           }}
         />
 
@@ -202,7 +235,7 @@ export function StarlightDecorationSVG({
             }}
             transition={{
               duration: 1.5,
-              repeat: Infinity,
+              repeat: repeatInf,
               ease: 'easeInOut',
             }}
           />
@@ -215,7 +248,7 @@ export function StarlightDecorationSVG({
           }}
           transition={{
             duration: 6,
-            repeat: Infinity,
+            repeat: repeatInf,
             ease: 'linear',
           }}
           style={{
@@ -242,7 +275,7 @@ export function StarlightDecorationSVG({
                 }}
                 transition={{
                   duration: 2,
-                  repeat: Infinity,
+                  repeat: repeatInf,
                   delay: 1.5 + i * 0.2,
                 }}
               />
@@ -269,7 +302,7 @@ export function StarlightDecorationSVG({
             }}
             transition={{
               duration: 3,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 2,
             }}
           >
@@ -316,7 +349,7 @@ export function StarlightDecorationSVG({
           }}
           transition={{
             duration: 2,
-            repeat: Infinity,
+            repeat: repeatInf,
             delay: 2.5,
           }}
         >
@@ -386,7 +419,7 @@ export function StarlightDecorationSVG({
               }}
               transition={{
                 duration: 4,
-                repeat: Infinity,
+                repeat: repeatInf,
                 delay: 3,
               }}
             />
@@ -424,7 +457,7 @@ export function StarlightDecorationSVG({
                   }}
                   transition={{
                     duration: 1.5,
-                    repeat: Infinity,
+                    repeat: repeatInf,
                     delay: 3.5 + i * 0.15,
                   }}
                 />
@@ -450,6 +483,7 @@ export function StarlightDecorationSVG({
             ]
             const pos = twinklePositions[i]
             if (!pos) return null
+            const timing = twinkleTimings[i]
 
             return (
               <motion.rect
@@ -464,9 +498,9 @@ export function StarlightDecorationSVG({
                   scale: [0.5, 1.2, 0.5],
                 }}
                 transition={{
-                  duration: Math.random() * 2 + 1,
-                  repeat: Infinity,
-                  delay: 2 + Math.random() * 3,
+                  duration: timing?.dur ?? 2,
+                  repeat: repeatInf,
+                  delay: timing?.delay ?? 2,
                   ease: 'easeInOut',
                 }}
               />
@@ -481,7 +515,7 @@ export function StarlightDecorationSVG({
           }}
           transition={{
             duration: 8,
-            repeat: Infinity,
+            repeat: repeatInf,
             ease: 'linear',
           }}
           style={{
@@ -501,7 +535,7 @@ export function StarlightDecorationSVG({
             }}
             transition={{
               duration: 2,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 3,
             }}
           />
@@ -518,7 +552,7 @@ export function StarlightDecorationSVG({
             }}
             transition={{
               duration: 2,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 3.2,
             }}
           />
@@ -537,7 +571,7 @@ export function StarlightDecorationSVG({
         }}
         transition={{
           duration: 3,
-          repeat: Infinity,
+          repeat: repeatInf,
           ease: 'easeInOut',
         }}
       />

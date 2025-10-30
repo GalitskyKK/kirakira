@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
 
 interface MushroomSVGProps {
@@ -9,6 +10,7 @@ interface MushroomSVGProps {
   isSelected?: boolean
   isHovered?: boolean
   name?: string
+  isVisible?: boolean
 }
 
 export function MushroomSVG({
@@ -19,6 +21,7 @@ export function MushroomSVG({
   isSelected = false,
   isHovered: _isHovered = false,
   name: _name = 'Mushroom',
+  isVisible = true,
 }: MushroomSVGProps) {
   const getRarityGlow = () => {
     switch (rarity) {
@@ -83,6 +86,22 @@ export function MushroomSVG({
   }
 
   const seasonalColors = getSeasonalColors()
+  const repeatInf = isVisible ? Infinity : 0
+  const pseudoRandom = (seed: number): number => {
+    const x = Math.sin(seed) * 10000
+    return x - Math.floor(x)
+  }
+  const spores = useMemo(() => {
+    const count = 10
+    const items = [] as Array<{ key: number; left: string; top: string; dx: number }>
+    for (let i = 0; i < count; i++) {
+      const left = 20 + pseudoRandom(500 + i) * 60
+      const top = 30 + pseudoRandom(600 + i) * 40
+      const dx = (pseudoRandom(700 + i) - 0.5) * 30
+      items.push({ key: i, left: `${left}%`, top: `${top}%`, dx })
+    }
+    return items
+  }, [])
 
   return (
     <motion.div
@@ -109,26 +128,13 @@ export function MushroomSVG({
       {/* Spores for magical mushrooms */}
       {(rarity === RarityLevel.EPIC || rarity === RarityLevel.LEGENDARY) && (
         <div className="pointer-events-none absolute inset-0">
-          {Array.from({ length: 10 }, (_, i) => (
+          {spores.map((s, i) => (
             <motion.div
-              key={i}
+              key={s.key}
               className="absolute h-0.5 w-0.5 rounded-full bg-purple-300"
-              style={{
-                left: `${20 + Math.random() * 60}%`,
-                top: `${30 + Math.random() * 40}%`,
-              }}
-              animate={{
-                y: [0, -40, 0],
-                x: [0, (Math.random() - 0.5) * 30, 0],
-                opacity: [0, 1, 0],
-                scale: [0, 1, 0],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                delay: i * 0.3,
-                ease: 'easeOut',
-              }}
+              style={{ left: s.left, top: s.top }}
+              animate={{ y: [0, -40, 0], x: [0, s.dx, 0], opacity: [0, 1, 0], scale: [0, 1, 0] }}
+              transition={{ duration: 4, repeat: repeatInf, delay: i * 0.3, ease: 'easeOut' }}
             />
           ))}
         </div>
@@ -420,7 +426,7 @@ export function MushroomSVG({
             }}
             transition={{
               duration: 3,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 2,
             }}
           >
@@ -477,7 +483,7 @@ export function MushroomSVG({
               }}
               transition={{
                 duration: 2,
-                repeat: Infinity,
+                repeat: repeatInf,
                 delay: 2.5,
               }}
             />
@@ -506,7 +512,7 @@ export function MushroomSVG({
                   }}
                   transition={{
                     duration: 1.5,
-                    repeat: Infinity,
+                    repeat: repeatInf,
                     delay: 3 + i * 0.5,
                   }}
                 />

@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
 
 interface FlowerSVGProps {
@@ -9,6 +10,7 @@ interface FlowerSVGProps {
   isSelected?: boolean
   isHovered?: boolean
   name?: string
+  isVisible?: boolean
 }
 
 export function FlowerSVG({
@@ -19,6 +21,7 @@ export function FlowerSVG({
   isSelected = false,
   isHovered: _isHovered = false,
   name = 'Flower',
+  isVisible = true,
 }: FlowerSVGProps) {
   const getRarityGlow = () => {
     switch (rarity) {
@@ -301,6 +304,21 @@ export function FlowerSVG({
   }
 
   const seasonalColors = getSeasonalColors()
+  const repeatInf = isVisible ? Infinity : 0
+  const pseudoRandom = (seed: number): number => {
+    const x = Math.sin(seed) * 10000
+    return x - Math.floor(x)
+  }
+  const legendaryParticles = useMemo(() => {
+    const count = 6
+    const items = [] as Array<{ key: number; left: string; top: string }>
+    for (let i = 0; i < count; i++) {
+      const left = 20 + pseudoRandom(300 + i) * 60
+      const top = 20 + pseudoRandom(400 + i) * 60
+      items.push({ key: i, left: `${left}%`, top: `${top}%` })
+    }
+    return items
+  }, [])
 
   return (
     <motion.div
@@ -328,25 +346,13 @@ export function FlowerSVG({
       {/* Particles for legendary */}
       {(rarity === RarityLevel.LEGENDARY || rarity === RarityLevel.EPIC) && (
         <div className="pointer-events-none absolute inset-0">
-          {Array.from({ length: 6 }, (_, i) => (
+          {legendaryParticles.map((p, i) => (
             <motion.div
-              key={i}
+              key={p.key}
               className="absolute h-1 w-1 rounded-full bg-yellow-300"
-              style={{
-                left: `${20 + Math.random() * 60}%`,
-                top: `${20 + Math.random() * 60}%`,
-              }}
-              animate={{
-                scale: [0, 1, 0],
-                opacity: [0, 1, 0],
-                rotate: [0, 360],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                delay: i * 0.3,
-                ease: 'easeInOut',
-              }}
+              style={{ left: p.left, top: p.top }}
+              animate={{ scale: [0, 1, 0], opacity: [0, 1, 0], rotate: [0, 360] }}
+              transition={{ duration: 2, repeat: repeatInf, delay: i * 0.3, ease: 'easeInOut' }}
             />
           ))}
         </div>
@@ -681,7 +687,7 @@ export function FlowerSVG({
             }}
             transition={{
               duration: 2,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 2,
             }}
           >
@@ -803,7 +809,7 @@ export function FlowerSVG({
                   height="2"
                   fill={seasonalColors.decoration}
                   animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 2, repeat: Infinity }}
+                  transition={{ duration: 2, repeat: repeatInf }}
                 />
                 <rect
                   x="12"
@@ -870,7 +876,7 @@ export function FlowerSVG({
                   height="1"
                   fill={seasonalColors.decoration}
                   animate={{ opacity: [0.4, 1, 0.4] }}
-                  transition={{ duration: 3, repeat: Infinity, delay: 0.5 }}
+                  transition={{ duration: 3, repeat: repeatInf, delay: 0.5 }}
                 />
                 <motion.rect
                   x="21"
@@ -879,7 +885,7 @@ export function FlowerSVG({
                   height="1"
                   fill={seasonalColors.decoration}
                   animate={{ opacity: [0.4, 1, 0.4] }}
-                  transition={{ duration: 3, repeat: Infinity, delay: 1.5 }}
+                  transition={{ duration: 3, repeat: repeatInf, delay: 1.5 }}
                 />
                 <rect
                   x="13"

@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 import { RarityLevel } from '@/types'
 
 interface MysticMushroomSVGProps {
@@ -8,6 +9,7 @@ interface MysticMushroomSVGProps {
   isSelected?: boolean
   isHovered?: boolean
   name?: string
+  isVisible?: boolean
 }
 
 export function MysticMushroomSVG({
@@ -17,6 +19,7 @@ export function MysticMushroomSVG({
   isSelected = false,
   isHovered: _isHovered = false,
   name: _name = 'Mystic Mushroom',
+  isVisible = true,
 }: MysticMushroomSVGProps) {
   const getRarityGlow = () => {
     switch (rarity) {
@@ -32,6 +35,23 @@ export function MysticMushroomSVG({
         return color
     }
   }
+
+  const repeatInf = isVisible ? Infinity : 0
+  const pseudoRandom = (seed: number): number => {
+    const x = Math.sin(seed) * 10000
+    return x - Math.floor(x)
+  }
+  const spores = useMemo(() => {
+    const count = 12
+    const items = [] as Array<{ key: number; left: string; top: string; dx: number }>
+    for (let i = 0; i < count; i++) {
+      const left = 15 + pseudoRandom(1600 + i) * 70
+      const top = 20 + pseudoRandom(1700 + i) * 60
+      const dx = (pseudoRandom(1800 + i) - 0.5) * 40
+      items.push({ key: i, left: `${left}%`, top: `${top}%`, dx })
+    }
+    return items
+  }, [])
 
   return (
     <motion.div
@@ -57,26 +77,13 @@ export function MysticMushroomSVG({
     >
       {/* Mystical spores floating around */}
       <div className="pointer-events-none absolute inset-0">
-        {Array.from({ length: 12 }, (_, i) => (
+        {spores.map((s, i) => (
           <motion.div
-            key={i}
+            key={s.key}
             className="absolute h-1 w-1 rounded-full bg-purple-300"
-            style={{
-              left: `${15 + Math.random() * 70}%`,
-              top: `${20 + Math.random() * 60}%`,
-            }}
-            animate={{
-              y: [0, -50, 0],
-              x: [0, (Math.random() - 0.5) * 40, 0],
-              opacity: [0, 1, 0],
-              scale: [0, 1.2, 0],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              delay: i * 0.3,
-              ease: 'easeOut',
-            }}
+            style={{ left: s.left, top: s.top }}
+            animate={{ y: [0, -50, 0], x: [0, s.dx, 0], opacity: [0, 1, 0], scale: [0, 1.2, 0] }}
+            transition={{ duration: 4, repeat: repeatInf, delay: i * 0.3, ease: 'easeOut' }}
           />
         ))}
       </div>
@@ -106,7 +113,7 @@ export function MysticMushroomSVG({
           }}
           transition={{
             scaleX: { duration: 0.6, delay: 0.2 },
-            opacity: { duration: 2, repeat: Infinity },
+            opacity: { duration: 2, repeat: repeatInf },
           }}
         />
 
@@ -178,7 +185,7 @@ export function MysticMushroomSVG({
             }}
             transition={{
               duration: 3,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 1,
             }}
           >
@@ -373,7 +380,7 @@ export function MysticMushroomSVG({
             }}
             transition={{
               duration: 4,
-              repeat: Infinity,
+              repeat: repeatInf,
               delay: 2,
             }}
           >
@@ -435,7 +442,7 @@ export function MysticMushroomSVG({
               }}
               transition={{
                 duration: 2,
-                repeat: Infinity,
+                repeat: repeatInf,
                 delay: i * 0.1,
               }}
             />
@@ -450,7 +457,7 @@ export function MysticMushroomSVG({
           }}
           transition={{
             duration: 2,
-            repeat: Infinity,
+            repeat: repeatInf,
             delay: 2,
           }}
         >
@@ -479,7 +486,7 @@ export function MysticMushroomSVG({
           }}
           transition={{
             duration: 8,
-            repeat: Infinity,
+            repeat: repeatInf,
             ease: 'linear',
           }}
           style={{
@@ -506,7 +513,7 @@ export function MysticMushroomSVG({
                 }}
                 transition={{
                   duration: 3,
-                  repeat: Infinity,
+                  repeat: repeatInf,
                   delay: i * 0.5,
                 }}
               />
@@ -531,7 +538,7 @@ export function MysticMushroomSVG({
               }}
               transition={{
                 duration: 3,
-                repeat: Infinity,
+                repeat: repeatInf,
                 delay: 3,
               }}
             />
@@ -550,7 +557,7 @@ export function MysticMushroomSVG({
               }}
               transition={{
                 duration: 2,
-                repeat: Infinity,
+                repeat: repeatInf,
                 delay: 3.5,
               }}
             />
@@ -588,7 +595,7 @@ export function MysticMushroomSVG({
                   }}
                   transition={{
                     duration: 2,
-                    repeat: Infinity,
+                    repeat: repeatInf,
                     delay: 4 + i * 0.3,
                   }}
                 />
@@ -610,9 +617,9 @@ export function MysticMushroomSVG({
           opacity: [0.3, 0.7, 0.3],
         }}
         transition={{
-          rotate: { duration: 6, repeat: Infinity, ease: 'linear' },
-          scale: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
-          opacity: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
+          rotate: { duration: 6, repeat: repeatInf, ease: 'linear' },
+          scale: { duration: 3, repeat: repeatInf, ease: 'easeInOut' },
+          opacity: { duration: 3, repeat: repeatInf, ease: 'easeInOut' },
         }}
       />
     </motion.div>
