@@ -88,18 +88,25 @@ export function useTelegramSync() {
           )
 
           // Передаем данные пользователя для создания в БД
-          const telegramUserData = {
-            first_name: telegramUser.firstName,
-            last_name: telegramUser.lastName,
-            username: telegramUser.username,
-            photo_url: telegramUser.photoUrl,
-            language_code: telegramUser.languageCode,
-          }
+          const telegramUserData: Partial<import('@/types/api').DatabaseUser> =
+            {
+              first_name: telegramUser.firstName,
+              ...(telegramUser.lastName != null && telegramUser.lastName !== ''
+                ? { last_name: telegramUser.lastName }
+                : {}),
+              ...(telegramUser.username != null && telegramUser.username !== ''
+                ? { username: telegramUser.username }
+                : {}),
+              ...(telegramUser.photoUrl != null && telegramUser.photoUrl !== ''
+                ? { photo_url: telegramUser.photoUrl }
+                : {}),
+              ...(telegramUser.languageCode != null &&
+              telegramUser.languageCode !== ''
+                ? { language_code: telegramUser.languageCode }
+                : {}),
+            }
 
-          await syncFromSupabase(
-            telegramUser.telegramId,
-            telegramUserData as any
-          )
+          await syncFromSupabase(telegramUser.telegramId, telegramUserData)
 
           // Если пользователя нет на сервере - создаем
           const { currentUser: syncedUser } = useUserStore.getState()
@@ -122,18 +129,25 @@ export function useTelegramSync() {
           )
 
           // Передаем обновленные данные пользователя
-          const telegramUserData = {
-            first_name: telegramUser.firstName,
-            last_name: telegramUser.lastName,
-            username: telegramUser.username,
-            photo_url: telegramUser.photoUrl,
-            language_code: telegramUser.languageCode,
-          }
+          const telegramUserData: Partial<import('@/types/api').DatabaseUser> =
+            {
+              first_name: telegramUser.firstName,
+              ...(telegramUser.lastName != null && telegramUser.lastName !== ''
+                ? { last_name: telegramUser.lastName }
+                : {}),
+              ...(telegramUser.username != null && telegramUser.username !== ''
+                ? { username: telegramUser.username }
+                : {}),
+              ...(telegramUser.photoUrl != null && telegramUser.photoUrl !== ''
+                ? { photo_url: telegramUser.photoUrl }
+                : {}),
+              ...(telegramUser.languageCode != null &&
+              telegramUser.languageCode !== ''
+                ? { language_code: telegramUser.languageCode }
+                : {}),
+            }
 
-          await syncFromSupabase(
-            telegramUser.telegramId,
-            telegramUserData as any
-          )
+          await syncFromSupabase(telegramUser.telegramId, telegramUserData)
         }
 
         return { success: true, mode: 'telegram', user: telegramUser }

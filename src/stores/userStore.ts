@@ -517,11 +517,11 @@ export const useUserStore = create<UserStore>()(
 
         // 2. Очищаем только пользовательские данные в localStorage
         const { STORAGE_KEYS } = await import('@/utils/storage')
-        const keysToKeep = [STORAGE_KEYS.ONBOARDING] // Сохраняем онбординг
+        const keysToKeep: string[] = [STORAGE_KEYS.ONBOARDING] // Сохраняем онбординг
 
         // Очищаем все ключи кроме тех что нужно сохранить
         Object.values(STORAGE_KEYS).forEach((key: string) => {
-          if (!keysToKeep.includes(key as any)) {
+          if (!keysToKeep.includes(key)) {
             localStorage.removeItem(key)
           }
         })

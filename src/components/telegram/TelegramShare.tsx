@@ -282,11 +282,12 @@ export function TelegramShare({
     try {
       hapticFeedback('light')
       // Проверяем наличие метода shareToStory
-      if (
-        'shareToStory' in webApp &&
-        typeof webApp.shareToStory === 'function'
-      ) {
-        ;(webApp as any).shareToStory(lastSharedImage)
+      type WebAppWithStory = typeof webApp & {
+        shareToStory?: (imageUrl: string) => void
+      }
+      const wa = webApp as WebAppWithStory
+      if (typeof wa.shareToStory === 'function') {
+        wa.shareToStory(lastSharedImage)
       } else {
         showAlert('Stories не поддерживаются в данной версии Telegram')
       }

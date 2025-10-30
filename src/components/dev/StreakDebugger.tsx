@@ -4,11 +4,8 @@ import { Card } from '@/components/ui'
 import { useMoodStore, useUserStore } from '@/stores'
 import { calculateMoodStats } from '@/utils/moodMapping'
 import { formatDate } from '@/utils/dateHelpers'
-import type {
-  DatabaseMoodEntry,
-  StandardApiResponse,
-  ProfileApiGetProfileResponse,
-} from '@/types/api'
+import type { StandardApiResponse, ProfileApiGetProfileResponse } from '@/types/api'
+import type { MoodEntry } from '@/types'
 import { authenticatedFetch } from '@/utils/apiClient'
 
 interface StreakDebugInfo {
@@ -35,7 +32,7 @@ interface StreakDebugInfo {
       }
     | undefined
   rawData: {
-    moodHistory: readonly any[] // Temporary fix for build
+    moodHistory: readonly MoodEntry[]
     serverData?: ProfileApiGetProfileResponse
   }
 }
@@ -208,8 +205,8 @@ export function StreakDebugger() {
         backend: backendInfo,
         database: databaseInfo,
         rawData: {
-          moodHistory: moodHistory as any,
-          serverData: serverData as any,
+          moodHistory: moodHistory,
+          ...(serverData ? { serverData } : {}),
         },
       })
     } catch (error) {
@@ -220,14 +217,18 @@ export function StreakDebugger() {
   }
 
   // Вычисляем streak из данных БД (копия логики из user.js)
-  const calculateDatabaseStreak = (moods: DatabaseMoodEntry[]) => {
+  const calculateDatabaseStreak = (moods: {
+    mood_date?: string
+    date?: Date
+  }[]) => {
     if (!moods || moods.length === 0) {
       return { current: 0, longest: 0 }
     }
 
     const sortedMoods = moods.sort(
       (a, b) =>
-        new Date(b.mood_date).getTime() - new Date(a.mood_date).getTime()
+        new Date((b.mood_date ?? (b.date as Date)).toString()).getTime() -
+        new Date((a.mood_date ?? (a.date as Date)).toString()).getTime()
     )
 
     let currentStreak = 0
@@ -238,7 +239,7 @@ export function StreakDebugger() {
     for (let i = 0; i < sortedMoods.length; i++) {
       const mood = sortedMoods[i]
       if (!mood) continue
-      const moodDate = new Date(mood.mood_date)
+      const moodDate = new Date((mood.mood_date ?? (mood.date as Date)).toString())
       const daysDiff = Math.floor(
         (today.getTime() - moodDate.getTime()) / (1000 * 60 * 60 * 24)
       )
@@ -256,8 +257,12 @@ export function StreakDebugger() {
       const prevMood = sortedMoods[i - 1]
       const currentMood = sortedMoods[i]
       if (!prevMood || !currentMood) continue
-      const prevDate = new Date(prevMood.mood_date)
-      const currentDate = new Date(currentMood.mood_date)
+      const prevDate = new Date(
+        (prevMood.mood_date ?? (prevMood.date as Date)).toString()
+      )
+      const currentDate = new Date(
+        (currentMood.mood_date ?? (currentMood.date as Date)).toString()
+      )
       const daysDiff = Math.floor(
         (prevDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)
       )
@@ -566,11 +571,22 @@ export function StreakDebugger() {
             </h4>
             <pre className="mt-2 rounded bg-gray-100 p-2 text-xs">
               {JSON.stringify(
-                debugInfo.rawData.moodHistory.slice(0, 7).map(mood => ({
-                  date: formatDate(new Date(mood.mood_date), 'dd.MM.yyyy'),
-                  mood: mood.mood,
-                  intensity: mood.intensity,
-                })),
+                debugInfo.rawData.moodHistory.slice(0, 7).map(mood => {
+                  const anyMood = mood as unknown as {
+                    mood_date?: string
+                    date?: Date
+                    mood: string
+                    intensity: number
+                  }
+                  const dateValue = anyMood.mood_date
+                    ? new Date(anyMood.mood_date)
+                    : (anyMood.date as Date)
+                  return {
+                    date: formatDate(dateValue, 'dd.MM.yyyy'),
+                    mood: anyMood.mood,
+                    intensity: anyMood.intensity,
+                  }
+                }),
                 null,
                 2
               )}

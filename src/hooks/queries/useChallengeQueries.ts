@@ -12,6 +12,7 @@ import {
   refreshLeaderboard,
   type UpdateProgressRequest,
 } from '@/api'
+import type { LoadChallengeDetailsResult } from '@/api/challengeService'
 
 // ============================================
 // QUERY KEYS - Константы для React Query
@@ -136,16 +137,16 @@ export function useUpdateChallengeProgress() {
       // Оптимистично обновляем прогресс
       queryClient.setQueryData(
         challengeKeys.details(request.challengeId, request.telegramId),
-        (old: any) => {
-          if (!old) return old
-          return {
-            ...old,
-            progress: {
-              ...old.progress,
-              progress: request.value,
-            },
-          }
-        }
+        (old: LoadChallengeDetailsResult | undefined) =>
+          old
+            ? {
+                ...old,
+                progress: {
+                  ...old.progress!,
+                  progress: request.value,
+                },
+              }
+            : old
       )
 
       return { previousDetails }
@@ -154,14 +155,14 @@ export function useUpdateChallengeProgress() {
       // Обновляем детали с финальными данными с сервера
       queryClient.setQueryData(
         challengeKeys.details(request.challengeId, request.telegramId),
-        (old: any) => {
-          if (!old) return old
-          return {
-            ...old,
-            progress: result.progress,
-            leaderboard: result.leaderboard,
-          }
-        }
+        (old: LoadChallengeDetailsResult | undefined) =>
+          old
+            ? {
+                ...old,
+                progress: result.progress,
+                leaderboard: result.leaderboard,
+              }
+            : old
       )
 
       // Инвалидируем queries для полной синхронизации
@@ -221,14 +222,14 @@ export function useRefreshLeaderboard() {
       // Обновляем лидерборд в деталях челленджа
       queryClient.setQueryData(
         challengeKeys.details(variables.challengeId, variables.telegramId),
-        (old: any) => {
-          if (!old) return old
-          return {
-            ...old,
-            leaderboard: result.leaderboard,
-            progress: result.progress,
-          }
-        }
+        (old: LoadChallengeDetailsResult | undefined) =>
+          old
+            ? {
+                ...old,
+                leaderboard: result.leaderboard,
+                progress: result.progress,
+              }
+            : old
       )
 
       console.log('✅ Leaderboard refreshed')

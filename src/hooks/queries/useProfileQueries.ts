@@ -11,6 +11,7 @@ import {
   type AddExperienceRequest,
 } from '@/api'
 import { saveUser, loadUser } from '@/utils/storage'
+import type { ProfileApiGetProfileResponse } from '@/types/api'
 import type { User } from '@/types'
 
 // ============================================
@@ -98,16 +99,16 @@ export function useAddExperience() {
       // поэтому только увеличиваем experience
       queryClient.setQueryData(
         profileKeys.own(request.telegramId),
-        (old: any) => {
-          if (!old) return old
-          return {
-            ...old,
-            user: {
-              ...old.user,
-              experience: old.user.experience + request.experiencePoints,
-            },
-          }
-        }
+        (old: ProfileApiGetProfileResponse | undefined) =>
+          old
+            ? {
+                ...old,
+                user: {
+                  ...old.user,
+                  experience: old.user.experience + request.experiencePoints,
+                },
+              }
+            : old
       )
 
       return { previousProfile }
@@ -117,17 +118,17 @@ export function useAddExperience() {
         // Обновляем profile query с финальными данными
         queryClient.setQueryData(
           profileKeys.own(request.telegramId),
-          (old: any) => {
-            if (!old) return old
-            return {
-              ...old,
-              user: {
-                ...old.user,
-                experience: result.experience,
-                level: result.level,
-              },
-            }
-          }
+          (old: ProfileApiGetProfileResponse | undefined) =>
+            old
+              ? {
+                  ...old,
+                  user: {
+                    ...old.user,
+                    experience: result.experience,
+                    level: result.level,
+                  },
+                }
+              : old
         )
 
         // Обновляем локальное хранилище

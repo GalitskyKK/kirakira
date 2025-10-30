@@ -305,7 +305,7 @@ export async function addUserExperience(
     sproutReward?: number
     gemReward?: number
     specialUnlock?: string | null
-    newAchievements?: any[]
+    newAchievements?: readonly string[]
     reason: string
   }
   error?: string
@@ -335,7 +335,7 @@ export async function addUserExperience(
       sproutReward: number
       gemReward: number
       specialUnlock: string | null
-      newAchievements: any[]
+      newAchievements: readonly string[]
       reason: string
     }>
 

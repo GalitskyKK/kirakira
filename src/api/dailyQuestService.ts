@@ -72,16 +72,17 @@ export async function updateQuestProgress(
   questIdOrType: string,
   increment: number = 1
 ): Promise<UpdateProgressResponse> {
-  const requestBody: any = {
-    telegramId,
-    increment,
-  }
+  type UpdateDailyProgressRequest =
+    | { telegramId: number; increment: number; questId: string }
+    | { telegramId: number; increment: number; questType: string }
+
+  let requestBody: UpdateDailyProgressRequest
 
   // Если это UUID (questId), используем questId, иначе questType
   if (questIdOrType.includes('-')) {
-    requestBody.questId = questIdOrType
+    requestBody = { telegramId, increment, questId: questIdOrType }
   } else {
-    requestBody.questType = questIdOrType
+    requestBody = { telegramId, increment, questType: questIdOrType }
   }
 
   const url = `${DAILY_QUESTS_ENDPOINT}?action=update-daily-progress`

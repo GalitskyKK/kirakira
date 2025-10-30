@@ -8,6 +8,7 @@ import { Button, Card } from '@/components/ui'
 import { ChallengeDetails } from './ChallengeDetails'
 import { useChallengeList } from '@/hooks/queries/useChallengeQueries'
 import type { Garden, Challenge } from '@/types'
+import type { ChallengeParticipant } from '@/types/challenges'
 
 interface ChallengeListProps {
   readonly garden: Garden | null
@@ -55,7 +56,7 @@ export function ChallengeList({ garden }: ChallengeListProps) {
       if (!challenge) return
 
       const participation = challengesData?.userParticipations.find(
-        (p: any) => p.challengeId === challengeId
+        (p: ChallengeParticipant) => p.challengeId === challengeId
       )
 
       if (!challenge || !participation) return
@@ -133,10 +134,10 @@ export function ChallengeList({ garden }: ChallengeListProps) {
     <div className="space-y-4">
       {activeChallenges.map((challenge: Challenge, index: number) => {
         const isParticipating = challengesData?.userParticipations.some(
-          (p: any) => p.challengeId === challenge.id
+          (p: ChallengeParticipant) => p.challengeId === challenge.id
         )
         const participation = challengesData?.userParticipations.find(
-          (p: any) => p.challengeId === challenge.id
+          (p: ChallengeParticipant) => p.challengeId === challenge.id
         )
 
         // Подсчитываем время до окончания

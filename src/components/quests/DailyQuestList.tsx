@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { ErrorMessage } from '@/components/ui/ErrorMessage'
-import { getQuestCategoryInfo, type DailyQuest } from '@/types/dailyQuests'
+import { getQuestCategoryInfo, type DailyQuest, type QuestCategory } from '@/types/dailyQuests'
 
 interface DailyQuestListProps {
   readonly telegramId: number
@@ -152,7 +152,7 @@ export function DailyQuestList({
       {/* Список заданий по категориям */}
       <div className="space-y-6">
         {Object.entries(questsByCategory).map(([category, quests]) => {
-          const categoryInfo = getQuestCategoryInfo(category as any)
+          const categoryInfo = getQuestCategoryInfo(category as QuestCategory)
 
           return (
             <div key={category} className="space-y-3">

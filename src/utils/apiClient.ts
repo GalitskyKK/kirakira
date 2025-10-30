@@ -12,7 +12,7 @@ function getTelegramInitData(): string {
   }
 
   // Проверяем наличие Telegram WebApp
-  const telegram = (window as any).Telegram?.WebApp
+  const telegram = window.Telegram?.WebApp
 
   if (!telegram?.initData) {
     console.warn('⚠️ Telegram WebApp initData not available')
@@ -63,7 +63,7 @@ export async function authenticatedFetch(
 /**
  * GET запрос с аутентификацией
  */
-export async function apiGet<T = any>(url: string): Promise<T> {
+export async function apiGet<T = unknown>(url: string): Promise<T> {
   const response = await authenticatedFetch(url, {
     method: 'GET',
   })
@@ -78,7 +78,10 @@ export async function apiGet<T = any>(url: string): Promise<T> {
 /**
  * POST запрос с аутентификацией
  */
-export async function apiPost<T = any>(url: string, data: any): Promise<T> {
+export async function apiPost<T = unknown, B = unknown>(
+  url: string,
+  data: B
+): Promise<T> {
   const response = await authenticatedFetch(url, {
     method: 'POST',
     body: JSON.stringify(data),
@@ -94,7 +97,10 @@ export async function apiPost<T = any>(url: string, data: any): Promise<T> {
 /**
  * PUT запрос с аутентификацией
  */
-export async function apiPut<T = any>(url: string, data: any): Promise<T> {
+export async function apiPut<T = unknown, B = unknown>(
+  url: string,
+  data: B
+): Promise<T> {
   const response = await authenticatedFetch(url, {
     method: 'PUT',
     body: JSON.stringify(data),
@@ -110,7 +116,7 @@ export async function apiPut<T = any>(url: string, data: any): Promise<T> {
 /**
  * DELETE запрос с аутентификацией
  */
-export async function apiDelete<T = any>(url: string): Promise<T> {
+export async function apiDelete<T = unknown>(url: string): Promise<T> {
   const response = await authenticatedFetch(url, {
     method: 'DELETE',
   })

@@ -84,18 +84,35 @@ export function ThemeShopSection() {
         saveOwnedThemesToStorage(updatedOwned)
 
         // Принудительно обновляем React Query кеш
-        queryClient.setQueryData(['themes', 'catalog'], (oldData: any) => {
-          if (oldData?.success && oldData?.data?.ownedThemeIds) {
-            return {
-              ...oldData,
-              data: {
-                ...oldData.data,
-                ownedThemeIds: [...oldData.data.ownedThemeIds, themeId],
-              },
+        queryClient.setQueryData(
+          ['themes', 'catalog'],
+          (oldData: ReturnType<typeof Object> | undefined) => {
+            type ThemesCatalogResponse = {
+              success: boolean
+              data?: {
+                themes: Array<{
+                  id: string
+                  name: string
+                  priceSprouts: number
+                  isDefault: boolean
+                }>
+                ownedThemeIds: string[]
+              }
+              error?: string
             }
+            const casted = oldData as ThemesCatalogResponse | undefined
+            if (casted?.success && casted.data?.ownedThemeIds) {
+              return {
+                ...casted,
+                data: {
+                  ...casted.data,
+                  ownedThemeIds: [...casted.data.ownedThemeIds, themeId],
+                },
+              }
+            }
+            return oldData
           }
-          return oldData
-        })
+        )
 
         // Принудительно обновляем localStorage версию для useGardenTheme
         window.dispatchEvent(new Event('storage'))

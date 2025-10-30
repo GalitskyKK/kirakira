@@ -10,10 +10,6 @@ import type {
   ChallengeLeaderboardEntry,
   ChallengeProgress,
   ChallengeMetric,
-  ChallengeListResponse,
-  ChallengeDetailsResponse,
-  JoinChallengeResponse,
-  ChallengeProgressResponse,
 } from '@/types/challenges'
 
 // ============================================
@@ -39,6 +35,66 @@ export interface LoadChallengeDetailsResult {
   readonly leaderboard: readonly ChallengeLeaderboardEntry[]
   readonly progress: ChallengeProgress | null
   readonly participation: ChallengeParticipant | null
+}
+
+// ============================================
+// RAW API TYPES (даты как строки от сервера)
+// ============================================
+
+interface RawChallenge
+  extends Omit<Challenge, 'startDate' | 'endDate' | 'createdAt' | 'updatedAt'> {
+  startDate: string
+  endDate: string
+  createdAt: string
+  updatedAt: string
+}
+
+interface RawChallengeParticipant
+  extends Omit<
+    ChallengeParticipant,
+    'joinedAt' | 'lastUpdateAt' | 'completedAt'
+  > {
+  joinedAt: string
+  lastUpdateAt: string
+  completedAt?: string | null
+}
+
+interface RawChallengeListResponse {
+  success: boolean
+  data?: {
+    challenges: readonly RawChallenge[]
+    userParticipations: readonly RawChallengeParticipant[]
+  }
+  error?: string
+}
+
+interface RawChallengeDetailsResponse {
+  success: boolean
+  data?: {
+    challenge: RawChallenge
+    participation?: RawChallengeParticipant | null
+    leaderboard: readonly ChallengeLeaderboardEntry[]
+    progress: ChallengeProgress | null
+  }
+  error?: string
+}
+
+interface RawJoinChallengeResponse {
+  success: boolean
+  data?: {
+    participation: RawChallengeParticipant
+    challenge: RawChallenge
+  }
+  error?: string
+}
+
+interface RawChallengeProgressResponse {
+  success: boolean
+  data?: {
+    progress: ChallengeProgress
+    leaderboard: readonly ChallengeLeaderboardEntry[]
+  }
+  error?: string
 }
 
 export interface JoinChallengeRequest {
@@ -70,7 +126,7 @@ export interface UpdateProgressResult {
 /**
  * Конвертирует строковые даты в объекты Date
  */
-function convertChallengeDates(challenge: any): Challenge {
+function convertChallengeDates(challenge: RawChallenge): Challenge {
   return {
     ...challenge,
     startDate: new Date(challenge.startDate),
@@ -83,7 +139,9 @@ function convertChallengeDates(challenge: any): Challenge {
 /**
  * Конвертирует строковые даты участия в объекты Date
  */
-function convertParticipationDates(participation: any): ChallengeParticipant {
+function convertParticipationDates(
+  participation: RawChallengeParticipant
+): ChallengeParticipant {
   return {
     ...participation,
     joinedAt: new Date(participation.joinedAt),
@@ -109,7 +167,7 @@ export async function loadChallenges(
       `/api/challenges?action=list&telegramId=${request.telegramId}`
     )
 
-    const result = (await response.json()) as ChallengeListResponse
+    const result = (await response.json()) as RawChallengeListResponse
 
     if (!result.success) {
       throw new Error(result.error || 'Ошибка загрузки челленджей')
@@ -146,7 +204,7 @@ export async function loadChallengeDetails(
       `/api/challenges?action=details&challengeId=${request.challengeId}&telegramId=${request.telegramId}`
     )
 
-    const result = (await response.json()) as ChallengeDetailsResponse
+    const result = (await response.json()) as RawChallengeDetailsResponse
 
     if (!result.success) {
       throw new Error(result.error || 'Ошибка загрузки деталей челленджа')
@@ -189,7 +247,7 @@ export async function joinChallenge(
       body: JSON.stringify(request),
     })
 
-    const result = (await response.json()) as JoinChallengeResponse
+    const result = (await response.json()) as RawJoinChallengeResponse
 
     if (!result.success) {
       throw new Error(result.error || 'Ошибка присоединения к челленджу')
@@ -231,7 +289,7 @@ export async function updateProgress(
       }
     )
 
-    const result = (await response.json()) as ChallengeProgressResponse
+    const result = (await response.json()) as RawChallengeProgressResponse
 
     if (!result.success) {
       throw new Error(result.error || 'Ошибка обновления прогресса')
@@ -266,7 +324,7 @@ export async function refreshLeaderboard(
       `/api/challenges?action=details&challengeId=${challengeId}&telegramId=${telegramId}`
     )
 
-    const result = (await response.json()) as ChallengeDetailsResponse
+    const result = (await response.json()) as RawChallengeDetailsResponse
 
     if (!result.success || !result.data) {
       return { leaderboard: [], progress: null }

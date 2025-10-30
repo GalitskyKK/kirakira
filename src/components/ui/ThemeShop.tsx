@@ -150,18 +150,35 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
         saveOwnedThemesToStorage(updatedOwned)
 
         // Принудительно обновляем React Query кеш
-        queryClient.setQueryData(['themes', 'catalog'], (oldData: any) => {
-          if (oldData?.success && oldData?.data?.ownedThemeIds) {
-            return {
-              ...oldData,
-              data: {
-                ...oldData.data,
-                ownedThemeIds: [...oldData.data.ownedThemeIds, themeId],
-              },
+        queryClient.setQueryData(
+          ['themes', 'catalog'],
+          (oldData: ReturnType<typeof Object> | undefined) => {
+            type ThemesCatalogResponse = {
+              success: boolean
+              data?: {
+                themes: Array<{
+                  id: string
+                  name: string
+                  priceSprouts: number
+                  isDefault: boolean
+                }>
+                ownedThemeIds: string[]
+              }
+              error?: string
             }
+            const casted = oldData as ThemesCatalogResponse | undefined
+            if (casted?.success && casted.data?.ownedThemeIds) {
+              return {
+                ...casted,
+                data: {
+                  ...casted.data,
+                  ownedThemeIds: [...casted.data.ownedThemeIds, themeId],
+                },
+              }
+            }
+            return oldData
           }
-          return oldData
-        })
+        )
 
         // Принудительно обновляем localStorage версию для useGardenTheme
         window.dispatchEvent(new Event('storage'))
@@ -200,7 +217,7 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
         onClick={onClose}
       >
         {/* Overlay */}
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm mb-14" />
+        <div className="absolute inset-0 mb-14 bg-black/50 backdrop-blur-sm" />
         <motion.div
           className="relative flex max-h-[75vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900"
           initial={{ scale: 0.9, opacity: 0 }}

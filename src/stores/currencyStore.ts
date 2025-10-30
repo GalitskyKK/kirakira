@@ -15,6 +15,11 @@ import type {
 } from '@/types/currency'
 import { hasEnoughCurrency } from '@/types/currency'
 import { authenticatedFetch } from '@/utils/apiClient'
+import type {
+  CurrencyApiTransactionResponse,
+  CurrencyApiBalanceResponse,
+  StandardApiResponse,
+} from '@/types/api'
 
 // ===============================================
 // 🏪 STORE IMPLEMENTATION
@@ -51,9 +56,9 @@ export const useCurrencyStore = create<CurrencyStore>()(
           throw new Error(`Failed to load currency: ${response.status}`)
         }
 
-        const result = await response.json()
+        const result = (await response.json()) as StandardApiResponse<CurrencyApiBalanceResponse>
 
-        if (!result.success) {
+        if (!result.success || !result.data) {
           throw new Error(result.error || 'Failed to load currency')
         }
 
@@ -101,27 +106,28 @@ export const useCurrencyStore = create<CurrencyStore>()(
           throw new Error(`Failed to load transactions: ${response.status}`)
         }
 
-        const result = await response.json()
+        const result = (await response.json()) as StandardApiResponse<CurrencyApiTransactionResponse>
 
-        if (!result.success) {
+        if (!result.success || !result.data) {
           throw new Error(result.error || 'Failed to load transactions')
         }
 
-        const transactions: CurrencyTransaction[] =
-          result.data.transactions.map((tx: any) => ({
+        const transactions: CurrencyTransaction[] = result.data.transactions.map(
+          (tx) => ({
             id: tx.id,
             telegramId: tx.telegramId,
-            transactionType: tx.transactionType,
-            currencyType: tx.currencyType,
+            transactionType: tx.transactionType as import('@/types/currency').TransactionType,
+            currencyType: tx.currencyType as import('@/types/currency').CurrencyType,
             amount: tx.amount,
             balanceBefore: tx.balanceBefore,
             balanceAfter: tx.balanceAfter,
-            reason: tx.reason,
-            description: tx.description,
-            metadata: tx.metadata,
-            relatedUserId: tx.relatedUserId,
+            reason: tx.reason as import('@/types/currency').CurrencyReason,
+            ...(tx.description != null ? { description: tx.description } : {}),
+            ...(tx.metadata != null ? { metadata: tx.metadata } : {}),
+            ...(tx.relatedUserId != null ? { relatedUserId: tx.relatedUserId } : {}),
             createdAt: new Date(tx.createdAt),
-          }))
+          })
+        )
 
         set({ recentTransactions: transactions })
 

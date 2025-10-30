@@ -340,7 +340,7 @@ export function useGardenState() {
                 try {
                   await updateQuestProgress.mutateAsync({
                     telegramId,
-                    questType: questType as any,
+                    questType,
                     increment: 1,
                   })
                 } catch (error) {

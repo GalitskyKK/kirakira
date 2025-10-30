@@ -11,7 +11,7 @@ import {
   addUserExperience,
   clearUserData,
 } from '@/api'
-import type { User } from '@/types'
+import type { UserSyncResponse } from '@/api/userService'
 
 // ============================================
 // QUERY KEYS - Константы для React Query
@@ -107,16 +107,16 @@ export function useUpdateUserPhoto() {
       // Оптимистично обновляем фото
       queryClient.setQueryData(
         userKeys.sync(telegramId),
-        (old: { user: User; stats: any }) => {
-          if (!old) return old
-          return {
-            ...old,
-            user: {
-              ...old.user,
-              photoUrl,
-            },
-          }
-        }
+        (old: UserSyncResponse | null | undefined) =>
+          old
+            ? {
+                ...old,
+                user: {
+                  ...old.user,
+                  photoUrl,
+                },
+              }
+            : old
       )
 
       return { previousData }
