@@ -11,6 +11,7 @@ interface StoneSVGProps {
   isHovered?: boolean
   name?: string
   isVisible?: boolean
+  staticMode?: boolean
 }
 
 function StoneSVGComponent({
@@ -22,6 +23,7 @@ function StoneSVGComponent({
   isHovered: _isHovered = false,
   name = 'Stone',
   isVisible = true,
+  staticMode = false,
 }: StoneSVGProps) {
   const getRarityGlow = () => {
     switch (rarity) {
@@ -87,7 +89,7 @@ function StoneSVGComponent({
 
   const seasonalColors = getSeasonalColors()
   const prefersReducedMotion = useReducedMotion()
-  const repeatInf = isVisible && !prefersReducedMotion ? Infinity : 0
+  const repeatInf = isVisible && !prefersReducedMotion && !staticMode ? Infinity : 0
 
   // Определяем тип камня по имени
   const isGravel =

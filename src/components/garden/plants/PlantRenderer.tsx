@@ -56,7 +56,31 @@ function PlantRendererComponent({
 
   const prefersReducedMotion = useReducedMotion()
 
-  const isAnimVisible = isVisible && !prefersReducedMotion
+  // Runtime FPS probe: включаем staticMode, если средний FPS за 1с < 50
+  const [isLowPerf, setIsLowPerf] = useState<boolean>(false)
+  useEffect(() => {
+    let mounted = true
+    let frames = 0
+    let start = performance.now()
+    let rafId = 0
+    const loop = () => {
+      frames++
+      const now = performance.now()
+      if (now - start >= 1000) {
+        const fps = (frames * 1000) / (now - start)
+        if (mounted) setIsLowPerf(fps < 50)
+        return
+      }
+      rafId = requestAnimationFrame(loop)
+    }
+    rafId = requestAnimationFrame(loop)
+    return () => {
+      mounted = false
+      if (rafId) cancelAnimationFrame(rafId)
+    }
+  }, [])
+
+  const isAnimVisible = isVisible && !prefersReducedMotion && !isLowPerf
 
   const commonProps = useMemo(
     () => ({
@@ -68,6 +92,7 @@ function PlantRendererComponent({
       isHovered,
       name: element.name,
       isVisible: isAnimVisible,
+      staticMode: prefersReducedMotion || isLowPerf,
     }), [
       actualSize,
       element.color,
@@ -77,6 +102,8 @@ function PlantRendererComponent({
       isSelected,
       isHovered,
       isAnimVisible,
+      prefersReducedMotion,
+      isLowPerf,
     ]
   )
 

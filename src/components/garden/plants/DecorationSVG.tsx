@@ -11,6 +11,7 @@ interface DecorationSVGProps {
   isHovered?: boolean
   name?: string
   isVisible?: boolean
+  staticMode?: boolean
 }
 
 function DecorationSVGComponent({
@@ -22,9 +23,10 @@ function DecorationSVGComponent({
   isHovered: _isHovered = false,
   name = 'Decoration',
   isVisible = true,
+  staticMode = false,
 }: DecorationSVGProps) {
   const prefersReducedMotion = useReducedMotion()
-  const repeatInf = isVisible && !prefersReducedMotion ? Infinity : 0
+  const repeatInf = isVisible && !prefersReducedMotion && !staticMode ? Infinity : 0
 
   const getRarityGlow = useMemo(() => {
     switch (rarity) {

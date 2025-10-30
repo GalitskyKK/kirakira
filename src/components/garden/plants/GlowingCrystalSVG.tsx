@@ -10,6 +10,7 @@ interface GlowingCrystalSVGProps {
   isHovered?: boolean
   name?: string
   isVisible?: boolean
+  staticMode?: boolean
 }
 
 function areEqual(
@@ -37,9 +38,10 @@ function GlowingCrystalSVGComponent({
   isHovered: _isHovered = false,
   name: _name = 'Glowing Crystal',
   isVisible = true,
+  staticMode = false,
 }: GlowingCrystalSVGProps) {
   const prefersReducedMotion = useReducedMotion()
-  const repeatInf = isVisible && !prefersReducedMotion ? Infinity : 0
+  const repeatInf = isVisible && !prefersReducedMotion && !staticMode ? Infinity : 0
 
   const getRarityGlow = useMemo(() => {
     switch (rarity) {
@@ -97,17 +99,19 @@ function GlowingCrystalSVGComponent({
       }}
     >
       {/* Intense energy particles */}
-      <div className="pointer-events-none absolute inset-0">
-        {energyParticles.map((p, i) => (
-          <motion.div
-            key={p.key}
-            className="absolute h-1 w-1 rounded-full"
-            style={{ background: color, left: p.left, top: p.top }}
-            animate={{ y: [0, -40, 0], x: [0, p.dx, 0], opacity: [0, 1, 0], scale: [0.5, 2, 0.5] }}
-            transition={{ duration: 3, repeat: repeatInf, delay: i * 0.2, ease: 'easeInOut' }}
-          />
-        ))}
-      </div>
+      {!staticMode && (
+        <div className="pointer-events-none absolute inset-0">
+          {energyParticles.map((p, i) => (
+            <motion.div
+              key={p.key}
+              className="absolute h-1 w-1 rounded-full"
+              style={{ background: color, left: p.left, top: p.top }}
+              animate={{ y: [0, -40, 0], x: [0, p.dx, 0], opacity: [0, 1, 0], scale: [0.5, 2, 0.5] }}
+              transition={{ duration: 3, repeat: repeatInf, delay: i * 0.2, ease: 'easeInOut' }}
+            />
+          ))}
+        </div>
+      )}
 
       <motion.svg
         width={size}

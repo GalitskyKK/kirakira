@@ -10,6 +10,7 @@ interface MysticMushroomSVGProps {
   isHovered?: boolean
   name?: string
   isVisible?: boolean
+  staticMode?: boolean
 }
 
 function MysticMushroomSVGComponent({
@@ -20,9 +21,10 @@ function MysticMushroomSVGComponent({
   isHovered: _isHovered = false,
   name: _name = 'Mystic Mushroom',
   isVisible = true,
+  staticMode = false,
 }: MysticMushroomSVGProps) {
   const prefersReducedMotion = useReducedMotion()
-  const repeatInf = isVisible && !prefersReducedMotion ? Infinity : 0
+  const repeatInf = isVisible && !prefersReducedMotion && !staticMode ? Infinity : 0
 
   const getRarityGlow = useMemo(() => {
     switch (rarity) {
@@ -78,17 +80,19 @@ function MysticMushroomSVGComponent({
       }}
     >
       {/* Mystical spores floating around */}
-      <div className="pointer-events-none absolute inset-0">
-        {spores.map((s, i) => (
-          <motion.div
-            key={s.key}
-            className="absolute h-1 w-1 rounded-full bg-purple-300"
-            style={{ left: s.left, top: s.top }}
-            animate={{ y: [0, -50, 0], x: [0, s.dx, 0], opacity: [0, 1, 0], scale: [0, 1.2, 0] }}
-            transition={{ duration: 4, repeat: repeatInf, delay: i * 0.3, ease: 'easeOut' }}
-          />
-        ))}
-      </div>
+      {!staticMode && (
+        <div className="pointer-events-none absolute inset-0">
+          {spores.map((s, i) => (
+            <motion.div
+              key={s.key}
+              className="absolute h-1 w-1 rounded-full bg-purple-300"
+              style={{ left: s.left, top: s.top }}
+              animate={{ y: [0, -50, 0], x: [0, s.dx, 0], opacity: [0, 1, 0], scale: [0, 1.2, 0] }}
+              transition={{ duration: 4, repeat: repeatInf, delay: i * 0.3, ease: 'easeOut' }}
+            />
+          ))}
+        </div>
+      )}
 
       <motion.svg
         width={size}

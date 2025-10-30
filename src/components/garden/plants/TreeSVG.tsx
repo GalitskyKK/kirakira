@@ -11,6 +11,7 @@ interface TreeSVGProps {
   isHovered?: boolean
   name?: string
   isVisible?: boolean
+  staticMode?: boolean
 }
 
 function TreeSVGComponent({
@@ -22,6 +23,7 @@ function TreeSVGComponent({
   isHovered: _isHovered = false,
   name = 'Tree',
   isVisible = true,
+  staticMode = false,
 }: TreeSVGProps) {
   // Определяем тип дерева по имени
   const isSprout = name === 'Росток'
@@ -35,7 +37,7 @@ function TreeSVGComponent({
     name?.toLowerCase().includes('aurora tree')
 
   const prefersReducedMotion = useReducedMotion()
-  const repeatInf = isVisible && !prefersReducedMotion ? Infinity : 0
+  const repeatInf = isVisible && !prefersReducedMotion && !staticMode ? Infinity : 0
 
   const getRarityGlow = useMemo(() => {
     switch (rarity) {

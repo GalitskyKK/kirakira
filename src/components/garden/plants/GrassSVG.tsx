@@ -11,6 +11,7 @@ interface GrassSVGProps {
   isHovered?: boolean
   name?: string
   isVisible?: boolean
+  staticMode?: boolean
 }
 
 function GrassSVGComponent({
@@ -22,9 +23,10 @@ function GrassSVGComponent({
   isHovered: _isHovered = false,
   name = 'Grass',
   isVisible = true,
+  staticMode = false,
 }: GrassSVGProps) {
   const prefersReducedMotion = useReducedMotion()
-  const repeatInf = isVisible && !prefersReducedMotion ? Infinity : 0
+  const repeatInf = isVisible && !prefersReducedMotion && !staticMode ? Infinity : 0
 
   const getRarityGlow = useMemo(() => {
     switch (rarity) {

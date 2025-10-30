@@ -10,6 +10,7 @@ interface RainbowFlowerSVGProps {
   isHovered?: boolean
   name?: string
   isVisible?: boolean
+  staticMode?: boolean
 }
 
  
@@ -22,9 +23,10 @@ function RainbowFlowerSVGComponent({
   isHovered: _isHovered = false,
   name: _name = 'Rainbow Flower',
   isVisible = true,
+  staticMode = false,
 }: RainbowFlowerSVGProps) {
   const prefersReducedMotion = useReducedMotion()
-  const repeatInf = isVisible && !prefersReducedMotion ? Infinity : 0
+  const repeatInf = isVisible && !prefersReducedMotion && !staticMode ? Infinity : 0
 
   const getRarityGlow = useMemo(() => {
     switch (rarity) {
@@ -93,21 +95,23 @@ function RainbowFlowerSVGComponent({
       }}
     >
       {/* Rainbow particles floating */}
-      <div className="pointer-events-none absolute inset-0">
-        {rainbowParticles.map((p, i) => (
-          <motion.div
-            key={p.key}
-            className="absolute h-1 w-1 rounded-full"
-            style={{
-              background: rainbowColors[i % rainbowColors.length],
-              left: p.left,
-              top: p.top,
-            }}
-            animate={{ scale: [0, 1, 0], opacity: [0, 1, 0], rotate: [0, 360], y: [0, -20, 0] }}
-            transition={{ duration: 3, repeat: repeatInf, delay: i * 0.2, ease: 'easeInOut' }}
-          />
-        ))}
-      </div>
+      {!staticMode && (
+        <div className="pointer-events-none absolute inset-0">
+          {rainbowParticles.map((p, i) => (
+            <motion.div
+              key={p.key}
+              className="absolute h-1 w-1 rounded-full"
+              style={{
+                background: rainbowColors[i % rainbowColors.length],
+                left: p.left,
+                top: p.top,
+              }}
+              animate={{ scale: [0, 1, 0], opacity: [0, 1, 0], rotate: [0, 360], y: [0, -20, 0] }}
+              transition={{ duration: 3, repeat: repeatInf, delay: i * 0.2, ease: 'easeInOut' }}
+            />
+          ))}
+        </div>
+      )}
 
       <motion.svg
         width={size}
