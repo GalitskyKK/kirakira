@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion'
-import { useMemo } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { memo, useMemo } from 'react'
 import { RarityLevel } from '@/types'
 
 interface MysticMushroomSVGProps {
@@ -12,7 +12,7 @@ interface MysticMushroomSVGProps {
   isVisible?: boolean
 }
 
-export function MysticMushroomSVG({
+function MysticMushroomSVGComponent({
   size = 64,
   color = '#8b5cf6',
   rarity = RarityLevel.EPIC,
@@ -21,7 +21,10 @@ export function MysticMushroomSVG({
   name: _name = 'Mystic Mushroom',
   isVisible = true,
 }: MysticMushroomSVGProps) {
-  const getRarityGlow = () => {
+  const prefersReducedMotion = useReducedMotion()
+  const repeatInf = isVisible && !prefersReducedMotion ? Infinity : 0
+
+  const getRarityGlow = useMemo(() => {
     switch (rarity) {
       case RarityLevel.UNCOMMON:
         return '#22c55e'
@@ -34,9 +37,8 @@ export function MysticMushroomSVG({
       default:
         return color
     }
-  }
+  }, [rarity, color])
 
-  const repeatInf = isVisible ? Infinity : 0
   const pseudoRandom = (seed: number): number => {
     const x = Math.sin(seed) * 10000
     return x - Math.floor(x)
@@ -56,13 +58,13 @@ export function MysticMushroomSVG({
   return (
     <motion.div
       className="pixel-container relative flex items-center justify-center"
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, willChange: 'transform, opacity' }}
       initial={{ scale: 0, y: 10 }}
       animate={{
         scale: 1,
         y: 0,
         filter: isSelected
-          ? `drop-shadow(0 0 25px ${getRarityGlow()})`
+          ? `drop-shadow(0 0 25px ${getRarityGlow})`
           : 'none',
       }}
       whileHover={{
@@ -609,7 +611,7 @@ export function MysticMushroomSVG({
       <motion.div
         className="absolute inset-0 rounded-full"
         style={{
-          background: `conic-gradient(from 0deg, ${getRarityGlow()}30, transparent, ${getRarityGlow()}30)`,
+          background: `conic-gradient(from 0deg, ${getRarityGlow}30, transparent, ${getRarityGlow}30)`,
         }}
         animate={{
           rotate: [0, 360],
@@ -625,3 +627,20 @@ export function MysticMushroomSVG({
     </motion.div>
   )
 }
+
+function areEqual(
+  prev: Readonly<MysticMushroomSVGProps>,
+  next: Readonly<MysticMushroomSVGProps>
+) {
+  return (
+    prev.size === next.size &&
+    prev.color === next.color &&
+    prev.rarity === next.rarity &&
+    prev.isSelected === next.isSelected &&
+    prev.isHovered === next.isHovered &&
+    prev.name === next.name &&
+    prev.isVisible === next.isVisible
+  )
+}
+
+export const MysticMushroomSVG = memo(MysticMushroomSVGComponent, areEqual)

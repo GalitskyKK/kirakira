@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion'
-import { useEffect, useRef, useState } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { FlowerSVG } from './FlowerSVG'
 import { TreeSVG } from './TreeSVG'
 import { CrystalSVG } from './CrystalSVG'
@@ -25,7 +25,7 @@ interface PlantRendererProps {
   onClick?: () => void
 }
 
-export function PlantRenderer({
+function PlantRendererComponent({
   element,
   size = 64,
   isSelected = false,
@@ -54,8 +54,12 @@ export function PlantRenderer({
     return () => observer.disconnect()
   }, [])
 
-  const renderPlant = () => {
-    const commonProps = {
+  const prefersReducedMotion = useReducedMotion()
+
+  const isAnimVisible = isVisible && !prefersReducedMotion
+
+  const commonProps = useMemo(
+    () => ({
       size: actualSize,
       color: element.color,
       rarity: element.rarity,
@@ -63,8 +67,20 @@ export function PlantRenderer({
       isSelected,
       isHovered,
       name: element.name,
-      isVisible,
-    }
+      isVisible: isAnimVisible,
+    }), [
+      actualSize,
+      element.color,
+      element.rarity,
+      element.seasonalVariant,
+      element.name,
+      isSelected,
+      isHovered,
+      isAnimVisible,
+    ]
+  )
+
+  const renderPlant = () => {
 
     switch (element.type) {
       case ElementType.FLOWER:
@@ -117,8 +133,9 @@ export function PlantRenderer({
       <motion.div
         className="cursor-pointer"
         onClick={onClick}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
+        whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
+        style={{ willChange: 'transform, opacity' }}
       >
         {renderPlant()}
       </motion.div>
@@ -137,3 +154,22 @@ export function PlantRenderer({
     </div>
   )
 }
+
+function areEqual(prev: PlantRendererProps, next: PlantRendererProps) {
+  return (
+    prev.element.id === next.element.id &&
+    prev.element.type === next.element.type &&
+    prev.element.color === next.element.color &&
+    prev.element.rarity === next.element.rarity &&
+    prev.element.seasonalVariant === next.element.seasonalVariant &&
+    prev.element.name === next.element.name &&
+    (prev.element.scale ?? 1) === (next.element.scale ?? 1) &&
+    prev.size === next.size &&
+    prev.isSelected === next.isSelected &&
+    prev.isHovered === next.isHovered &&
+    prev.showTooltip === next.showTooltip &&
+    prev.onClick === next.onClick
+  )
+}
+
+export const PlantRenderer = memo(PlantRendererComponent, areEqual)

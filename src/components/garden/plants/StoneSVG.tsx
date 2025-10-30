@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
+import { memo } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
 
 interface StoneSVGProps {
@@ -12,7 +13,7 @@ interface StoneSVGProps {
   isVisible?: boolean
 }
 
-export function StoneSVG({
+function StoneSVGComponent({
   size = 64,
   color = '#6b7280',
   rarity = RarityLevel.COMMON,
@@ -85,7 +86,8 @@ export function StoneSVG({
   }
 
   const seasonalColors = getSeasonalColors()
-  const repeatInf = isVisible ? Infinity : 0
+  const prefersReducedMotion = useReducedMotion()
+  const repeatInf = isVisible && !prefersReducedMotion ? Infinity : 0
 
   // Определяем тип камня по имени
   const isGravel =
@@ -98,7 +100,7 @@ export function StoneSVG({
   return (
     <motion.div
       className="pixel-container relative flex items-center justify-center"
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, willChange: 'transform, opacity' }}
       initial={{ scale: 0, y: 20 }}
       animate={{
         scale: 1,
@@ -910,3 +912,18 @@ export function StoneSVG({
     </motion.div>
   )
 }
+
+function areEqual(prev: Readonly<StoneSVGProps>, next: Readonly<StoneSVGProps>) {
+  return (
+    prev.size === next.size &&
+    prev.color === next.color &&
+    prev.rarity === next.rarity &&
+    prev.season === next.season &&
+    prev.isSelected === next.isSelected &&
+    prev.isHovered === next.isHovered &&
+    prev.name === next.name &&
+    prev.isVisible === next.isVisible
+  )
+}
+
+export const StoneSVG = memo(StoneSVGComponent, areEqual)

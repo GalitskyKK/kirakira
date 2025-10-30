@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion'
-import { useMemo } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { memo, useMemo } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
 
 interface DecorationSVGProps {
@@ -13,7 +13,7 @@ interface DecorationSVGProps {
   isVisible?: boolean
 }
 
-export function DecorationSVG({
+function DecorationSVGComponent({
   size = 64,
   color = '#f59e0b',
   rarity = RarityLevel.COMMON,
@@ -23,7 +23,10 @@ export function DecorationSVG({
   name = 'Decoration',
   isVisible = true,
 }: DecorationSVGProps) {
-  const getRarityGlow = () => {
+  const prefersReducedMotion = useReducedMotion()
+  const repeatInf = isVisible && !prefersReducedMotion ? Infinity : 0
+
+  const getRarityGlow = useMemo(() => {
     switch (rarity) {
       case RarityLevel.UNCOMMON:
         return '#22c55e'
@@ -36,9 +39,9 @@ export function DecorationSVG({
       default:
         return color
     }
-  }
+  }, [rarity, color])
 
-  const getSeasonalColors = () => {
+  const getSeasonalColors = useMemo(() => {
     const baseColor = color
     switch (season) {
       case SeasonalVariant.SPRING:
@@ -77,10 +80,9 @@ export function DecorationSVG({
           wing: '#fef3c7',
         }
     }
-  }
+  }, [season, color])
 
-  const seasonalColors = getSeasonalColors()
-  const repeatInf = isVisible ? Infinity : 0
+  const seasonalColors = getSeasonalColors
 
   // Мемоизация позиций для вращающихся искр и легендарных эффектов
   const defaultSparkles = useMemo(() => {
@@ -122,13 +124,13 @@ export function DecorationSVG({
     return (
       <motion.div
         className="pixel-container relative flex items-center justify-center"
-        style={{ width: size, height: size }}
+        style={{ width: size, height: size, willChange: 'transform, opacity' }}
         initial={{ scale: 0, opacity: 0 }}
         animate={{
           scale: 1,
           opacity: 1,
           filter: isSelected
-            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            ? `drop-shadow(0 0 20px ${getRarityGlow})`
             : 'none',
         }}
         whileHover={{
@@ -171,7 +173,7 @@ export function DecorationSVG({
               y="18"
               width="2"
               height="3"
-              fill="#fbbf24"
+                fill="#fbbf24"
               animate={{
                 opacity: [0.6, 1, 0.6],
                 scale: [1, 1.1, 1],
@@ -289,13 +291,13 @@ export function DecorationSVG({
     return (
       <motion.div
         className="pixel-container relative flex items-center justify-center"
-        style={{ width: size, height: size }}
+        style={{ width: size, height: size, willChange: 'transform, opacity' }}
         initial={{ scale: 0, opacity: 0 }}
         animate={{
           scale: 1,
           opacity: 1,
           filter: isSelected
-            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            ? `drop-shadow(0 0 20px ${getRarityGlow})`
             : 'none',
         }}
         whileHover={{
@@ -520,13 +522,13 @@ export function DecorationSVG({
     return (
       <motion.div
         className="pixel-container relative flex items-center justify-center"
-        style={{ width: size, height: size }}
+        style={{ width: size, height: size, willChange: 'transform, opacity' }}
         initial={{ scale: 0, rotate: -90 }}
         animate={{
           scale: 1,
           rotate: 0,
           filter: isSelected
-            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            ? `drop-shadow(0 0 20px ${getRarityGlow})`
             : 'none',
         }}
         whileHover={{
@@ -785,13 +787,13 @@ export function DecorationSVG({
     return (
       <motion.div
         className="pixel-container relative flex items-center justify-center"
-        style={{ width: size, height: size }}
+        style={{ width: size, height: size, willChange: 'transform, opacity' }}
         initial={{ scale: 0, rotate: 180 }}
         animate={{
           scale: 1,
           rotate: 0,
           filter: isSelected
-            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            ? `drop-shadow(0 0 20px ${getRarityGlow})`
             : 'none',
         }}
         whileHover={{
@@ -979,13 +981,13 @@ export function DecorationSVG({
     return (
       <motion.div
         className="pixel-container relative flex items-center justify-center"
-        style={{ width: size, height: size }}
+        style={{ width: size, height: size, willChange: 'transform, opacity' }}
         initial={{ scale: 0, rotate: -45 }}
         animate={{
           scale: 1,
           rotate: 0,
           filter: isSelected
-            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            ? `drop-shadow(0 0 20px ${getRarityGlow})`
             : 'none',
         }}
         whileHover={{
@@ -1177,13 +1179,13 @@ export function DecorationSVG({
     return (
       <motion.div
         className="pixel-container relative flex items-center justify-center"
-        style={{ width: size, height: size }}
+        style={{ width: size, height: size, willChange: 'transform, opacity' }}
         initial={{ scale: 0, y: -20 }}
         animate={{
           scale: 1,
           y: 0,
           filter: isSelected
-            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            ? `drop-shadow(0 0 20px ${getRarityGlow})`
             : 'none',
         }}
         whileHover={{
@@ -1375,7 +1377,7 @@ export function DecorationSVG({
                 y="14"
                 width="2"
                 height="1"
-                fill={getRarityGlow()}
+                fill={getRarityGlow}
                 opacity="0.6"
               />
               <rect
@@ -1383,7 +1385,7 @@ export function DecorationSVG({
                 y="14"
                 width="2"
                 height="1"
-                fill={getRarityGlow()}
+                fill={getRarityGlow}
                 opacity="0.6"
               />
               <rect
@@ -1391,7 +1393,7 @@ export function DecorationSVG({
                 y="16"
                 width="2"
                 height="1"
-                fill={getRarityGlow()}
+                fill={getRarityGlow}
                 opacity="0.4"
               />
               <rect
@@ -1399,7 +1401,7 @@ export function DecorationSVG({
                 y="16"
                 width="2"
                 height="1"
-                fill={getRarityGlow()}
+                fill={getRarityGlow}
                 opacity="0.4"
               />
             </motion.g>
@@ -1414,13 +1416,13 @@ export function DecorationSVG({
     return (
       <motion.div
         className="pixel-container relative flex items-center justify-center"
-        style={{ width: size, height: size }}
+        style={{ width: size, height: size, willChange: 'transform, opacity' }}
         initial={{ scale: 0, opacity: 0 }}
         animate={{
           scale: 1,
           opacity: 1,
           filter: isSelected
-            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            ? `drop-shadow(0 0 20px ${getRarityGlow})`
             : 'none',
         }}
         whileHover={{
@@ -1570,13 +1572,13 @@ export function DecorationSVG({
     return (
       <motion.div
         className="pixel-container relative flex items-center justify-center"
-        style={{ width: size, height: size }}
+        style={{ width: size, height: size, willChange: 'transform, opacity' }}
         initial={{ scale: 0, rotate: 180 }}
         animate={{
           scale: 1,
           rotate: 0,
           filter: isSelected
-            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            ? `drop-shadow(0 0 20px ${getRarityGlow})`
             : 'none',
         }}
         whileHover={{
@@ -1766,12 +1768,12 @@ export function DecorationSVG({
     return (
       <motion.div
         className="pixel-container relative flex items-center justify-center"
-        style={{ width: size, height: size }}
+        style={{ width: size, height: size, willChange: 'transform, opacity' }}
         initial={{ scale: 0 }}
         animate={{
           scale: 1,
           filter: isSelected
-            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            ? `drop-shadow(0 0 20px ${getRarityGlow})`
             : 'none',
         }}
         whileHover={{
@@ -2003,7 +2005,7 @@ export function DecorationSVG({
         scale: 1,
         rotate: 0,
         filter: isSelected
-          ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+          ? `drop-shadow(0 0 20px ${getRarityGlow})`
           : 'none',
       }}
       whileHover={{
@@ -2294,7 +2296,7 @@ export function DecorationSVG({
               y="12"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
             <rect
@@ -2302,7 +2304,7 @@ export function DecorationSVG({
               y="18"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
             <rect
@@ -2310,7 +2312,7 @@ export function DecorationSVG({
               y="4"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.9"
             />
             <rect
@@ -2318,7 +2320,7 @@ export function DecorationSVG({
               y="26"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
           </motion.g>
@@ -2375,7 +2377,7 @@ export function DecorationSVG({
         <motion.div
           className="absolute inset-0 rounded-full"
           style={{
-            background: `radial-gradient(circle, ${getRarityGlow()}20 0%, transparent 70%)`,
+            background: `radial-gradient(circle, ${getRarityGlow}20 0%, transparent 70%)`,
           }}
           animate={{
             scale: [1, 1.2, 1],
@@ -2391,3 +2393,21 @@ export function DecorationSVG({
     </motion.div>
   )
 }
+
+function areEqual(
+  prev: Readonly<DecorationSVGProps>,
+  next: Readonly<DecorationSVGProps>
+) {
+  return (
+    prev.size === next.size &&
+    prev.color === next.color &&
+    prev.rarity === next.rarity &&
+    prev.season === next.season &&
+    prev.isSelected === next.isSelected &&
+    prev.isHovered === next.isHovered &&
+    prev.name === next.name &&
+    prev.isVisible === next.isVisible
+  )
+}
+
+export const DecorationSVG = memo(DecorationSVGComponent, areEqual)

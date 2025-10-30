@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion'
-import { useMemo } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { memo, useMemo } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
 
 interface TreeSVGProps {
@@ -13,7 +13,7 @@ interface TreeSVGProps {
   isVisible?: boolean
 }
 
-export function TreeSVG({
+function TreeSVGComponent({
   size = 64,
   color = '#22c55e',
   rarity = RarityLevel.COMMON,
@@ -34,7 +34,10 @@ export function TreeSVG({
     name?.toLowerCase().includes('дерево авроры') ||
     name?.toLowerCase().includes('aurora tree')
 
-  const getRarityGlow = () => {
+  const prefersReducedMotion = useReducedMotion()
+  const repeatInf = isVisible && !prefersReducedMotion ? Infinity : 0
+
+  const getRarityGlow = useMemo(() => {
     switch (rarity) {
       case RarityLevel.UNCOMMON:
         return '#22c55e'
@@ -47,9 +50,9 @@ export function TreeSVG({
       default:
         return color
     }
-  }
+  }, [rarity, color])
 
-  const getSeasonalColors = () => {
+  const getSeasonalColors = useMemo(() => {
     switch (season) {
       case SeasonalVariant.SPRING:
         return {
@@ -82,28 +85,28 @@ export function TreeSVG({
           accent: '#4ade80',
         }
     }
-  }
+  }, [season, color])
 
-  const seasonalColors = getSeasonalColors()
+  const seasonalColors = getSeasonalColors
 
   // Деторминатор для стабильных псевдослучайных значений (чтобы не пересоздавать layout)
   const pseudoRandom = (seed: number): number => {
     const x = Math.sin(seed) * 10000
     return x - Math.floor(x)
   }
-  const repeatInf = isVisible ? Infinity : 0
+  
 
   // Пиксельное дерево в зависимости от типа
   if (isSprout) {
     return (
       <motion.div
         className="pixel-container relative flex items-center justify-center"
-        style={{ width: size, height: size }}
+        style={{ width: size, height: size, willChange: 'transform, opacity' }}
         initial={{ scale: 0 }}
         animate={{
           scale: 1,
           filter: isSelected
-            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            ? `drop-shadow(0 0 20px ${getRarityGlow})`
             : 'none',
         }}
         whileHover={{
@@ -222,7 +225,7 @@ export function TreeSVG({
                 y="21"
                 width="1"
                 height="1"
-                fill={getRarityGlow()}
+                fill={getRarityGlow}
                 opacity="0.8"
               />
               <rect
@@ -230,7 +233,7 @@ export function TreeSVG({
                 y="23"
                 width="1"
                 height="1"
-                fill={getRarityGlow()}
+                fill={getRarityGlow}
                 opacity="0.8"
               />
             </motion.g>
@@ -244,12 +247,12 @@ export function TreeSVG({
     return (
       <motion.div
         className="pixel-container relative flex items-center justify-center"
-        style={{ width: size, height: size }}
+        style={{ width: size, height: size, willChange: 'transform, opacity' }}
         initial={{ scale: 0 }}
         animate={{
           scale: 1,
           filter: isSelected
-            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            ? `drop-shadow(0 0 20px ${getRarityGlow})`
             : 'none',
         }}
         whileHover={{
@@ -384,7 +387,7 @@ export function TreeSVG({
                 y="19"
                 width="1"
                 height="1"
-                fill={getRarityGlow()}
+                fill={getRarityGlow}
                 opacity="0.8"
               />
               <rect
@@ -392,7 +395,7 @@ export function TreeSVG({
                 y="21"
                 width="1"
                 height="1"
-                fill={getRarityGlow()}
+                fill={getRarityGlow}
                 opacity="0.8"
               />
               <rect
@@ -400,7 +403,7 @@ export function TreeSVG({
                 y="17"
                 width="1"
                 height="1"
-                fill={getRarityGlow()}
+                fill={getRarityGlow}
                 opacity="0.8"
               />
             </motion.g>
@@ -414,12 +417,12 @@ export function TreeSVG({
     return (
       <motion.div
         className="pixel-container relative flex items-center justify-center"
-        style={{ width: size, height: size }}
+        style={{ width: size, height: size, willChange: 'transform, opacity' }}
         initial={{ scale: 0 }}
         animate={{
           scale: 1,
           filter: isSelected
-            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            ? `drop-shadow(0 0 20px ${getRarityGlow})`
             : 'none',
         }}
         whileHover={{
@@ -557,7 +560,7 @@ export function TreeSVG({
                 y="13"
                 width="1"
                 height="1"
-                fill={getRarityGlow()}
+                fill={getRarityGlow}
                 opacity="0.8"
               />
               <rect
@@ -565,7 +568,7 @@ export function TreeSVG({
                 y="15"
                 width="1"
                 height="1"
-                fill={getRarityGlow()}
+                fill={getRarityGlow}
                 opacity="0.8"
               />
               <rect
@@ -573,7 +576,7 @@ export function TreeSVG({
                 y="9"
                 width="1"
                 height="1"
-                fill={getRarityGlow()}
+                fill={getRarityGlow}
                 opacity="0.8"
               />
               <rect
@@ -581,7 +584,7 @@ export function TreeSVG({
                 y="11"
                 width="1"
                 height="1"
-                fill={getRarityGlow()}
+                fill={getRarityGlow}
                 opacity="0.8"
               />
             </motion.g>
@@ -600,7 +603,7 @@ export function TreeSVG({
       animate={{
         scale: 1,
         filter: isSelected
-          ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+          ? `drop-shadow(0 0 20px ${getRarityGlow})`
           : 'none',
       }}
       whileHover={{
@@ -954,7 +957,7 @@ export function TreeSVG({
               y="10"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
             <rect
@@ -962,7 +965,7 @@ export function TreeSVG({
               y="13"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
             <rect
@@ -970,7 +973,7 @@ export function TreeSVG({
               y="1"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
             <rect
@@ -978,7 +981,7 @@ export function TreeSVG({
               y="3"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
             <rect
@@ -986,7 +989,7 @@ export function TreeSVG({
               y="18"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
           </motion.g>
@@ -1280,7 +1283,7 @@ export function TreeSVG({
         <motion.div
           className="absolute inset-0 rounded-full"
           style={{
-            background: `radial-gradient(circle, ${getRarityGlow()}15 0%, transparent 70%)`,
+            background: `radial-gradient(circle, ${getRarityGlow}15 0%, transparent 70%)`,
           }}
           animate={{
             scale: [1, 1.15, 1],
@@ -1296,3 +1299,18 @@ export function TreeSVG({
     </motion.div>
   )
 }
+
+function areEqual(prev: Readonly<TreeSVGProps>, next: Readonly<TreeSVGProps>) {
+  return (
+    prev.size === next.size &&
+    prev.color === next.color &&
+    prev.rarity === next.rarity &&
+    prev.season === next.season &&
+    prev.isSelected === next.isSelected &&
+    prev.isHovered === next.isHovered &&
+    prev.name === next.name &&
+    prev.isVisible === next.isVisible
+  )
+}
+
+export const TreeSVG = memo(TreeSVGComponent, areEqual)

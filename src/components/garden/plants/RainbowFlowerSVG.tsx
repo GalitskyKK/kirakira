@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion'
-import { useMemo } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { memo, useMemo } from 'react'
 import { RarityLevel } from '@/types'
 
 interface RainbowFlowerSVGProps {
@@ -12,7 +12,9 @@ interface RainbowFlowerSVGProps {
   isVisible?: boolean
 }
 
-export function RainbowFlowerSVG({
+ 
+
+function RainbowFlowerSVGComponent({
   size = 64,
   color = '#ec4899',
   rarity = RarityLevel.EPIC,
@@ -21,7 +23,10 @@ export function RainbowFlowerSVG({
   name: _name = 'Rainbow Flower',
   isVisible = true,
 }: RainbowFlowerSVGProps) {
-  const getRarityGlow = () => {
+  const prefersReducedMotion = useReducedMotion()
+  const repeatInf = isVisible && !prefersReducedMotion ? Infinity : 0
+
+  const getRarityGlow = useMemo(() => {
     switch (rarity) {
       case RarityLevel.UNCOMMON:
         return '#22c55e'
@@ -34,7 +39,7 @@ export function RainbowFlowerSVG({
       default:
         return color
     }
-  }
+  }, [rarity, color])
 
   // Rainbow colors for petals
   const rainbowColors = [
@@ -48,7 +53,7 @@ export function RainbowFlowerSVG({
     '#ec4899', // pink
   ]
 
-  const repeatInf = isVisible ? Infinity : 0
+  
   const pseudoRandom = (seed: number): number => {
     const x = Math.sin(seed) * 10000
     return x - Math.floor(x)
@@ -67,13 +72,13 @@ export function RainbowFlowerSVG({
   return (
     <motion.div
       className="pixel-container relative flex items-center justify-center"
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, willChange: 'transform, opacity' }}
       initial={{ scale: 0, rotate: -45 }}
       animate={{
         scale: 1,
         rotate: 0,
         filter: isSelected
-          ? `drop-shadow(0 0 25px ${getRarityGlow()})`
+          ? `drop-shadow(0 0 25px ${getRarityGlow})`
           : 'none',
       }}
       whileHover={{
@@ -495,3 +500,20 @@ export function RainbowFlowerSVG({
     </motion.div>
   )
 }
+
+function areEqual(
+  prev: Readonly<RainbowFlowerSVGProps>,
+  next: Readonly<RainbowFlowerSVGProps>
+) {
+  return (
+    prev.size === next.size &&
+    prev.color === next.color &&
+    prev.rarity === next.rarity &&
+    prev.isSelected === next.isSelected &&
+    prev.isHovered === next.isHovered &&
+    prev.name === next.name &&
+    prev.isVisible === next.isVisible
+  )
+}
+
+export const RainbowFlowerSVG = memo(RainbowFlowerSVGComponent, areEqual)

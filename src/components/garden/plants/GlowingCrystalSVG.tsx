@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion'
-import { useMemo } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { memo, useMemo } from 'react'
 import { RarityLevel } from '@/types'
 
 interface GlowingCrystalSVGProps {
@@ -12,7 +12,24 @@ interface GlowingCrystalSVGProps {
   isVisible?: boolean
 }
 
-export function GlowingCrystalSVG({
+function areEqual(
+  prev: Readonly<GlowingCrystalSVGProps>,
+  next: Readonly<GlowingCrystalSVGProps>
+) {
+  return (
+    prev.size === next.size &&
+    prev.color === next.color &&
+    prev.rarity === next.rarity &&
+    prev.isSelected === next.isSelected &&
+    prev.isHovered === next.isHovered &&
+    prev.name === next.name &&
+    prev.isVisible === next.isVisible
+  )
+}
+
+export const GlowingCrystalSVG = memo(GlowingCrystalSVGComponent, areEqual)
+
+function GlowingCrystalSVGComponent({
   size = 64,
   color = '#06b6d4',
   rarity = RarityLevel.EPIC,
@@ -21,7 +38,10 @@ export function GlowingCrystalSVG({
   name: _name = 'Glowing Crystal',
   isVisible = true,
 }: GlowingCrystalSVGProps) {
-  const getRarityGlow = () => {
+  const prefersReducedMotion = useReducedMotion()
+  const repeatInf = isVisible && !prefersReducedMotion ? Infinity : 0
+
+  const getRarityGlow = useMemo(() => {
     switch (rarity) {
       case RarityLevel.UNCOMMON:
         return '#22c55e'
@@ -34,9 +54,8 @@ export function GlowingCrystalSVG({
       default:
         return color
     }
-  }
+  }, [rarity, color])
 
-  const repeatInf = isVisible ? Infinity : 0
   const pseudoRandom = (seed: number): number => {
     const x = Math.sin(seed) * 10000
     return x - Math.floor(x)
@@ -56,14 +75,14 @@ export function GlowingCrystalSVG({
   return (
     <motion.div
       className="pixel-container relative flex items-center justify-center"
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, willChange: 'transform, opacity' }}
       initial={{ scale: 0, rotate: -180, opacity: 0 }}
       animate={{
         scale: 1,
         rotate: 0,
         opacity: 1,
         filter: isSelected
-          ? `drop-shadow(0 0 30px ${getRarityGlow()})`
+          ? `drop-shadow(0 0 30px ${getRarityGlow})`
           : 'none',
       }}
       whileHover={{
@@ -394,7 +413,7 @@ export function GlowingCrystalSVG({
             y="9"
             width="1"
             height="1"
-            fill={getRarityGlow()}
+            fill={getRarityGlow}
             opacity="1"
           />
           <rect
@@ -402,7 +421,7 @@ export function GlowingCrystalSVG({
             y="11"
             width="1"
             height="1"
-            fill={getRarityGlow()}
+            fill={getRarityGlow}
             opacity="1"
           />
           <rect
@@ -410,7 +429,7 @@ export function GlowingCrystalSVG({
             y="17"
             width="1"
             height="1"
-            fill={getRarityGlow()}
+            fill={getRarityGlow}
             opacity="1"
           />
           <rect
@@ -418,7 +437,7 @@ export function GlowingCrystalSVG({
             y="19"
             width="1"
             height="1"
-            fill={getRarityGlow()}
+            fill={getRarityGlow}
             opacity="1"
           />
           <rect
@@ -426,7 +445,7 @@ export function GlowingCrystalSVG({
             y="25"
             width="1"
             height="1"
-            fill={getRarityGlow()}
+            fill={getRarityGlow}
             opacity="1"
           />
 
@@ -525,7 +544,7 @@ export function GlowingCrystalSVG({
               width="20"
               height="20"
               fill="none"
-              stroke={getRarityGlow()}
+            stroke={getRarityGlow}
               strokeWidth="1"
               opacity="0.6"
               strokeDasharray="2,1"
@@ -653,7 +672,7 @@ export function GlowingCrystalSVG({
       <motion.div
         className="absolute inset-0 rounded-full"
         style={{
-          background: `conic-gradient(from 0deg, ${getRarityGlow()}40, transparent, ${color}40, transparent, ${getRarityGlow()}40)`,
+          background: `conic-gradient(from 0deg, ${getRarityGlow}40, transparent, ${color}40, transparent, ${getRarityGlow}40)`,
         }}
         animate={{
           rotate: [0, 360],

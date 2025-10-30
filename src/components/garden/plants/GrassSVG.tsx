@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion'
-import { useMemo } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { memo, useMemo } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
 
 interface GrassSVGProps {
@@ -13,7 +13,7 @@ interface GrassSVGProps {
   isVisible?: boolean
 }
 
-export function GrassSVG({
+function GrassSVGComponent({
   size = 64,
   color = '#22c55e',
   rarity = RarityLevel.COMMON,
@@ -23,7 +23,10 @@ export function GrassSVG({
   name = 'Grass',
   isVisible = true,
 }: GrassSVGProps) {
-  const getRarityGlow = () => {
+  const prefersReducedMotion = useReducedMotion()
+  const repeatInf = isVisible && !prefersReducedMotion ? Infinity : 0
+
+  const getRarityGlow = useMemo(() => {
     switch (rarity) {
       case RarityLevel.UNCOMMON:
         return '#22c55e'
@@ -36,9 +39,9 @@ export function GrassSVG({
       default:
         return color
     }
-  }
+  }, [rarity, color])
 
-  const getSeasonalColors = () => {
+  const getSeasonalColors = useMemo(() => {
     const baseGreen = color
     switch (season) {
       case SeasonalVariant.SPRING:
@@ -72,10 +75,9 @@ export function GrassSVG({
           accent: '#4ade80',
         }
     }
-  }
+  }, [season, color])
 
-  const seasonalColors = getSeasonalColors()
-  const repeatInf = isVisible ? Infinity : 0
+  const seasonalColors = getSeasonalColors
   const hashDelay = useMemo(() => {
     const src = String(name ?? '')
     let h = 0
@@ -90,12 +92,12 @@ export function GrassSVG({
   return (
     <motion.div
       className="pixel-container relative flex items-center justify-center"
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, willChange: 'transform, opacity' }}
       initial={{ scale: 0 }}
       animate={{
         scale: 1,
         filter: isSelected
-          ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+          ? `drop-shadow(0 0 20px ${getRarityGlow})`
           : 'none',
       }}
       whileHover={{
@@ -678,7 +680,7 @@ export function GrassSVG({
               y="20"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
             <rect
@@ -686,7 +688,7 @@ export function GrassSVG({
               y="22"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
             <rect
@@ -694,7 +696,7 @@ export function GrassSVG({
               y="5"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.9"
             />
             {!isMoss && (
@@ -704,7 +706,7 @@ export function GrassSVG({
                   y="9"
                   width="1"
                   height="1"
-                  fill={getRarityGlow()}
+                  fill={getRarityGlow}
                   opacity="0.8"
                 />
                 <rect
@@ -712,7 +714,7 @@ export function GrassSVG({
                   y="7"
                   width="1"
                   height="1"
-                  fill={getRarityGlow()}
+                  fill={getRarityGlow}
                   opacity="0.8"
                 />
               </>
@@ -795,7 +797,7 @@ export function GrassSVG({
                 y={isMoss ? 20 : 12}
                 width="1"
                 height="1"
-                fill={getRarityGlow()}
+                fill={getRarityGlow}
                 animate={{
                   y: [isMoss ? 20 : 12, isMoss ? 15 : 5, isMoss ? 20 : 12],
                   opacity: [0, 1, 0],
@@ -818,7 +820,7 @@ export function GrassSVG({
         <motion.div
           className="absolute inset-0 rounded-full"
           style={{
-            background: `radial-gradient(circle, ${getRarityGlow()}15 0%, transparent 70%)`,
+            background: `radial-gradient(circle, ${getRarityGlow}15 0%, transparent 70%)`,
           }}
           animate={{
             scale: [1, 1.1, 1],
@@ -834,3 +836,18 @@ export function GrassSVG({
     </motion.div>
   )
 }
+
+function areEqual(prev: Readonly<GrassSVGProps>, next: Readonly<GrassSVGProps>) {
+  return (
+    prev.size === next.size &&
+    prev.color === next.color &&
+    prev.rarity === next.rarity &&
+    prev.season === next.season &&
+    prev.isSelected === next.isSelected &&
+    prev.isHovered === next.isHovered &&
+    prev.name === next.name &&
+    prev.isVisible === next.isVisible
+  )
+}
+
+export const GrassSVG = memo(GrassSVGComponent, areEqual)

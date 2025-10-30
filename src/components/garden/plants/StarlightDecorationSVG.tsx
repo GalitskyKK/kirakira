@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion'
-import { useMemo } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { memo, useMemo } from 'react'
 import { RarityLevel } from '@/types'
 
 interface StarlightDecorationSVGProps {
@@ -12,7 +12,7 @@ interface StarlightDecorationSVGProps {
   isVisible?: boolean
 }
 
-export function StarlightDecorationSVG({
+function StarlightDecorationSVGComponent({
   size = 64,
   color = '#fbbf24',
   rarity = RarityLevel.EPIC,
@@ -21,7 +21,10 @@ export function StarlightDecorationSVG({
   name: _name = 'Starlight Decoration',
   isVisible = true,
 }: StarlightDecorationSVGProps) {
-  const getRarityGlow = () => {
+  const prefersReducedMotion = useReducedMotion()
+  const repeatInf = isVisible && !prefersReducedMotion ? Infinity : 0
+
+  const getRarityGlow = useMemo(() => {
     switch (rarity) {
       case RarityLevel.UNCOMMON:
         return '#22c55e'
@@ -34,9 +37,8 @@ export function StarlightDecorationSVG({
       default:
         return color
     }
-  }
+  }, [rarity, color])
 
-  const repeatInf = isVisible ? Infinity : 0
   const pseudoRandom = (seed: number): number => {
     const x = Math.sin(seed) * 10000
     return x - Math.floor(x)
@@ -72,15 +74,13 @@ export function StarlightDecorationSVG({
   return (
     <motion.div
       className="pixel-container relative flex items-center justify-center"
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, willChange: 'transform, opacity' }}
       initial={{ scale: 0, opacity: 0, rotate: -90 }}
       animate={{
         scale: 1,
         opacity: 1,
         rotate: 0,
-        filter: isSelected
-          ? `drop-shadow(0 0 30px ${getRarityGlow()})`
-          : 'none',
+        filter: isSelected ? `drop-shadow(0 0 30px ${getRarityGlow})` : 'none',
       }}
       whileHover={{
         scale: 1.2,
@@ -563,7 +563,7 @@ export function StarlightDecorationSVG({
       <motion.div
         className="absolute inset-0 rounded-full"
         style={{
-          background: `radial-gradient(circle, ${getRarityGlow()}30, transparent 70%)`,
+          background: `radial-gradient(circle, ${getRarityGlow}30, transparent 70%)`,
         }}
         animate={{
           scale: [1, 1.4, 1],
@@ -578,3 +578,23 @@ export function StarlightDecorationSVG({
     </motion.div>
   )
 }
+
+function areEqual(
+  prev: Readonly<StarlightDecorationSVGProps>,
+  next: Readonly<StarlightDecorationSVGProps>
+) {
+  return (
+    prev.size === next.size &&
+    prev.color === next.color &&
+    prev.rarity === next.rarity &&
+    prev.isSelected === next.isSelected &&
+    prev.isHovered === next.isHovered &&
+    prev.name === next.name &&
+    prev.isVisible === next.isVisible
+  )
+}
+
+export const StarlightDecorationSVG = memo(
+  StarlightDecorationSVGComponent,
+  areEqual
+)
