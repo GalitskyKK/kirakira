@@ -11,7 +11,7 @@ import { useTelegramId } from '@/hooks/useTelegramId'
 import { buyStreakFreeze } from '@/api/streakFreezeService'
 import { useQueryClient } from '@tanstack/react-query'
 import { useUserSync } from '@/hooks/index.v2'
-import { currencyKeys } from '@/hooks/queries'
+import { currencyKeys, userKeys } from '@/hooks/queries'
 import {
   FREEZE_SHOP_CONFIG,
   FREEZE_DESCRIPTIONS,
@@ -101,22 +101,7 @@ export function FreezeShopSection() {
       if (result.success && telegramId) {
         console.log('✅ Freeze purchased successfully:', result.data)
 
-        // Инвалидируем кеш (это обновит данные о заморозках и валюте через React Query)
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ['user', telegramId] }),
-          queryClient.invalidateQueries({
-            queryKey: currencyKeys.balance(telegramId),
-          }),
-          queryClient.invalidateQueries({
-            queryKey: currencyKeys.transactions(telegramId),
-          }),
-          queryClient.invalidateQueries({
-            queryKey: ['streak-freezes', telegramId],
-          }),
-        ])
-
-        // 🔄 Оптимистичное обновление store для мгновенного отображения
-        // Обновляем баланс сразу из результата покупки, не дожидаясь refetch
+        // 🔄 1. Оптимистичное обновление баланса валюты
         if (
           result.data?.newBalance !== undefined &&
           result.data?.currencyUsed
@@ -124,7 +109,6 @@ export function FreezeShopSection() {
           const storeState = useCurrencyClientStore.getState()
           const currentCurrency = storeState.userCurrency
           if (currentCurrency && storeState.updateCurrencyFromQuery) {
-            // Обновляем баланс из результата покупки
             storeState.updateCurrencyFromQuery({
               ...currentCurrency,
               sprouts:
@@ -135,7 +119,7 @@ export function FreezeShopSection() {
                 result.data.currencyUsed === 'gems'
                   ? result.data.newBalance
                   : currentCurrency.gems,
-              lastUpdated: new Date(), // Обновляем timestamp
+              lastUpdated: new Date(),
             })
             console.log('✅ Currency balance updated optimistically:', {
               currencyUsed: result.data.currencyUsed,
@@ -143,6 +127,32 @@ export function FreezeShopSection() {
             })
           }
         }
+
+        // 🔄 2. Оптимистичное обновление данных о заморозках
+        if (result.data?.newAmount !== undefined && freezeData) {
+          setFreezeData({
+            ...freezeData,
+            [freezeType]: result.data.newAmount,
+          })
+          console.log('✅ Freeze data updated optimistically:', {
+            freezeType,
+            oldAmount: freezeData[freezeType],
+            newAmount: result.data.newAmount,
+          })
+        }
+
+        // 🔄 3. Инвалидируем кеш для полной синхронизации с сервером
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: userKeys.sync(telegramId),
+          }),
+          queryClient.invalidateQueries({
+            queryKey: currencyKeys.balance(telegramId),
+          }),
+          queryClient.invalidateQueries({
+            queryKey: currencyKeys.transactions(telegramId),
+          }),
+        ])
       } else {
         console.error('❌ Failed to buy freeze:', result.error)
         // TODO: Показать toast с ошибкой

@@ -33,6 +33,27 @@ export function useStreakFreeze() {
   const [autoUsedMessage, setAutoUsedMessage] = useState<string | null>(null)
   const [hasProcessedStreakCheck, setHasProcessedStreakCheck] = useState(false)
 
+  // 🔄 Обновляем freezeData при изменении userData (после покупки заморозок)
+  useEffect(() => {
+    if (userData?.user?.stats) {
+      const newFreezeData: StreakFreezeData = {
+        manual: userData.user.stats.streakFreezes || 0,
+        auto: userData.user.stats.autoFreezes || 0,
+        max: freezeData?.max ?? 5, // Сохраняем max из предыдущего состояния или 5 по умолчанию
+        canAccumulate: true,
+      }
+      
+      // Обновляем только если данные изменились
+      if (
+        freezeData?.manual !== newFreezeData.manual ||
+        freezeData?.auto !== newFreezeData.auto
+      ) {
+        setFreezeData(newFreezeData)
+        console.log('✅ Freeze data synced from userData:', newFreezeData)
+      }
+    }
+  }, [userData, freezeData?.max])
+
   // 🔥 ШАГ 1: Проверка стрика на сервере при инициализации
   const checkAndHandleStreak = useCallback(async () => {
     if (currentUser?.telegramId == null || hasProcessedStreakCheck) return
