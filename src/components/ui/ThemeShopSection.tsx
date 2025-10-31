@@ -3,7 +3,7 @@
  * Выделенная секция для покупки тем сада
  */
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Check, Lock, Leaf } from 'lucide-react'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
@@ -46,13 +46,22 @@ export function ThemeShopSection() {
   const queryClient = useQueryClient()
 
   const [purchasingTheme, setPurchasingTheme] = useState<string | null>(null)
+  const isProcessingRef = useRef(false) // Защита от двойных кликов
 
   const handleBuyTheme = async (themeId: string) => {
+    // Защита от двойных кликов
+    if (isProcessingRef.current || purchasingTheme !== null) {
+      console.warn('⚠️ Purchase already in progress, ignoring duplicate click')
+      return
+    }
+
     if (!telegramId) {
       console.error('❌ No telegramId available')
       return
     }
 
+    // Блокируем повторные вызовы
+    isProcessingRef.current = true
     setPurchasingTheme(themeId)
 
     try {
@@ -132,6 +141,10 @@ export function ThemeShopSection() {
       console.error('💥 Error in handleBuyTheme:', error)
     } finally {
       setPurchasingTheme(null)
+      // Разблокируем через небольшую задержку для предотвращения двойных кликов
+      setTimeout(() => {
+        isProcessingRef.current = false
+      }, 500)
     }
   }
 

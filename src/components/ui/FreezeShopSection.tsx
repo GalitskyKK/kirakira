@@ -3,11 +3,10 @@
  * Покупка ручных и авто-заморозок стрика
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Snowflake, Check, Leaf, Zap } from 'lucide-react'
 import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
-import { useSpendCurrency } from '@/hooks/queries'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { buyStreakFreeze } from '@/api/streakFreezeService'
 import { useQueryClient } from '@tanstack/react-query'
@@ -24,7 +23,6 @@ export function FreezeShopSection() {
   const { userCurrency } = useCurrencyClientStore()
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
-  const spendCurrencyMutation = useSpendCurrency()
   const queryClient = useQueryClient()
 
   // Получаем данные о заморозках из userData
@@ -42,6 +40,7 @@ export function FreezeShopSection() {
   }, [userData])
 
   const [purchasing, setPurchasing] = useState<FreezeType | null>(null)
+  const isProcessingRef = useRef(false) // Защита от двойных кликов
 
   // Определяем, какую валюту используем
   const manualCost = FREEZE_SHOP_CONFIG.manual
@@ -74,14 +73,24 @@ export function FreezeShopSection() {
     freezeType: FreezeType,
     quantity: number = 1
   ) => {
+    // Защита от двойных кликов
+    if (isProcessingRef.current || purchasing !== null) {
+      console.warn('⚠️ Purchase already in progress, ignoring duplicate click')
+      return
+    }
+
     if (!telegramId) {
       console.error('❌ No telegramId available')
       return
     }
 
+    // Блокируем повторные вызовы
+    isProcessingRef.current = true
     setPurchasing(freezeType)
 
     try {
+      // API buyStreakFreeze уже списывает валюту на сервере
+      // НЕ нужно списывать валюту вручную!
       const result = await buyStreakFreeze({
         telegramId,
         freezeType,
@@ -91,30 +100,16 @@ export function FreezeShopSection() {
       if (result.success && telegramId) {
         console.log('✅ Freeze purchased successfully:', result.data)
 
-        // Списываем валюту через React Query mutation
-        const cost = freezeType === 'manual' ? manualCost : autoCost
-        const currencyType =
-          freezeType === 'manual' ? manualCurrency : autoCurrency
-
-        if (currencyType && (cost.gems || cost.sprouts)) {
-          await spendCurrencyMutation.mutateAsync({
-            telegramId,
-            currencyType: currencyType as 'sprouts' | 'gems',
-            amount: (cost.gems || cost.sprouts) ?? 0,
-            reason:
-              freezeType === 'manual' ? 'streak_freeze' : 'auto_streak_freeze',
-            description: `Покупка ${freezeType === 'manual' ? 'ручной' : 'автоматической'} заморозки стрика`,
-          })
-        }
-
-        // Инвалидируем кеш (это обновит данные о заморозках через React Query)
-        await queryClient.invalidateQueries({ queryKey: ['user', telegramId] })
-        await queryClient.invalidateQueries({
-          queryKey: ['currency', telegramId],
-        })
-        await queryClient.invalidateQueries({
-          queryKey: ['streak-freezes', telegramId],
-        })
+        // Инвалидируем кеш (это обновит данные о заморозках и валюте через React Query)
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['user', telegramId] }),
+          queryClient.invalidateQueries({
+            queryKey: ['currency', telegramId],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ['streak-freezes', telegramId],
+          }),
+        ])
       } else {
         console.error('❌ Failed to buy freeze:', result.error)
         // TODO: Показать toast с ошибкой
@@ -124,6 +119,10 @@ export function FreezeShopSection() {
       // TODO: Показать toast с ошибкой
     } finally {
       setPurchasing(null)
+      // Разблокируем через небольшую задержку для предотвращения двойных кликов
+      setTimeout(() => {
+        isProcessingRef.current = false
+      }, 500)
     }
   }
 

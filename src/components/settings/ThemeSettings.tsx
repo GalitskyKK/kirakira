@@ -4,6 +4,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useRef } from 'react'
 import { Check, Lock, Leaf } from 'lucide-react'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
 import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
@@ -53,12 +54,21 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
   const { data: userData } = useUserSync(telegramId, !!telegramId)
   const currentUser = userData?.user
   const queryClient = useQueryClient()
+  const isProcessingRef = useRef(false) // Защита от двойных кликов
 
   const handleBuyTheme = async (themeId: string) => {
+    // Защита от двойных кликов
+    if (isProcessingRef.current) {
+      console.warn('⚠️ Purchase already in progress, ignoring duplicate click')
+      return
+    }
+
     if (!currentUser?.telegramId) return
 
+    // Блокируем повторные вызовы
+    isProcessingRef.current = true
+
     try {
-      if (!currentUser.telegramId) return
 
       const theme = themes.find(t => t.id === themeId)
       if (!theme) {
@@ -120,6 +130,11 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
       }
     } catch (error) {
       console.error('Failed to buy theme:', error)
+    } finally {
+      // Разблокируем через небольшую задержку для предотвращения двойных кликов
+      setTimeout(() => {
+        isProcessingRef.current = false
+      }, 500)
     }
   }
 

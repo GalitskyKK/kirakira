@@ -3,13 +3,12 @@
  * Показывает доступные темы и позволяет их покупать
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Check, Lock, Leaf } from 'lucide-react'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
 import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
 import { useSpendCurrency } from '@/hooks/queries'
-import { useUserSync } from '@/hooks/queries/useUserQueries'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button, Card } from '@/components/ui'
@@ -51,11 +50,10 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
 
   // Используем правильный подход - React Query вместо Zustand
   const telegramId = useTelegramId()
-  const { data: userData } = useUserSync(telegramId, !!telegramId)
-  const currentUser = userData?.user
   const queryClient = useQueryClient()
 
   const [purchasingTheme, setPurchasingTheme] = useState<string | null>(null)
+  const isProcessingRef = useRef(false) // Защита от двойных кликов
 
   // Блокируем скролл при открытии модалки
   useEffect(() => {
@@ -93,20 +91,20 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
   }, [isOpen])
 
   const handleBuyTheme = async (themeId: string) => {
-    console.log('🛒 handleBuyTheme called with themeId:', themeId)
-    console.log('👤 currentUser:', currentUser)
-    console.log('💰 userCurrency:', userCurrency)
-    console.log('🔑 telegramId:', telegramId)
+    // Защита от двойных кликов
+    if (isProcessingRef.current || purchasingTheme !== null) {
+      console.warn('⚠️ Purchase already in progress, ignoring duplicate click')
+      return
+    }
 
     if (!telegramId) {
       console.error('❌ No telegramId available')
       return
     }
 
-    console.log('✅ Using telegramId:', telegramId)
-
+    // Блокируем повторные вызовы
+    isProcessingRef.current = true
     setPurchasingTheme(themeId)
-    console.log('⏳ Set purchasing theme:', themeId)
 
     try {
       const theme = themes.find(t => t.id === themeId)
@@ -133,8 +131,6 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
         description: `Покупка темы "${theme.name}"`,
         metadata: { themeId, themeName: theme.name },
       })
-
-      console.log('📊 spendCurrency result:', result)
 
       if (result.success) {
         // Обновляем список купленных тем
@@ -195,8 +191,11 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
     } catch (error) {
       console.error('💥 Error in handleBuyTheme:', error)
     } finally {
-      console.log('🏁 Clearing purchasing theme')
       setPurchasingTheme(null)
+      // Разблокируем через небольшую задержку для предотвращения двойных кликов
+      setTimeout(() => {
+        isProcessingRef.current = false
+      }, 500)
     }
   }
 
