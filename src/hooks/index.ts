@@ -1,8 +1,8 @@
 // Re-export all hooks for easier importing
-// 🔧 ИСПРАВЛЕНИЕ: Используем v2 хуки по умолчанию (с React Query)
-export { useGardenState } from './useGardenState.v2'
+// ✅ Миграция завершена: все хуки используют React Query
+export { useGardenState } from './useGardenState'
 export { useGardenRooms } from './useGardenRooms'
-export { useMoodTracking } from './useMoodTracking.v2'
+export { useMoodTracking } from './useMoodTracking'
 export { useElementGeneration } from './useElementGeneration'
 export {
   useLocalStorage,
@@ -20,7 +20,7 @@ export { useTelegramSync } from './useTelegramSync'
 export { useStoresSync } from './useStoresSync'
 export { useDeepLink } from './useDeepLink'
 export { useUserPhotos } from './useUserPhotos'
-export { useProfile } from './useProfile.v2'
+export { useProfile } from './useProfile'
 export {
   useChallengeIntegration,
   useChallengeGardenIntegration,

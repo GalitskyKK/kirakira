@@ -4,7 +4,7 @@
  */
 
 import { motion } from 'framer-motion'
-import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
+import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { Sparkles, Leaf } from 'lucide-react'
 
 interface CurrencyDisplayProps {

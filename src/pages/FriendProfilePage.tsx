@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Lock, Eye, Users } from 'lucide-react'
 import { LoadingSpinner, UserAvatar } from '@/components/ui'
-import { useFriendProfileData } from '@/hooks/useProfile.v2'
+import { useFriendProfileData } from '@/hooks/useProfile'
 import { GARDENER_LEVELS } from '@/utils/achievements'
 import type {
   DatabaseUser,

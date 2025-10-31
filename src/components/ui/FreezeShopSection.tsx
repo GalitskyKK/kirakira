@@ -6,7 +6,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Snowflake, Check, Leaf, Zap } from 'lucide-react'
-import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
+import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { buyStreakFreeze } from '@/api/streakFreezeService'
 import { useQueryClient } from '@tanstack/react-query'

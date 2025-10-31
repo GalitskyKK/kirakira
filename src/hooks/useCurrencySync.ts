@@ -1,14 +1,14 @@
 /**
  * 💰 Currency Sync Hook (v2 - React Query)
  * Синхронизирует React Query данные валюты с currencyStore для обратной совместимости
- * 
+ *
  * @deprecated Это временное решение для обратной совместимости
  * В будущем все компоненты должны использовать useCurrencyBalance() напрямую
  */
 
 import { useEffect } from 'react'
 import { useCurrencyBalance, useCurrencyTransactions } from '@/hooks/queries'
-import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
+import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { useTelegramId } from '@/hooks/useTelegramId'
 
 /**
@@ -41,4 +41,3 @@ export function useCurrencySync() {
 
   return currencyData
 }
-

@@ -1,34 +1,124 @@
+/**
+ * 🌱 Garden State Hook (v2 - Refactored)
+ * Использует React Query для серверного состояния
+ * И Zustand для клиентского UI состояния
+ */
+
 import { useCallback, useMemo } from 'react'
-import { useGardenStore } from '@/stores'
-import type { MoodType, Position2D, GardenElement } from '@/types'
+import { useGardenClientStore } from '@/stores/gardenStore'
+import {
+  useGardenSync,
+  useAddGardenElement,
+  useUpdateElementPosition,
+} from '@/hooks/queries'
+import { useUserSync } from '@/hooks/index.v2'
+import { useTelegramId } from '@/hooks/useTelegramId'
+import {
+  useUpdateQuestProgress,
+  useDailyQuests,
+} from '@/hooks/queries/useDailyQuestQueries'
+import { useChallengeGardenIntegration } from '@/hooks/useChallengeIntegration'
+import { useQuestIntegration } from '@/hooks/useQuestIntegration'
+import type { MoodType, Position2D, GardenElement, Garden } from '@/types'
+import { loadGarden, saveGarden } from '@/utils/storage'
+import {
+  generateDailyElement,
+  canUnlockTodaysElement,
+  getCurrentSeason,
+} from '@/utils/elementGeneration'
+import { awardElementSprouts } from '@/utils/currencyRewards'
 
 /**
- * Hook for managing garden state and operations
+ * Хук для управления состоянием сада
+ * Объединяет серверное состояние (React Query) и клиентское состояние (Zustand)
  */
 export function useGardenState() {
+  // Получаем telegramId через контекст для оптимизации
+  const telegramId = useTelegramId()
+  const { data: userData } = useUserSync(telegramId, !!telegramId)
+  const currentUser = userData?.user
+
+  // Серверное состояние через React Query
   const {
-    currentGarden,
+    data: gardenData,
     isLoading,
-    error,
+    error: queryError,
+    refetch: syncGarden,
+  } = useGardenSync(telegramId, !!telegramId)
+
+  const addElementMutation = useAddGardenElement()
+  const updatePositionMutation = useUpdateElementPosition()
+  const updateQuestProgress = useUpdateQuestProgress()
+  const { onGardenElementAdded } = useChallengeGardenIntegration()
+
+  // Получаем квесты для умной валидации
+  const { data: questsData } = useDailyQuests(telegramId || 0)
+  const { updateQuestsWithValidation } = useQuestIntegration({
+    onQuestUpdated: (questType, isCompleted) => {
+      if (isCompleted) {
+        console.log(`🎉 Quest completed: ${questType}`)
+      }
+    },
+  })
+
+  // Клиентское UI состояние через Zustand
+  const {
     viewMode,
     selectedElement,
     currentRoomIndex,
-    loadGarden,
-    createGarden,
-    updateGarden,
-    unlockTodaysElement,
-    moveElement,
-    selectElement,
     setViewMode,
+    selectElement,
     setCurrentRoomIndex,
-    setError,
-    canUnlockToday,
-    getElementsCount,
-    getLatestElement,
-    clearGarden,
-  } = useGardenStore()
+    clearSelection,
+  } = useGardenClientStore()
 
-  // Memoized garden statistics
+  // 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Объединенное состояние с приоритетом серверным данным
+  // Если после очистки localStorage нет сада, но есть серверные данные - создаём сад из них
+  const currentGarden = useMemo(() => {
+    const localGarden = loadGarden()
+
+    // Если есть серверные данные - они приоритетнее
+    if (gardenData && currentUser) {
+      const updatedGarden: Garden = {
+        id: `garden_${currentUser.id}`,
+        userId: currentUser.id,
+        createdAt: currentUser.registrationDate,
+        streak: gardenData.streak,
+        elements: gardenData.elements,
+        lastVisited: new Date(),
+        season: getCurrentSeason(new Date()),
+      }
+
+      // Сохраняем обновленный сад локально
+      saveGarden(updatedGarden)
+
+      return updatedGarden
+    }
+
+    // Fallback на локальные данные (offline-first)
+    if (localGarden) {
+      return localGarden
+    }
+
+    // Если нет ни серверных, ни локальных данных, но есть пользователь - создаём пустой сад
+    if (currentUser && !isLoading) {
+      const emptyGarden: Garden = {
+        id: `garden_${currentUser.id}`,
+        userId: currentUser.id,
+        createdAt: currentUser.registrationDate,
+        streak: 0,
+        elements: [],
+        lastVisited: new Date(),
+        season: getCurrentSeason(new Date()),
+      }
+      saveGarden(emptyGarden)
+      return emptyGarden
+    }
+
+    return null
+  }, [gardenData, currentUser, isLoading])
+
+  // Статистика сада
   const gardenStats = useMemo(() => {
     if (!currentGarden) {
       return {
@@ -44,7 +134,7 @@ export function useGardenState() {
     const elements = currentGarden.elements
     const totalElements = elements.length
 
-    // Group by type
+    // Группировка по типу
     const elementsByType = elements.reduce(
       (acc, element) => {
         acc[element.type] = (acc[element.type] ?? 0) + 1
@@ -53,7 +143,7 @@ export function useGardenState() {
       {} as Record<string, number>
     )
 
-    // Group by rarity
+    // Группировка по редкости
     const elementsByRarity = elements.reduce(
       (acc, element) => {
         acc[element.rarity] = (acc[element.rarity] ?? 0) + 1
@@ -62,7 +152,7 @@ export function useGardenState() {
       {} as Record<string, number>
     )
 
-    // Calculate average age in days
+    // Средний возраст в днях
     const now = new Date()
     const totalAge = elements.reduce((sum, element) => {
       const age = Math.floor(
@@ -73,7 +163,7 @@ export function useGardenState() {
     const averageAge =
       totalElements > 0 ? Math.round(totalAge / totalElements) : 0
 
-    // Find newest and oldest elements
+    // Новейший и старейший элементы
     const sortedByDate = [...elements].sort(
       (a, b) => b.unlockDate.getTime() - a.unlockDate.getTime()
     )
@@ -90,7 +180,7 @@ export function useGardenState() {
     }
   }, [currentGarden])
 
-  // Check if a position is occupied
+  // Проверка занятости позиции
   const isPositionOccupied = useCallback(
     (position: Position2D): boolean => {
       if (!currentGarden) return false
@@ -103,7 +193,7 @@ export function useGardenState() {
     [currentGarden]
   )
 
-  // Get available positions
+  // Получение доступных позиций
   const getAvailablePositions = useCallback((): Position2D[] => {
     const availablePositions: Position2D[] = []
 
@@ -119,105 +209,280 @@ export function useGardenState() {
     return availablePositions
   }, [isPositionOccupied])
 
-  // Unlock today's element with error handling
+  // Разблокировка элемента за сегодня
   const unlockElement = useCallback(
     async (mood: MoodType): Promise<GardenElement | null> => {
+      if (!currentUser?.telegramId || !currentGarden) {
+        console.error('❌ No user or garden available')
+        return null
+      }
+
+      // Проверка возможности разблокировки
+      const latestElement = currentGarden.elements.reduce(
+        (latest, current) =>
+          !latest || current.unlockDate > latest.unlockDate ? current : latest,
+        null as GardenElement | null
+      )
+
+      if (!canUnlockTodaysElement(latestElement?.unlockDate ?? null)) {
+        console.error("❌ Already unlocked today's element")
+        return null
+      }
+
       try {
-        setError(null)
-        const element = await unlockTodaysElement(mood)
-        return element
+        // Генерируем элемент локально
+        const existingPositions = currentGarden.elements.map(el => el.position)
+        const newElement = generateDailyElement(
+          currentGarden.userId,
+          new Date(currentGarden.createdAt),
+          new Date(),
+          mood,
+          existingPositions,
+          currentUser?.experience ?? 0 // НОВОЕ: передаём опыт для rarityBonus
+        )
+
+        // Отправляем на сервер через mutation
+        const telegramUserData: {
+          userId: string
+          firstName: string
+          lastName?: string
+          username?: string
+          languageCode: string
+          photoUrl?: string
+        } = {
+          userId: currentUser.id,
+          firstName: currentUser.firstName ?? 'User',
+          languageCode: currentUser.preferences.language || 'ru',
+        }
+
+        if (currentUser.lastName !== undefined) {
+          telegramUserData.lastName = currentUser.lastName
+        }
+        if (currentUser.username !== undefined) {
+          telegramUserData.username = currentUser.username
+        }
+        if (currentUser.photoUrl !== undefined) {
+          telegramUserData.photoUrl = currentUser.photoUrl
+        }
+
+        const result = await addElementMutation.mutateAsync({
+          telegramId: currentUser.telegramId,
+          element: {
+            type: newElement.type,
+            position: newElement.position,
+            unlockDate: newElement.unlockDate.toISOString(),
+            moodInfluence: mood,
+            rarity: newElement.rarity,
+            seasonalVariant:
+              newElement.seasonalVariant ??
+              getCurrentSeason(newElement.unlockDate),
+          },
+          telegramUserData,
+        })
+
+        if (result) {
+          console.log('✅ Element unlocked successfully')
+
+          // 💰 Начисляем валюту за получение элемента
+          const currencyResult = await awardElementSprouts(
+            currentUser.telegramId,
+            result.element.rarity,
+            result.element.id
+          )
+
+          if (currencyResult.success) {
+            console.log(
+              `💰 Awarded ${currencyResult.amount} sprouts for ${result.element.rarity} element`
+            )
+          }
+
+          // 🎯 Обновляем прогресс daily quests с умной валидацией
+          if (
+            telegramId &&
+            questsData?.quests &&
+            questsData.quests.length > 0
+          ) {
+            try {
+              console.log(
+                '🎯 Updating garden-related daily quests with validation...'
+              )
+
+              await updateQuestsWithValidation(
+                {
+                  elementType: newElement.type,
+                  isRareElement:
+                    newElement.rarity === 'rare' ||
+                    newElement.rarity === 'epic' ||
+                    newElement.rarity === 'legendary',
+                },
+                questsData.quests
+              )
+            } catch (questError) {
+              console.error('❌ Failed to update quest progress:', questError)
+            }
+          } else if (telegramId) {
+            // Fallback к старому методу если квесты не загружены
+            try {
+              console.log(
+                '🎯 Updating garden-related daily quests (fallback)...'
+              )
+
+              const gardenQuests = ['collect_elements']
+              if (
+                newElement.rarity === 'rare' ||
+                newElement.rarity === 'epic' ||
+                newElement.rarity === 'legendary'
+              ) {
+                // gardenQuests.push('collect_rare_element') // Removed complex quest
+              }
+
+              for (const questType of gardenQuests) {
+                try {
+                  await updateQuestProgress.mutateAsync({
+                    telegramId,
+                    questType,
+                    increment: 1,
+                  })
+                } catch (error) {
+                  console.warn(`⚠️ Failed to update quest ${questType}:`, error)
+                }
+              }
+            } catch (questError) {
+              console.error(
+                '❌ Failed to update quest progress (fallback):',
+                questError
+              )
+            }
+          }
+
+          // 🏆 Обновляем прогресс челенджей
+          try {
+            console.log('🏆 Updating challenge progress...')
+            await onGardenElementAdded()
+          } catch (challengeError) {
+            console.warn(
+              '⚠️ Failed to update challenge progress:',
+              challengeError
+            )
+          }
+
+          return result.element
+        }
+
+        return null
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to unlock element'
-        setError(errorMessage)
+        console.error('❌ Failed to unlock element:', error)
         return null
       }
     },
-    [unlockTodaysElement, setError]
+    [currentUser, currentGarden, addElementMutation]
   )
 
-  // Move element with validation
+  // Безопасное перемещение элемента
   const moveElementSafely = useCallback(
     async (elementId: string, newPosition: Position2D): Promise<boolean> => {
+      if (!currentUser?.telegramId) {
+        console.error('❌ No user available')
+        return false
+      }
+
+      // Валидация позиции
+      if (
+        newPosition.x < 0 ||
+        newPosition.x >= 10 ||
+        newPosition.y < 0 ||
+        newPosition.y >= 10
+      ) {
+        console.error('❌ Position is out of bounds')
+        return false
+      }
+
+      // Проверка занятости позиции
+      if (
+        currentGarden?.elements.some(
+          el =>
+            el.id !== elementId &&
+            el.position.x === newPosition.x &&
+            el.position.y === newPosition.y
+        )
+      ) {
+        console.error('❌ Position is already occupied')
+        return false
+      }
+
       try {
-        setError(null)
+        // Отправляем на сервер через mutation
+        const success = await updatePositionMutation.mutateAsync({
+          telegramId: currentUser.telegramId,
+          elementId,
+          position: newPosition,
+        })
 
-        // Check if position is valid
-        if (
-          newPosition.x < 0 ||
-          newPosition.x >= 10 ||
-          newPosition.y < 0 ||
-          newPosition.y >= 10
-        ) {
-          setError('Position is out of bounds')
-          return false
-        }
-
-        // Check if position is occupied by another element
-        if (
-          currentGarden?.elements.some(
-            el =>
-              el.id !== elementId &&
-              el.position.x === newPosition.x &&
-              el.position.y === newPosition.y
-          )
-        ) {
-          setError('Position is already occupied')
-          return false
-        }
-
-        await moveElement(elementId, newPosition)
-        return true
+        return success
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to move element'
-        setError(errorMessage)
+        console.error('❌ Failed to move element:', error)
         return false
       }
     },
-    [moveElement, setError, currentGarden]
+    [currentUser, currentGarden, updatePositionMutation]
   )
 
-  // Initialize garden for new user
-  const initializeGarden = useCallback(
-    (userId: string): boolean => {
-      try {
-        setError(null)
-        createGarden(userId)
-        return true
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to create garden'
-        setError(errorMessage)
-        return false
-      }
-    },
-    [createGarden, setError]
-  )
+  // Проверка возможности разблокировки сегодня
+  const canUnlockToday = useCallback(() => {
+    if (!currentGarden) return false
+
+    const latestElement = currentGarden.elements.reduce(
+      (latest, current) =>
+        !latest || current.unlockDate > latest.unlockDate ? current : latest,
+      null as GardenElement | null
+    )
+
+    return canUnlockTodaysElement(latestElement?.unlockDate ?? null)
+  }, [currentGarden])
+
+  // Получение количества элементов
+  const getElementsCount = useCallback(() => {
+    return currentGarden?.elements.length ?? 0
+  }, [currentGarden])
+
+  // Получение последнего элемента
+  const getLatestElement = useCallback(() => {
+    if (!currentGarden || currentGarden.elements.length === 0) {
+      return null
+    }
+
+    return currentGarden.elements.reduce((latest, current) =>
+      current.unlockDate > latest.unlockDate ? current : latest
+    )
+  }, [currentGarden])
 
   return {
-    // State
+    // Состояние
     garden: currentGarden,
-    isLoading,
-    error,
+    isLoading:
+      isLoading ||
+      addElementMutation.isPending ||
+      updatePositionMutation.isPending,
+    error:
+      queryError?.message ??
+      addElementMutation.error?.message ??
+      updatePositionMutation.error?.message ??
+      null,
     viewMode,
     selectedElement,
     currentRoomIndex,
 
-    // Statistics
+    // Статистика
     gardenStats,
 
     // Actions
-    loadGarden,
-    initializeGarden,
-    updateGarden,
+    syncGarden,
     unlockElement,
     moveElementSafely,
     selectElement,
     setViewMode,
     setCurrentRoomIndex,
-    setError,
-    clearGarden,
+    clearSelection,
 
     // Utility functions
     canUnlockToday,

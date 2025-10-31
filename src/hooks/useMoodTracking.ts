@@ -1,213 +1,315 @@
+/**
+ * 😊 Mood Tracking Hook (v2 - Refactored)
+ * Использует React Query для серверного состояния
+ * И Zustand для клиентского UI состояния
+ */
+
 import { useCallback, useMemo } from 'react'
-import { useMoodStore } from '@/stores'
+import { useMoodClientStore } from '@/stores/moodStore'
+import {
+  useMoodSync,
+  useAddMoodEntry,
+  useCanCheckinToday,
+} from '@/hooks/queries'
+import { useUserSync } from '@/hooks/index.v2'
+import { useTelegramId } from '@/hooks/useTelegramId'
+import { useChallengeMoodIntegration } from '@/hooks/useChallengeIntegration'
+import { useQuestIntegration } from '@/hooks/useQuestIntegration'
 import type { MoodType, MoodIntensity, MoodEntry, MoodStats } from '@/types'
 import { getMoodDisplayProps, getRecommendedMood } from '@/utils/moodMapping'
-import { getTimeUntilNextCheckin, formatDate } from '@/utils/dateHelpers'
+import { getTimeUntilNextCheckin } from '@/utils/dateHelpers'
+import { calculateMoodStats } from '@/utils/moodMapping'
+import { loadMoodHistory, saveMoodHistory } from '@/utils/storage'
+import { awardMoodRewards } from '@/utils/currencyRewards'
 
 /**
- * Hook for managing mood tracking and statistic
+ * Хук для отслеживания настроения
+ * Объединяет серверное состояние (React Query) и клиентское состояние (Zustand)
  */
 export function useMoodTracking() {
+  const telegramId = useTelegramId()
+  const { data: userData } = useUserSync(telegramId, !!telegramId)
+  const currentUser = userData?.user
+  const userId = currentUser?.id
+
+  // Серверное состояние через React Query
   const {
-    todaysMood,
-    moodHistory,
+    data: moodData,
     isLoading,
-    error,
-    streakCount,
-    lastCheckin,
-    loadMoodHistory,
-    addMoodEntry,
-    updateTodaysMood,
-    canCheckinToday,
-    getTodaysMood,
-    getRecentMoods,
-    getMoodStats,
-    getStreakInfo,
-    setError,
-    clearMoodHistory,
-  } = useMoodStore()
+    error: queryError,
+    refetch: syncMoodHistory,
+  } = useMoodSync(telegramId, userId, !!telegramId && !!userId)
 
-  // Memoized mood statistic
-  const moodStats: MoodStats = useMemo(() => getMoodStats(), [getMoodStats])
+  const addMoodMutation = useAddMoodEntry()
+  const { onMoodEntryAdded } = useChallengeMoodIntegration()
+  const { questActions } = useQuestIntegration({
+    onQuestUpdated: (questType, isCompleted) => {
+      if (isCompleted) {
+        console.log(`🎉 Quest completed: ${questType}`)
+      }
+    },
+  })
 
-  // Get time until next check-in
+  // Проверка возможности отметки настроения
+  const { canCheckin, todaysMood } = useCanCheckinToday(telegramId, userId)
+
+  // Клиентское UI состояние через Zustand
+  const {
+    selectedDateRange,
+    isFilterModalOpen,
+    selectedMoodFilter,
+    setDateRange,
+    setFilterModalOpen,
+    setSelectedMoodFilter,
+    clearFilters,
+  } = useMoodClientStore()
+
+  // 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Объединенное состояние с приоритетом серверным данным
+  // Если после очистки localStorage нет истории, но есть серверные данные - используем их
+  const moodHistory = useMemo(() => {
+    const localMoodHistory = loadMoodHistory()
+
+    // Если есть серверные данные - они приоритетнее
+    if (moodData) {
+      // Сохраняем серверные данные локально для offline-first
+      saveMoodHistory(moodData.moods)
+      return moodData.moods
+    }
+
+    // Fallback на локальные данные (offline-first)
+    return localMoodHistory
+  }, [moodData])
+
+  // Статистика настроений
+  // 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Используем серверные стрики из userData вместо локального расчета
+  const moodStats: MoodStats = useMemo(() => {
+    const localStats = calculateMoodStats(moodHistory)
+
+    // Если есть серверные данные о стриках - используем их (более точные!)
+    if (userData?.stats) {
+      return {
+        ...localStats,
+        currentStreak: userData.stats.currentStreak ?? localStats.currentStreak,
+        longestStreak: userData.stats.longestStreak ?? localStats.longestStreak,
+        totalMoodEntries:
+          userData.stats.totalMoodEntries ?? localStats.totalEntries,
+      }
+    }
+
+    return localStats
+  }, [moodHistory, userData?.stats])
+
+  // Время до следующей отметки
   const timeUntilNextCheckin = useMemo(() => {
-    return getTimeUntilNextCheckin(lastCheckin)
-  }, [lastCheckin])
+    const lastEntry = moodHistory.length > 0 ? moodHistory[0] : null
+    return getTimeUntilNextCheckin(lastEntry?.date ?? null)
+  }, [moodHistory])
 
-  // Get recent mood trend
+  // Недавний тренд (последние 7 дней)
   const recentTrend = useMemo((): readonly MoodEntry[] => {
-    const recent = getRecentMoods(7) // Last 7 days
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+    const recent = moodHistory.filter(entry => entry.date >= sevenDaysAgo)
     return [...recent].sort(
       (a: MoodEntry, b: MoodEntry) => a.date.getTime() - b.date.getTime()
     )
-  }, [getRecentMoods])
+  }, [moodHistory])
 
-  // Get mood recommendation based on patterns
+  // Рекомендация настроения на основе паттернов
   const moodRecommendation = useMemo(() => {
     return getRecommendedMood(recentTrend)
   }, [recentTrend])
 
-  // Check in with mood today
+  // Отметка настроения за сегодня
   const checkInToday = useCallback(
     async (
       mood: MoodType,
       intensity: MoodIntensity,
       note?: string
     ): Promise<MoodEntry | null> => {
-      try {
-        setError(null)
+      if (!currentUser?.telegramId || !currentUser?.id) {
+        console.error('❌ No user available')
+        return null
+      }
 
-        if (!canCheckinToday()) {
-          setError('You have already checked in today')
-          return null
+      if (!canCheckin) {
+        console.error('❌ Already checked in today')
+        return null
+      }
+
+      try {
+        // Отправляем на сервер через mutation
+        const telegramUserData: {
+          userId: string
+          firstName: string
+          lastName?: string
+          username?: string
+          languageCode: string
+          photoUrl?: string
+        } = {
+          userId: currentUser.id,
+          firstName: currentUser.firstName ?? 'User',
+          languageCode: currentUser.preferences.language || 'ru',
         }
 
-        const entry = await addMoodEntry(mood, intensity, note)
+        if (currentUser.lastName !== undefined) {
+          telegramUserData.lastName = currentUser.lastName
+        }
+        if (currentUser.username !== undefined) {
+          telegramUserData.username = currentUser.username
+        }
+        if (currentUser.photoUrl !== undefined) {
+          telegramUserData.photoUrl = currentUser.photoUrl
+        }
+
+        const moodRequest: {
+          telegramUserId: number
+          mood: MoodType
+          intensity: MoodIntensity
+          note?: string
+          date: string
+          telegramUserData: typeof telegramUserData
+        } = {
+          telegramUserId: currentUser.telegramId,
+          mood,
+          intensity,
+          date: new Date().toISOString(),
+          telegramUserData,
+        }
+
+        if (note !== undefined) {
+          moodRequest.note = note
+        }
+
+        const entry = await addMoodMutation.mutateAsync(moodRequest)
+
+        console.log('✅ Mood checked in successfully')
+
+        // 💰 Начисляем валюту за запись настроения
+        const isFirstToday = !todaysMood
+        const currencyResult = await awardMoodRewards(
+          currentUser.telegramId,
+          isFirstToday
+        )
+
+        if (currencyResult.success) {
+          console.log(
+            `💰 Awarded ${currencyResult.sprouts} sprouts for mood check-in`
+          )
+        }
+
+        // 🎯 Обновляем прогресс daily quests
+        if (telegramId) {
+          try {
+            // Обновляем квесты связанные с настроением
+            console.log('🎯 Updating mood-related daily quests...')
+
+            // Обновляем квесты настроения
+            await questActions.recordMood(mood, !!note)
+
+            // Обновляем квесты стриков (если это первая запись за день)
+            if (isFirstToday) {
+              await questActions.maintainStreak(1)
+            }
+          } catch (questError) {
+            console.error('❌ Failed to update quest progress:', questError)
+          }
+        }
+
+        // 🏆 Обновляем прогресс челенджей
+        try {
+          console.log('🏆 Updating challenge progress...')
+          await onMoodEntryAdded()
+        } catch (challengeError) {
+          console.warn(
+            '⚠️ Failed to update challenge progress:',
+            challengeError
+          )
+        }
+
         return entry
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to check in'
-        setError(errorMessage)
+        console.error('❌ Failed to check in mood:', error)
         return null
       }
     },
-    [addMoodEntry, canCheckinToday, setError]
+    [currentUser, canCheckin, addMoodMutation]
   )
 
-  // Update today's mood if already checked in
-  const updateTodaysMoodEntry = useCallback(
-    async (
-      mood: MoodType,
-      intensity: MoodIntensity,
-      note?: string
-    ): Promise<MoodEntry | null> => {
-      try {
-        setError(null)
-        const entry = await updateTodaysMood(mood, intensity, note)
-        return entry
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to update mood'
-        setError(errorMessage)
-        return null
-      }
-    },
-    [updateTodaysMood, setError]
-  )
-
-  // Get mood display properties
+  // Получение свойств отображения настроения
   const getMoodDisplay = useCallback((mood: MoodType) => {
     return getMoodDisplayProps(mood)
   }, [])
 
-  // Get mood history for a specific period
-  const getMoodHistoryForPeriod = useCallback(
-    (period: 'week' | 'month' | 'year'): readonly MoodEntry[] => {
-      const now = new Date()
-      let cutoffDate: Date
+  // Проверка возможности отметки
+  const canCheckinNow = useCallback(() => {
+    return canCheckin
+  }, [canCheckin])
 
-      switch (period) {
-        case 'week':
-          cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-          break
-        case 'month':
-          cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-          break
-        case 'year':
-          cutoffDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
-          break
-        default:
-          cutoffDate = new Date(0)
-      }
+  // Получение настроения за сегодня
+  const getTodaysMoodEntry = useCallback(() => {
+    return todaysMood
+  }, [todaysMood])
+
+  // Получение недавних настроений
+  const getRecentMoods = useCallback(
+    (days: number): readonly MoodEntry[] => {
+      const cutoffDate = new Date()
+      cutoffDate.setDate(cutoffDate.getDate() - days)
 
       return moodHistory.filter(entry => entry.date >= cutoffDate)
     },
     [moodHistory]
   )
 
-  // Get mood frequency for a specific mood
-  const getMoodFrequency = useCallback(
-    (mood: MoodType, period: 'week' | 'month' | 'year' = 'month'): number => {
-      const periodHistory = getMoodHistoryForPeriod(period)
-      const moodCount = periodHistory.filter(
-        entry => entry.mood === mood
-      ).length
-      return periodHistory.length > 0
-        ? (moodCount / periodHistory.length) * 100
-        : 0
-    },
-    [getMoodHistoryForPeriod]
-  )
+  // Получение статистики
+  const getMoodStatsData = useCallback(() => {
+    return moodStats
+  }, [moodStats])
 
-  // Check if user has checked in consistently
-  const getConsistencyScore = useCallback((): number => {
-    const last30Days = getMoodHistoryForPeriod('month')
-    const expectedDays = Math.min(
-      30,
-      Math.floor(
-        (new Date().getTime() -
-          (moodHistory[moodHistory.length - 1]?.date.getTime() ??
-            new Date().getTime())) /
-          (24 * 60 * 60 * 1000)
-      ) + 1
-    )
-
-    if (expectedDays === 0) return 0
-    return Math.round((last30Days.length / expectedDays) * 100)
-  }, [getMoodHistoryForPeriod, moodHistory])
-
-  // Get formatted mood history for charts
-  const getFormattedMoodData = useCallback(() => {
-    return moodHistory.map(entry => ({
-      date: formatDate(entry.date, 'dd.MM'),
-      mood: entry.mood,
-      intensity: entry.intensity,
-      display: getMoodDisplay(entry.mood),
-    }))
-  }, [moodHistory, getMoodDisplay])
-
-  // Check if it's a good time to check in (not too late, not too early)
-  const isGoodTimeToCheckin = useCallback((): boolean => {
-    const now = new Date()
-    const hours = now.getHours()
-
-    // Good time is between 6 AM and 11 PM
-    return hours >= 6 && hours <= 23
-  }, [])
+  // Получение информации о streak
+  const getStreakInfo = useCallback(() => {
+    return {
+      current: moodStats.currentStreak,
+      longest: moodStats.longestStreak,
+    }
+  }, [moodStats])
 
   return {
-    // State
+    // Состояние
     todaysMood,
     moodHistory,
-    isLoading,
-    error,
-    streakCount,
-    lastCheckin,
+    isLoading: isLoading || addMoodMutation.isPending,
+    error: queryError?.message ?? addMoodMutation.error?.message ?? null,
+    streakCount: moodStats.currentStreak,
+    lastCheckin: moodHistory.length > 0 ? (moodHistory[0]?.date ?? null) : null,
 
-    // Statistics
+    // Статистика
     moodStats,
+    timeUntilNextCheckin,
     recentTrend,
     moodRecommendation,
-    timeUntilNextCheckin,
+
+    // Фильтры UI
+    selectedDateRange,
+    isFilterModalOpen,
+    selectedMoodFilter,
 
     // Actions
-    loadMoodHistory,
+    syncMoodHistory,
     checkInToday,
-    updateTodaysMoodEntry,
-    clearMoodHistory,
-    setError,
+    getMoodDisplay,
+    setDateRange,
+    setFilterModalOpen,
+    setSelectedMoodFilter,
+    clearFilters,
 
     // Utility functions
-    canCheckinToday,
-    getTodaysMood,
+    canCheckinToday: canCheckinNow,
+    getTodaysMood: getTodaysMoodEntry,
     getRecentMoods,
+    getMoodStats: getMoodStatsData,
     getStreakInfo,
-    getMoodDisplay,
-    getMoodHistoryForPeriod,
-    getMoodFrequency,
-    getConsistencyScore,
-    getFormattedMoodData,
-    isGoodTimeToCheckin,
   }
 }

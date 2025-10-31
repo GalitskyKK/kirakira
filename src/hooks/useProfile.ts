@@ -1,234 +1,145 @@
-import { useState, useCallback } from 'react'
-import { useUserStore } from '@/stores'
-import type {
-  ProfileData,
-  StandardApiResponse,
-  ProfileApiGetProfileResponse,
-  ProfileApiUpdatePrivacyResponse,
-  ProfileApiAddExperienceResponse,
-  DatabaseAchievement,
-} from '@/types/api'
-import { authenticatedFetch } from '@/utils/apiClient'
+/**
+ * 📊 Profile Hook (v2 - Refactored)
+ * Использует React Query вместо прямых API запросов
+ * Устраняет антипаттерн прямых API вызовов в хуке
+ */
 
-interface ExperienceResult {
-  experience: number
-  newAchievements: readonly DatabaseAchievement[]
-  reason: string
-}
+import {
+  useOwnProfile,
+  useFriendProfile,
+  useAddExperience,
+} from '@/hooks/queries'
+import { useUserSync } from '@/hooks/index.v2'
+import { useTelegramId } from '@/hooks/useTelegramId'
+import type { ProfileData } from '@/types/api'
 
+/**
+ * Хук для работы с профилем пользователя
+ * Использует React Query для управления серверным состоянием
+ */
 export function useProfile() {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const { currentUser } = useUserStore()
+  const telegramId = useTelegramId()
+  useUserSync(telegramId, !!telegramId)
 
-  /**
-   * Загружает полный профиль пользователя
-   */
-  const loadProfile = useCallback(
-    async (telegramId?: number): Promise<ProfileData | null> => {
-      if (!telegramId && !currentUser?.telegramId) {
-        setError('No Telegram ID available')
-        return null
+  // Получение собственного профиля
+  const {
+    data: profileData,
+    isLoading,
+    error: queryError,
+    refetch: reloadProfile,
+  } = useOwnProfile(telegramId, !!telegramId)
+
+  // Mutation для добавления опыта
+  const addExperienceMutation = useAddExperience()
+
+  // Загрузка профиля (просто refetch query)
+  const loadProfile = async (
+    customTelegramId?: number
+  ): Promise<ProfileData | null> => {
+    if (customTelegramId && customTelegramId !== telegramId) {
+      // Если указан другой ID - это не наш профиль
+      console.warn('Use useFriendProfile hook for friend profiles')
+      return null
+    }
+
+    const result = await reloadProfile()
+    return result.data ?? null
+  }
+
+  // Добавление опыта
+  const addExperience = async (
+    experiencePoints: number,
+    reason: string = 'Manual'
+  ) => {
+    if (!telegramId) {
+      console.error('❌ No user logged in')
+      return null
+    }
+
+    try {
+      const result = await addExperienceMutation.mutateAsync({
+        telegramId,
+        experiencePoints,
+        reason,
+      })
+
+      if (result) {
+        console.log(`✅ Added ${experiencePoints} XP for ${reason}`)
+        if (result.leveledUp) {
+          console.log(`🎉 Level up! New level: ${result.level}`)
+        }
       }
 
-      setIsLoading(true)
-      setError(null)
+      return result
+    } catch (error) {
+      console.error('❌ Failed to add experience:', error)
+      return null
+    }
+  }
 
-      try {
-        const response = await authenticatedFetch(
-          `/api/profile?action=get_profile&telegramId=${telegramId || currentUser!.telegramId}`
-        )
-
-        if (!response.ok) {
-          throw new Error(`Failed to load profile: ${response.status}`)
-        }
-
-        const result =
-          (await response.json()) as StandardApiResponse<ProfileApiGetProfileResponse>
-
-        if (!result.success) {
-          throw new Error(result.error ?? 'Failed to load profile')
-        }
-
-        return result.data ?? null
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to load profile'
-        setError(errorMessage)
-        console.error('Profile load error:', err)
-        return null
-      } finally {
-        setIsLoading(false)
-      }
-    },
-    [currentUser]
-  )
-
-  /**
-   * Обновляет настройки приватности
-   */
-  const updatePrivacySettings = useCallback(
-    async (privacySettings: Record<string, boolean>): Promise<boolean> => {
-      if (!currentUser?.telegramId) {
-        setError('No user logged in')
-        return false
-      }
-
-      setIsLoading(true)
-      setError(null)
-
-      try {
-        const response = await authenticatedFetch(
-          '/api/profile?action=update_privacy',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              telegramId: currentUser.telegramId,
-              privacySettings,
-            }),
-          }
-        )
-
-        if (!response.ok) {
-          throw new Error(`Failed to update privacy: ${response.status}`)
-        }
-
-        const result =
-          (await response.json()) as StandardApiResponse<ProfileApiUpdatePrivacyResponse>
-
-        if (!result.success) {
-          throw new Error(result.error ?? 'Failed to update privacy settings')
-        }
-
-        return true
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to update privacy'
-        setError(errorMessage)
-        console.error('Privacy update error:', err)
-        return false
-      } finally {
-        setIsLoading(false)
-      }
-    },
-    [currentUser]
-  )
-
-  /**
-   * Добавляет опыт пользователю
-   */
-  const addExperience = useCallback(
-    async (
-      experiencePoints: number,
-      reason: string = 'Manual'
-    ): Promise<ExperienceResult | null> => {
-      if (!currentUser?.telegramId) {
-        setError('No user logged in')
-        return null
-      }
-
-      setIsLoading(true)
-      setError(null)
-
-      try {
-        const response = await authenticatedFetch(
-          '/api/profile?action=add_experience',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              telegramId: currentUser.telegramId,
-              experiencePoints,
-              reason,
-            }),
-          }
-        )
-
-        if (!response.ok) {
-          throw new Error(`Failed to add experience: ${response.status}`)
-        }
-
-        const result =
-          (await response.json()) as StandardApiResponse<ProfileApiAddExperienceResponse>
-
-        if (!result.success) {
-          throw new Error(result.error ?? 'Failed to add experience')
-        }
-
-        return result.data
-          ? {
-              experience: result.data.experience,
-              newAchievements: [],
-              reason: 'experience_added',
-            }
-          : null
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to add experience'
-        setError(errorMessage)
-        console.error('Experience add error:', err)
-        return null
-      } finally {
-        setIsLoading(false)
-      }
-    },
-    [currentUser]
-  )
-
-  /**
-   * Загружает профиль друга
-   */
-  const loadFriendProfile = useCallback(
-    async (friendTelegramId: number): Promise<ProfileData | null> => {
-      if (!currentUser?.telegramId) {
-        setError('No user logged in')
-        return null
-      }
-
-      setIsLoading(true)
-      setError(null)
-
-      try {
-        const response = await authenticatedFetch(
-          `/api/profile?action=get_friend_profile&telegramId=${currentUser.telegramId}&friendTelegramId=${friendTelegramId}`
-        )
-
-        if (!response.ok) {
-          if (response.status === 403) {
-            throw new Error('Профиль недоступен или пользователь не в друзьях')
-          }
-          throw new Error(`Failed to load friend profile: ${response.status}`)
-        }
-
-        const result =
-          (await response.json()) as StandardApiResponse<ProfileApiGetProfileResponse>
-
-        if (!result.success) {
-          throw new Error(result.error ?? 'Failed to load friend profile')
-        }
-
-        return result.data ?? null
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to load friend profile'
-        setError(errorMessage)
-        console.error('Friend profile load error:', err)
-        return null
-      } finally {
-        setIsLoading(false)
-      }
-    },
-    [currentUser]
-  )
+  // Очистка ошибки
+  const clearError = () => {
+    // В React Query ошибка очищается автоматически при следующем успешном запросе
+    // Но можно форсировать refetch для очистки
+    reloadProfile()
+  }
 
   return {
-    isLoading,
-    error,
+    // Состояние
+    profile: profileData ?? null,
+    isLoading: isLoading || addExperienceMutation.isPending,
+    error: queryError?.message ?? addExperienceMutation.error?.message ?? null,
+
+    // Actions
     loadProfile,
-    updatePrivacySettings,
     addExperience,
+    clearError,
+  }
+}
+
+/**
+ * Хук для загрузки профиля друга
+ */
+export function useFriendProfileData(friendTelegramId: number | undefined) {
+  const currentUserTelegramId = useTelegramId()
+  useUserSync(currentUserTelegramId, !!currentUserTelegramId)
+
+  const {
+    data: friendProfile,
+    isLoading,
+    error: queryError,
+    refetch: reloadFriendProfile,
+  } = useFriendProfile(
+    currentUserTelegramId,
+    friendTelegramId,
+    !!currentUserTelegramId && !!friendTelegramId
+  )
+
+  // Загрузка профиля друга
+  const loadFriendProfile = async (
+    customFriendId: number
+  ): Promise<ProfileData | null> => {
+    if (!currentUserTelegramId) {
+      console.error('❌ No user logged in')
+      return null
+    }
+
+    if (customFriendId !== friendTelegramId) {
+      console.warn('Friend ID mismatch')
+      return null
+    }
+
+    const result = await reloadFriendProfile()
+    return result.data ?? null
+  }
+
+  return {
+    // Состояние
+    friendProfile: friendProfile ?? null,
+    isLoading,
+    error: queryError?.message ?? null,
+
+    // Actions
     loadFriendProfile,
-    clearError: () => setError(null),
   }
 }

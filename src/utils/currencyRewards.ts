@@ -1,9 +1,11 @@
 /**
  * 💰 УТИЛИТЫ ДЛЯ НАЧИСЛЕНИЯ ВАЛЮТЫ
  * Хелперы для автоматического начисления валюты за действия
+ *
+ * Использует прямой API вызов через authenticatedFetch (утилита не может использовать React Query хуки)
  */
 
-import { useCurrencyStore } from '@/stores/currencyStore'
+import { authenticatedFetch } from '@/utils/apiClient'
 import {
   type CurrencyType,
   type CurrencyReason,
@@ -22,6 +24,7 @@ import type { RarityLevel } from '@/types/garden'
 
 /**
  * Начислить валюту пользователю
+ * Использует прямой API вызов (утилита не может использовать React Query хуки)
  */
 export async function awardCurrency(
   telegramId: number,
@@ -37,26 +40,42 @@ export async function awardCurrency(
   error?: string
 }> {
   try {
-    const { earnCurrency } = useCurrencyStore.getState()
+    const response = await authenticatedFetch('/api/currency?action=earn', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        telegramId,
+        currencyType,
+        amount,
+        reason,
+        description: description || getReasonDescription(reason),
+        metadata,
+      }),
+    })
 
-    const result = await earnCurrency(
-      telegramId,
-      currencyType,
-      amount,
-      reason,
-      description || getReasonDescription(reason),
-      metadata
-    )
-
-    if (result.success) {
-      console.log(
-        `✅ Awarded ${amount} ${currencyType} for ${reason}: ${description}`
-      )
-    } else {
-      console.error(`❌ Failed to award currency: ${result.error}`)
+    if (!response.ok) {
+      throw new Error(`Failed to earn currency: ${response.status}`)
     }
 
-    return result
+    const result = await response.json()
+
+    if (!result.success) {
+      console.error(`❌ Failed to award currency: ${result.error}`)
+      return {
+        success: false,
+        error: result.error || 'Failed to earn currency',
+      }
+    }
+
+    console.log(
+      `✅ Awarded ${amount} ${currencyType} for ${reason}: ${description || getReasonDescription(reason)}`
+    )
+
+    return {
+      success: true,
+      newBalance: result.data?.balance_after,
+      transactionId: result.data?.transaction_id,
+    }
   } catch (error) {
     console.error('❌ Error awarding currency:', error)
     return {
@@ -458,6 +477,7 @@ export function previewReward(
 
 /**
  * Получить общую статистику заработка за период
+ * Использует прямой API вызов для получения транзакций
  */
 export async function getCurrencyEarnedStats(
   telegramId: number,
@@ -469,28 +489,46 @@ export async function getCurrencyEarnedStats(
   transactionCount: number
 }> {
   try {
-    const { loadTransactions } = useCurrencyStore.getState()
-    const transactions = await loadTransactions(telegramId, 1000) // Загружаем больше для статистики
+    // Загружаем транзакции через API
+    const response = await authenticatedFetch(
+      `/api/currency?action=transactions&telegramId=${telegramId}&limit=1000`
+    )
+
+    if (!response.ok) {
+      throw new Error(`Failed to load transactions: ${response.status}`)
+    }
+
+    const result = await response.json()
+
+    if (!result.success || !result.data) {
+      throw new Error(result.error || 'Failed to load transactions')
+    }
+
+    const transactions = result.data.transactions || []
 
     // Фильтруем по дате если указано
-    const filteredTransactions = transactions.filter(tx => {
-      if (tx.transactionType !== 'earn') return false
+    const filteredTransactions = transactions.filter(
+      (tx: { transactionType: string; createdAt: string }) => {
+        if (tx.transactionType !== 'earn') return false
 
-      const txDate = new Date(tx.createdAt)
+        if (fromDate || toDate) {
+          const txDate = new Date(tx.createdAt)
 
-      if (fromDate && txDate < fromDate) return false
-      if (toDate && txDate > toDate) return false
+          if (fromDate && txDate < fromDate) return false
+          if (toDate && txDate > toDate) return false
+        }
 
-      return true
-    })
+        return true
+      }
+    )
 
     const sprouts = filteredTransactions
-      .filter(tx => tx.currencyType === 'sprouts')
-      .reduce((sum, tx) => sum + tx.amount, 0)
+      .filter((tx: { currencyType: string }) => tx.currencyType === 'sprouts')
+      .reduce((sum: number, tx: { amount: number }) => sum + tx.amount, 0)
 
     const gems = filteredTransactions
-      .filter(tx => tx.currencyType === 'gems')
-      .reduce((sum, tx) => sum + tx.amount, 0)
+      .filter((tx: { currencyType: string }) => tx.currencyType === 'gems')
+      .reduce((sum: number, tx: { amount: number }) => sum + tx.amount, 0)
 
     return {
       sprouts,

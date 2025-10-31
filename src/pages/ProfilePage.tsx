@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { useUserSync, useGardenSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
-import { useProfile } from '@/hooks/useProfile.v2'
+import { useProfile } from '@/hooks/useProfile'
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { ProfileStats } from '@/components/profile/ProfileStats'
 import { ProfileAchievements } from '@/components/profile/ProfileAchievements'

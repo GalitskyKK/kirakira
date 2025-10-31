@@ -3,29 +3,29 @@
  * Используют React Query для серверных данных и Zustand для UI состояния
  */
 
-// Основные хуки приложения (v2)
-export { useGardenState } from './useGardenState.v2'
-export { useMoodTracking } from './useMoodTracking.v2'
-export { useProfile, useFriendProfileData } from './useProfile.v2'
+// Основные хуки приложения (v2 - миграция завершена)
+export { useGardenState } from './useGardenState'
+export { useMoodTracking } from './useMoodTracking'
+export { useProfile, useFriendProfileData } from './useProfile'
 
-// Store v2 хуки
+// Store хуки (миграция завершена)
 export {
   useUserClientStore,
   useOnboardingStatus,
   useAuthModalState,
-} from '@/stores/userStore.v2'
+} from '@/stores/userStore'
 export {
   useGardenClientStore,
   useGardenViewMode,
   useSelectedElement,
   useCurrentRoomIndex,
-} from '@/stores/gardenStore.v2'
+} from '@/stores/gardenStore'
 export {
   useChallengeClientStore,
   useCurrentChallenge,
   useChallengeLoading,
   useChallengeError,
-} from '@/stores/challengeStore.v2'
+} from '@/stores/challengeStore'
 
 // React Query хуки для прямого использования
 export * from './queries'

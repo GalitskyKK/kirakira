@@ -9,7 +9,7 @@ import { X, Palette, Snowflake, Sparkles, Leaf, Zap } from 'lucide-react'
 
 import { ThemeShopSection } from './ThemeShopSection'
 import { FreezeShopSection } from './FreezeShopSection'
-import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
+import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { useCurrencySync } from '@/hooks/useCurrencySync'
 
 export interface ShopProps {

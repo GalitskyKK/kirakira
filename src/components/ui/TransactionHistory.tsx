@@ -5,7 +5,7 @@
 
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
+import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { useCurrencyTransactions } from '@/hooks/queries'
 import type { CurrencyTransaction } from '@/types/currency'
 import { SingleCurrencyDisplay } from './CurrencyDisplay'

@@ -5,7 +5,7 @@
 
 import { useState, useCallback, useRef } from 'react'
 import type { GardenElement, RarityLevel } from '@/types/garden'
-import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
+import { useCurrencyClientStore } from '@/stores/currencyStore'
 import {
   useUserSync,
   useElementUpgradeInfo,

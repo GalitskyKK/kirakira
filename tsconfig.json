@@ -39,5 +39,6 @@
     }
   },
   "include": ["src"],
+  "exclude": ["**/*.old.ts", "node_modules", "dist"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

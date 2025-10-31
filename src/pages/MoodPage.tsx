@@ -12,7 +12,7 @@ import {
 import { useGardenState, useMoodTracking } from '@/hooks/index.v2'
 import { useStreakFreeze } from '@/hooks/useStreakFreeze'
 import { useCurrencySync } from '@/hooks/useCurrencySync'
-import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
+import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 

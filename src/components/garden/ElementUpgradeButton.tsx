@@ -11,7 +11,7 @@ import {
   UPGRADE_COSTS,
   UPGRADE_SUCCESS_RATES,
 } from '@/types/garden'
-import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
+import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { TrendingUp, Sparkles } from 'lucide-react'
