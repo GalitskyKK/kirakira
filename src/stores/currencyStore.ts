@@ -35,6 +35,16 @@ export const useCurrencyStore = create<CurrencyStore>()(
     isLoading: false,
     error: null,
 
+    /**
+     * Обновить валюту из React Query данных (для обратной совместимости)
+     * @deprecated Используйте useCurrencyBalance() напрямую вместо этого store
+     */
+    updateCurrencyFromQuery: (
+      currency: import('@/types/currency').UserCurrency
+    ) => {
+      set({ userCurrency: currency })
+    },
+
     // ===============================================
     // 📥 ДЕЙСТВИЯ: Получение данных
     // ===============================================
@@ -56,7 +66,8 @@ export const useCurrencyStore = create<CurrencyStore>()(
           throw new Error(`Failed to load currency: ${response.status}`)
         }
 
-        const result = (await response.json()) as StandardApiResponse<CurrencyApiBalanceResponse>
+        const result =
+          (await response.json()) as StandardApiResponse<CurrencyApiBalanceResponse>
 
         if (!result.success || !result.data) {
           throw new Error(result.error || 'Failed to load currency')
@@ -106,28 +117,32 @@ export const useCurrencyStore = create<CurrencyStore>()(
           throw new Error(`Failed to load transactions: ${response.status}`)
         }
 
-        const result = (await response.json()) as StandardApiResponse<CurrencyApiTransactionResponse>
+        const result =
+          (await response.json()) as StandardApiResponse<CurrencyApiTransactionResponse>
 
         if (!result.success || !result.data) {
           throw new Error(result.error || 'Failed to load transactions')
         }
 
-        const transactions: CurrencyTransaction[] = result.data.transactions.map(
-          (tx) => ({
+        const transactions: CurrencyTransaction[] =
+          result.data.transactions.map(tx => ({
             id: tx.id,
             telegramId: tx.telegramId,
-            transactionType: tx.transactionType as import('@/types/currency').TransactionType,
-            currencyType: tx.currencyType as import('@/types/currency').CurrencyType,
+            transactionType:
+              tx.transactionType as import('@/types/currency').TransactionType,
+            currencyType:
+              tx.currencyType as import('@/types/currency').CurrencyType,
             amount: tx.amount,
             balanceBefore: tx.balanceBefore,
             balanceAfter: tx.balanceAfter,
             reason: tx.reason as import('@/types/currency').CurrencyReason,
             ...(tx.description != null ? { description: tx.description } : {}),
             ...(tx.metadata != null ? { metadata: tx.metadata } : {}),
-            ...(tx.relatedUserId != null ? { relatedUserId: tx.relatedUserId } : {}),
+            ...(tx.relatedUserId != null
+              ? { relatedUserId: tx.relatedUserId }
+              : {}),
             createdAt: new Date(tx.createdAt),
-          })
-        )
+          }))
 
         set({ recentTransactions: transactions })
 
@@ -359,18 +374,14 @@ export const useCurrencyStore = create<CurrencyStore>()(
 )
 
 // ===============================================
-// 🔔 ПОДПИСКИ
+// 🔔 ПОДПИСКИ (v2 - React Query)
 // ===============================================
 
-// Автоматическая синхронизация валюты при изменении пользователя
-import { useUserStore } from './userStore'
-
-useUserStore.subscribe(
-  state => state.currentUser?.telegramId,
-  telegramId => {
-    if (telegramId) {
-      const { loadCurrency } = useCurrencyStore.getState()
-      void loadCurrency(telegramId)
-    }
-  }
-)
+// ⚠️ DEPRECATED: Подписка на useUserStore удалена
+// Вместо этого используйте React Query хук useCurrencyBalance()
+// Он автоматически обновляется при изменении telegramId через useUserSync
+//
+// Пример использования:
+// const { data: currency } = useCurrencyBalance(telegramId, !!telegramId)
+//
+// Или используйте хук useCurrencyStore() который теперь работает с React Query

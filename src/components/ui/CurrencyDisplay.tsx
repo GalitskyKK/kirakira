@@ -4,7 +4,7 @@
  */
 
 import { motion } from 'framer-motion'
-import { useCurrencyStore } from '@/stores/currencyStore'
+import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
 import { Sparkles, Leaf } from 'lucide-react'
 
 interface CurrencyDisplayProps {
@@ -28,7 +28,7 @@ export function CurrencyDisplay({
   onClick,
   showBorder = true,
 }: CurrencyDisplayProps): JSX.Element {
-  const { userCurrency, isLoading } = useCurrencyStore()
+  const { userCurrency, isLoading } = useCurrencyClientStore()
 
   // Размеры в зависимости от size prop
   const sizeClasses = {

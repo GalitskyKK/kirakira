@@ -1,37 +1,34 @@
-// Re-export all stores for easier importing
-export { useGardenStore } from './gardenStore'
-export { useMoodStore } from './moodStore'
-export { useUserStore } from './userStore'
+// ============================================
+// v2 Stores (React Query + UI State only)
+// ============================================
+export { useGardenClientStore } from './gardenStore.v2'
+export { useMoodClientStore } from './moodStore.v2'
+export { useUserClientStore } from './userStore.v2'
+export { useCurrencyClientStore } from './currencyStore.v2'
+export { useChallengeClientStore } from './challengeStore.v2'
+
+// ============================================
+// Other Stores (not yet migrated)
+// ============================================
 export { usePremiumStore, premiumUtils } from './premiumStore'
-export { useCurrencyStore } from './currencyStore'
 export { useDailyQuestStore } from './dailyQuestStore'
 
-// Store initialization function with static imports to avoid chunk splitting warnings
-import { useUserStore } from './userStore'
-import { useMoodStore } from './moodStore'
-import { useGardenStore } from './gardenStore'
+// ============================================
+// DEPRECATED: Old stores (will be removed)
+// Используйте v2 stores или React Query хуки
+// ============================================
+/** @deprecated Используйте useGardenClientStore() или useGardenSync() */
+export { useGardenStore } from './gardenStore'
+/** @deprecated Используйте useMoodClientStore() или useMoodSync() */
+export { useMoodStore } from './moodStore'
+/** @deprecated Используйте useUserClientStore() или useUserSync() */
+export { useUserStore } from './userStore'
+/** @deprecated Используйте useCurrencyClientStore() или useCurrencyBalance() */
+export { useCurrencyStore } from './currencyStore'
 
-export async function initializeStores(): Promise<void> {
-  // Load user first
-  await useUserStore.getState().loadUser()
-
-  // If no user exists, create anonymous user
-  const currentUser = useUserStore.getState().currentUser
-  if (!currentUser) {
-    await useUserStore.getState().createAnonymousUser()
-  }
-
-  // Load mood history and garden data
-  await Promise.all([
-    useMoodStore.getState().loadMoodHistory(),
-    useGardenStore.getState().loadGarden(),
-  ])
-
-  // Create garden if it doesn't exist
-  const currentGarden = useGardenStore.getState().currentGarden
-  const user = useUserStore.getState().currentUser
-
-  if (!currentGarden && user) {
-    await useGardenStore.getState().createGarden(user.id)
-  }
-}
+// ⚠️ DEPRECATED: initializeStores() удалена - используйте React Query хуки
+// Для синхронизации данных используйте:
+// - useUserSync() для пользователя
+// - useMoodSync() для настроений
+// - useGardenSync() для сада
+// Или useStoresSync() для комплексной синхронизации

@@ -1,9 +1,8 @@
-import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { MobileTabNavigation } from './MobileTabNavigation'
 import { TelegramStatus, StreakFreezeModal } from '@/components/ui'
 import { useStreakFreeze } from '@/hooks/useStreakFreeze'
-import { useCurrencyStore } from '@/stores/currencyStore'
+import { useCurrencySync } from '@/hooks/useCurrencySync'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 
@@ -12,7 +11,9 @@ export function MobileLayout() {
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
   const currentUser = userData?.user
-  const { loadCurrency } = useCurrencyStore()
+
+  // ✅ Автоматически загружаем и синхронизируем валюту через React Query
+  useCurrencySync()
 
   // 🧊 Заморозки стрика
   const {
@@ -24,13 +25,6 @@ export function MobileLayout() {
     resetStreak,
     closeModal,
   } = useStreakFreeze()
-
-  // Загружаем баланс валюты при монтировании
-  useEffect(() => {
-    if (currentUser?.telegramId != null) {
-      void loadCurrency(currentUser.telegramId)
-    }
-  }, [currentUser?.telegramId, loadCurrency])
 
   return (
     <div

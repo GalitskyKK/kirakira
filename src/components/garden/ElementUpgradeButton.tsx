@@ -11,7 +11,7 @@ import {
   UPGRADE_COSTS,
   UPGRADE_SUCCESS_RATES,
 } from '@/types/garden'
-import { useCurrencyStore } from '@/stores'
+import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { TrendingUp, Sparkles } from 'lucide-react'
@@ -31,7 +31,7 @@ export function ElementUpgradeButton({
   disabled = false,
   isLoading = false,
 }: ElementUpgradeButtonProps) {
-  const { userCurrency } = useCurrencyStore()
+  const { userCurrency } = useCurrencyClientStore()
 
   // Получаем данные пользователя через React Query
   const telegramId = useTelegramId()

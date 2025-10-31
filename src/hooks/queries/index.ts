@@ -17,3 +17,6 @@ export * from './useProfileQueries'
 
 // Challenge Queries
 export * from './useChallengeQueries'
+
+// Currency Queries
+export * from './useCurrencyQueries'

@@ -28,6 +28,7 @@ export {
 } from './useChallengeIntegration'
 export { useStreakFreeze } from './useStreakFreeze'
 export { useScrollToTop } from './useScrollToTop'
+export { useCurrencySync } from './useCurrencySync'
 
 // Additional utility hooks can be added here
 export { useGardenTheme } from './useGardenTheme'

@@ -36,11 +36,6 @@ export * from './queries/useDailyQuestQueries'
 // Telegram ID Hook
 export { useTelegramId } from './useTelegramId'
 
-// Старые хуки (для обратной совместимости)
-export { useGardenState as useGardenStateOld } from './useGardenState'
-export { useMoodTracking as useMoodTrackingOld } from './useMoodTracking'
-export { useProfile as useProfileOld } from './useProfile'
-
 // Другие хуки
 export { useTelegramSync } from './useTelegramSync'
 export { useTelegram } from './useTelegram'

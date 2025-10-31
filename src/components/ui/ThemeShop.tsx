@@ -7,7 +7,8 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Check, Lock, Leaf } from 'lucide-react'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
-import { useCurrencyStore } from '@/stores/currencyStore'
+import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
+import { useSpendCurrency } from '@/hooks/queries'
 import { useUserSync } from '@/hooks/queries/useUserQueries'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useQueryClient } from '@tanstack/react-query'
@@ -45,7 +46,8 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
     isLoadingThemes,
     refetchOwnedThemes,
   } = useGardenTheme()
-  const { userCurrency, spendCurrency } = useCurrencyStore()
+  const { userCurrency } = useCurrencyClientStore()
+  const spendCurrencyMutation = useSpendCurrency()
 
   // Используем правильный подход - React Query вместо Zustand
   const telegramId = useTelegramId()
@@ -123,14 +125,14 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
         metadata: { themeId, themeName: theme.name },
       })
 
-      const result = await spendCurrency(
+      const result = await spendCurrencyMutation.mutateAsync({
         telegramId,
-        'sprouts',
-        theme.priceSprouts,
-        'buy_theme',
-        `Покупка темы "${theme.name}"`,
-        { themeId, themeName: theme.name }
-      )
+        currencyType: 'sprouts',
+        amount: theme.priceSprouts,
+        reason: 'buy_theme',
+        description: `Покупка темы "${theme.name}"`,
+        metadata: { themeId, themeName: theme.name },
+      })
 
       console.log('📊 spendCurrency result:', result)
 

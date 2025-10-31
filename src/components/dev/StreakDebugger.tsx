@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Bug, RefreshCw, Database, Monitor, Server } from 'lucide-react'
 import { Card } from '@/components/ui'
-import { useMoodStore, useUserStore } from '@/stores'
+import { useUserSync, useMoodSync, useTelegramId } from '@/hooks/index.v2'
 import { calculateMoodStats } from '@/utils/moodMapping'
 import { formatDate } from '@/utils/dateHelpers'
 import type { StandardApiResponse, ProfileApiGetProfileResponse } from '@/types/api'
@@ -38,8 +38,19 @@ interface StreakDebugInfo {
 }
 
 export function StreakDebugger() {
-  const { moodHistory, loadMoodHistory, syncMoodHistory } = useMoodStore()
-  const { currentUser } = useUserStore()
+  // Используем v2 хуки (React Query) вместо старых stores
+  const telegramId = useTelegramId()
+  const { data: userData } = useUserSync(telegramId, !!telegramId)
+  const currentUser = userData?.user
+  
+  // Получаем данные настроений через React Query
+  const { data: moodData, refetch: refetchMood } = useMoodSync(
+    telegramId,
+    currentUser?.id,
+    !!telegramId && !!currentUser?.id
+  )
+  const moodHistory = moodData?.moods ?? []
+  
   const [debugInfo, setDebugInfo] = useState<StreakDebugInfo | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [testTelegramId, setTestTelegramId] = useState('')
@@ -280,8 +291,8 @@ export function StreakDebugger() {
   }
 
   const handleRefresh = async () => {
-    loadMoodHistory()
-    await syncMoodHistory(true)
+    // Обновляем данные через React Query
+    await refetchMood()
     await analyzeStreaks()
   }
 

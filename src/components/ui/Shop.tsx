@@ -9,8 +9,7 @@ import { X, Palette, Snowflake, Sparkles, Leaf, Zap } from 'lucide-react'
 
 import { ThemeShopSection } from './ThemeShopSection'
 import { FreezeShopSection } from './FreezeShopSection'
-import { useCurrencyStore } from '@/stores/currencyStore'
-import { useTelegramId } from '@/hooks/useTelegramId'
+import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
 
 export interface ShopProps {
   readonly isOpen: boolean
@@ -35,15 +34,8 @@ const SHOP_TABS: readonly TabConfig[] = [
 
 export function Shop({ isOpen, onClose, initialTab = 'themes' }: ShopProps) {
   const [activeTab, setActiveTab] = useState<ShopTab>(initialTab)
-  const { userCurrency, loadCurrency } = useCurrencyStore()
-  const telegramId = useTelegramId()
-
-  // Загружаем валюту при открытии
-  useEffect(() => {
-    if (isOpen && telegramId) {
-      void loadCurrency(telegramId)
-    }
-  }, [isOpen, telegramId, loadCurrency])
+  // Используем v2 store (синхронизируется через useCurrencySync)
+  const { userCurrency } = useCurrencyClientStore()
 
   // Блокируем скролл при открытии модалки
   useEffect(() => {

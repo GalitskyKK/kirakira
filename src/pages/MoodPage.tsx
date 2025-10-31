@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { MoodCheckin } from '@/components/mood'
@@ -11,7 +11,8 @@ import {
 } from '@/components/ui'
 import { useGardenState, useMoodTracking } from '@/hooks/index.v2'
 import { useStreakFreeze } from '@/hooks/useStreakFreeze'
-import { useCurrencyStore } from '@/stores/currencyStore'
+import { useCurrencySync } from '@/hooks/useCurrencySync'
+import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 
@@ -23,7 +24,13 @@ export function MoodPage() {
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
   const currentUser = userData?.user
-  const { userCurrency, loadCurrency } = useCurrencyStore()
+  
+  // ✅ Автоматически загружаем и синхронизируем валюту через React Query
+  useCurrencySync()
+  
+  // Получаем валюту из v2 store (синхронизируется через useCurrencySync)
+  const { userCurrency } = useCurrencyClientStore()
+  
   const [isThemeShopOpen, setIsThemeShopOpen] = useState(false)
   const [shopInitialTab, setShopInitialTab] = useState<'themes' | 'freezes'>(
     'themes'
@@ -41,12 +48,7 @@ export function MoodPage() {
     closeModal,
   } = useStreakFreeze()
 
-  // Загружаем баланс валюты при монтировании
-  useEffect(() => {
-    if (currentUser?.telegramId != null) {
-      void loadCurrency(currentUser.telegramId)
-    }
-  }, [currentUser?.telegramId, loadCurrency])
+  // ✅ Валюта автоматически загружается через useCurrencyBalance() выше
 
   return (
     <>

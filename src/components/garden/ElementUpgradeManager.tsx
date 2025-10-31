@@ -5,7 +5,7 @@
 
 import { useState, useCallback, useRef } from 'react'
 import type { GardenElement, RarityLevel } from '@/types/garden'
-import { useCurrencyStore } from '@/stores'
+import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
 import {
   useUserSync,
   useElementUpgradeInfo,
@@ -27,7 +27,7 @@ export function ElementUpgradeManager({
   onUpgradeSuccess,
   onUpgradeComplete,
 }: ElementUpgradeManagerProps) {
-  const { userCurrency } = useCurrencyStore()
+  const { userCurrency } = useCurrencyClientStore()
 
   // Получаем данные пользователя через React Query
   const telegramId = useTelegramId()
@@ -93,14 +93,9 @@ export function ElementUpgradeManager({
           useFree,
         })
 
-        // 🔄 СИНХРОНИЗИРУЕМ ВАЛЮТУ ПОСЛЕ УЛУЧШЕНИЯ
-        try {
-          const { loadCurrency } = useCurrencyStore.getState()
-          await loadCurrency(currentUser.telegramId)
-          console.log('✅ Currency synced after element upgrade')
-        } catch (error) {
-          console.warn('⚠️ Failed to sync currency after upgrade:', error)
-        }
+        // 🔄 ВАЛЮТА АВТОМАТИЧЕСКИ СИНХРОНИЗИРУЕТСЯ ЧЕРЕЗ React Query
+        // useCurrencySync() в MobileLayout автоматически обновит store
+        console.log('✅ Currency will sync automatically via React Query')
 
         if (result) {
           // 🎉 УСПЕХ - показываем оверлей на странице элемента

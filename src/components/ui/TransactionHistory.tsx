@@ -4,8 +4,9 @@
  */
 
 import { motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
-import { useCurrencyStore } from '@/stores/currencyStore'
+import { useState } from 'react'
+import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
+import { useCurrencyTransactions } from '@/hooks/queries'
 import type { CurrencyTransaction } from '@/types/currency'
 import { SingleCurrencyDisplay } from './CurrencyDisplay'
 import { ArrowUp, ArrowDown, Clock, Filter } from 'lucide-react'
@@ -26,18 +27,24 @@ export function TransactionHistory({
   limit = 50,
   showFilters = true,
 }: TransactionHistoryProps): JSX.Element {
-  const { recentTransactions, loadTransactions, isLoading } = useCurrencyStore()
+  // Используем React Query для получения данных
+  const { data: transactionsData, isLoading } = useCurrencyTransactions(
+    telegramId,
+    limit,
+    !!telegramId
+  )
+  // Получаем транзакции из v2 store (синхронизируются через useCurrencySync)
+  const { recentTransactions } = useCurrencyClientStore()
+  // Используем данные из React Query если есть, иначе из store
+  const transactions = transactionsData ?? recentTransactions
+
   const [filter, setFilter] = useState<'all' | 'earn' | 'spend'>('all')
   const [currencyFilter, setCurrencyFilter] = useState<
     'all' | 'sprouts' | 'gems'
   >('all')
 
-  useEffect(() => {
-    void loadTransactions(telegramId, limit)
-  }, [telegramId, limit, loadTransactions])
-
   // Фильтрация транзакций
-  const filteredTransactions = recentTransactions.filter(tx => {
+  const filteredTransactions = transactions.filter(tx => {
     if (filter !== 'all' && tx.transactionType !== filter) return false
     if (currencyFilter !== 'all' && tx.currencyType !== currencyFilter)
       return false
@@ -57,7 +64,7 @@ export function TransactionHistory({
     )
   }
 
-  if (recentTransactions.length === 0) {
+  if (transactions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <Clock size={48} className="mb-4 text-gray-300 dark:text-gray-600" />
@@ -306,11 +313,16 @@ export function CompactTransactionHistory({
   telegramId,
   onSeeAll,
 }: CompactTransactionHistoryProps): JSX.Element {
-  const { recentTransactions, loadTransactions, isLoading } = useCurrencyStore()
-
-  useEffect(() => {
-    void loadTransactions(telegramId, 5)
-  }, [telegramId, loadTransactions])
+  // Используем React Query для получения данных
+  const { data: transactionsData, isLoading } = useCurrencyTransactions(
+    telegramId,
+    5,
+    !!telegramId
+  )
+  // Получаем транзакции из v2 store (синхронизируются через useCurrencySync)
+  const { recentTransactions } = useCurrencyClientStore()
+  // Используем данные из React Query если есть, иначе из store
+  const transactions = transactionsData ?? recentTransactions
 
   if (isLoading) {
     return (
@@ -327,11 +339,11 @@ export function CompactTransactionHistory({
 
   return (
     <div className="space-y-2">
-      {recentTransactions.slice(0, 5).map((tx, index) => (
+      {transactions.slice(0, 5).map((tx, index) => (
         <TransactionItem key={tx.id} transaction={tx} index={index} />
       ))}
 
-      {recentTransactions.length > 5 && onSeeAll && (
+      {transactions.length > 5 && onSeeAll && (
         <button
           onClick={onSeeAll}
           className="w-full rounded-lg border-2 border-dashed border-gray-300 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-gray-400 hover:text-gray-800 dark:border-gray-600 dark:text-gray-400 dark:hover:border-gray-500 dark:hover:text-gray-300"

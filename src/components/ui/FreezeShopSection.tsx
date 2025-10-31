@@ -6,7 +6,8 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Snowflake, Check, Leaf, Zap } from 'lucide-react'
-import { useCurrencyStore } from '@/stores/currencyStore'
+import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
+import { useSpendCurrency } from '@/hooks/queries'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { buyStreakFreeze } from '@/api/streakFreezeService'
 import { useQueryClient } from '@tanstack/react-query'
@@ -20,9 +21,10 @@ import {
 import { Button, Card } from '@/components/ui'
 
 export function FreezeShopSection() {
-  const { userCurrency, loadCurrency } = useCurrencyStore()
+  const { userCurrency } = useCurrencyClientStore()
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
+  const spendCurrencyMutation = useSpendCurrency()
   const queryClient = useQueryClient()
 
   // Получаем данные о заморозках из userData
@@ -86,11 +88,24 @@ export function FreezeShopSection() {
         quantity,
       })
 
-      if (result.success) {
+      if (result.success && telegramId) {
         console.log('✅ Freeze purchased successfully:', result.data)
 
-        // Обновляем баланс валюты
-        await loadCurrency(telegramId)
+        // Списываем валюту через React Query mutation
+        const cost = freezeType === 'manual' ? manualCost : autoCost
+        const currencyType =
+          freezeType === 'manual' ? manualCurrency : autoCurrency
+
+        if (currencyType && (cost.gems || cost.sprouts)) {
+          await spendCurrencyMutation.mutateAsync({
+            telegramId,
+            currencyType: currencyType as 'sprouts' | 'gems',
+            amount: (cost.gems || cost.sprouts) ?? 0,
+            reason:
+              freezeType === 'manual' ? 'streak_freeze' : 'auto_streak_freeze',
+            description: `Покупка ${freezeType === 'manual' ? 'ручной' : 'автоматической'} заморозки стрика`,
+          })
+        }
 
         // Инвалидируем кеш (это обновит данные о заморозках через React Query)
         await queryClient.invalidateQueries({ queryKey: ['user', telegramId] })

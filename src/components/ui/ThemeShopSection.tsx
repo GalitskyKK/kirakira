@@ -7,7 +7,8 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Check, Lock, Leaf } from 'lucide-react'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
-import { useCurrencyStore } from '@/stores/currencyStore'
+import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
+import { useSpendCurrency } from '@/hooks/queries'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button, Card } from '@/components/ui'
@@ -39,7 +40,8 @@ export function ThemeShopSection() {
     isLoadingThemes,
     refetchOwnedThemes,
   } = useGardenTheme()
-  const { userCurrency, spendCurrency } = useCurrencyStore()
+  const { userCurrency } = useCurrencyClientStore()
+  const spendCurrencyMutation = useSpendCurrency()
   const telegramId = useTelegramId()
   const queryClient = useQueryClient()
 
@@ -60,14 +62,19 @@ export function ThemeShopSection() {
         return
       }
 
-      const result = await spendCurrency(
+      if (!telegramId) {
+        console.error('❌ No telegramId available')
+        return
+      }
+
+      const result = await spendCurrencyMutation.mutateAsync({
         telegramId,
-        'sprouts',
-        theme.priceSprouts,
-        'buy_theme',
-        `Покупка темы "${theme.name}"`,
-        { themeId, themeName: theme.name }
-      )
+        currencyType: 'sprouts',
+        amount: theme.priceSprouts,
+        reason: 'buy_theme',
+        description: `Покупка темы "${theme.name}"`,
+        metadata: { themeId, themeName: theme.name },
+      })
 
       if (result.success) {
         // Обновляем список купленных тем

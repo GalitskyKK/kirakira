@@ -405,6 +405,9 @@ export interface CurrencyActions {
     telegramId: number,
     limit?: number
   ) => Promise<CurrencyTransaction[]>
+  
+  // v2: Обновление из React Query (для обратной совместимости)
+  updateCurrencyFromQuery?: (currency: UserCurrency) => void
 
   // Операции с валютой
   earnCurrency: (

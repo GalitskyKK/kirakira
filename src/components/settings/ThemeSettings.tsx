@@ -6,7 +6,8 @@
 import { motion } from 'framer-motion'
 import { Check, Lock, Leaf } from 'lucide-react'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
-import { useCurrencyStore } from '@/stores/currencyStore'
+import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
+import { useSpendCurrency } from '@/hooks/queries'
 import { useUserSync } from '@/hooks/queries/useUserQueries'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useQueryClient } from '@tanstack/react-query'
@@ -44,7 +45,8 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
     isLoadingThemes,
     refetchOwnedThemes,
   } = useGardenTheme()
-  const { userCurrency, spendCurrency } = useCurrencyStore()
+  const { userCurrency } = useCurrencyClientStore()
+  const spendCurrencyMutation = useSpendCurrency()
 
   // Используем правильный подход - React Query вместо Zustand
   const telegramId = useTelegramId()
@@ -56,14 +58,22 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
     if (!currentUser?.telegramId) return
 
     try {
-      const result = await spendCurrency(
-        currentUser.telegramId,
-        'sprouts',
-        themes.find(t => t.id === themeId)?.priceSprouts || 0,
-        'buy_theme',
-        `Покупка темы "${themes.find(t => t.id === themeId)?.name}"`,
-        { themeId, themeName: themes.find(t => t.id === themeId)?.name }
-      )
+      if (!currentUser.telegramId) return
+
+      const theme = themes.find(t => t.id === themeId)
+      if (!theme) {
+        console.error('❌ Theme not found')
+        return
+      }
+
+      const result = await spendCurrencyMutation.mutateAsync({
+        telegramId: currentUser.telegramId,
+        currencyType: 'sprouts',
+        amount: theme.priceSprouts,
+        reason: 'buy_theme',
+        description: `Покупка темы "${theme.name}"`,
+        metadata: { themeId, themeName: theme.name },
+      })
 
       if (result.success) {
         // Обновляем список купленных тем
