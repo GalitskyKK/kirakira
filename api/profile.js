@@ -61,12 +61,23 @@ async function ensureUser(telegramId, userData = {}) {
 
     // Если есть новые данные пользователя - добавляем их к обновлениям
     if (userData && Object.keys(userData).length > 0) {
-      // Обновляем только непустые поля
-      if (userData.first_name) updates.first_name = userData.first_name
-      if (userData.last_name) updates.last_name = userData.last_name
-      if (userData.username) updates.username = userData.username
-      if (userData.photo_url) updates.photo_url = userData.photo_url
-      if (userData.language_code) updates.language_code = userData.language_code
+      // 🔥 ИСПРАВЛЕНИЕ: Обновляем поля если они переданы, даже если уже заполнены
+      // Это важно для исправления неправильных данных (например, "User" вместо реального имени)
+      if (userData.first_name != null && userData.first_name !== '') {
+        updates.first_name = userData.first_name
+      }
+      if (userData.last_name != null && userData.last_name !== '') {
+        updates.last_name = userData.last_name
+      }
+      if (userData.username != null && userData.username !== '') {
+        updates.username = userData.username
+      }
+      if (userData.photo_url != null && userData.photo_url !== '') {
+        updates.photo_url = userData.photo_url
+      }
+      if (userData.language_code != null && userData.language_code !== '') {
+        updates.language_code = userData.language_code
+      }
     }
 
     console.log(
@@ -100,11 +111,27 @@ async function ensureUser(telegramId, userData = {}) {
     .insert({
       telegram_id: telegramId,
       user_id: `tg_${telegramId}`, // ИСПРАВЛЕНО: добавлено обязательное поле user_id
-      first_name: userData.first_name || null,
-      last_name: userData.last_name || null,
-      username: userData.username || null,
-      photo_url: userData.photo_url || null,
-      language_code: userData.language_code || 'ru',
+      // 🔥 ИСПРАВЛЕНИЕ: Используем данные из userData, если они есть
+      first_name:
+        userData?.first_name != null && userData.first_name !== ''
+          ? userData.first_name
+          : null,
+      last_name:
+        userData?.last_name != null && userData.last_name !== ''
+          ? userData.last_name
+          : null,
+      username:
+        userData?.username != null && userData.username !== ''
+          ? userData.username
+          : null,
+      photo_url:
+        userData?.photo_url != null && userData.photo_url !== ''
+          ? userData.photo_url
+          : null,
+      language_code:
+        userData?.language_code != null && userData.language_code !== ''
+          ? userData.language_code
+          : 'ru',
       // registration_date будет равна created_at (автоматически в БД)
       experience: 0,
       level: 1,
@@ -433,6 +460,23 @@ async function protectedHandler(req, res) {
           return res
             .status(400)
             .json({ success: false, error: 'Missing telegramId' })
+        }
+
+        // 🔥 ИСПРАВЛЕНИЕ: Используем данные из req.auth.userData если они не переданы в body
+        // Это особенно важно при GET запросах и первой авторизации
+        if (!userData && req.auth?.userData) {
+          // Преобразуем camelCase (req.auth.userData) в snake_case (для БД)
+          userData = {
+            first_name: req.auth.userData.firstName,
+            last_name: req.auth.userData.lastName,
+            username: req.auth.userData.username,
+            photo_url: req.auth.userData.photoUrl,
+            language_code: req.auth.userData.languageCode,
+          }
+          console.log(
+            `📝 Using auth data for user ${telegramId}:`,
+            userData
+          )
         }
 
         // Получаем или создаем пользователя с данными Telegram

@@ -23,7 +23,7 @@ interface BulkPhotoUpdateResult {
  * Хук для управления аватарками пользователей
  */
 export function useUserPhotos() {
-  const { user, isTelegramEnv, showAlert } = useTelegram()
+  const { user, isTelegramEnv } = useTelegram()
   const [isUpdatingPhoto, setIsUpdatingPhoto] = useState(false)
   const [isUpdatingFriendsPhotos, setIsUpdatingFriendsPhotos] = useState(false)
 
@@ -111,7 +111,16 @@ export function useUserPhotos() {
 
         if (result.success) {
           const { total, updated, skipped, errors } = result.data
-          const message = `Обновлено: ${updated}, пропущено: ${skipped}, ошибок: ${errors} из ${total}`
+
+          // 🔥 ИСПРАВЛЕНИЕ: Упрощенное сообщение для пользователя
+          let message: string
+          if (errors > 0) {
+            message = `Обновлено ${updated} из ${total} аватарок. Ошибок: ${errors}`
+          } else if (updated > 0) {
+            message = `Обновлено ${updated} аватар${updated === 1 ? 'ка' : updated < 5 ? 'ки' : 'ок'}`
+          } else {
+            message = 'Все аватарки актуальны'
+          }
 
           return {
             success: true,
@@ -139,41 +148,39 @@ export function useUserPhotos() {
     }, [user?.telegramId, isTelegramEnv])
 
   /**
-   * Обновляет аватарку пользователя с уведомлением
+   * Обновляет аватарку пользователя (без уведомлений)
+   * Автоматически вызывается при необходимости
    */
   const updateCurrentUserPhotoWithAlert = useCallback(
     async (forceUpdate = false) => {
+      // 🔥 УБРАНО: Уведомления пользователям не нужны - это техническая операция
       const result = await updateCurrentUserPhoto(forceUpdate)
-
-      if (showAlert) {
-        if (result.success) {
-          showAlert(result.message || 'Аватарка обновлена!')
-        } else {
-          showAlert(result.error || 'Ошибка обновления аватарки')
-        }
+      // Результаты логируются в консоль для отладки, но не показываются пользователю
+      if (result.success) {
+        console.log('✅ User photo updated:', result.message)
+      } else {
+        console.error('❌ Failed to update user photo:', result.error)
       }
-
       return result
     },
-    [updateCurrentUserPhoto, showAlert]
+    [updateCurrentUserPhoto]
   )
 
   /**
-   * Обновляет аватарки друзей с уведомлением
+   * Обновляет аватарки друзей (без уведомлений)
+   * Автоматически вызывается при загрузке списка друзей
    */
   const updateFriendsPhotosWithAlert = useCallback(async () => {
+    // 🔥 УБРАНО: Уведомления пользователям не нужны - это техническая операция
     const result = await updateFriendsPhotos()
-
-    if (showAlert) {
-      if (result.success) {
-        showAlert(result.message || 'Аватарки друзей обновлены!')
-      } else {
-        showAlert(result.error || 'Ошибка обновления аватарок друзей')
-      }
+    // Результаты логируются в консоль для отладки, но не показываются пользователю
+    if (result.success) {
+      console.log('✅ Friends photos updated:', result.message)
+    } else {
+      console.error('❌ Failed to update friends photos:', result.error)
     }
-
     return result
-  }, [updateFriendsPhotos, showAlert])
+  }, [updateFriendsPhotos])
 
   /**
    * Получает URL аватарки текущего пользователя

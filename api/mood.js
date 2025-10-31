@@ -88,18 +88,23 @@ async function handleRecord(req, res) {
     const supabase = await getSupabaseClient(req.auth?.jwt)
 
     // 🔥 АВТОМАТИЧЕСКИ СОЗДАЕМ ПОЛЬЗОВАТЕЛЯ ЕСЛИ ЕГО НЕТ
-    if (telegramUserData) {
-      console.log(`👤 Ensuring user exists with data:`, telegramUserData)
+    // 🔥 ИСПРАВЛЕНИЕ: Используем req.auth.userData как fallback, если telegramUserData не передан
+    const userDataToUse = telegramUserData || req.auth?.userData
+
+    if (userDataToUse) {
+      console.log(`👤 Ensuring user exists with data:`, userDataToUse)
 
       const { error: userError } = await supabase.from('users').upsert(
         {
           telegram_id: telegramUserId,
-          user_id: telegramUserData.userId || `user_${telegramUserId}`,
-          username: telegramUserData.username || null,
-          first_name: telegramUserData.firstName || null,
-          last_name: telegramUserData.lastName || null,
-          language_code: telegramUserData.languageCode || 'ru',
-          photo_url: telegramUserData.photoUrl || null,
+          user_id: userDataToUse.userId || `tg_${telegramUserId}`,
+          username: userDataToUse.username || null,
+          first_name:
+            userDataToUse.firstName || userDataToUse.first_name || null,
+          last_name: userDataToUse.lastName || userDataToUse.last_name || null,
+          language_code:
+            userDataToUse.languageCode || userDataToUse.language_code || 'ru',
+          photo_url: userDataToUse.photoUrl || userDataToUse.photo_url || null,
           // registration_date будет равна created_at (автоматически в БД)
           last_visit_date: new Date().toISOString(),
           updated_at: new Date().toISOString(),

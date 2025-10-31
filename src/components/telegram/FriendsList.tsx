@@ -155,7 +155,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
           )
           setHasAutoUpdatedPhotos(true) // Помечаем что уже обновляли
 
-          // Запускаем в фоне, не ждем результата
+          // Запускаем в фоне без уведомлений (техническая операция)
           void updateFriendsPhotosWithAlert().then(() => {
             // Перезагружаем список друзей после обновления аватарок
             void loadFriendsData()
