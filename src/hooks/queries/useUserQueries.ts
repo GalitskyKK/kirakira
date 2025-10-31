@@ -50,6 +50,38 @@ export function useUserSync(telegramId: number | undefined, enabled = true) {
   })
 }
 
+/**
+ * Хук для синхронизации пользователя с передачей данных (мутация)
+ * Используется когда нужно синхронизировать с передачей обновленных данных
+ */
+export function useSyncUserWithData() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      telegramId,
+      userData,
+    }: {
+      telegramId: number
+      userData?: Partial<import('@/types/api').DatabaseUser>
+    }) => syncUserFromSupabase(telegramId, userData),
+    onSuccess: (_result, variables) => {
+      // Инвалидируем queries для перезагрузки данных
+      queryClient.invalidateQueries({
+        queryKey: userKeys.sync(variables.telegramId),
+      })
+      queryClient.invalidateQueries({
+        queryKey: userKeys.profile(variables.telegramId),
+      })
+
+      console.log('✅ User synced with data successfully')
+    },
+    onError: error => {
+      console.error('❌ Failed to sync user with data:', error)
+    },
+  })
+}
+
 // ============================================
 // MUTATION HOOKS - Изменение данных
 // ============================================

@@ -1,38 +1,52 @@
 import { useCallback } from 'react'
-import { initializeStores } from '@/stores'
+import { useQueryClient } from '@tanstack/react-query'
+import { userKeys, moodKeys, gardenKeys } from '@/hooks/queries'
 import type { StoresSyncResult } from '@/types/initialization'
 
 /**
- * Хук для синхронизации stores с сервером
+ * Хук для синхронизации stores с сервером (v2 - React Query)
+ * Использует React Query invalidate вместо старых stores
  */
 export function useStoresSync() {
+  const queryClient = useQueryClient()
+
   const syncStores = useCallback(
     async (telegramId?: number): Promise<StoresSyncResult> => {
       try {
-        // Инициализируем базовые stores
-        await initializeStores()
+        // Если есть Telegram ID - инвалидируем queries для принудительной синхронизации
+        if (telegramId != null && telegramId > 0) {
+          console.log('🔄 Принудительная синхронизация stores для:', telegramId)
 
-        // Если есть Telegram ID - синхронизируем данные с сервером
-        if (telegramId) {
-          // Динамический импорт stores для принудительной синхронизации
-          const { useMoodStore } = await import('@/stores/moodStore')
-          const { useGardenStore } = await import('@/stores/gardenStore')
-
-          // Принудительная синхронизация один раз при входе
+          // Инвалидируем все queries связанные с пользователем для перезагрузки данных
           await Promise.all([
-            useMoodStore.getState().syncMoodHistory(true), // forceSync = true
-            useGardenStore.getState().syncGarden(true), // forceSync = true
+            queryClient.invalidateQueries({
+              queryKey: userKeys.sync(telegramId),
+              refetchType: 'active', // Перезагружаем только активные queries
+            }),
+            queryClient.invalidateQueries({
+              queryKey: moodKeys.sync(telegramId),
+              refetchType: 'active',
+            }),
+            queryClient.invalidateQueries({
+              queryKey: gardenKeys.sync(telegramId),
+              refetchType: 'active',
+            }),
           ])
+
+          console.log('✅ Stores синхронизированы через React Query')
+        } else {
+          console.log('ℹ️ Telegram ID не предоставлен, синхронизация пропущена')
         }
 
         return { success: true }
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : 'Stores sync failed'
+        console.error('❌ Stores sync error:', error)
         return { success: false, error: errorMessage }
       }
     },
-    []
+    [queryClient]
   )
 
   return {
