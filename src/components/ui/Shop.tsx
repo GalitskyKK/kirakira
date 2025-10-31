@@ -10,6 +10,7 @@ import { X, Palette, Snowflake, Sparkles, Leaf, Zap } from 'lucide-react'
 import { ThemeShopSection } from './ThemeShopSection'
 import { FreezeShopSection } from './FreezeShopSection'
 import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
+import { useCurrencySync } from '@/hooks/useCurrencySync'
 
 export interface ShopProps {
   readonly isOpen: boolean
@@ -34,7 +35,11 @@ const SHOP_TABS: readonly TabConfig[] = [
 
 export function Shop({ isOpen, onClose, initialTab = 'themes' }: ShopProps) {
   const [activeTab, setActiveTab] = useState<ShopTab>(initialTab)
-  // Используем v2 store (синхронизируется через useCurrencySync)
+
+  // ✅ Синхронизируем валюту из React Query в store
+  useCurrencySync()
+
+  // Используем v2 store (обновляется через useCurrencySync)
   const { userCurrency } = useCurrencyClientStore()
 
   // Блокируем скролл при открытии модалки

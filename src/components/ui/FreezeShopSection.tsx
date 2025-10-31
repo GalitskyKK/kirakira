@@ -11,6 +11,7 @@ import { useTelegramId } from '@/hooks/useTelegramId'
 import { buyStreakFreeze } from '@/api/streakFreezeService'
 import { useQueryClient } from '@tanstack/react-query'
 import { useUserSync } from '@/hooks/index.v2'
+import { currencyKeys } from '@/hooks/queries'
 import {
   FREEZE_SHOP_CONFIG,
   FREEZE_DESCRIPTIONS,
@@ -104,12 +105,44 @@ export function FreezeShopSection() {
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ['user', telegramId] }),
           queryClient.invalidateQueries({
-            queryKey: ['currency', telegramId],
+            queryKey: currencyKeys.balance(telegramId),
+          }),
+          queryClient.invalidateQueries({
+            queryKey: currencyKeys.transactions(telegramId),
           }),
           queryClient.invalidateQueries({
             queryKey: ['streak-freezes', telegramId],
           }),
         ])
+
+        // 🔄 Оптимистичное обновление store для мгновенного отображения
+        // Обновляем баланс сразу из результата покупки, не дожидаясь refetch
+        if (
+          result.data?.newBalance !== undefined &&
+          result.data?.currencyUsed
+        ) {
+          const storeState = useCurrencyClientStore.getState()
+          const currentCurrency = storeState.userCurrency
+          if (currentCurrency && storeState.updateCurrencyFromQuery) {
+            // Обновляем баланс из результата покупки
+            storeState.updateCurrencyFromQuery({
+              ...currentCurrency,
+              sprouts:
+                result.data.currencyUsed === 'sprouts'
+                  ? result.data.newBalance
+                  : currentCurrency.sprouts,
+              gems:
+                result.data.currencyUsed === 'gems'
+                  ? result.data.newBalance
+                  : currentCurrency.gems,
+              lastUpdated: new Date(), // Обновляем timestamp
+            })
+            console.log('✅ Currency balance updated optimistically:', {
+              currencyUsed: result.data.currencyUsed,
+              newBalance: result.data.newBalance,
+            })
+          }
+        }
       } else {
         console.error('❌ Failed to buy freeze:', result.error)
         // TODO: Показать toast с ошибкой

@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Check, Lock, Leaf } from 'lucide-react'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
 import { useCurrencyClientStore } from '@/stores/currencyStore.v2'
-import { useSpendCurrency } from '@/hooks/queries'
+import { useSpendCurrency, currencyKeys } from '@/hooks/queries'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button, Card } from '@/components/ui'
@@ -133,6 +133,22 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
       })
 
       if (result.success) {
+        // 🔄 Оптимистичное обновление баланса для мгновенного отображения
+        if (result.balance_after !== undefined && telegramId) {
+          const storeState = useCurrencyClientStore.getState()
+          const currentCurrency = storeState.userCurrency
+          if (currentCurrency && storeState.updateCurrencyFromQuery) {
+            storeState.updateCurrencyFromQuery({
+              ...currentCurrency,
+              sprouts: result.balance_after,
+              lastUpdated: new Date(),
+            })
+            console.log('✅ Currency balance updated optimistically:', {
+              newBalance: result.balance_after,
+            })
+          }
+        }
+
         // Обновляем список купленных тем
         console.log('🔄 Refetching owned themes...')
         await refetchOwnedThemes()
@@ -140,6 +156,11 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
         // Принудительно обновляем кеш React Query
         await queryClient.invalidateQueries({
           queryKey: ['themes', 'catalog'],
+        })
+        
+        // Инвалидируем валюту для полной синхронизации
+        await queryClient.invalidateQueries({
+          queryKey: currencyKeys.balance(telegramId),
         })
 
         // Принудительно обновляем локальное состояние
