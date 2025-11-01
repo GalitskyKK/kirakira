@@ -10,6 +10,7 @@ import {
   getElementScale,
 } from './elementNames'
 import { calculateGardenerLevel } from './achievements'
+import { getLocalDateString } from './dateHelpers'
 
 /**
  * Упрощенный шаблон элемента без фиксированных имен/описаний
@@ -477,6 +478,9 @@ export function generateDailyElement(
 
 /**
  * Validates if a user can unlock a new element today
+ * 
+ * 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Использует ЛОКАЛЬНУЮ дату для сравнения,
+ * а не UTC, чтобы корректно работать с часовыми поясами (как isTimeForCheckin)
  */
 export function canUnlockTodaysElement(
   lastUnlockDate: Date | null,
@@ -484,13 +488,18 @@ export function canUnlockTodaysElement(
 ): boolean {
   if (lastUnlockDate === null) return true
 
-  const today = new Date(currentDate)
-  today.setHours(0, 0, 0, 0)
+  // Используем ЛОКАЛЬНУЮ дату для сравнения (консистентно с isTimeForCheckin)
+  const lastUnlockStr = getLocalDateString(lastUnlockDate)
+  const todayStr = getLocalDateString(currentDate)
 
-  const lastUnlock = new Date(lastUnlockDate)
-  lastUnlock.setHours(0, 0, 0, 0)
+  console.log('🔓 canUnlockTodaysElement check:', {
+    lastUnlockDate: lastUnlockDate.toISOString(),
+    lastUnlockStr,
+    todayStr,
+    canUnlock: todayStr !== lastUnlockStr,
+  })
 
-  return today.getTime() > lastUnlock.getTime()
+  return todayStr !== lastUnlockStr // Можно разблокировать если даты разные
 }
 
 /**
@@ -512,13 +521,12 @@ export function calculateStreak(unlockDates: readonly Date[]): {
   let longestStreak = 0
   let tempStreak = 1
 
+  // 🔧 ИСПРАВЛЕНИЕ: Используем локальные даты для корректной работы с часовыми поясами
   const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  const lastUnlock = new Date(sortedDates[0]!)
-  lastUnlock.setHours(0, 0, 0, 0)
+  const lastUnlock = sortedDates[0]!
 
   // Check if last unlock was today or yesterday for current streak
+  // differenceInDays из date-fns работает с локальными датами корректно
   const daysSinceLastUnlock = differenceInDays(today, lastUnlock)
 
   if (daysSinceLastUnlock <= 1) {
@@ -526,12 +534,10 @@ export function calculateStreak(unlockDates: readonly Date[]): {
 
     // Count consecutive days
     for (let i = 1; i < sortedDates.length; i++) {
-      const currentDate = new Date(sortedDates[i - 1]!)
-      const prevDate = new Date(sortedDates[i]!)
+      const currentDate = sortedDates[i - 1]!
+      const prevDate = sortedDates[i]!
 
-      currentDate.setHours(0, 0, 0, 0)
-      prevDate.setHours(0, 0, 0, 0)
-
+      // differenceInDays из date-fns работает с локальными датами корректно
       const dayDiff = differenceInDays(currentDate, prevDate)
 
       if (dayDiff === 1) {
@@ -545,12 +551,10 @@ export function calculateStreak(unlockDates: readonly Date[]): {
   // Calculate longest streak
   tempStreak = 1
   for (let i = 1; i < sortedDates.length; i++) {
-    const currentDate = new Date(sortedDates[i - 1]!)
-    const prevDate = new Date(sortedDates[i]!)
+    const currentDate = sortedDates[i - 1]!
+    const prevDate = sortedDates[i]!
 
-    currentDate.setHours(0, 0, 0, 0)
-    prevDate.setHours(0, 0, 0, 0)
-
+    // differenceInDays из date-fns работает с локальными датами корректно
     const dayDiff = differenceInDays(currentDate, prevDate)
 
     if (dayDiff === 1) {
