@@ -255,16 +255,15 @@ async function handleList(req, res) {
 
         // Проверяем, можно ли получить награду (завершен, но не забран)
         if (p.status === 'completed' && challenge?.rewards) {
-          const { data: existingTransactions } = await supabase
+          const { count: existingCount } = await supabase
             .from('currency_transactions')
-            .select('id')
+            .select('*', { count: 'exact', head: true })
             .eq('telegram_id', parseInt(telegramId))
             .eq('reason', 'challenge_reward')
             .eq('metadata->>challenge_id', p.challenge_id)
             .limit(1)
 
-          canClaimReward =
-            !existingTransactions || existingTransactions.length === 0
+          canClaimReward = !existingCount || existingCount === 0
         }
 
         return {
@@ -425,16 +424,15 @@ async function handleDetails(req, res) {
     // Проверяем, можно ли получить награду (завершен, но не забран)
     let canClaimReward = false
     if (participation?.status === 'completed' && challenge.rewards) {
-      const { data: existingTransactions } = await supabase
+      const { count: existingCount } = await supabase
         .from('currency_transactions')
-        .select('id')
+        .select('*', { count: 'exact', head: true })
         .eq('telegram_id', parseInt(telegramId))
         .eq('reason', 'challenge_reward')
         .eq('metadata->>challenge_id', challengeId)
         .limit(1)
 
-      canClaimReward =
-        !existingTransactions || existingTransactions.length === 0
+      canClaimReward = !existingCount || existingCount === 0
     }
 
     const formattedParticipation = participation
@@ -1621,15 +1619,22 @@ async function handleClaimChallengeReward(req, res) {
     // ✅ Проверяем, что ЭТОТ пользователь еще не получил награду
     // Проверка идет по telegram_id + challenge_id, поэтому получение награды
     // одним пользователем не влияет на возможность получения другими
-    const { data: existingTransactions } = await supabase
+    // Используем count для избежания проблем с RLS политиками
+    const { count: existingCount, error: checkError } = await supabase
       .from('currency_transactions')
-      .select('id')
+      .select('*', { count: 'exact', head: true })
       .eq('telegram_id', parseInt(telegramId)) // ✅ Только для этого пользователя
       .eq('reason', 'challenge_reward')
       .eq('metadata->>challenge_id', challengeId)
       .limit(1)
 
-    if (existingTransactions && existingTransactions.length > 0) {
+    if (checkError) {
+      console.error('Error checking existing transactions:', checkError)
+      // Если ошибка при проверке, продолжаем (не блокируем получение награды)
+      // Но лучше залогировать для отладки
+    }
+
+    if (existingCount && existingCount > 0) {
       return res.status(400).json({
         success: false,
         error: 'Награда уже получена',

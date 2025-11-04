@@ -368,14 +368,14 @@ export function ChallengeList({ garden }: ChallengeListProps) {
 
                   {isParticipating ? (
                     !participation?.canClaimReward && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleShareProgress(challenge.id)}
-                        className="dark:border-gray-600 dark:hover:bg-gray-700"
-                      >
-                        <span className="text-xs">Поделиться</span>
-                      </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleShareProgress(challenge.id)}
+                      className="dark:border-gray-600 dark:hover:bg-gray-700"
+                    >
+                      <span className="text-xs">Поделиться</span>
+                    </Button>
                     )
                   ) : (
                     <Button
