@@ -12,13 +12,19 @@ import {
   TrendingUp,
   Sparkles,
   ArrowRight,
+  Gift,
 } from 'lucide-react'
 import { Button, Card } from '@/components/ui'
 import { useTelegram } from '@/hooks'
 import { useUserSync, useJoinChallenge } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
-import { useChallengeDetails } from '@/hooks/queries/useChallengeQueries'
+import {
+  useChallengeDetails,
+  useClaimChallengeReward,
+} from '@/hooks/queries/useChallengeQueries'
+import { useChallengeRewardStore } from '@/stores/challengeRewardStore'
 import { ChallengeLeaderboard } from './ChallengeLeaderboard'
+import { ChallengeRewardModal } from './ChallengeRewardModal'
 
 interface ChallengeDetailsProps {
   readonly challengeId: string
@@ -50,12 +56,20 @@ export function ChallengeDetails({
   const currentChallenge = challengeData?.challenge
   const currentLeaderboard = challengeData?.leaderboard ?? []
   const currentProgress = challengeData?.progress
+  const currentParticipation = challengeData?.participation
 
   const [isJoining, setIsJoining] = useState(false)
   const [timeRemaining, setTimeRemaining] = useState<string>('')
 
   // Мутация для присоединения к челленджу
   const joinChallengeMutation = useJoinChallenge()
+
+  // Хук для получения награды
+  const claimRewardMutation = useClaimChallengeReward()
+
+  // Управление модалкой награды
+  const { isShowingReward, lastRewards, challengeTitle, hideReward } =
+    useChallengeRewardStore()
 
   // Обновляем таймер
   useEffect(() => {
@@ -129,6 +143,29 @@ export function ChallengeDetails({
     hapticFeedback('light')
     // React Query автоматически обновит данные при необходимости
   }, [currentUser?.telegramId, challengeId, hapticFeedback])
+
+  // Получить награду за челлендж
+  const handleClaimReward = useCallback(async () => {
+    if (!currentUser?.telegramId || !challengeId) return
+
+    hapticFeedback('light')
+    try {
+      await claimRewardMutation.mutateAsync({
+        challengeId,
+        telegramId: currentUser.telegramId,
+      })
+    } catch (error) {
+      console.error('Failed to claim challenge reward:', error)
+      hapticFeedback('error')
+      showAlert('Не удалось получить награду')
+    }
+  }, [
+    currentUser?.telegramId,
+    challengeId,
+    claimRewardMutation,
+    hapticFeedback,
+    showAlert,
+  ])
 
   if (isLoading) {
     return (
@@ -385,7 +422,27 @@ export function ChallengeDetails({
 
           {/* Кнопки действий */}
           <div className="flex space-x-3">
-            {!isParticipating && canJoin.canJoin && (
+            {currentParticipation?.canClaimReward && (
+              <Button
+                onClick={handleClaimReward}
+                disabled={claimRewardMutation.isPending}
+                className="flex-1 bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
+              >
+                {claimRewardMutation.isPending ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
+                    Получение...
+                  </>
+                ) : (
+                  <>
+                    <Gift className="mr-2 h-4 w-4" />
+                    Получить награду
+                  </>
+                )}
+              </Button>
+            )}
+
+            {!isParticipating && canJoin.canJoin && !currentParticipation?.canClaimReward && (
               <Button
                 onClick={handleJoinChallenge}
                 disabled={isJoining}
@@ -405,7 +462,7 @@ export function ChallengeDetails({
               </Button>
             )}
 
-            {!isParticipating && !canJoin.canJoin && (
+            {!isParticipating && !canJoin.canJoin && !currentParticipation?.canClaimReward && (
               <Button disabled className="flex-1">
                 {canJoin.reason || 'Недоступно'}
               </Button>
@@ -444,6 +501,18 @@ export function ChallengeDetails({
             isLoading={isLoading}
           />
         </motion.div>
+      </AnimatePresence>
+
+      {/* Модалка награды за челлендж */}
+      <AnimatePresence>
+        {isShowingReward && lastRewards && challengeTitle && (
+          <ChallengeRewardModal
+            rewards={lastRewards}
+            challengeTitle={challengeTitle}
+            isOpen={isShowingReward}
+            onClose={hideReward}
+          />
+        )}
       </AnimatePresence>
     </div>
   )

@@ -10,9 +10,15 @@ import {
   joinChallenge,
   updateProgress,
   refreshLeaderboard,
+  claimChallengeReward,
   type UpdateProgressRequest,
+  type ClaimChallengeRewardRequest,
 } from '@/api'
-import type { LoadChallengeDetailsResult } from '@/api/challengeService'
+import type {
+  LoadChallengeDetailsResult,
+  ClaimChallengeRewardResult,
+} from '@/api/challengeService'
+import { useChallengeRewardStore } from '@/stores/challengeRewardStore'
 
 // ============================================
 // QUERY KEYS - Константы для React Query
@@ -190,6 +196,9 @@ export function useUpdateChallengeProgress() {
       console.log(
         `✅ Updated challenge progress: ${request.value} (all related caches invalidated)`
       )
+
+      // ✅ УБРАНО: Автоматический показ модалки
+      // Теперь пользователь сам получает награду через кнопку "Получить награду"
     },
     onError: (error, request, context) => {
       // Откатываем оптимистичное обновление при ошибке
@@ -200,6 +209,60 @@ export function useUpdateChallengeProgress() {
         )
       }
       console.error('❌ Failed to update challenge progress:', error)
+    },
+  })
+}
+
+/**
+ * Хук для получения награды за завершенный челлендж
+ */
+export function useClaimChallengeReward() {
+  const queryClient = useQueryClient()
+  const showReward = useChallengeRewardStore((state) => state.showReward)
+
+  return useMutation({
+    mutationFn: (request: ClaimChallengeRewardRequest) =>
+      claimChallengeReward(request),
+    onSuccess: (data: ClaimChallengeRewardResult, variables) => {
+      // Инвалидируем кеш челленджей
+      queryClient.invalidateQueries({
+        queryKey: challengeKeys.list(variables.telegramId),
+      })
+
+      queryClient.invalidateQueries({
+        queryKey: challengeKeys.details(
+          variables.challengeId,
+          variables.telegramId
+        ),
+      })
+
+      // Инвалидируем кеш валюты
+      queryClient.invalidateQueries({
+        queryKey: ['currency', variables.telegramId],
+      })
+
+      // Инвалидируем кеш профиля
+      queryClient.invalidateQueries({
+        queryKey: ['user', variables.telegramId],
+      })
+
+      // Показываем модалку награды
+      if (showReward) {
+        showReward(
+          {
+            sprouts: data.rewards.sprouts,
+            gems: data.rewards.gems,
+            experience: data.rewards.experience,
+            achievements: data.rewards.achievements,
+          },
+          data.challenge.title
+        )
+      }
+
+      console.log('✅ Challenge reward claimed successfully')
+    },
+    onError: error => {
+      console.error('Claim challenge reward error:', error)
     },
   })
 }

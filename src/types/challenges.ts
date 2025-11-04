@@ -52,7 +52,9 @@ export type ChallengeMetric =
   | 'friend_interactions' // Взаимодействия с друзьями
 
 export interface ChallengeRewards {
-  readonly experience: number
+  readonly sprouts?: number // Награда sprouts за челлендж
+  readonly gems?: number // Награда gems за челлендж
+  readonly experience?: number // Награда опытом
   readonly specialElements?: readonly string[] // Специальные элементы для сада
   readonly achievements?: readonly string[] // ID достижений
   readonly title?: string // Специальный титул
@@ -69,6 +71,7 @@ export interface ChallengeParticipant {
   readonly lastUpdateAt: Date
   readonly completedAt?: Date | undefined
   readonly teamProgress?: number // Общий прогресс команды (только для групповых)
+  readonly canClaimReward?: boolean // Можно ли получить награду (завершен, но не забран)
 }
 
 export interface ChallengeLeaderboardEntry {
@@ -141,6 +144,11 @@ export interface ChallengeProgressResponse {
     readonly progress: ChallengeProgress
     readonly leaderboard: readonly ChallengeLeaderboardEntry[]
     readonly newAchievements?: readonly string[]
+    readonly rewards?: {
+      readonly isCompleted: boolean
+      readonly rewards: ChallengeRewards
+      readonly challengeTitle: string
+    } | null
   }
   readonly error?: string
 }

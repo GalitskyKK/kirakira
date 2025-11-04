@@ -56,12 +56,41 @@ async function handleList(req, res) {
     // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
     const supabase = await getSupabaseClient(req.auth?.jwt)
 
+    // ✅ Обновляем статусы истекших челленджей и начисляем награды РЕТРОАКТИВНО
+    // ВАЖНО: Это делается ТОЛЬКО для тех, кто завершил челлендж ДО его окончания,
+    // но по какой-то причине не получил награды (исправление бага)
+    // НЕ для обновления прогресса после окончания!
+    try {
+      const result = await supabase.rpc('award_expired_challenge_rewards')
+      if (result?.data) {
+        console.log('✅ Updated expired challenges:', result.data)
+        if (result.data.rewards_awarded > 0) {
+          console.log(
+            `🎉 Retroactively awarded ${result.data.rewards_awarded} rewards for completed challenges`
+          )
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to update expired challenges:', error)
+      // Fallback: пробуем простую функцию обновления статусов
+      try {
+        await supabase.rpc('update_expired_challenges_status')
+        console.log('✅ Updated expired challenges status (fallback)')
+      } catch (fallbackError) {
+        console.warn('⚠️ Fallback also failed:', fallbackError)
+        // Не критично - продолжаем работу
+      }
+    }
+
     // Получаем активные челленджи (прямой запрос вместо RPC)
     console.log('📞 Fetching active challenges directly...')
+    const now = new Date().toISOString()
     const { data: challenges, error: challengesError } = await supabase
       .from('challenges')
       .select('*')
       .in('status', ['active', 'draft'])
+      .lte('start_date', now) // Уже начались
+      .gte('end_date', now) // Еще не закончились
 
     console.log('📦 Challenges response:', {
       challengesCount: challenges?.length || 0,
@@ -83,12 +112,13 @@ async function handleList(req, res) {
 
       // Fallback: пробуем прямой запрос к таблице
       console.log('🔄 Trying direct table query as fallback...')
+      const now = new Date().toISOString()
       const { data: fallbackChallenges, error: fallbackError } = await supabase
         .from('challenges')
         .select('*')
         .eq('status', 'active')
-        .lte('start_date', new Date().toISOString())
-        .gte('end_date', new Date().toISOString())
+        .lte('start_date', now)
+        .gte('end_date', now)
 
       console.log('📦 Fallback response:', {
         fallbackChallenges,
@@ -204,6 +234,7 @@ async function handleList(req, res) {
     const formattedParticipations = await Promise.all(
       participations.map(async p => {
         let teamProgress = undefined
+        let canClaimReward = false
 
         // Для групповых челленджей вычисляем общий прогресс команды
         const challenge = formattedChallenges.find(c => c.id === p.challenge_id)
@@ -222,6 +253,20 @@ async function handleList(req, res) {
           }
         }
 
+        // Проверяем, можно ли получить награду (завершен, но не забран)
+        if (p.status === 'completed' && challenge?.rewards) {
+          const { data: existingTransactions } = await supabase
+            .from('currency_transactions')
+            .select('id')
+            .eq('telegram_id', parseInt(telegramId))
+            .eq('reason', 'challenge_reward')
+            .eq('metadata->>challenge_id', p.challenge_id)
+            .limit(1)
+
+          canClaimReward =
+            !existingTransactions || existingTransactions.length === 0
+        }
+
         return {
           id: p.id,
           challengeId: p.challenge_id,
@@ -235,6 +280,7 @@ async function handleList(req, res) {
             ? new Date(p.completed_at).toISOString()
             : undefined,
           teamProgress: teamProgress,
+          canClaimReward: canClaimReward,
         }
       })
     )
@@ -376,6 +422,21 @@ async function handleDetails(req, res) {
       participant_count: participantCount || 0,
     }
 
+    // Проверяем, можно ли получить награду (завершен, но не забран)
+    let canClaimReward = false
+    if (participation?.status === 'completed' && challenge.rewards) {
+      const { data: existingTransactions } = await supabase
+        .from('currency_transactions')
+        .select('id')
+        .eq('telegram_id', parseInt(telegramId))
+        .eq('reason', 'challenge_reward')
+        .eq('metadata->>challenge_id', challengeId)
+        .limit(1)
+
+      canClaimReward =
+        !existingTransactions || existingTransactions.length === 0
+    }
+
     const formattedParticipation = participation
       ? {
           id: participation.id,
@@ -389,6 +450,7 @@ async function handleDetails(req, res) {
           completedAt: participation.completed_at
             ? new Date(participation.completed_at).toISOString()
             : undefined,
+          canClaimReward: canClaimReward,
         }
       : undefined
 
@@ -710,22 +772,31 @@ async function handleUpdateProgress(req, res) {
     })
 
     const challenge = participation.challenges
-    if (!challenge || challenge.status !== 'active') {
+    if (!challenge) {
       return res.status(400).json({
         success: false,
-        error: 'Челлендж не активен',
+        error: 'Челлендж не найден',
       })
     }
 
-    // Проверяем что челлендж еще идет
+    // ✅ ПРАВИЛЬНО: Блокируем обновление прогресса после окончания челленджа
+    // Награды должны начисляться автоматически при завершении ВО ВРЕМЯ активного челленджа
     const now = new Date()
     const startDate = new Date(challenge.start_date)
     const endDate = new Date(challenge.end_date)
 
-    if (now < startDate || now > endDate) {
+    if (now < startDate) {
       return res.status(400).json({
         success: false,
-        error: 'Челлендж не в активном периоде',
+        error: 'Челлендж еще не начался',
+      })
+    }
+
+    // ❌ КРИТИЧНО: Запрещаем обновление прогресса после окончания челленджа
+    if (now > endDate) {
+      return res.status(400).json({
+        success: false,
+        error: 'Челлендж завершен. Прогресс больше не обновляется.',
       })
     }
 
@@ -836,33 +907,26 @@ async function handleUpdateProgress(req, res) {
         `🎉 User ${telegramId} completed challenge: ${challenge.title}`
       )
 
-      // Начисляем опыт за завершение челленджа
-      const experienceReward = challenge.rewards.experience || 0
-      if (experienceReward > 0) {
-        await awardExperience(
-          supabase,
-          parseInt(telegramId),
-          experienceReward,
-          {
-            source: 'challenge_completion',
-            challengeId: challengeId,
-            challengeTitle: challenge.title,
-          }
-        )
-        console.log(
-          `💰 Awarded ${experienceReward} experience to user ${telegramId}`
-        )
-      }
-
-      // Проверяем специальные награды
+      // ✅ УБРАНО: Автоматическое начисление наград
+      // Награды теперь выдаются только при вызове claim-challenge-reward
+      // Проверяем только достижения для информации
       if (
         challenge.rewards.achievements &&
         challenge.rewards.achievements.length > 0
       ) {
         newAchievements = challenge.rewards.achievements
-        console.log(`🏆 Awarded achievements: ${newAchievements.join(', ')}`)
+        console.log(
+          `🏆 Challenge rewards achievements: ${newAchievements.join(', ')}`
+        )
       }
     }
+
+    // ✅ УБРАНО: Автоматическое начисление наград
+    // Награды теперь выдаются только при вызове claim-challenge-reward
+    // Просто сообщаем, что челлендж завершен (для UI - показать кнопку "Получить награду")
+    const isNewlyCompleted =
+      updatedParticipation.status === 'completed' &&
+      participation.status !== 'completed'
 
     res.status(200).json({
       success: true,
@@ -870,6 +934,7 @@ async function handleUpdateProgress(req, res) {
         progress,
         leaderboard: formattedLeaderboard,
         newAchievements,
+        isCompleted: isNewlyCompleted, // Флаг завершения для UI
       },
     })
   } catch (error) {
@@ -1477,6 +1542,183 @@ async function handleClaimDailyQuest(req, res) {
   } catch (error) {
     console.error('Claim daily quest error:', error)
     res.status(500).json({ success: false, error: 'Internal server error' })
+  }
+}
+
+/**
+ * Получение награды за завершенный челлендж
+ *
+ * ВАЖНО:
+ * - Получение награды НЕ меняет статус участия (status уже должен быть 'completed')
+ * - Для личных челленджей: каждый пользователь получает награду независимо
+ * - Для групповых челленджей: каждый участник получает награду независимо
+ * - Получение награды одним пользователем НЕ влияет на других участников
+ */
+async function handleClaimChallengeReward(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  try {
+    const { challengeId, telegramId } = req.body
+
+    if (!challengeId || !telegramId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameters: challengeId, telegramId',
+      })
+    }
+
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+
+    // ✅ Получаем участие КОНКРЕТНОГО пользователя (не влияет на других)
+    const { data: participation, error: participationError } = await supabase
+      .from('challenge_participants')
+      .select(
+        `
+        id,
+        challenge_id,
+        telegram_id,
+        status,
+        challenges (
+          id,
+          title,
+          rewards,
+          status,
+          type
+        )
+      `
+      )
+      .eq('challenge_id', challengeId)
+      .eq('telegram_id', parseInt(telegramId)) // ✅ Фильтр по конкретному пользователю
+      .single()
+
+    if (participationError || !participation) {
+      return res.status(404).json({
+        success: false,
+        error: 'Участие в челлендже не найдено',
+      })
+    }
+
+    const challenge = participation.challenges
+    if (!challenge) {
+      return res.status(404).json({
+        success: false,
+        error: 'Челлендж не найден',
+      })
+    }
+
+    // ✅ Проверяем, что ЭТОТ пользователь завершил челлендж
+    // Статус участия меняется только при обновлении прогресса (update_challenge_progress_v2),
+    // НЕ при получении награды
+    if (participation.status !== 'completed') {
+      return res.status(400).json({
+        success: false,
+        error: 'Челлендж еще не завершен',
+      })
+    }
+
+    // ✅ Проверяем, что ЭТОТ пользователь еще не получил награду
+    // Проверка идет по telegram_id + challenge_id, поэтому получение награды
+    // одним пользователем не влияет на возможность получения другими
+    const { data: existingTransactions } = await supabase
+      .from('currency_transactions')
+      .select('id')
+      .eq('telegram_id', parseInt(telegramId)) // ✅ Только для этого пользователя
+      .eq('reason', 'challenge_reward')
+      .eq('metadata->>challenge_id', challengeId)
+      .limit(1)
+
+    if (existingTransactions && existingTransactions.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Награда уже получена',
+      })
+    }
+
+    // Начисляем награды через функцию БД
+    if (!challenge.rewards) {
+      return res.status(400).json({
+        success: false,
+        error: 'У челленджа нет наград',
+      })
+    }
+
+    const { data: rewardsResult, error: rewardsError } = await supabase.rpc(
+      'award_challenge_rewards',
+      {
+        p_telegram_id: parseInt(telegramId),
+        p_rewards: challenge.rewards,
+        p_metadata: {
+          challenge_id: challengeId,
+          challenge_title: challenge.title,
+        },
+      }
+    )
+
+    if (rewardsError) {
+      console.error('Award challenge rewards error:', rewardsError)
+      return res.status(500).json({
+        success: false,
+        error: 'Ошибка при начислении наград',
+      })
+    }
+
+    if (!rewardsResult?.success) {
+      return res.status(500).json({
+        success: false,
+        error: rewardsResult?.error || 'Ошибка при начислении наград',
+      })
+    }
+
+    console.log('✅ Challenge reward claimed successfully:', {
+      challengeId,
+      telegramId,
+      challengeType: challenge.type,
+      rewards: rewardsResult,
+    })
+
+    // ✅ ВАЖНО: Получение награды НЕ меняет статус участия
+    // Статус participation.status остается 'completed' (не меняется)
+    // Статус самого челленджа challenges.status не меняется при получении награды
+    // Статус челленджа меняется только когда истекает end_date или через функцию update_expired_challenges_status
+
+    // Получаем обновленный баланс
+    const { data: currencyData } = await supabase
+      .from('user_currency')
+      .select('sprouts, gems')
+      .eq('telegram_id', parseInt(telegramId))
+      .single()
+
+    const balance = currencyData || { sprouts: 0, gems: 0 }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        challenge: {
+          id: challenge.id,
+          title: challenge.title,
+          type: challenge.type, // Возвращаем тип для информации
+        },
+        participation: {
+          id: participation.id,
+          status: participation.status, // Статус остается 'completed' (не меняется)
+        },
+        balance,
+        rewards: {
+          sprouts: rewardsResult.sprouts_awarded || 0,
+          gems: rewardsResult.gems_awarded || 0,
+          experience: rewardsResult.experience_awarded || 0,
+          achievements: rewardsResult.awarded_achievements || [],
+        },
+      },
+    })
+  } catch (error) {
+    console.error('Claim challenge reward error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    })
   }
 }
 
@@ -2092,6 +2334,8 @@ async function protectedHandler(req, res) {
         return await handleDailyQuests(req, res)
       case 'claim-daily-quest':
         return await handleClaimDailyQuest(req, res)
+      case 'claim-challenge-reward':
+        return await handleClaimChallengeReward(req, res)
       case 'update-daily-progress':
         return await handleUpdateDailyProgress(req, res)
       case 'recalculate-progress':

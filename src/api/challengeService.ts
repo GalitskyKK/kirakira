@@ -93,6 +93,7 @@ interface RawChallengeProgressResponse {
   data?: {
     progress: ChallengeProgress
     leaderboard: readonly ChallengeLeaderboardEntry[]
+    isCompleted?: boolean
   }
   error?: string
 }
@@ -117,6 +118,33 @@ export interface UpdateProgressRequest {
 export interface UpdateProgressResult {
   readonly progress: ChallengeProgress
   readonly leaderboard: readonly ChallengeLeaderboardEntry[]
+  readonly isCompleted?: boolean // Флаг завершения (для показа кнопки "Получить награду")
+}
+
+export interface ClaimChallengeRewardRequest {
+  readonly challengeId: string
+  readonly telegramId: number
+}
+
+export interface ClaimChallengeRewardResult {
+  readonly challenge: {
+    readonly id: string
+    readonly title: string
+  }
+  readonly participation: {
+    readonly id: string
+    readonly status: string
+  }
+  readonly balance: {
+    readonly sprouts: number
+    readonly gems: number
+  }
+  readonly rewards: {
+    readonly sprouts: number
+    readonly gems: number
+    readonly experience: number
+    readonly achievements: readonly string[]
+  }
 }
 
 // ============================================
@@ -302,9 +330,49 @@ export async function updateProgress(
     return {
       progress: result.data.progress,
       leaderboard: result.data.leaderboard,
+      isCompleted: result.data.isCompleted ?? false,
     }
   } catch (error) {
     console.error('Failed to update progress:', error)
+    throw error
+  }
+}
+
+/**
+ * Получает награду за завершенный челлендж
+ */
+export async function claimChallengeReward(
+  request: ClaimChallengeRewardRequest
+): Promise<ClaimChallengeRewardResult> {
+  try {
+    const response = await authenticatedFetch(
+      '/api/challenges?action=claim-challenge-reward',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      }
+    )
+
+    const result = (await response.json()) as {
+      success: boolean
+      data?: ClaimChallengeRewardResult
+      error?: string
+    }
+
+    if (!result.success) {
+      throw new Error(result.error || 'Ошибка получения награды')
+    }
+
+    if (!result.data) {
+      throw new Error('Нет данных о награде')
+    }
+
+    return result.data
+  } catch (error) {
+    console.error('Failed to claim challenge reward:', error)
     throw error
   }
 }

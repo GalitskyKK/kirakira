@@ -1,11 +1,14 @@
 import { useCallback, useState } from 'react'
-import { motion } from 'framer-motion'
-import { Trophy, Clock, CheckCircle, Eye } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Trophy, Clock, CheckCircle, Eye, Gift } from 'lucide-react'
 import { useTelegram } from '@/hooks'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
+import { useChallengeRewardStore } from '@/stores/challengeRewardStore'
+import { useClaimChallengeReward } from '@/hooks/queries/useChallengeQueries'
 import { Button, Card } from '@/components/ui'
 import { ChallengeDetails } from './ChallengeDetails'
+import { ChallengeRewardModal } from './ChallengeRewardModal'
 import { useChallengeList } from '@/hooks/queries/useChallengeQueries'
 import type { Garden, Challenge } from '@/types'
 import type { ChallengeParticipant } from '@/types/challenges'
@@ -36,6 +39,13 @@ export function ChallengeList({ garden }: ChallengeListProps) {
     null
   )
 
+  // Управление модалкой награды
+  const { isShowingReward, lastRewards, challengeTitle, hideReward } =
+    useChallengeRewardStore()
+
+  // Хук для получения награды
+  const claimRewardMutation = useClaimChallengeReward()
+
   // Открыть детали челленджа
   const handleViewChallenge = useCallback(
     (challengeId: string) => {
@@ -43,6 +53,25 @@ export function ChallengeList({ garden }: ChallengeListProps) {
       setSelectedChallengeId(challengeId)
     },
     [hapticFeedback]
+  )
+
+  // Получить награду за челлендж
+  const handleClaimReward = useCallback(
+    async (challengeId: string) => {
+      if (!currentUser?.telegramId) return
+
+      hapticFeedback('light')
+      try {
+        await claimRewardMutation.mutateAsync({
+          challengeId,
+          telegramId: currentUser.telegramId,
+        })
+      } catch (error) {
+        console.error('Failed to claim challenge reward:', error)
+        hapticFeedback('error')
+      }
+    },
+    [currentUser?.telegramId, claimRewardMutation, hapticFeedback]
   )
 
   // Поделиться прогрессом
@@ -309,6 +338,25 @@ export function ChallengeList({ garden }: ChallengeListProps) {
 
                 {/* Кнопки действий */}
                 <div className="flex justify-end space-x-2 border-t border-gray-100 pt-2 dark:border-gray-700">
+                  {isParticipating && participation?.canClaimReward && (
+                    <Button
+                      size="sm"
+                      onClick={e => {
+                        e.stopPropagation()
+                        handleClaimReward(challenge.id)
+                      }}
+                      disabled={claimRewardMutation.isPending}
+                      className="bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
+                    >
+                      <Gift className="mr-1 h-3 w-3" />
+                      <span className="text-xs">
+                        {claimRewardMutation.isPending
+                          ? 'Получение...'
+                          : 'Получить награду'}
+                      </span>
+                    </Button>
+                  )}
+
                   <Button
                     size="sm"
                     variant="outline"
@@ -319,14 +367,16 @@ export function ChallengeList({ garden }: ChallengeListProps) {
                   </Button>
 
                   {isParticipating ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleShareProgress(challenge.id)}
-                      className="dark:border-gray-600 dark:hover:bg-gray-700"
-                    >
-                      <span className="text-xs">Поделиться</span>
-                    </Button>
+                    !participation?.canClaimReward && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleShareProgress(challenge.id)}
+                        className="dark:border-gray-600 dark:hover:bg-gray-700"
+                      >
+                        <span className="text-xs">Поделиться</span>
+                      </Button>
+                    )
                   ) : (
                     <Button
                       size="sm"
@@ -342,6 +392,26 @@ export function ChallengeList({ garden }: ChallengeListProps) {
           </motion.div>
         )
       })}
+
+      {/* Модалка награды за челлендж */}
+      <AnimatePresence>
+        {isShowingReward && lastRewards && challengeTitle && (
+          <ChallengeRewardModal
+            rewards={lastRewards}
+            challengeTitle={challengeTitle}
+            isOpen={isShowingReward}
+            onClose={hideReward}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Детали челленджа */}
+      {selectedChallengeId && (
+        <ChallengeDetails
+          challengeId={selectedChallengeId}
+          onBack={() => setSelectedChallengeId(null)}
+        />
+      )}
     </div>
   )
 }

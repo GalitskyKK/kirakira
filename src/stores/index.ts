@@ -6,6 +6,7 @@ export { useMoodClientStore } from './moodStore'
 export { useUserClientStore } from './userStore'
 export { useCurrencyClientStore } from './currencyStore'
 export { useChallengeClientStore } from './challengeStore'
+export { useChallengeRewardStore } from './challengeRewardStore'
 
 // ============================================
 // Other Stores (not yet migrated)
