@@ -19,6 +19,8 @@ import type {
   ClaimChallengeRewardResult,
 } from '@/api/challengeService'
 import { useChallengeRewardStore } from '@/stores/challengeRewardStore'
+import { currencyKeys } from './useCurrencyQueries'
+import { userKeys } from './useUserQueries'
 
 // ============================================
 // QUERY KEYS - Константы для React Query
@@ -236,14 +238,37 @@ export function useClaimChallengeReward() {
         ),
       })
 
-      // Инвалидируем кеш валюты
+      // Инвалидируем кеш валюты (используем правильные ключи)
       queryClient.invalidateQueries({
-        queryKey: ['currency', variables.telegramId],
+        queryKey: currencyKeys.balance(variables.telegramId),
+      })
+      queryClient.invalidateQueries({
+        queryKey: currencyKeys.transactions(variables.telegramId),
+      })
+      // Также инвалидируем все запросы валюты для этого пользователя
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          return (
+            Array.isArray(query.queryKey) &&
+            query.queryKey[0] === 'currency' &&
+            query.queryKey.includes(variables.telegramId)
+          )
+        },
       })
 
-      // Инвалидируем кеш профиля
+      // Инвалидируем кеш профиля (используем правильные ключи)
       queryClient.invalidateQueries({
-        queryKey: ['user', variables.telegramId],
+        queryKey: userKeys.sync(variables.telegramId),
+      })
+      // Также инвалидируем все запросы пользователя для этого пользователя
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          return (
+            Array.isArray(query.queryKey) &&
+            (query.queryKey[0] === 'user' || query.queryKey[0] === 'profile') &&
+            query.queryKey.includes(variables.telegramId)
+          )
+        },
       })
 
       // Показываем модалку награды

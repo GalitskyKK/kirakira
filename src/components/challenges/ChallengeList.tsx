@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Trophy, Clock, CheckCircle, Eye, Gift } from 'lucide-react'
+import { Trophy, Clock, CheckCircle, Gift } from 'lucide-react'
 import { useTelegram } from '@/hooks'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
@@ -17,8 +17,8 @@ interface ChallengeListProps {
   readonly garden: Garden | null
 }
 
-export function ChallengeList({ garden }: ChallengeListProps) {
-  const { webApp, hapticFeedback } = useTelegram()
+export function ChallengeList({ garden: _garden }: ChallengeListProps) {
+  const { hapticFeedback } = useTelegram()
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
   const currentUser = userData?.user
@@ -72,41 +72,6 @@ export function ChallengeList({ garden }: ChallengeListProps) {
       }
     },
     [currentUser?.telegramId, claimRewardMutation, hapticFeedback]
-  )
-
-  // Поделиться прогрессом
-  const handleShareProgress = useCallback(
-    (challengeId: string) => {
-      if (!webApp || !garden) return
-
-      const challenge = activeChallenges.find(
-        (c: Challenge) => c.id === challengeId
-      )
-      if (!challenge) return
-
-      const participation = challengesData?.userParticipations.find(
-        (p: ChallengeParticipant) => p.challengeId === challengeId
-      )
-
-      if (!challenge || !participation) return
-
-      hapticFeedback('medium')
-
-      const progressText = `🎯 Мой прогресс в челленже "${challenge.title}"\n\n📊 Прогресс: ${participation.currentProgress}/${challenge.requirements.targetValue}\n🌱 Элементов в саду: ${garden.elements.length}\n🔥 Текущий стрик: ${currentUser?.stats.currentStreak || 0}\n\n💪 Присоединяйтесь к KiraKira!`
-
-      webApp.shareMessage({
-        text: progressText,
-        parse_mode: 'Markdown',
-      })
-    },
-    [
-      webApp,
-      hapticFeedback,
-      garden,
-      activeChallenges,
-      challengesData,
-      currentUser,
-    ]
   )
 
   // Если выбран конкретный челлендж, показываем его детали
@@ -188,7 +153,10 @@ export function ChallengeList({ garden }: ChallengeListProps) {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Card className="p-3 sm:p-4">
+            <Card
+              className="cursor-pointer p-3 transition-all hover:shadow-lg sm:p-4"
+              onClick={() => handleViewChallenge(challenge.id)}
+            >
               <div className="space-y-3">
                 {/* Верхняя часть: иконка, заголовок и тип */}
                 <div className="flex items-start space-x-3">
@@ -326,19 +294,25 @@ export function ChallengeList({ garden }: ChallengeListProps) {
                     <Trophy className="h-3 w-3" />
                     <span>Цель: {challenge.requirements.targetValue}</span>
                   </span>
-                  {challenge.rewards.title && (
+                  {challenge.rewards && (
                     <span className="flex items-center space-x-1">
-                      <Trophy className="h-3 w-3" />
+                      <Gift className="h-3 w-3" />
                       <span className="truncate">
-                        {challenge.rewards.title}
+                        {challenge.rewards.sprouts
+                          ? `🌱 ${challenge.rewards.sprouts}`
+                          : challenge.rewards.gems
+                            ? `💎 ${challenge.rewards.gems}`
+                            : challenge.rewards.experience
+                              ? `⭐ ${challenge.rewards.experience} опыта`
+                              : 'Награда'}
                       </span>
                     </span>
                   )}
                 </div>
 
-                {/* Кнопки действий */}
-                <div className="flex justify-end space-x-2 border-t border-gray-100 pt-2 dark:border-gray-700">
-                  {isParticipating && participation?.canClaimReward && (
+                {/* Кнопка получения награды (если завершено) */}
+                {isParticipating && participation?.canClaimReward && (
+                  <div className="flex justify-end border-t border-gray-100 pt-2 dark:border-gray-700">
                     <Button
                       size="sm"
                       onClick={e => {
@@ -355,38 +329,8 @@ export function ChallengeList({ garden }: ChallengeListProps) {
                           : 'Получить награду'}
                       </span>
                     </Button>
-                  )}
-
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleViewChallenge(challenge.id)}
-                  >
-                    <Eye className="mr-1 h-3 w-3" />
-                    <span className="text-xs">Детали</span>
-                  </Button>
-
-                  {isParticipating ? (
-                    !participation?.canClaimReward && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleShareProgress(challenge.id)}
-                      className="dark:border-gray-600 dark:hover:bg-gray-700"
-                    >
-                      <span className="text-xs">Поделиться</span>
-                    </Button>
-                    )
-                  ) : (
-                    <Button
-                      size="sm"
-                      onClick={() => handleViewChallenge(challenge.id)}
-                      className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
-                    >
-                      <span className="text-xs">Участвовать</span>
-                    </Button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </Card>
           </motion.div>

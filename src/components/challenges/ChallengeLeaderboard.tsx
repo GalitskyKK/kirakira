@@ -316,25 +316,6 @@ export function ChallengeLeaderboard({
       )}
 
       {/* Информация о награде */}
-      {challenge.rewards && (
-        <Card className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 dark:from-purple-900/20 dark:to-pink-900/20">
-          <h4 className="mb-2 text-sm font-medium text-purple-700 dark:text-purple-300">
-            🎁 Награды за победу
-          </h4>
-          <div className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
-            {challenge.rewards.experience && (
-              <p>⚡ +{challenge.rewards.experience} опыта</p>
-            )}
-            {challenge.rewards.title && (
-              <p>🏅 Титул: "{challenge.rewards.title}"</p>
-            )}
-            {challenge.rewards.specialElements &&
-              challenge.rewards.specialElements.length > 0 && (
-                <p>🌸 Специальные элементы сада</p>
-              )}
-          </div>
-        </Card>
-      )}
     </div>
   )
 }

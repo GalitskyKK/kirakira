@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { Leaf, Heart, Users, User, Trophy } from 'lucide-react'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useDailyQuests } from '@/hooks/queries/useDailyQuestQueries'
+import { useChallengeList } from '@/hooks/queries/useChallengeQueries'
 
 interface Tab {
   id: string
@@ -56,11 +57,26 @@ export function MobileTabNavigation({ className }: MobileTabNavigationProps) {
     hasValidTelegramId
   )
 
-  // Проверяем наличие доступных наград: только квесты со статусом 'completed'
-  // (бонусы за челленджи выдаются автоматически, поэтому исключаем canClaimBonus)
-  const hasAvailableRewards = questsData
+  // Проверяем наличие доступных наград за челленджи
+  const { data: challengesData } = useChallengeList(
+    hasValidTelegramId ? telegramId : undefined,
+    hasValidTelegramId
+  )
+
+  // Проверяем наличие доступных наград: квесты со статусом 'completed'
+  const hasQuestRewards = questsData
     ? questsData.quests.some(quest => quest.status === 'completed')
     : false
+
+  // Проверяем наличие доступных наград за челленджи
+  const hasChallengeRewards = challengesData
+    ? challengesData.userParticipations.some(
+        (p) => p.canClaimReward === true
+      )
+    : false
+
+  // Есть ли доступные награды (квесты или челленджи)
+  const hasAvailableRewards = hasQuestRewards || hasChallengeRewards
 
   return (
     <div

@@ -303,6 +303,58 @@ export function ChallengeDetails({
             </div>
           </div>
 
+          {/* Награды */}
+          {currentChallenge.rewards && (
+            <div className="rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50 p-4 dark:from-yellow-900/20 dark:to-amber-900/20">
+              <div className="mb-2 flex items-center space-x-2">
+                <Gift className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  Награды за выполнение:
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                {typeof currentChallenge.rewards.sprouts === 'number' &&
+                  currentChallenge.rewards.sprouts > 0 && (
+                    <span className="flex items-center space-x-1 rounded-full bg-white/60 px-3 py-1 text-sm dark:bg-gray-800/60">
+                      <span>🌱</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                        {currentChallenge.rewards.sprouts}
+                      </span>
+                    </span>
+                  )}
+                {typeof currentChallenge.rewards.gems === 'number' &&
+                  currentChallenge.rewards.gems > 0 && (
+                    <span className="flex items-center space-x-1 rounded-full bg-white/60 px-3 py-1 text-sm dark:bg-gray-800/60">
+                      <span>💎</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                        {currentChallenge.rewards.gems}
+                      </span>
+                    </span>
+                  )}
+                {typeof currentChallenge.rewards.experience === 'number' &&
+                  currentChallenge.rewards.experience > 0 && (
+                    <span className="flex items-center space-x-1 rounded-full bg-white/60 px-3 py-1 text-sm dark:bg-gray-800/60">
+                      <span>⭐</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                        {currentChallenge.rewards.experience} опыта
+                      </span>
+                    </span>
+                  )}
+                {currentChallenge.rewards.achievements &&
+                  Array.isArray(currentChallenge.rewards.achievements) &&
+                  currentChallenge.rewards.achievements.length > 0 && (
+                    <span className="flex items-center space-x-1 rounded-full bg-white/60 px-3 py-1 text-sm dark:bg-gray-800/60">
+                      <span>🏆</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                        {currentChallenge.rewards.achievements.length}{' '}
+                        достижений
+                      </span>
+                    </span>
+                  )}
+              </div>
+            </div>
+          )}
+
           {/* Прогресс пользователя */}
           {isParticipating && currentProgress && (
             <motion.div
@@ -442,31 +494,35 @@ export function ChallengeDetails({
               </Button>
             )}
 
-            {!isParticipating && canJoin.canJoin && !currentParticipation?.canClaimReward && (
-              <Button
-                onClick={handleJoinChallenge}
-                disabled={isJoining}
-                className="flex-1"
-              >
-                {isJoining ? (
-                  <>
-                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
-                    Присоединяемся...
-                  </>
-                ) : (
-                  <>
-                    <ArrowRight className="mr-2 h-4 w-4" />
-                    Присоединиться
-                  </>
-                )}
-              </Button>
-            )}
+            {!isParticipating &&
+              canJoin.canJoin &&
+              !currentParticipation?.canClaimReward && (
+                <Button
+                  onClick={handleJoinChallenge}
+                  disabled={isJoining}
+                  className="flex-1"
+                >
+                  {isJoining ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
+                      Присоединяемся...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowRight className="mr-2 h-4 w-4" />
+                      Присоединиться
+                    </>
+                  )}
+                </Button>
+              )}
 
-            {!isParticipating && !canJoin.canJoin && !currentParticipation?.canClaimReward && (
-              <Button disabled className="flex-1">
-                {canJoin.reason || 'Недоступно'}
-              </Button>
-            )}
+            {!isParticipating &&
+              !canJoin.canJoin &&
+              !currentParticipation?.canClaimReward && (
+                <Button disabled className="flex-1">
+                  {canJoin.reason || 'Недоступно'}
+                </Button>
+              )}
 
             <Button
               onClick={handleRefreshLeaderboard}
