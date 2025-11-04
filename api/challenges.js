@@ -255,15 +255,21 @@ async function handleList(req, res) {
 
         // Проверяем, можно ли получить награду (завершен, но не забран)
         if (p.status === 'completed' && challenge?.rewards) {
-          const { count: existingCount } = await supabase
-            .from('currency_transactions')
-            .select('*', { count: 'exact', head: true })
-            .eq('telegram_id', parseInt(telegramId))
-            .eq('reason', 'challenge_reward')
-            .eq('metadata->>challenge_id', p.challenge_id)
-            .limit(1)
+          try {
+            const { data: existingTransactions } = await supabase
+              .from('currency_transactions')
+              .select('created_at')
+              .eq('telegram_id', parseInt(telegramId))
+              .eq('reason', 'challenge_reward')
+              .eq('metadata->>challenge_id', p.challenge_id)
+              .limit(1)
 
-          canClaimReward = !existingCount || existingCount === 0
+            canClaimReward =
+              !existingTransactions || existingTransactions.length === 0
+          } catch (error) {
+            // При ошибке считаем, что можно получить (оптимистичный подход)
+            canClaimReward = true
+          }
         }
 
         return {
@@ -424,15 +430,21 @@ async function handleDetails(req, res) {
     // Проверяем, можно ли получить награду (завершен, но не забран)
     let canClaimReward = false
     if (participation?.status === 'completed' && challenge.rewards) {
-      const { count: existingCount } = await supabase
-        .from('currency_transactions')
-        .select('*', { count: 'exact', head: true })
-        .eq('telegram_id', parseInt(telegramId))
-        .eq('reason', 'challenge_reward')
-        .eq('metadata->>challenge_id', challengeId)
-        .limit(1)
+      try {
+        const { data: existingTransactions } = await supabase
+          .from('currency_transactions')
+          .select('created_at')
+          .eq('telegram_id', parseInt(telegramId))
+          .eq('reason', 'challenge_reward')
+          .eq('metadata->>challenge_id', challengeId)
+          .limit(1)
 
-      canClaimReward = !existingCount || existingCount === 0
+        canClaimReward =
+          !existingTransactions || existingTransactions.length === 0
+      } catch (error) {
+        // При ошибке считаем, что можно получить (оптимистичный подход)
+        canClaimReward = true
+      }
     }
 
     const formattedParticipation = participation
@@ -1616,30 +1628,9 @@ async function handleClaimChallengeReward(req, res) {
       })
     }
 
-    // ✅ Проверяем, что ЭТОТ пользователь еще не получил награду
-    // Проверка идет по telegram_id + challenge_id, поэтому получение награды
-    // одним пользователем не влияет на возможность получения другими
-    // Используем count для избежания проблем с RLS политиками
-    const { count: existingCount, error: checkError } = await supabase
-      .from('currency_transactions')
-      .select('*', { count: 'exact', head: true })
-      .eq('telegram_id', parseInt(telegramId)) // ✅ Только для этого пользователя
-      .eq('reason', 'challenge_reward')
-      .eq('metadata->>challenge_id', challengeId)
-      .limit(1)
-
-    if (checkError) {
-      console.error('Error checking existing transactions:', checkError)
-      // Если ошибка при проверке, продолжаем (не блокируем получение награды)
-      // Но лучше залогировать для отладки
-    }
-
-    if (existingCount && existingCount > 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Награда уже получена',
-      })
-    }
+    // ✅ Проверка дубликатов выполняется в функции БД award_challenge_rewards
+    // Не проверяем здесь, чтобы избежать проблем с RLS политиками
+    // Функция БД сама проверит наличие транзакций и вернет ошибку, если награда уже получена
 
     // Начисляем награды через функцию БД
     if (!challenge.rewards) {
@@ -1663,6 +1654,21 @@ async function handleClaimChallengeReward(req, res) {
 
     if (rewardsError) {
       console.error('Award challenge rewards error:', rewardsError)
+
+      // Проверяем, не является ли это ошибкой дубликата
+      const errorMessage = rewardsError.message || String(rewardsError)
+      if (
+        errorMessage.includes('already') ||
+        errorMessage.includes('уже') ||
+        errorMessage.includes('duplicate') ||
+        errorMessage.includes('exists')
+      ) {
+        return res.status(400).json({
+          success: false,
+          error: 'Награда уже получена',
+        })
+      }
+
       return res.status(500).json({
         success: false,
         error: 'Ошибка при начислении наград',
@@ -1670,6 +1676,20 @@ async function handleClaimChallengeReward(req, res) {
     }
 
     if (!rewardsResult?.success) {
+      // Проверяем, не является ли это ошибкой дубликата
+      const errorMessage = rewardsResult?.error || ''
+      if (
+        errorMessage.includes('already') ||
+        errorMessage.includes('уже') ||
+        errorMessage.includes('duplicate') ||
+        errorMessage.includes('exists')
+      ) {
+        return res.status(400).json({
+          success: false,
+          error: 'Награда уже получена',
+        })
+      }
+
       return res.status(500).json({
         success: false,
         error: rewardsResult?.error || 'Ошибка при начислении наград',
