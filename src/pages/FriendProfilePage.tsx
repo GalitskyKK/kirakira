@@ -189,7 +189,7 @@ export default function FriendProfilePage() {
         </div>
       </div>
 
-      <div className="space-y-6 pb-8"> {/* Убрал p-4 */}
+      <div className="space-y-6 p-4 pb-8">
         {/* Debug Info */}
         {/* <FriendProfileDebug
           profileData={profileData}
