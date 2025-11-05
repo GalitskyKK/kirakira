@@ -132,11 +132,19 @@ export interface DatabaseUserStats {
 }
 
 export interface DatabaseAchievement {
-  readonly id: string
+  readonly id?: string
   readonly achievement_id: string
-  readonly unlocked_at: string
-  readonly progress: number
+  readonly unlocked_at?: string | null
+  readonly progress?: number
   readonly is_unlocked: boolean
+  // 🔥 ИСПРАВЛЕНИЕ: Добавляем вложенный объект из join-а с таблицей achievements
+  readonly achievements?: {
+    readonly name: string
+    readonly description: string
+    readonly emoji: string
+    readonly category: string
+    readonly rarity?: string
+  }
 }
 
 export interface ProfileData {

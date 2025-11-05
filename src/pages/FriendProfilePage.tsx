@@ -101,7 +101,7 @@ export default function FriendProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="from-kira-50 flex min-h-screen items-center justify-center bg-gradient-to-br via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-kira-50 via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
         <motion.div
           className="text-center"
           initial={{ opacity: 0, scale: 0.9 }}
@@ -171,7 +171,7 @@ export default function FriendProfilePage() {
   const daysSinceRegistration = daysSinceRegistrationLocal
 
   return (
-    <div className="from-kira-50 min-h-screen bg-gradient-to-br via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
+    <div className="min-h-screen bg-gradient-to-br from-kira-50 via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
       {/* Header */}
       <div className="glass-card sticky top-0 z-10 border-b border-neutral-200/50 backdrop-blur-md dark:border-neutral-700/50">
         <div className="flex items-center justify-between p-4">
@@ -418,6 +418,13 @@ interface AchievementBadgeProps {
 }
 
 function AchievementBadge({ achievement, delay }: AchievementBadgeProps) {
+  // 🔥 ИСПРАВЛЕНИЕ: Используем данные из join-а вместо achievement_id
+  // TypeScript автоматически выведет тип из DatabaseAchievement.achievements
+  const emoji = achievement.achievements?.emoji ?? '🏆'
+  const name = achievement.achievements?.name ?? achievement.achievement_id
+  const description =
+    achievement.achievements?.description ?? 'Достижение получено!'
+
   return (
     <motion.div
       className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 dark:border-blue-700 dark:from-blue-900/30 dark:to-indigo-900/30"
@@ -426,12 +433,12 @@ function AchievementBadge({ achievement, delay }: AchievementBadgeProps) {
       transition={{ delay, duration: 0.3 }}
     >
       <div className="text-center">
-        <div className="mb-2 text-3xl">🏆</div>
+        <div className="mb-2 text-3xl">{emoji}</div>
         <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-          {achievement.achievement_id}
+          {name}
         </div>
         <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-          Achievement earned!
+          {description}
         </div>
         {achievement.unlocked_at && (
           <div className="mt-2 text-xs text-blue-500 dark:text-blue-400">
