@@ -473,10 +473,7 @@ async function protectedHandler(req, res) {
             photo_url: req.auth.userData.photoUrl,
             language_code: req.auth.userData.languageCode,
           }
-          console.log(
-            `📝 Using auth data for user ${telegramId}:`,
-            userData
-          )
+          console.log(`📝 Using auth data for user ${telegramId}:`, userData)
         }
 
         // Получаем или создаем пользователя с данными Telegram
@@ -732,7 +729,20 @@ async function protectedHandler(req, res) {
         const friend = await ensureUser(parseInt(friendTelegramId))
 
         // Получаем настройки приватности друга
-        const privacySettings = friend.privacy_settings || {}
+        // 🔥 ИСПРАВЛЕНИЕ: Нормализуем privacy_settings (может быть строкой или объектом)
+        let privacySettings = friend.privacy_settings || {}
+        if (typeof privacySettings === 'string') {
+          try {
+            privacySettings = JSON.parse(privacySettings)
+          } catch (e) {
+            console.error('Error parsing privacy_settings:', e)
+            privacySettings = {}
+          }
+        }
+        // Убеждаемся что shareAchievements - boolean
+        if (privacySettings.shareAchievements === undefined) {
+          privacySettings.shareAchievements = true // Значение по умолчанию
+        }
 
         // Обновляем достижения друга (чтобы они были актуальными)
         await checkAndUpdateAchievements(friend.telegram_id)
@@ -755,8 +765,18 @@ async function protectedHandler(req, res) {
         // Достижения (если разрешены)
         let achievements = []
         if (privacySettings.shareAchievements) {
+          // 🔥 ИСПРАВЛЕНИЕ: Используем SERVICE_ROLE_KEY для чтения данных друга
+          // так как RLS политики могут блокировать доступ к данным других пользователей
+          const friendSupabase = await getSupabaseClient(null) // null = SERVICE_ROLE_KEY
+
+          // 🔍 ОТЛАДКА: Логируем проверку перед запросом
+          console.log('🔍 Fetching friend achievements:', {
+            friendTelegramId: friend.telegram_id,
+            shareAchievements: privacySettings.shareAchievements,
+          })
+
           const { data: userAchievements, error: friendAchievementsError } =
-            await supabase
+            await friendSupabase
               .from('user_achievements')
               .select(
                 `
@@ -774,6 +794,15 @@ async function protectedHandler(req, res) {
               .eq('telegram_id', friend.telegram_id)
               .eq('is_unlocked', true)
 
+          // 🔍 ОТЛАДКА: Логируем результат запроса
+          console.log('🔍 Friend achievements query result:', {
+            friendTelegramId: friend.telegram_id,
+            hasError: !!friendAchievementsError,
+            error: friendAchievementsError,
+            achievementsCount: userAchievements?.length || 0,
+            achievements: userAchievements,
+          })
+
           if (friendAchievementsError) {
             console.error(
               'Error fetching friend achievements:',
@@ -782,6 +811,14 @@ async function protectedHandler(req, res) {
           }
 
           achievements = userAchievements || []
+        } else {
+          console.log(
+            '🔍 Friend achievements skipped (shareAchievements = false):',
+            {
+              friendTelegramId: friend.telegram_id,
+              shareAchievements: privacySettings.shareAchievements,
+            }
+          )
         }
 
         return res.status(200).json({
