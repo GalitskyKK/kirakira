@@ -13,6 +13,7 @@ import {
   Sparkles,
   ArrowRight,
   Gift,
+  Leaf,
 } from 'lucide-react'
 import { Button, Card } from '@/components/ui'
 import { useTelegram } from '@/hooks'
@@ -316,7 +317,7 @@ export function ChallengeDetails({
                 {typeof currentChallenge.rewards.sprouts === 'number' &&
                   currentChallenge.rewards.sprouts > 0 && (
                     <span className="flex items-center space-x-1 rounded-full bg-white/60 px-3 py-1 text-sm dark:bg-gray-800/60">
-                      <span>🌱</span>
+                      <Leaf size={16} className="text-green-500" />
                       <span className="font-medium text-gray-900 dark:text-gray-100">
                         {currentChallenge.rewards.sprouts}
                       </span>
@@ -325,7 +326,7 @@ export function ChallengeDetails({
                 {typeof currentChallenge.rewards.gems === 'number' &&
                   currentChallenge.rewards.gems > 0 && (
                     <span className="flex items-center space-x-1 rounded-full bg-white/60 px-3 py-1 text-sm dark:bg-gray-800/60">
-                      <span>💎</span>
+                      <Sparkles size={16} className="text-purple-500" />
                       <span className="font-medium text-gray-900 dark:text-gray-100">
                         {currentChallenge.rewards.gems}
                       </span>
@@ -336,7 +337,7 @@ export function ChallengeDetails({
                     <span className="flex items-center space-x-1 rounded-full bg-white/60 px-3 py-1 text-sm dark:bg-gray-800/60">
                       <span>⭐</span>
                       <span className="font-medium text-gray-900 dark:text-gray-100">
-                        {currentChallenge.rewards.experience} опыта
+                        {currentChallenge.rewards.experience}
                       </span>
                     </span>
                   )}
