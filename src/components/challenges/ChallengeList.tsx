@@ -294,7 +294,7 @@ export function ChallengeList({ garden: _garden }: ChallengeListProps) {
                     <Trophy className="h-3 w-3" />
                     <span>Цель: {challenge.requirements.targetValue}</span>
                   </span>
-                  {challenge.rewards && (
+                  {/* {challenge.rewards && (
                     <span className="flex items-center space-x-1">
                       <Gift className="h-3 w-3" />
                       <span className="truncate">
@@ -307,7 +307,7 @@ export function ChallengeList({ garden: _garden }: ChallengeListProps) {
                               : 'Награда'}
                       </span>
                     </span>
-                  )}
+                  )} */}
                 </div>
 
                 {/* Кнопка получения награды (если завершено) */}

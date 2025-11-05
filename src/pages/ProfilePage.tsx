@@ -159,7 +159,7 @@ export function ProfilePage() {
 
   return (
     <motion.div
-      className="space-y-6 p-4 pb-8"
+      className="space-y-6 pb-8" // Убрал p-4
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}

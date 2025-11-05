@@ -36,7 +36,7 @@ export function MobileLayout() {
 
       {/* Content Area - React Router Outlet */}
       <div className="relative overflow-x-hidden">
-        <div className="w-full px-3 pb-6 sm:px-4">
+        <div className="w-full p-3 pb-6 sm:p-4">
           <Outlet />
         </div>
       </div>
