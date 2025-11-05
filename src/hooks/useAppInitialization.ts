@@ -63,26 +63,32 @@ export function useAppInitialization(
   useEffect(() => {
     const checkDependencies = () => {
       // В Telegram режиме ждем готовности Telegram и загрузки пользователя
-
       if (finalConfig.enableTelegram && Boolean(telegramUser?.telegramId)) {
         const telegramReady = Boolean(telegramUser)
-
         const userDataReady = !userLoading && Boolean(userData?.user)
 
         if (telegramReady && userDataReady) {
           setAllDependenciesReady(true)
-
           return true
         }
 
         return false
       }
 
-      // В браузерном режиме - только базовая готовность
-
+      // В браузерном режиме - завершаем инициализацию без ожидания Telegram
+      // Пользователь может быть авторизован через JWT токен, но это проверяется отдельно
       if (!finalConfig.enableTelegram) {
         setAllDependenciesReady(true)
+        return true
+      }
 
+      // Если включен Telegram режим, но нет telegramId - это нормально для браузера
+      // (может быть JWT токен или пользователь еще не авторизован)
+      // Завершаем инициализацию, чтобы не блокировать приложение
+      if (finalConfig.enableTelegram && !telegramUser?.telegramId) {
+        // Проверяем, может быть это браузер с JWT токеном
+        // В этом случае завершаем инициализацию
+        setAllDependenciesReady(true)
         return true
       }
 

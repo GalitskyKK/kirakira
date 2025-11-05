@@ -1,5 +1,6 @@
-import { createContext, useContext, ReactNode } from 'react'
+import { createContext, useContext, ReactNode, useMemo } from 'react'
 import { useTelegram } from '@/hooks'
+import { getTelegramIdFromJWT } from '@/utils/apiClient'
 
 interface UserContextType {
   telegramId: number | undefined
@@ -15,8 +16,20 @@ interface UserProviderProps {
 export function UserProvider({ children }: UserProviderProps) {
   const { user: telegramUser } = useTelegram()
 
+  // Получаем telegramId: приоритет Telegram WebApp > JWT токен из localStorage
+  const telegramId = useMemo(() => {
+    // Если в Telegram Mini App - используем данные из WebApp
+    if (telegramUser?.telegramId) {
+      return telegramUser.telegramId
+    }
+
+    // Если в браузере - пытаемся получить из JWT токена
+    const jwtTelegramId = getTelegramIdFromJWT()
+    return jwtTelegramId ?? undefined
+  }, [telegramUser?.telegramId])
+
   const value: UserContextType = {
-    telegramId: telegramUser?.telegramId,
+    telegramId,
     isTelegramEnv: !!window.Telegram?.WebApp,
   }
 

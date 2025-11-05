@@ -6,6 +6,74 @@
 import crypto from 'crypto'
 
 /**
+ * Валидирует данные от Telegram Login Widget
+ * @param {object} loginData - Данные от Telegram Login Widget { id, first_name, last_name?, username?, photo_url?, auth_date, hash }
+ * @param {string} botToken - Токен бота
+ * @returns {{ isValid: boolean, user: object | null }} Результат валидации
+ */
+export function validateTelegramLoginWidget(loginData, botToken) {
+  try {
+    if (!loginData || !botToken || !loginData.hash) {
+      return { isValid: false, user: null }
+    }
+
+    const { hash, ...dataWithoutHash } = loginData
+
+    // Создаем строку для проверки: сортируем ключи и формируем строку
+    // Все значения должны быть преобразованы в строки
+    const dataCheckString = Object.keys(dataWithoutHash)
+      .sort()
+      .map(key => {
+        const value = dataWithoutHash[key]
+        // Преобразуем значение в строку (числа, null, undefined)
+        const stringValue = value == null ? '' : String(value)
+        return `${key}=${stringValue}`
+      })
+      .join('\n')
+
+    // Создаем секретный ключ из токена бота
+    const secretKey = crypto
+      .createHmac('sha256', 'WebAppData')
+      .update(botToken)
+      .digest()
+
+    // Вычисляем хеш
+    const calculatedHash = crypto
+      .createHmac('sha256', secretKey)
+      .update(dataCheckString)
+      .digest('hex')
+
+    // Проверяем совпадение хешей
+    if (calculatedHash === hash) {
+      // Проверяем, что данные не устарели (максимум 86400 секунд = 24 часа)
+      const authDate = parseInt(dataWithoutHash.auth_date)
+      const now = Math.floor(Date.now() / 1000)
+      if (now - authDate > 86400) {
+        console.warn('⚠️ Telegram Login Widget data expired')
+        return { isValid: false, user: null }
+      }
+
+      return {
+        isValid: true,
+        user: {
+          id: dataWithoutHash.id,
+          first_name: dataWithoutHash.first_name,
+          last_name: dataWithoutHash.last_name,
+          username: dataWithoutHash.username,
+          photo_url: dataWithoutHash.photo_url,
+          language_code: dataWithoutHash.language_code,
+        },
+      }
+    }
+
+    return { isValid: false, user: null }
+  } catch (error) {
+    console.error('❌ Telegram Login Widget validation error:', error)
+    return { isValid: false, user: null }
+  }
+}
+
+/**
  * Валидирует initData от Telegram WebApp
  * @param {string} initData - Строка initData от Telegram
  * @param {string} botToken - Токен бота
@@ -58,8 +126,41 @@ export function validateTelegramInitData(initData, botToken) {
 }
 
 /**
+ * Аутентифицирует пользователя через JWT токен
+ * @param {string} token - JWT токен
+ * @returns {{ authorized: boolean, telegramId: number | null, userData: object | null, jwt: string | null }} Результат авторизации
+ */
+export async function authenticateJWT(token) {
+  try {
+    const { verifySupabaseJWT } = await import('./_jwt.js')
+    const payload = verifySupabaseJWT(token)
+
+    if (!payload || !payload.telegram_id) {
+      return { authorized: false, telegramId: null, userData: null, jwt: null }
+    }
+
+    return {
+      authorized: true,
+      telegramId: payload.telegram_id,
+      userData: {
+        id: payload.telegram_id,
+        firstName: payload.user_metadata?.first_name || null,
+        lastName: payload.user_metadata?.last_name || null,
+        username: payload.user_metadata?.username || null,
+        languageCode: null,
+        photoUrl: null,
+      },
+      jwt: token,
+    }
+  } catch (error) {
+    console.error('❌ JWT authentication error:', error)
+    return { authorized: false, telegramId: null, userData: null, jwt: null }
+  }
+}
+
+/**
  * Middleware для защиты API эндпоинтов
- * Проверяет Authorization header с Telegram initData
+ * Проверяет Authorization header с Telegram initData или JWT токеном
  * И генерирует JWT токен для работы с Supabase RLS
  *
  * @param {Request} req - Vercel Functions request
@@ -70,8 +171,20 @@ export async function authenticateTelegramUser(req) {
     // Получаем Authorization header
     const authHeader = req.headers.authorization || req.headers.Authorization
 
-    if (!authHeader || !authHeader.startsWith('tma ')) {
-      console.warn('⚠️ Missing or invalid Authorization header')
+    if (!authHeader) {
+      console.warn('⚠️ Missing Authorization header')
+      return { authorized: false, telegramId: null, userData: null, jwt: null }
+    }
+
+    // Проверяем JWT токен (Bearer префикс)
+    if (authHeader.startsWith('Bearer ')) {
+      const token = authHeader.replace('Bearer ', '')
+      return await authenticateJWT(token)
+    }
+
+    // Проверяем Telegram initData (tma префикс)
+    if (!authHeader.startsWith('tma ')) {
+      console.warn('⚠️ Invalid Authorization header format')
       return { authorized: false, telegramId: null, userData: null, jwt: null }
     }
 

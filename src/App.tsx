@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import {
   BrowserRouter as Router,
   Routes,
@@ -42,6 +42,7 @@ const FriendProfilePage = lazy(() => import('@/pages/FriendProfilePage'))
 import { TelegramDiagnostic } from '@/components/TelegramDiagnostic'
 import { useTelegram, useTelegramTheme, useAppInitialization } from '@/hooks'
 import { InitializationStage } from '@/types/initialization'
+import { getTelegramIdFromJWT } from '@/utils/apiClient'
 
 interface AppInitState {
   stage: InitializationStage
@@ -66,13 +67,18 @@ function App() {
   const forceDiagnostic =
     urlParams.get('diagnostic') === '1' ||
     urlParams.get('force_diagnostic') === '1'
-  const isTelegramEnv = !!window.Telegram?.WebApp
+
+  // Определяем Telegram окружение: проверяем не только наличие WebApp, но и initData
+  // Это важно, так как в браузере может быть определен window.Telegram через расширения
+  const isTelegramEnv = !!(
+    window.Telegram?.WebApp &&
+    (window.Telegram.WebApp.initData ||
+      window.Telegram.WebApp.initDataUnsafe?.user)
+  )
 
   // ✅ ВСЕ ХУКИ ДОЛЖНЫ БЫТЬ ВЫЗВАНЫ ДО ЛЮБОГО УСЛОВНОГО ВОЗВРАТА
   const { hasCompletedOnboarding, isLoading: userStoreLoading } =
     useUserClientStore()
-
-  const [showAuth, setShowAuth] = useState(false)
 
   // Telegram интеграция
   const {
@@ -81,14 +87,31 @@ function App() {
     isReady: telegramReady,
   } = useTelegram()
 
+  // Получаем telegramId из JWT токена (если не в Telegram)
+  let jwtTelegramId: number | null = null
+  if (!isTelegramEnv) {
+    try {
+      const id = getTelegramIdFromJWT()
+      jwtTelegramId = id ?? null
+    } catch {
+      jwtTelegramId = null
+    }
+  }
+
+  // Определяем актуальный telegramId: Telegram WebApp > JWT токен
+  const actualTelegramId: number | undefined =
+    telegramUser?.telegramId ?? jwtTelegramId ?? undefined
+
   // Получаем данные пользователя через React Query
   const { data: userData, isLoading: userLoading } = useUserSync(
-    telegramUser?.telegramId,
-    telegramUser?.telegramId != null
+    actualTelegramId,
+    actualTelegramId != null
   )
 
   const currentUser = userData?.user
-  const isAuthenticated = !!currentUser
+  // Считаем авторизованным, если есть telegramId (даже если данные еще загружаются)
+  // или если загрузились данные пользователя
+  const isAuthenticated = actualTelegramId != null || currentUser != null
 
   const { colorScheme } = useTelegramTheme()
 
@@ -379,16 +402,105 @@ function App() {
     return <OnboardingPage onComplete={handleOnboardingComplete} />
   }
 
-  // Show auth screen for non-authenticated users (optional)
-  if (showAuth && !isAuthenticated && !isTelegramEnv) {
+  // Проверяем авторизацию только после завершения инициализации и загрузки данных
+  // Не показываем ошибки во время загрузки
+  const shouldCheckAuth = !initState.isLoading && !userLoading
+
+  // Show auth screen for non-authenticated users in browser
+  // В Telegram Mini App авторизация автоматическая, если нет telegramId - это ошибка
+  if (shouldCheckAuth && !isAuthenticated && !isTelegramEnv) {
     if (isDevelopment) {
-      console.log('🔍 РЕНДЕРИМ AUTH PAGE')
+      console.log('🔍 РЕНДЕРИМ AUTH PAGE (нет авторизации в браузере)', {
+        actualTelegramId: actualTelegramId ?? null,
+        jwtTelegramId: jwtTelegramId ?? null,
+        telegramUser: telegramUser != null,
+        currentUser: currentUser != null,
+        userLoading,
+        initStateLoading: initState.isLoading,
+      })
     }
     return (
       <AuthPage
-        onSuccess={() => setShowAuth(false)}
+        onSuccess={() => {
+          // После успешной авторизации перезагружаем страницу для обновления состояния
+          window.location.reload()
+        }}
         onError={error => console.error('Auth error:', error)}
       />
+    )
+  }
+
+  // В Telegram Mini App без telegramId - показываем ошибку только после завершения загрузки
+  // и только если действительно нет telegramId (не во время загрузки)
+  const hasNoTelegramId =
+    telegramUser?.telegramId == null || telegramUser.telegramId === 0
+  if (
+    shouldCheckAuth &&
+    !isAuthenticated &&
+    isTelegramEnv &&
+    hasNoTelegramId &&
+    !userLoading
+  ) {
+    if (isDevelopment) {
+      console.log('🔍 РЕНДЕРИМ ОШИБКУ (Telegram без telegramId)', {
+        isTelegramEnv,
+        telegramUser: telegramUser != null,
+        telegramUserTelegramId: telegramUser?.telegramId ?? null,
+        actualTelegramId: actualTelegramId ?? null,
+        userLoading,
+        initStateLoading: initState.isLoading,
+        windowTelegram: window.Telegram != null,
+        windowTelegramWebApp: window.Telegram?.WebApp != null,
+        initData:
+          window.Telegram?.WebApp?.initData != null &&
+          window.Telegram.WebApp.initData.length > 0,
+        initDataUnsafe: window.Telegram?.WebApp?.initDataUnsafe != null,
+      })
+    }
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-red-50 via-orange-50 to-neutral-50 dark:from-neutral-900 dark:to-neutral-800">
+        <motion.div
+          className="mx-auto max-w-md p-8 text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="mb-4 text-6xl">⚠️</div>
+          <h1 className="mb-4 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+            Ошибка авторизации
+          </h1>
+          <p className="mb-6 text-neutral-600 dark:text-neutral-400">
+            Не удалось получить данные пользователя из Telegram. Пожалуйста,
+            попробуйте перезапустить приложение.
+          </p>
+          {isDevelopment && (
+            <div className="mb-4 rounded-lg bg-yellow-50 p-4 text-left text-xs text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200">
+              <p className="font-semibold">Debug Info:</p>
+              <p>
+                Telegram WebApp: {window.Telegram?.WebApp != null ? '✅' : '❌'}
+              </p>
+              <p>
+                InitData:{' '}
+                {(window.Telegram?.WebApp?.initData?.length ?? 0) > 0
+                  ? '✅'
+                  : '❌'}
+              </p>
+              <p>
+                User in initData:{' '}
+                {window.Telegram?.WebApp?.initDataUnsafe?.user != null
+                  ? '✅'
+                  : '❌'}
+              </p>
+            </div>
+          )}
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full rounded-2xl bg-kira-500 px-6 py-3 text-white transition-all hover:bg-kira-600 hover:shadow-lg"
+          >
+            🔄 Перезагрузить
+          </button>
+        </motion.div>
+      </div>
     )
   }
 

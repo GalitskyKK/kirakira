@@ -5,6 +5,7 @@ import { TelegramLoginWidget } from './TelegramLoginWidget'
 import { useTelegram } from '@/hooks'
 import { useUserClientStore } from '@/hooks/index.v2'
 import { syncUserFromSupabase } from '@/api'
+import { setJWTToken } from '@/utils/apiClient'
 import { Card } from '@/components/ui'
 
 interface TelegramUser {
@@ -38,7 +39,60 @@ export function TelegramAuth({ onSuccess, onError }: TelegramAuthProps) {
       try {
         console.log('Обрабатываем авторизацию Telegram:', telegramData)
 
-        // Синхронизируем пользователя с сервером через API
+        // Если не в Telegram Mini App - получаем JWT токен через API
+        if (!isTelegramEnv) {
+          try {
+            const authResponse = await fetch('/api/auth', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                loginData: {
+                  id: telegramData.id,
+                  first_name: telegramData.first_name,
+                  last_name: telegramData.last_name,
+                  username: telegramData.username,
+                  photo_url: telegramData.photo_url,
+                  auth_date: telegramData.auth_date,
+                  hash: telegramData.hash,
+                },
+              }),
+            })
+
+            if (!authResponse.ok) {
+              throw new Error('Ошибка авторизации на сервере')
+            }
+
+            const authResult = await authResponse.json()
+            if (!authResult.success || !authResult.data?.token) {
+              throw new Error('Не удалось получить токен авторизации')
+            }
+
+            // Сохраняем JWT токен в localStorage
+            setJWTToken(authResult.data.token)
+            console.log('✅ JWT токен сохранен')
+
+            // Синхронизируем пользователя с сервером через API
+            const result = await syncUserFromSupabase(telegramData.id)
+
+            console.log('Пользователь синхронизирован:', result)
+
+            // Инвалидируем кеш, чтобы приложение подтянуло свежие данные
+            await queryClient.invalidateQueries({ queryKey: ['user'] })
+
+            // Помечаем, что онбординг пройден
+            completeOnboarding()
+
+            onSuccess?.()
+            return
+          } catch (authError) {
+            console.error('Ошибка получения JWT токена:', authError)
+            throw authError
+          }
+        }
+
+        // В Telegram Mini App - просто синхронизируем (авторизация уже есть)
         const result = await syncUserFromSupabase(telegramData.id)
 
         console.log('Пользователь синхронизирован:', result)
@@ -60,7 +114,7 @@ export function TelegramAuth({ onSuccess, onError }: TelegramAuthProps) {
         setIsLoading(false)
       }
     },
-    [queryClient, completeOnboarding, onSuccess, onError]
+    [queryClient, completeOnboarding, onSuccess, onError, isTelegramEnv]
   )
 
   const handleAuthError = useCallback(
