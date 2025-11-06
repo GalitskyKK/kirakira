@@ -9,9 +9,14 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt', // ✅ Показываем кнопку обновления + автообновление при закрытии
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: [
+        'favicon.ico',
+        'apple-touch-icon.png',
+        'icons/favicon-16x16.png',
+        'icons/favicon-32x32.png',
+      ],
       devOptions: {
-        enabled: true, // Для тестирования 
+        enabled: true, // Для тестирования
       },
       injectRegister: 'auto', // Автоматическая инъекция регистрации SW
       manifest: {
@@ -27,20 +32,22 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'icons/icon-192x192.png',
             sizes: '192x192',
             type: 'image/png',
+            purpose: 'any',
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'icons/icon-512x512.png',
             sizes: '512x512',
             type: 'image/png',
+            purpose: 'any',
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'icons/icon-512x512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable',
+            purpose: 'maskable',
           },
         ],
       },
