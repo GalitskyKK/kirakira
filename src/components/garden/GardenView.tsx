@@ -8,7 +8,6 @@ import { ElementDetails } from './ElementDetails'
 import { LoadingOverlay, Card } from '@/components/ui'
 import type { GardenElement as GardenElementType } from '@/types'
 import { ViewMode } from '@/types'
-import { useCompanionStore } from '@/stores/companionStore'
 
 interface GardenViewProps {
   className?: string
@@ -30,9 +29,6 @@ export function GardenView({ className }: GardenViewProps) {
   const [draggedElement] = useState<GardenElementType | null>(null)
   const [elementBeingMoved, setElementBeingMoved] =
     useState<GardenElementType | null>(null) // Элемент для перемещения
-
-  const isCompanionVisible = useCompanionStore(state => state.isVisible)
-  const setCompanionVisible = useCompanionStore(state => state.setVisible)
 
   const handleElementClick = useCallback(
     (element: GardenElementType) => {
@@ -219,19 +215,6 @@ export function GardenView({ className }: GardenViewProps) {
                       </>
                     ) : (
                       <>
-                        <button
-                          onClick={() =>
-                            setCompanionVisible(!isCompanionVisible)
-                          }
-                          className={clsx(
-                            'rounded-lg px-3 py-1.5 text-sm transition-colors',
-                            isCompanionVisible
-                              ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-200'
-                              : 'text-gray-600 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700'
-                          )}
-                        >
-                          {isCompanionVisible ? 'Скрыть духа' : 'Показать духа'}
-                        </button>
                         <button
                           onClick={() => setViewMode(ViewMode.OVERVIEW)}
                           className={clsx(

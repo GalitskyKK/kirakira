@@ -5,6 +5,7 @@ import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { ProfilePrivacySettings } from '@/components/profile/ProfilePrivacySettings'
 import { ThemeSettings } from '@/components/settings/ThemeSettings'
+import { CompanionSettings } from '@/components/settings/CompanionSettings'
 
 export function SettingsPage() {
   const navigate = useNavigate()
@@ -53,6 +54,7 @@ export function SettingsPage() {
       {/* Content */}
       <div className="space-y-6 p-4">
         <ThemeSettings />
+        <CompanionSettings user={currentUser} />
         <ProfilePrivacySettings user={currentUser} />
       </div>
     </motion.div>
