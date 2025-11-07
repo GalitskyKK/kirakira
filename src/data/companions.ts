@@ -2,6 +2,7 @@ import type {
   CompanionDefinition,
   CompanionEmotion,
   CompanionId,
+  MoodType,
 } from '@/types'
 import { RarityLevel } from '@/types'
 
@@ -64,7 +65,8 @@ export const COMPANION_DEFINITIONS: Readonly<
       joy: {
         emotion: 'joy',
         label: baseEmotionLabels.joy,
-        description: 'Лумина сияет тёплым светом и оставляет за собой звёздный след.',
+        description:
+          'Лумина сияет тёплым светом и оставляет за собой звёздный след.',
         bodyGradient: ['#FFE066', '#FF9F1C'],
         coreGlow: ['#FFFFFF', '#FFD26F'],
         auraColor: '#FFEAA7',
@@ -87,7 +89,8 @@ export const COMPANION_DEFINITIONS: Readonly<
       calm: {
         emotion: 'calm',
         label: baseEmotionLabels.calm,
-        description: 'Сияние становится прохладным, а движения — медленными и ровными.',
+        description:
+          'Сияние становится прохладным, а движения — медленными и ровными.',
         bodyGradient: ['#A8FFEB', '#4CD3C2'],
         coreGlow: ['#E2FFF8', '#76E8D8'],
         auraColor: '#7AF2DD',
@@ -110,7 +113,8 @@ export const COMPANION_DEFINITIONS: Readonly<
       sadness: {
         emotion: 'sadness',
         label: baseEmotionLabels.sadness,
-        description: 'Форма вытягивается вниз, а цвета становятся прохладнее и мягче.',
+        description:
+          'Форма вытягивается вниз, а цвета становятся прохладнее и мягче.',
         bodyGradient: ['#6FA3FF', '#4E54C8'],
         coreGlow: ['#BED0FF', '#6170D9'],
         auraColor: '#7A87E8',
@@ -133,7 +137,8 @@ export const COMPANION_DEFINITIONS: Readonly<
       anger: {
         emotion: 'anger',
         label: baseEmotionLabels.anger,
-        description: 'Контуры становятся острее, а свет переливается рубиновыми всполохами.',
+        description:
+          'Контуры становятся острее, а свет переливается рубиновыми всполохами.',
         bodyGradient: ['#FF6B6B', '#C91847'],
         coreGlow: ['#FFD6D6', '#FF5678'],
         auraColor: '#FF8A8A',
@@ -156,7 +161,8 @@ export const COMPANION_DEFINITIONS: Readonly<
       stress: {
         emotion: 'stress',
         label: baseEmotionLabels.stress,
-        description: 'Лумина мерцает нестабильно, будто собирая себя из осколков света.',
+        description:
+          'Лумина мерцает нестабильно, будто собирая себя из осколков света.',
         bodyGradient: ['#FF9F68', '#7F53AC'],
         coreGlow: ['#FFE2C7', '#9D74D4'],
         auraColor: '#B08AEB',
@@ -179,7 +185,8 @@ export const COMPANION_DEFINITIONS: Readonly<
       anxiety: {
         emotion: 'anxiety',
         label: baseEmotionLabels.anxiety,
-        description: 'Свет становится более тусклым, а хвост оставляет за собой трепещущий след.',
+        description:
+          'Свет становится более тусклым, а хвост оставляет за собой трепещущий след.',
         bodyGradient: ['#7C83FF', '#3A47D5'],
         coreGlow: ['#C9CEFF', '#6A73FF'],
         auraColor: '#9FA6FF',
@@ -232,9 +239,43 @@ export const COMPANION_DEFINITIONS: Readonly<
   },
 } as const
 
+export const COMPANION_MOOD_MESSAGES: Readonly<
+  Record<MoodType, readonly string[]>
+> = {
+  joy: [
+    'Я чувствую, как сад искрится вместе с тобой! ✨',
+    'Так много света сегодня — продолжай делиться радостью!',
+    'Твоя улыбка делает лепестки ярче, спасибо!',
+  ],
+  calm: [
+    'Какое умиротворение, можно слушать твой сад вечно.',
+    'Давай просто плыть рядом и сохранять этот баланс.',
+    'Твой покой похож на мягкий ветерок, оставайся в нём.',
+  ],
+  sadness: [
+    'Я рядом, можем посидеть тихо и дождаться рассвета.',
+    'Позволь мне укрыть тебя мягким светом, ты не один.',
+    'Грусть — это дождь перед цветением, я сохраню тепло.',
+  ],
+  stress: [
+    'Сделаем глубокий вдох вместе, сад шепчет «не спеши».',
+    'Я напоминаю ветру быть добрее к тебе, отдохни чуть-чуть.',
+    'Всё получится — шаг за шагом, я свечу рядом.',
+  ],
+  anger: [
+    'Я направлю огонь в силу, а ты вдохни глубже.',
+    'Пусть искры гнева превратятся в цветы смелости.',
+    'Я рядом, чтобы смягчить вспышки и поддержать тебя.',
+  ],
+  anxiety: [
+    'Возьмём паузу и посмотрим на звёзды вместе.',
+    'Я дышу рядом, можем идти медленно-медленно.',
+    'Давай найдём тихий уголок сада и просто послушаем его.',
+  ],
+}
+
 export function getCompanionDefinition(
   companionId: CompanionId
 ): CompanionDefinition {
   return COMPANION_DEFINITIONS[companionId]
 }
-

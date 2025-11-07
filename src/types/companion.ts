@@ -23,7 +23,12 @@ export type CompanionMouthShape =
   | 'open'
   | 'determined'
 
-export type CompanionAmbientAnimation = 'twirl' | 'peek' | 'pulse'
+export type CompanionAmbientAnimation =
+  | 'twirl'
+  | 'peek'
+  | 'pulse'
+  | 'orbit'
+  | 'drift'
 
 export type CompanionReactionType =
   | 'mood-checkin'

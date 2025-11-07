@@ -168,6 +168,8 @@ export function useCompanionController(): void {
       'twirl',
       'peek',
       'pulse',
+      'orbit',
+      'drift',
     ]
 
     function scheduleAmbient() {
@@ -237,7 +239,7 @@ export function useCompanionController(): void {
 
     reactionClearRef.current = window.setTimeout(() => {
       clearReaction()
-    }, reactionDurations[activeReaction])
+    }, reactionDurations[activeReaction] + 600)
 
     return () => {
       if (reactionClearRef.current !== null) {

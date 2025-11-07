@@ -2,7 +2,10 @@ import { useMemo } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { clsx } from 'clsx'
 import { useCompanionStore } from '@/stores/companionStore'
-import { getCompanionDefinition } from '@/data/companions'
+import {
+  getCompanionDefinition,
+  COMPANION_MOOD_MESSAGES,
+} from '@/data/companions'
 import { useCompanionController } from '@/hooks/useCompanionController'
 import type {
   CompanionAmbientAnimation,
@@ -159,6 +162,30 @@ function getAmbientMotionConfig(
           ease: 'easeInOut',
         },
       }
+    case 'orbit':
+      return {
+        animate: {
+          x: [0, 6, 0, -6, 0],
+          y: [0, -4, 0, 4, 0],
+          rotate: [0, 4, -2, 2, 0],
+        },
+        transition: {
+          duration: 3,
+          ease: 'easeInOut',
+        },
+      }
+    case 'drift':
+      return {
+        animate: {
+          x: [0, 3, -2, 4, 0],
+          y: [0, -2, 3, -4, 0],
+          scale: [1, 1.04, 0.98, 1.02, 1],
+        },
+        transition: {
+          duration: 2.6,
+          ease: 'easeInOut',
+        },
+      }
     default:
       return {
         animate: { rotate: 0, scale: 1, x: 0, y: 0, opacity: 1 },
@@ -189,6 +216,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   const activeReaction = useCompanionStore(state => state.activeReaction)
   const toggleInfo = useCompanionStore(state => state.toggleInfo)
   const isInfoOpen = useCompanionStore(state => state.isInfoOpen)
+  const lastMood = useCompanionStore(state => state.lastMood)
   const visual = useCompanionVisual()
 
   const reduceMotion = useReducedMotion()
@@ -223,6 +251,18 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
       return null
     }
 
+    const moodMessage = (() => {
+      if (!lastMood) {
+        return 'Спасибо, что поделился!'
+      }
+      const options = COMPANION_MOOD_MESSAGES[lastMood] ?? []
+      if (options.length === 0) {
+        return 'Спасибо, что поделился!'
+      }
+      const randomIndex = Math.floor(Math.random() * options.length)
+      return options[randomIndex] ?? options[0]
+    })()
+
     switch (activeReaction) {
       case 'mood-checkin':
         return (
@@ -254,6 +294,18 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
                 ♥
               </motion.span>
             ))}
+            <motion.div
+              className="absolute bottom-12 flex flex-col items-center"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.25, ease: 'easeOut', delay: 0.1 }}
+            >
+              <span className="relative inline-block rounded-2xl bg-white/90 px-3 py-1 text-xs font-medium text-slate-600 shadow-sm backdrop-blur dark:bg-slate-900/90 dark:text-slate-200">
+                {moodMessage}
+                <span className="absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-white/90 shadow-sm dark:bg-slate-900/90" />
+              </span>
+            </motion.div>
           </motion.div>
         )
       case 'reward-earned':
@@ -289,6 +341,15 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
                 }}
               />
             ))}
+            <motion.div
+              className="absolute right-6 top-8 rounded-full bg-amber-50/90 px-3 py-1 text-xs font-medium text-amber-700 shadow-sm backdrop-blur"
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25, ease: 'easeOut', delay: 0.1 }}
+            >
+              Награда получена!
+            </motion.div>
           </motion.div>
         )
       case 'quest-progress':
@@ -325,6 +386,15 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
                 🍃
               </motion.span>
             ))}
+            <motion.div
+              className="absolute bottom-8 left-6 rounded-full bg-emerald-50/90 px-3 py-1 text-xs font-medium text-emerald-700 shadow-sm backdrop-blur"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.25, ease: 'easeOut', delay: 0.1 }}
+            >
+              Прогресс по заданиям!
+            </motion.div>
           </motion.div>
         )
       case 'garden-celebration':
@@ -340,12 +410,22 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
               background:
                 'radial-gradient(circle, rgba(255,255,255,0.5) 0%, transparent 70%)',
             }}
-          />
+          >
+            <motion.div
+              className="absolute left-1/2 top-8 -translate-x-1/2 rounded-full bg-fuchsia-100/90 px-3 py-1 text-xs font-semibold text-fuchsia-700 shadow-sm backdrop-blur"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.3, ease: 'easeOut', delay: 0.1 }}
+            >
+              Магия редкого открытия!
+            </motion.div>
+          </motion.div>
         )
       default:
         return null
     }
-  }, [activeReaction, reduceMotion, visual?.accentColor])
+  }, [activeReaction, reduceMotion, visual?.accentColor, lastMood])
 
   if (!visual || !isVisible) {
     return null
