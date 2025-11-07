@@ -1102,7 +1102,7 @@ export function WaterSVG({
               delay: 2,
             }}
           >
-            {/* Magical sparkles on water surface */}
+            {/* Magical sparkles on water surface  */}
             <rect
               x="8"
               y="18"
