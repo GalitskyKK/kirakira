@@ -2,7 +2,7 @@
  * Local storage utilities with type safety and error handling
  */
 
-import type { Garden, MoodEntry, User } from '@/types'
+import type { Garden, MoodEntry, User, CompanionSelection } from '@/types'
 
 // Storage keys
 export const STORAGE_KEYS = {
@@ -12,6 +12,7 @@ export const STORAGE_KEYS = {
   PREFERENCES: 'kirakira_preferences',
   ONBOARDING: 'kirakira_onboarding_completed',
   LAST_VISIT: 'kirakira_last_visit',
+  COMPANION: 'kirakira_companion',
 } as const
 
 /**
@@ -262,6 +263,40 @@ export function clearAllData(): void {
   Object.values(STORAGE_KEYS).forEach(key => {
     storage.removeItem(key)
   })
+}
+
+/**
+ * Save companion selection to storage
+ */
+export function saveCompanionSelection(selection: CompanionSelection): boolean {
+  const serialized = safeJsonStringify(selection)
+  if (serialized === null) {
+    return false
+  }
+
+  try {
+    storage.setItem(STORAGE_KEYS.COMPANION, serialized)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Load companion selection from storage
+ */
+export function loadCompanionSelection(): CompanionSelection | null {
+  const stored = storage.getItem(STORAGE_KEYS.COMPANION)
+  if (stored === null) {
+    return null
+  }
+
+  const selection = safeJsonParse<CompanionSelection | null>(stored, null)
+  if (selection && typeof selection === 'object' && 'activeCompanionId' in selection) {
+    return selection
+  }
+
+  return null
 }
 
 /**

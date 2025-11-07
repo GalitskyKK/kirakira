@@ -6,6 +6,7 @@ export { ShelfView } from './ShelfView'
 export { ShelfElement } from './ShelfElement'
 export { FriendGardenView } from './FriendGardenView'
 export { GardenRoomManager } from './GardenRoomManager'
+export { GardenCompanion } from './companion'
 // Upgrade system components
 export { ElementUpgradeButton } from './ElementUpgradeButton'
 export { UpgradeConfirmModal } from './UpgradeConfirmModal'

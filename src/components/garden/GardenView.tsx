@@ -8,6 +8,8 @@ import { ElementDetails } from './ElementDetails'
 import { LoadingOverlay, Card } from '@/components/ui'
 import type { GardenElement as GardenElementType } from '@/types'
 import { ViewMode } from '@/types'
+import { GardenCompanion } from '@/components/garden'
+import { useCompanionStore } from '@/stores/companionStore'
 
 interface GardenViewProps {
   className?: string
@@ -29,6 +31,9 @@ export function GardenView({ className }: GardenViewProps) {
   const [draggedElement] = useState<GardenElementType | null>(null)
   const [elementBeingMoved, setElementBeingMoved] =
     useState<GardenElementType | null>(null) // Элемент для перемещения
+
+  const isCompanionVisible = useCompanionStore(state => state.isVisible)
+  const setCompanionVisible = useCompanionStore(state => state.setVisible)
 
   const handleElementClick = useCallback(
     (element: GardenElementType) => {
@@ -216,6 +221,17 @@ export function GardenView({ className }: GardenViewProps) {
                     ) : (
                       <>
                         <button
+                          onClick={() => setCompanionVisible(!isCompanionVisible)}
+                          className={clsx(
+                            'rounded-lg px-3 py-1.5 text-sm transition-colors',
+                            isCompanionVisible
+                              ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-200'
+                              : 'text-gray-600 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700'
+                          )}
+                        >
+                          {isCompanionVisible ? 'Скрыть духа' : 'Показать духа'}
+                        </button>
+                        <button
                           onClick={() => setViewMode(ViewMode.OVERVIEW)}
                           className={clsx(
                             'rounded-lg px-3 py-1.5 text-sm transition-colors',
@@ -236,18 +252,21 @@ export function GardenView({ className }: GardenViewProps) {
               <div className="flex flex-col lg:flex-row">
                 {/* Garden Display - Room Manager with Multi-Room Support */}
                 <div className="flex-1 p-2 sm:p-4 lg:p-6">
-                  <GardenRoomManager
-                    elements={garden.elements}
-                    selectedElement={selectedElement}
-                    draggedElement={draggedElement}
-                    elementBeingMoved={elementBeingMoved}
-                    viewMode={viewMode}
-                    currentRoomIndex={currentRoomIndex}
-                    onRoomChange={setCurrentRoomIndex}
-                    onElementClick={handleElementClick}
-                    onElementLongPress={handleElementLongPress}
-                    onSlotClick={handleSlotClick}
-                  />
+                  <div className="relative">
+                    <GardenCompanion className="md:absolute md:right-2 md:top-2 md:z-20 md:h-48 md:w-44 md:opacity-95 md:[pointer-events:none] md:[transform-origin:top_right] mx-auto mb-4 md:mb-0" />
+                    <GardenRoomManager
+                      elements={garden.elements}
+                      selectedElement={selectedElement}
+                      draggedElement={draggedElement}
+                      elementBeingMoved={elementBeingMoved}
+                      viewMode={viewMode}
+                      currentRoomIndex={currentRoomIndex}
+                      onRoomChange={setCurrentRoomIndex}
+                      onElementClick={handleElementClick}
+                      onElementLongPress={handleElementLongPress}
+                      onSlotClick={handleSlotClick}
+                    />
+                  </div>
                 </div>
 
                 {/* Sidebar - Hidden on mobile, shown on desktop */}
