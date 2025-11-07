@@ -23,6 +23,7 @@ import { MobileLayout } from '@/components/layout/MobileLayout'
 import { LoadingSpinner } from '@/components/ui'
 import { lazy, Suspense } from 'react'
 import { UpdatePrompt } from '@/components/ui/UpdatePrompt'
+import { CompanionOverlay } from '@/components/layout/CompanionOverlay'
 
 // Динамический импорт dev страниц только в DEV режиме
 const ShowcasePage = import.meta.env.DEV
@@ -648,6 +649,8 @@ function App() {
             </Routes>
           </AnimatePresence>
         </Router>
+
+        <CompanionOverlay />
 
         {/* PWA Update Prompt - глобально доступен */}
         <UpdatePrompt />

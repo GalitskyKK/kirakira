@@ -26,6 +26,11 @@ export {
   useChallengeLoading,
   useChallengeError,
 } from '@/stores/challengeStore'
+export {
+  useCompanionStore,
+  useCompanionVisibility,
+  useCompanionEmotion,
+} from '@/stores/companionStore'
 
 // React Query хуки для прямого использования
 export * from './queries'

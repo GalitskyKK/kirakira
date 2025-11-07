@@ -9,6 +9,7 @@ export type * from './challenges'
 export type * from './currency'
 export type * from './dailyQuests'
 export type * from './streakFreeze'
+export type * from './companion'
 
 // Re-export enums and constants (can't use "export type *" for these)
 export {
