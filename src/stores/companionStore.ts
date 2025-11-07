@@ -1,6 +1,12 @@
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
-import type { CompanionEmotion, CompanionId, MoodType } from '@/types'
+import type {
+  CompanionAmbientAnimation,
+  CompanionEmotion,
+  CompanionId,
+  CompanionReactionType,
+  MoodType,
+} from '@/types'
 import { loadCompanionSelection, saveCompanionSelection } from '@/utils/storage'
 
 type CompanionBaseEmotion = Exclude<CompanionEmotion, 'celebration'>
@@ -13,6 +19,9 @@ interface CompanionState {
   readonly isCelebrating: boolean
   readonly celebrationUntil: number | null
   readonly lastMood: MoodType | null
+  readonly isInfoOpen: boolean
+  readonly activeAmbientAnimation: CompanionAmbientAnimation | null
+  readonly activeReaction: CompanionReactionType | null
 
   setActiveCompanion: (id: CompanionId) => void
   setVisible: (visible: boolean) => void
@@ -20,6 +29,12 @@ interface CompanionState {
   triggerCelebration: (durationMs?: number) => void
   clearCelebration: () => void
   setLastMood: (mood: MoodType | null) => void
+  toggleInfo: () => void
+  setInfoOpen: (open: boolean) => void
+  triggerAmbientAnimation: (animation: CompanionAmbientAnimation) => void
+  clearAmbientAnimation: () => void
+  triggerReaction: (reaction: CompanionReactionType) => void
+  clearReaction: () => void
 }
 
 function persistSelectionState(
@@ -40,6 +55,9 @@ export const useCompanionStore = create<CompanionState>()(
     isCelebrating: false,
     celebrationUntil: null,
     lastMood: null,
+    isInfoOpen: false,
+    activeAmbientAnimation: null,
+    activeReaction: null,
 
     setActiveCompanion: (id: CompanionId) => {
       set(state => {
@@ -97,6 +115,42 @@ export const useCompanionStore = create<CompanionState>()(
         lastMood: mood,
       })
     },
+
+    toggleInfo: () => {
+      set(state => ({
+        isInfoOpen: !state.isInfoOpen,
+      }))
+    },
+
+    setInfoOpen: (open: boolean) => {
+      set({
+        isInfoOpen: open,
+      })
+    },
+
+    triggerAmbientAnimation: (animation: CompanionAmbientAnimation) => {
+      set({
+        activeAmbientAnimation: animation,
+      })
+    },
+
+    clearAmbientAnimation: () => {
+      set({
+        activeAmbientAnimation: null,
+      })
+    },
+
+    triggerReaction: (reaction: CompanionReactionType) => {
+      set({
+        activeReaction: reaction,
+      })
+    },
+
+    clearReaction: () => {
+      set({
+        activeReaction: null,
+      })
+    },
   }))
 )
 
@@ -111,6 +165,14 @@ export function useCompanionEmotion() {
   return useCompanionStore(state => ({
     currentEmotion: state.currentEmotion,
     isCelebrating: state.isCelebrating,
+  }))
+}
+
+export function useCompanionInfoPanel() {
+  return useCompanionStore(state => ({
+    isInfoOpen: state.isInfoOpen,
+    toggleInfo: state.toggleInfo,
+    setInfoOpen: state.setInfoOpen,
   }))
 }
 

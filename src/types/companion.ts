@@ -23,6 +23,14 @@ export type CompanionMouthShape =
   | 'open'
   | 'determined'
 
+export type CompanionAmbientAnimation = 'twirl' | 'peek' | 'pulse'
+
+export type CompanionReactionType =
+  | 'mood-checkin'
+  | 'reward-earned'
+  | 'quest-progress'
+  | 'garden-celebration'
+
 export interface CompanionMotionPreset {
   readonly amplitude: number
   readonly duration: number
