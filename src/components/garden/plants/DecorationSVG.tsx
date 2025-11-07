@@ -469,7 +469,7 @@ function DecorationSVGComponent({
             />
           </motion.g>
 
-          {/* Butterfly body */}
+          {/* Butterfly body b*/}
           <motion.g
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
