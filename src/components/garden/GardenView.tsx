@@ -8,7 +8,6 @@ import { ElementDetails } from './ElementDetails'
 import { LoadingOverlay, Card } from '@/components/ui'
 import type { GardenElement as GardenElementType } from '@/types'
 import { ViewMode } from '@/types'
-import { GardenCompanion } from '@/components/garden'
 import { useCompanionStore } from '@/stores/companionStore'
 
 interface GardenViewProps {
@@ -221,7 +220,9 @@ export function GardenView({ className }: GardenViewProps) {
                     ) : (
                       <>
                         <button
-                          onClick={() => setCompanionVisible(!isCompanionVisible)}
+                          onClick={() =>
+                            setCompanionVisible(!isCompanionVisible)
+                          }
                           className={clsx(
                             'rounded-lg px-3 py-1.5 text-sm transition-colors',
                             isCompanionVisible
@@ -252,21 +253,18 @@ export function GardenView({ className }: GardenViewProps) {
               <div className="flex flex-col lg:flex-row">
                 {/* Garden Display - Room Manager with Multi-Room Support */}
                 <div className="flex-1 p-2 sm:p-4 lg:p-6">
-                  <div className="relative">
-                    <GardenCompanion className="md:absolute md:right-2 md:top-2 md:z-20 md:h-48 md:w-44 md:opacity-95 md:[pointer-events:none] md:[transform-origin:top_right] mx-auto mb-4 md:mb-0" />
-                    <GardenRoomManager
-                      elements={garden.elements}
-                      selectedElement={selectedElement}
-                      draggedElement={draggedElement}
-                      elementBeingMoved={elementBeingMoved}
-                      viewMode={viewMode}
-                      currentRoomIndex={currentRoomIndex}
-                      onRoomChange={setCurrentRoomIndex}
-                      onElementClick={handleElementClick}
-                      onElementLongPress={handleElementLongPress}
-                      onSlotClick={handleSlotClick}
-                    />
-                  </div>
+                  <GardenRoomManager
+                    elements={garden.elements}
+                    selectedElement={selectedElement}
+                    draggedElement={draggedElement}
+                    elementBeingMoved={elementBeingMoved}
+                    viewMode={viewMode}
+                    currentRoomIndex={currentRoomIndex}
+                    onRoomChange={setCurrentRoomIndex}
+                    onElementClick={handleElementClick}
+                    onElementLongPress={handleElementLongPress}
+                    onSlotClick={handleSlotClick}
+                  />
                 </div>
 
                 {/* Sidebar - Hidden on mobile, shown on desktop */}
