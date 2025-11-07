@@ -169,11 +169,10 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           exit={{ opacity: 0, y: 12 }}
           transition={{ duration: 0.35, ease: 'easeOut' }}
           className={clsx(
-            'pointer-events-none select-none',
+            'pointer-events-auto select-none',
             'relative flex h-48 w-44 items-center justify-center',
             className
           )}
-          aria-hidden
         >
           <motion.div
             className="absolute inset-0"
@@ -237,13 +236,23 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <defs>
-                  <linearGradient id={gradientId} x1="20" y1="20" x2="100" y2="130">
+                  <linearGradient
+                    id={gradientId}
+                    x1="20"
+                    y1="20"
+                    x2="100"
+                    y2="130"
+                  >
                     <stop offset="0%" stopColor={visual.bodyGradient[0]} />
                     <stop offset="100%" stopColor={visual.bodyGradient[1]} />
                   </linearGradient>
                   <radialGradient id={coreGradientId} cx="50%" cy="45%" r="60%">
                     <stop offset="0%" stopColor={visual.coreGlow[0]} />
-                    <stop offset="100%" stopColor={visual.coreGlow[1]} stopOpacity="0" />
+                    <stop
+                      offset="100%"
+                      stopColor={visual.coreGlow[1]}
+                      stopOpacity="0"
+                    />
                   </radialGradient>
                 </defs>
 
@@ -389,4 +398,3 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     </AnimatePresence>
   )
 }
-
