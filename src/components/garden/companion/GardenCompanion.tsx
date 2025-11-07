@@ -5,6 +5,7 @@ import { useCompanionStore } from '@/stores/companionStore'
 import { getCompanionDefinition } from '@/data/companions'
 import { useCompanionController } from '@/hooks/useCompanionController'
 import type {
+  CompanionAmbientAnimation,
   CompanionEmotionVisual,
   CompanionEyeShape,
   CompanionMouthShape,
@@ -108,6 +109,64 @@ function getMouthPath(shape: CompanionMouthShape): MouthRenderOptions {
   }
 }
 
+interface AmbientMotionConfig {
+  readonly animate: Record<string, unknown>
+  readonly transition: Record<string, unknown>
+}
+
+function getAmbientMotionConfig(
+  animation: CompanionAmbientAnimation | null,
+  reduceMotion: boolean
+): AmbientMotionConfig {
+  if (reduceMotion || animation === null) {
+    return {
+      animate: { rotate: 0, scale: 1, x: 0, y: 0, opacity: 1 },
+      transition: { duration: 0.4 },
+    }
+  }
+
+  switch (animation) {
+    case 'twirl':
+      return {
+        animate: {
+          rotate: [0, 12, -8, 4, 0],
+          scale: [1, 1.05, 0.95, 1.02, 1],
+        },
+        transition: {
+          duration: 2.2,
+          ease: 'easeInOut',
+        },
+      }
+    case 'peek':
+      return {
+        animate: {
+          y: [0, -10, -4, 0],
+          rotate: [0, -4, 2, 0],
+        },
+        transition: {
+          duration: 1.8,
+          ease: 'easeInOut',
+        },
+      }
+    case 'pulse':
+      return {
+        animate: {
+          scale: [1, 1.12, 0.96, 1.06, 1],
+          opacity: [1, 0.92, 0.98, 1],
+        },
+        transition: {
+          duration: 1.6,
+          ease: 'easeInOut',
+        },
+      }
+    default:
+      return {
+        animate: { rotate: 0, scale: 1, x: 0, y: 0, opacity: 1 },
+        transition: { duration: 0.4 },
+      }
+  }
+}
+
 function useCompanionVisual(): CompanionEmotionVisual | null {
   const activeCompanionId = useCompanionStore(state => state.activeCompanionId)
   const currentEmotion = useCompanionStore(state => state.currentEmotion)
@@ -124,6 +183,12 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   const isVisible = useCompanionStore(state => state.isVisible)
   const isCelebrating = useCompanionStore(state => state.isCelebrating)
   const activeCompanionId = useCompanionStore(state => state.activeCompanionId)
+  const activeAmbientAnimation = useCompanionStore(
+    state => state.activeAmbientAnimation
+  )
+  const activeReaction = useCompanionStore(state => state.activeReaction)
+  const toggleInfo = useCompanionStore(state => state.toggleInfo)
+  const isInfoOpen = useCompanionStore(state => state.isInfoOpen)
   const visual = useCompanionVisual()
 
   const reduceMotion = useReducedMotion()
@@ -148,6 +213,140 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     return Array.from({ length: count }, (_, index) => index)
   }, [particlePreset])
 
+  const ambientMotion = useMemo(
+    () => getAmbientMotionConfig(activeAmbientAnimation, !!reduceMotion),
+    [activeAmbientAnimation, reduceMotion]
+  )
+
+  const reactionEffect = useMemo(() => {
+    if (!activeReaction || reduceMotion) {
+      return null
+    }
+
+    switch (activeReaction) {
+      case 'mood-checkin':
+        return (
+          <motion.div
+            key="reaction-hearts"
+            className="pointer-events-none absolute inset-0 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+          >
+            {[0, 1, 2].map(index => (
+              <motion.span
+                key={index}
+                className="mx-1 text-lg"
+                style={{ color: visual?.accentColor ?? '#FF6B6B' }}
+                initial={{ y: 6, scale: 0, opacity: 0 }}
+                animate={{
+                  y: -36 - index * 10,
+                  scale: 1,
+                  opacity: 0,
+                }}
+                transition={{
+                  duration: 1.4 + index * 0.1,
+                  ease: 'easeInOut',
+                  delay: index * 0.05,
+                }}
+              >
+                ♥
+              </motion.span>
+            ))}
+          </motion.div>
+        )
+      case 'reward-earned':
+        return (
+          <motion.div
+            key="reaction-reward"
+            className="pointer-events-none absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {[0, 1, 2, 3].map(index => (
+              <motion.span
+                key={index}
+                className="absolute rounded-full bg-amber-300 shadow"
+                style={{
+                  width: '10px',
+                  height: '10px',
+                  left: `${40 + index * 12}px`,
+                  top: `${70 + (index % 2) * 10}px`,
+                }}
+                initial={{ scale: 0, opacity: 0.4 }}
+                animate={{
+                  scale: [0, 1.2, 0.9, 1],
+                  opacity: [0.4, 1, 0.7, 0],
+                  y: [-4, -18],
+                }}
+                transition={{
+                  duration: 1.6,
+                  ease: 'easeOut',
+                  delay: index * 0.08,
+                }}
+              />
+            ))}
+          </motion.div>
+        )
+      case 'quest-progress':
+        return (
+          <motion.div
+            key="reaction-quest"
+            className="pointer-events-none absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            {[0, 1, 2].map(index => (
+              <motion.span
+                key={index}
+                className="absolute text-sm"
+                style={{
+                  left: `${30 + index * 20}px`,
+                  top: `${40 + index * 14}px`,
+                }}
+                initial={{ rotate: -12, scale: 0.6, opacity: 0 }}
+                animate={{
+                  rotate: [-12, 6, -4],
+                  scale: [0.6, 1, 0.8],
+                  opacity: [0, 1, 0],
+                  y: [-4, -18],
+                }}
+                transition={{
+                  duration: 1.8,
+                  ease: 'easeInOut',
+                  delay: index * 0.1,
+                }}
+              >
+                🍃
+              </motion.span>
+            ))}
+          </motion.div>
+        )
+      case 'garden-celebration':
+        return (
+          <motion.div
+            key="reaction-celebration"
+            className="pointer-events-none absolute inset-0"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: [0.3, 0.6, 0], scale: [0.8, 1.25, 1.4] }}
+            exit={{ opacity: 0, scale: 1.4 }}
+            transition={{ duration: 1.2, ease: 'easeOut' }}
+            style={{
+              background:
+                'radial-gradient(circle, rgba(255,255,255,0.5) 0%, transparent 70%)',
+            }}
+          />
+        )
+      default:
+        return null
+    }
+  }, [activeReaction, reduceMotion, visual?.accentColor])
+
   if (!visual || !isVisible) {
     return null
   }
@@ -171,8 +370,24 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           className={clsx(
             'pointer-events-auto select-none',
             'relative flex h-48 w-44 items-center justify-center',
+            'cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/70',
             className
           )}
+          role="button"
+          tabIndex={0}
+          aria-label="Лумина, дух сада"
+          aria-expanded={isInfoOpen}
+          onClick={event => {
+            event.stopPropagation()
+            toggleInfo()
+          }}
+          onKeyDown={event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault()
+              toggleInfo()
+            }
+          }}
+          whileTap={{ scale: reduceMotion ? 1 : 0.95 }}
         >
           <motion.div
             className="absolute inset-0"
@@ -191,195 +406,207 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
 
           <motion.div
             className="relative"
-            animate={{
-              scale: scaleAnimation,
-              rotate: reduceMotion
-                ? 0
-                : [
-                    0,
-                    visual.sway.amplitude * 0.2,
-                    0,
-                    -visual.sway.amplitude * 0.2,
-                    0,
-                  ],
-            }}
-            transition={{
-              duration: visual.sway.duration,
-              repeat: reduceMotion ? 0 : Infinity,
-              repeatType: 'mirror',
-              ease: 'easeInOut',
-            }}
+            animate={ambientMotion.animate}
+            transition={ambientMotion.transition}
           >
             <motion.div
               animate={{
-                y: reduceMotion
+                scale: scaleAnimation,
+                rotate: reduceMotion
                   ? 0
                   : [
                       0,
-                      -visual.float.amplitude,
+                      visual.sway.amplitude * 0.2,
                       0,
-                      visual.float.amplitude * 0.35,
+                      -visual.sway.amplitude * 0.2,
                       0,
                     ],
               }}
               transition={{
-                duration: visual.float.duration,
+                duration: visual.sway.duration,
                 repeat: reduceMotion ? 0 : Infinity,
+                repeatType: 'mirror',
                 ease: 'easeInOut',
               }}
             >
-              <svg
-                width="160"
-                height="200"
-                viewBox="0 0 120 150"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
+              <motion.div
+                animate={{
+                  y: reduceMotion
+                    ? 0
+                    : [
+                        0,
+                        -visual.float.amplitude,
+                        0,
+                        visual.float.amplitude * 0.35,
+                        0,
+                      ],
+                }}
+                transition={{
+                  duration: visual.float.duration,
+                  repeat: reduceMotion ? 0 : Infinity,
+                  ease: 'easeInOut',
+                }}
               >
-                <defs>
-                  <linearGradient
-                    id={gradientId}
-                    x1="20"
-                    y1="20"
-                    x2="100"
-                    y2="130"
-                  >
-                    <stop offset="0%" stopColor={visual.bodyGradient[0]} />
-                    <stop offset="100%" stopColor={visual.bodyGradient[1]} />
-                  </linearGradient>
-                  <radialGradient id={coreGradientId} cx="50%" cy="45%" r="60%">
-                    <stop offset="0%" stopColor={visual.coreGlow[0]} />
-                    <stop
-                      offset="100%"
-                      stopColor={visual.coreGlow[1]}
-                      stopOpacity="0"
-                    />
-                  </radialGradient>
-                </defs>
+                <svg
+                  width="160"
+                  height="200"
+                  viewBox="0 0 120 150"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <defs>
+                    <linearGradient
+                      id={gradientId}
+                      x1="20"
+                      y1="20"
+                      x2="100"
+                      y2="130"
+                    >
+                      <stop offset="0%" stopColor={visual.bodyGradient[0]} />
+                      <stop offset="100%" stopColor={visual.bodyGradient[1]} />
+                    </linearGradient>
+                    <radialGradient
+                      id={coreGradientId}
+                      cx="50%"
+                      cy="45%"
+                      r="60%"
+                    >
+                      <stop offset="0%" stopColor={visual.coreGlow[0]} />
+                      <stop
+                        offset="100%"
+                        stopColor={visual.coreGlow[1]}
+                        stopOpacity="0"
+                      />
+                    </radialGradient>
+                  </defs>
 
-                <g>
+                  <g>
+                    <path
+                      d="M60 12C86 18 106 42 100 80C96 110 80 132 60 142C40 132 24 110 20 80C14 42 34 18 60 12Z"
+                      fill={`url(#${gradientId})`}
+                      stroke={visual.accentColor}
+                      strokeOpacity="0.45"
+                      strokeWidth="2"
+                    />
+                    <path
+                      d="M60 24C78 30 90 48 86 72C83 92 72 108 60 114C48 108 37 92 34 72C30 48 42 30 60 24Z"
+                      fill={`url(#${coreGradientId})`}
+                      opacity="0.85"
+                    />
+                  </g>
+
+                  {/* Tail */}
                   <path
-                    d="M60 12C86 18 106 42 100 80C96 110 80 132 60 142C40 132 24 110 20 80C14 42 34 18 60 12Z"
-                    fill={`url(#${gradientId})`}
+                    d="M60 142C72 134 86 124 93 108C96 100 92 90 96 82"
                     stroke={visual.accentColor}
-                    strokeOpacity="0.45"
                     strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeOpacity="0.58"
+                  />
+
+                  {/* Eyes */}
+                  <path
+                    d={eyePaths.left}
+                    stroke="#1F2933"
+                    strokeWidth={eyePaths.strokeWidth}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
                   />
                   <path
-                    d="M60 24C78 30 90 48 86 72C83 92 72 108 60 114C48 108 37 92 34 72C30 48 42 30 60 24Z"
-                    fill={`url(#${coreGradientId})`}
-                    opacity="0.85"
+                    d={eyePaths.right}
+                    stroke="#1F2933"
+                    strokeWidth={eyePaths.strokeWidth}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
                   />
-                </g>
 
-                {/* Tail */}
-                <path
-                  d="M60 142C72 134 86 124 93 108C96 100 92 90 96 82"
-                  stroke={visual.accentColor}
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeOpacity="0.58"
-                />
+                  {/* Mouth */}
+                  <path
+                    d={mouthPath.path}
+                    stroke="#1F2933"
+                    strokeWidth={mouthPath.strokeWidth}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill={mouthPath.isFilled ? '#1F2933' : 'none'}
+                  />
 
-                {/* Eyes */}
-                <path
-                  d={eyePaths.left}
-                  stroke="#1F2933"
-                  strokeWidth={eyePaths.strokeWidth}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-                <path
-                  d={eyePaths.right}
-                  stroke="#1F2933"
-                  strokeWidth={eyePaths.strokeWidth}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
+                  {/* Cheek glow */}
+                  <ellipse
+                    cx="36"
+                    cy="88"
+                    rx="6"
+                    ry="4.5"
+                    fill={visual.coreGlow[0]}
+                    opacity="0.35"
+                  />
+                  <ellipse
+                    cx="84"
+                    cy="88"
+                    rx="6"
+                    ry="4.5"
+                    fill={visual.coreGlow[0]}
+                    opacity="0.35"
+                  />
+                </svg>
+              </motion.div>
 
-                {/* Mouth */}
-                <path
-                  d={mouthPath.path}
-                  stroke="#1F2933"
-                  strokeWidth={mouthPath.strokeWidth}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill={mouthPath.isFilled ? '#1F2933' : 'none'}
-                />
+              {particles.length > 0 && particlePreset && (
+                <div className="absolute inset-0">
+                  {particles.map(index => {
+                    const angle = (index / particles.length) * Math.PI * 2
+                    const radius = 46 + (index % 2 === 0 ? 6 : 10)
+                    const x = Math.cos(angle) * radius
+                    const y = Math.sin(angle) * radius * 0.6
 
-                {/* Cheek glow */}
-                <ellipse
-                  cx="36"
-                  cy="88"
-                  rx="6"
-                  ry="4.5"
-                  fill={visual.coreGlow[0]}
-                  opacity="0.35"
-                />
-                <ellipse
-                  cx="84"
-                  cy="88"
-                  rx="6"
-                  ry="4.5"
-                  fill={visual.coreGlow[0]}
-                  opacity="0.35"
-                />
-              </svg>
+                    const motionProps = reduceMotion
+                      ? { animate: false as const }
+                      : {
+                          animate: {
+                            opacity: [
+                              particlePreset.opacity[0],
+                              particlePreset.opacity[1],
+                              particlePreset.opacity[0],
+                            ],
+                            scale: [
+                              0.8,
+                              particlePreset.size[1] / particlePreset.size[0],
+                              0.8,
+                            ],
+                            y: [0, -particlePreset.travel.amplitude, 0],
+                          },
+                          transition: {
+                            duration: particlePreset.travel.duration,
+                            repeat: Infinity,
+                            delay: index * 0.3,
+                            ease: 'easeInOut' as const,
+                          },
+                        }
+
+                    return (
+                      <motion.span
+                        key={`particle-${visual.emotion}-${index}`}
+                        className="absolute rounded-full"
+                        style={{
+                          left: `calc(50% + ${x}px)`,
+                          top: `calc(50% + ${y}px)`,
+                          width: `${particlePreset.size[0]}px`,
+                          height: `${particlePreset.size[0]}px`,
+                          background: particlePreset.color,
+                          opacity: particlePreset.opacity[0],
+                          filter: 'blur(0.4px)',
+                        }}
+                        {...motionProps}
+                      />
+                    )
+                  })}
+                </div>
+              )}
             </motion.div>
-
-            {particles.length > 0 && particlePreset && (
-              <div className="absolute inset-0">
-                {particles.map(index => {
-                  const angle = (index / particles.length) * Math.PI * 2
-                  const radius = 46 + (index % 2 === 0 ? 6 : 10)
-                  const x = Math.cos(angle) * radius
-                  const y = Math.sin(angle) * radius * 0.6
-
-                  const motionProps = reduceMotion
-                    ? { animate: false as const }
-                    : {
-                        animate: {
-                          opacity: [
-                            particlePreset.opacity[0],
-                            particlePreset.opacity[1],
-                            particlePreset.opacity[0],
-                          ],
-                          scale: [
-                            0.8,
-                            particlePreset.size[1] / particlePreset.size[0],
-                            0.8,
-                          ],
-                          y: [0, -particlePreset.travel.amplitude, 0],
-                        },
-                        transition: {
-                          duration: particlePreset.travel.duration,
-                          repeat: Infinity,
-                          delay: index * 0.3,
-                          ease: 'easeInOut' as const,
-                        },
-                      }
-
-                  return (
-                    <motion.span
-                      key={`particle-${visual.emotion}-${index}`}
-                      className="absolute rounded-full"
-                      style={{
-                        left: `calc(50% + ${x}px)`,
-                        top: `calc(50% + ${y}px)`,
-                        width: `${particlePreset.size[0]}px`,
-                        height: `${particlePreset.size[0]}px`,
-                        background: particlePreset.color,
-                        opacity: particlePreset.opacity[0],
-                        filter: 'blur(0.4px)',
-                      }}
-                      {...motionProps}
-                    />
-                  )
-                })}
-              </div>
-            )}
           </motion.div>
+
+          <AnimatePresence>{reactionEffect}</AnimatePresence>
 
           {isCelebrating && (
             <motion.div

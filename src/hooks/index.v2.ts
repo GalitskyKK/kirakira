@@ -30,6 +30,7 @@ export {
   useCompanionStore,
   useCompanionVisibility,
   useCompanionEmotion,
+  useCompanionInfoPanel,
 } from '@/stores/companionStore'
 
 // React Query хуки для прямого использования

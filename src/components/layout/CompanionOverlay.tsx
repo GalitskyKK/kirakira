@@ -1,4 +1,5 @@
 import { GardenCompanion } from '@/components/garden'
+import { CompanionInfoPanel } from './CompanionInfoPanel'
 
 export function CompanionOverlay() {
   return (
@@ -8,10 +9,12 @@ export function CompanionOverlay() {
     >
       <div
         className="pointer-events-auto"
-        style={{ transform: 'scale(0.2)', transformOrigin: 'bottom right' }}
+        style={{ transform: 'scale(0.24)', transformOrigin: 'bottom right' }}
       >
         <GardenCompanion className="h-48 w-44" />
       </div>
+
+      <CompanionInfoPanel />
     </div>
   )
 }
