@@ -449,7 +449,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           transition={{ duration: 0.35, ease: 'easeOut' }}
           className={clsx(
             'pointer-events-auto select-none',
-            'relative flex h-24 w-20 items-center justify-center sm:h-32 sm:w-28',
+            'relative flex h-18 w-16 items-center justify-center sm:h-32 sm:w-28',
             'cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/70',
             className
           )}
