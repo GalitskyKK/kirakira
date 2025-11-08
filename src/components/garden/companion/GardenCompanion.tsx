@@ -295,19 +295,16 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
               </motion.span>
             ))}
             <motion.div
-              className="absolute left-[-210px] top-6 flex w-[220px] justify-end"
-              style={{
-                transform: 'scale(1.6)',
-                transformOrigin: 'right center',
-              }}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
+              className="absolute left-[-210px] top-6 flex w-[320px] justify-end"
+              style={{ originX: 1, originY: 0.5 }}
+              initial={{ opacity: 0, y: 8, scale: 3 }}
+              animate={{ opacity: 1, y: 0, scale: 3 }}
+              exit={{ opacity: 0, y: 8, scale: 3 }}
               transition={{ duration: 0.25, ease: 'easeOut', delay: 0.1 }}
             >
-              <span className="relative inline-flex min-h-[60px] w-[220px] items-center justify-center rounded-[28px] bg-white/95 px-6 py-4 text-left text-base font-medium leading-normal text-slate-600 shadow-xl backdrop-blur dark:bg-slate-900/95 dark:text-slate-200">
+              <span className="relative inline-flex min-h-[84px] w-[320px] items-center justify-center rounded-[32px] bg-white/95 px-7 py-6 text-left text-xl font-semibold leading-relaxed text-slate-600 shadow-xl backdrop-blur dark:bg-slate-900/95 dark:text-slate-200">
                 {moodMessage}
-                <span className="absolute right-[-12px] top-1/2 h-4 w-4 -translate-y-1/2 rotate-45 bg-white/95 shadow-sm dark:bg-slate-900/95" />
+                <span className="absolute right-[-18px] top-1/2 h-6 w-6 -translate-y-1/2 rotate-45 bg-white/95 shadow-sm dark:bg-slate-900/95" />
               </span>
             </motion.div>
           </motion.div>
