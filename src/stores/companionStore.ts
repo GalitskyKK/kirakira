@@ -26,7 +26,7 @@ interface CompanionState {
   setActiveCompanion: (id: CompanionId) => void
   setVisible: (visible: boolean) => void
   setBaseEmotion: (emotion: CompanionBaseEmotion) => void
-  triggerCelebration: (durationMs?: number) => void
+  triggerCelebration: (durationMs?: number, keepEmotion?: boolean) => void
   clearCelebration: () => void
   setLastMood: (mood: MoodType | null) => void
   toggleInfo: () => void
@@ -94,12 +94,15 @@ export const useCompanionStore = create<CompanionState>()(
       }))
     },
 
-    triggerCelebration: (durationMs: number = 2800) => {
-      set({
+    triggerCelebration: (
+      durationMs: number = 2800,
+      keepEmotion: boolean = false
+    ) => {
+      set(state => ({
         isCelebrating: true,
-        currentEmotion: 'celebration',
+        currentEmotion: keepEmotion ? state.currentEmotion : 'celebration',
         celebrationUntil: Date.now() + durationMs,
-      })
+      }))
     },
 
     clearCelebration: () => {
@@ -175,4 +178,3 @@ export function useCompanionInfoPanel() {
     setInfoOpen: state.setInfoOpen,
   }))
 }
-

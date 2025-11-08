@@ -295,15 +295,15 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
               </motion.span>
             ))}
             <motion.div
-              className="absolute -top-4 left-[-90px] flex max-w-[220px] flex-col items-start"
+              className="absolute -top-14 left-1/2 flex w-full max-w-[260px] -translate-x-1/2 justify-center px-2"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
               transition={{ duration: 0.25, ease: 'easeOut', delay: 0.1 }}
             >
-              <span className="relative inline-block rounded-3xl bg-white/95 px-4 py-2 text-sm font-medium text-slate-600 shadow-xl backdrop-blur dark:bg-slate-900/95 dark:text-slate-200">
+              <span className="relative inline-flex min-h-[40px] min-w-[100px] max-w-full items-center justify-center rounded-3xl bg-white/95 px-4 py-2 text-center text-sm font-medium leading-snug text-slate-600 shadow-xl backdrop-blur dark:bg-slate-900/95 dark:text-slate-200">
                 {moodMessage}
-                <span className="absolute -bottom-2 left-10 h-3 w-3 rotate-45 bg-white/95 shadow-sm dark:bg-slate-900/95" />
+                <span className="absolute -bottom-2 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-white/95 shadow-sm dark:bg-slate-900/95" />
               </span>
             </motion.div>
           </motion.div>

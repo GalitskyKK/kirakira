@@ -102,16 +102,20 @@ export function useCompanionController(): void {
     const isDifferentElement = elementMeta.latestId !== previousMeta.latestId
 
     if (hasNewElement && isDifferentElement) {
-      const celebrationDuration = elementMeta.latestRarity
-        ? elementMeta.latestRarity === 'rare' ||
-          elementMeta.latestRarity === 'epic' ||
-          elementMeta.latestRarity === 'legendary'
-          ? 3600
-          : 2600
-        : 2600
+      const isRareDiscovery =
+        elementMeta.latestRarity === 'rare' ||
+        elementMeta.latestRarity === 'epic' ||
+        elementMeta.latestRarity === 'legendary'
 
-      triggerCelebration(celebrationDuration)
-      triggerReaction('garden-celebration')
+      if (isRareDiscovery) {
+        const celebrationDuration =
+          elementMeta.latestRarity === 'epic' || elementMeta.latestRarity === 'legendary'
+            ? 4200
+            : 3600
+
+        triggerCelebration(celebrationDuration, true)
+        triggerReaction('garden-celebration')
+      }
     }
 
     previousMetaRef.current = elementMeta
