@@ -295,15 +295,15 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
               </motion.span>
             ))}
             <motion.div
-              className="absolute -left-[14rem] top-12 flex w-[17rem] justify-end"
+              className="absolute -left-[12rem] top-10 flex w-[16rem] justify-end sm:-left-[14rem] sm:top-12 sm:w-[18rem]"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
               transition={{ duration: 0.25, ease: 'easeOut', delay: 0.1 }}
             >
-              <span className="relative inline-flex min-h-[4.5rem] w-full items-center justify-center rounded-[2rem] bg-white/95 px-6 py-4 text-left text-lg font-medium leading-relaxed text-slate-600 shadow-xl backdrop-blur dark:bg-slate-900/95 dark:text-slate-200">
+              <span className="relative inline-flex min-h-[4rem] w-full items-center justify-center rounded-[2rem] bg-white/95 px-5 py-3 text-left text-base font-medium leading-relaxed text-slate-600 shadow-xl backdrop-blur dark:bg-slate-900/95 dark:text-slate-200 sm:min-h-[4.5rem] sm:px-6 sm:py-4 sm:text-lg">
                 {moodMessage}
-                <span className="absolute right-[-0.8rem] top-1/2 h-4 w-4 -translate-y-1/2 rotate-45 bg-white/95 shadow-sm dark:bg-slate-900/95" />
+                <span className="absolute right-[-0.75rem] top-1/2 h-4 w-4 -translate-y-1/2 rotate-45 bg-white/95 shadow-sm dark:bg-slate-900/95 sm:right-[-0.9rem]" />
               </span>
             </motion.div>
           </motion.div>
@@ -449,7 +449,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           transition={{ duration: 0.35, ease: 'easeOut' }}
           className={clsx(
             'pointer-events-auto select-none',
-            'relative flex h-[17rem] w-[20rem] items-center justify-center',
+            'relative flex h-40 w-32 items-center justify-center sm:h-48 sm:w-44',
             'cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/70',
             className
           )}
@@ -528,8 +528,8 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
                 }}
               >
                 <svg
-                  width="160"
-                  height="200"
+                  width="120"
+                  height="160"
                   viewBox="0 0 120 150"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
