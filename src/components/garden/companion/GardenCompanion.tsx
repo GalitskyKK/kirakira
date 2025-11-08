@@ -296,6 +296,10 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
             ))}
             <motion.div
               className="absolute left-[-210px] top-6 flex w-[220px] justify-end"
+              style={{
+                transform: 'scale(1.6)',
+                transformOrigin: 'right center',
+              }}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
