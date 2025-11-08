@@ -9,13 +9,13 @@ import { RarityLevel } from '@/types'
 export const DEFAULT_COMPANION_ID: CompanionId = 'lumina'
 
 const baseEmotionLabels: Readonly<Record<CompanionEmotion, string>> = {
-  neutral: 'Спокойствие света',
-  joy: 'Искрящаяся радость',
-  calm: 'Дыхание гармонии',
+  neutral: 'Спокойное сияние',
+  joy: 'Лучезарная радость',
+  calm: 'Мягкая гармония',
   sadness: 'Тихая грусть',
-  anger: 'Пылающая решимость',
-  stress: 'Перегруженный вихрь',
-  anxiety: 'Трепет ожидания',
+  anger: 'Вспышка гнева',
+  stress: 'Волна напряжения',
+  anxiety: 'Тревожное ожидание',
   celebration: 'Созвездие чудес',
 } as const
 

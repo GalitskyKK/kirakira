@@ -449,7 +449,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           transition={{ duration: 0.35, ease: 'easeOut' }}
           className={clsx(
             'pointer-events-auto select-none',
-            'relative flex h-18 w-16 items-center justify-center sm:h-32 sm:w-28',
+            'relative flex h-16 w-12 items-center justify-center sm:h-24 sm:w-20',
             'cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/70',
             className
           )}
@@ -528,8 +528,8 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
                 }}
               >
                 <svg
-                  width="96"
-                  height="128"
+                  width="80"
+                  height="108"
                   viewBox="0 0 120 150"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"

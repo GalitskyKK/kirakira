@@ -43,7 +43,7 @@ export function CompanionOverlay() {
   return (
     <div
       className="pointer-events-none fixed right-2 z-[1500] sm:bottom-auto sm:right-6 sm:top-6"
-      style={{ bottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}
+      style={{ bottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}
     >
       <GardenCompanion className="pointer-events-auto" />
 
