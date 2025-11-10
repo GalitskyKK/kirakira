@@ -76,7 +76,7 @@ export function WaterSVG({
   const seasonalColors = getSeasonalColors()
   const repeatInf = isVisible ? Infinity : 0
   // Предварительно мемоизированные позиции для повторяющихся элементов,
-  // чтобы не пересоздавать массивы и объекты на каждом рендере
+  // чтобы не пересоздавать массивы и объекты на каждом рендер
   const pondReflectionPositions = useMemo(
     () => [
       { x: 12, y: 20 },
