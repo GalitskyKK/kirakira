@@ -1,4 +1,6 @@
+import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
+import { clsx } from 'clsx'
 import {
   FlowerSVG,
   TreeSVG,
@@ -13,7 +15,13 @@ import {
   MysticMushroomSVG,
   StarlightDecorationSVG,
 } from '../garden/plants'
-import { ElementType, RarityLevel, SeasonalVariant, MOOD_CONFIG } from '@/types'
+import {
+  ElementType,
+  RarityLevel,
+  SeasonalVariant,
+  MOOD_CONFIG,
+  type CompanionEmotion,
+} from '@/types'
 import { Card } from '@/components/ui/Card'
 import {
   ELEMENT_TEMPLATES,
@@ -26,10 +34,179 @@ import {
   getElementColor,
 } from '@/utils/elementNames'
 import type { MoodType } from '@/types'
+import { GardenCompanion } from '@/components/garden/companion/GardenCompanion'
+import { useCompanionStore } from '@/stores/companionStore'
+import { getCompanionDefinition } from '@/data/companions'
 
 // Проверка dev режима - показывать только в разработке
 if (!import.meta.env.DEV) {
   throw new Error('ElementShowcase доступен только в режиме разработки')
+}
+
+const luminaDefinition = getCompanionDefinition('lumina')
+const LUMINA_EMOTIONS = Object.values(luminaDefinition.emotions)
+
+function CompanionShowcase() {
+  const [selectedEmotion, setSelectedEmotion] =
+    useState<CompanionEmotion>('neutral')
+
+  const {
+    setActiveCompanion,
+    setVisible,
+    setInfoOpen,
+    clearReaction,
+    clearAmbientAnimation,
+  } = useCompanionStore(state => ({
+    setActiveCompanion: state.setActiveCompanion,
+    setVisible: state.setVisible,
+    setInfoOpen: state.setInfoOpen,
+    clearReaction: state.clearReaction,
+    clearAmbientAnimation: state.clearAmbientAnimation,
+  }))
+
+  useEffect(() => {
+    setActiveCompanion('lumina')
+    setVisible(true)
+    setInfoOpen(false)
+    clearReaction()
+    clearAmbientAnimation()
+
+    useCompanionStore.setState({
+      baseEmotion: 'neutral',
+      currentEmotion: 'neutral',
+      isCelebrating: false,
+      celebrationUntil: null,
+      activeReaction: null,
+      activeAmbientAnimation: null,
+      lastMood: null,
+    })
+
+    return () => {
+      useCompanionStore.setState({
+        baseEmotion: 'neutral',
+        currentEmotion: 'neutral',
+        isCelebrating: false,
+        celebrationUntil: null,
+        activeReaction: null,
+        activeAmbientAnimation: null,
+        lastMood: null,
+      })
+    }
+  }, [
+    clearAmbientAnimation,
+    clearReaction,
+    setActiveCompanion,
+    setInfoOpen,
+    setVisible,
+  ])
+
+  useEffect(() => {
+    if (selectedEmotion === 'celebration') {
+      useCompanionStore.setState({
+        baseEmotion: 'neutral',
+        currentEmotion: 'celebration',
+        isCelebrating: true,
+        celebrationUntil: Date.now() + 60_000,
+      })
+      return
+    }
+
+    useCompanionStore.setState({
+      baseEmotion: selectedEmotion,
+      currentEmotion: selectedEmotion,
+      isCelebrating: false,
+      celebrationUntil: null,
+    })
+  }, [selectedEmotion])
+
+  const currentVisual = useMemo(
+    () =>
+      LUMINA_EMOTIONS.find(
+        emotionVisual => emotionVisual.emotion === selectedEmotion
+      ),
+    [selectedEmotion]
+  )
+
+  if (!currentVisual) {
+    return null
+  }
+
+  return (
+    <Card className="mb-8 overflow-hidden border-2 border-indigo-100 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-indigo-500/40 dark:bg-slate-900/60">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
+        <div className="flex flex-1 flex-col items-center">
+          <div className="pointer-events-none">
+            <GardenCompanion className="pointer-events-none scale-125 sm:scale-150" />
+          </div>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            {LUMINA_EMOTIONS.map(emotionVisual => {
+              const isActive = emotionVisual.emotion === selectedEmotion
+              return (
+                <button
+                  key={emotionVisual.emotion}
+                  type="button"
+                  onClick={() => setSelectedEmotion(emotionVisual.emotion)}
+                  className={clsx(
+                    'rounded-full px-4 py-2 text-sm font-medium transition-all',
+                    isActive
+                      ? 'bg-indigo-500 text-white shadow-lg'
+                      : 'bg-indigo-100/70 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-500/20 dark:text-indigo-200 dark:hover:bg-indigo-500/30'
+                  )}
+                >
+                  {emotionVisual.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="flex-1 space-y-4">
+          <div>
+            <h2 className="flex items-center gap-2 text-2xl font-semibold text-slate-800 dark:text-slate-100">
+              💫 Лумина — эмоциональный спутник
+            </h2>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+              Выбирай эмоцию, чтобы увидеть новую пузырьковую форму Лумины с
+              обновлёнными градиентами, крылышками и анимациями. Компонент
+              GardenCompanion рендерится напрямую, поэтому ты видишь ровно то,
+              что окажется в саду.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-indigo-100/60 bg-indigo-50/40 p-4 shadow-inner dark:border-indigo-500/30 dark:bg-indigo-500/10">
+            <div className="mb-2 text-xs uppercase tracking-wide text-indigo-500 dark:text-indigo-300">
+              Текущая эмоция
+            </div>
+            <div className="text-xl font-semibold text-indigo-700 dark:text-indigo-200">
+              {currentVisual.label}
+            </div>
+            <p className="mt-2 text-sm text-indigo-800/80 dark:text-indigo-200/80">
+              {currentVisual.description}
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-indigo-600/80 dark:text-indigo-200/70">
+              <span
+                className="inline-flex items-center rounded-full px-3 py-1 font-medium"
+                style={{
+                  background: `linear-gradient(120deg, ${currentVisual.bodyGradient[0]}, ${currentVisual.bodyGradient[1]})`,
+                  color: '#ffffff',
+                }}
+              >
+                🌈 Градиент тела
+              </span>
+              <span className="inline-flex items-center rounded-full bg-white/80 px-3 py-1 font-medium text-indigo-500 shadow-sm dark:bg-slate-800/80 dark:text-indigo-200">
+                ✨ Аура: {currentVisual.auraOpacity.toFixed(2)}
+              </span>
+              {currentVisual.particlePreset && (
+                <span className="inline-flex items-center rounded-full bg-white/80 px-3 py-1 font-medium text-indigo-500 shadow-sm dark:bg-slate-800/80 dark:text-indigo-200">
+                  🫧 Частицы: {currentVisual.particlePreset.variant}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
+  )
 }
 
 // Маппинг элементов к компонентам - теперь все уникальные!
@@ -130,7 +307,7 @@ const createAllElements = () => {
       rarity: template.rarity,
       component: getElementComponent(template.type),
       isPremium: PREMIUM_ELEMENT_TYPES.has(template.type),
-      moods: MOOD_MAPPING[template.type] || ['Универсальный'],
+      moods: MOOD_MAPPING[template.type] ?? ['Универсальный'],
       fullName: name,
     }
     elements.push(baseElement)
@@ -188,6 +365,8 @@ export function ElementShowcase() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
       <div className="mx-auto max-w-6xl">
+        <CompanionShowcase />
+
         <div className="mb-8 text-center">
           <h1 className="mb-4 text-4xl font-bold text-gray-800">
             🌿 Все элементы сада KiraKira
@@ -201,7 +380,12 @@ export function ElementShowcase() {
               {ELEMENT_TEMPLATES.length} базовых шаблонов
             </span>
             <span className="rounded-full bg-green-100 px-3 py-1 text-sm text-green-700">
-              {ALL_ELEMENTS.filter(el => el.season).length} сезонных вариаций
+              {
+                ALL_ELEMENTS.filter(
+                  el => el.season !== undefined && el.season !== null
+                ).length
+              }{' '}
+              сезонных вариаций
             </span>
             <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm text-yellow-700">
               {ALL_ELEMENTS.filter(el => el.isPremium).length} премиум элементов
@@ -239,8 +423,9 @@ export function ElementShowcase() {
 
         {/* Элементы по редкости */}
         {Object.entries(RARITY_INFO).map(([rarity, rarityInfo]) => {
+          const rarityKey = rarity as RarityLevel
           const elementsOfRarity = ALL_ELEMENTS.filter(
-            el => el.rarity === rarity
+            el => el.rarity === rarityKey
           )
           if (elementsOfRarity.length === 0) return null
 
@@ -262,7 +447,9 @@ export function ElementShowcase() {
 
                   return (
                     <motion.div
-                      key={`${element.type}-${element.name}-${element.season || 'base'}`}
+                      key={`${element.type}-${element.name}-${
+                        element.season ?? 'base'
+                      }`}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
@@ -292,7 +479,7 @@ export function ElementShowcase() {
                       <p className="mb-2 text-xs text-gray-600 dark:text-gray-400">
                         {element.description}
                       </p>
-                      {element.season && (
+                      {element.season !== undefined && (
                         <div className="mb-1 inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
                           🌿 {getSeasonName(element.season)}
                         </div>
@@ -422,8 +609,9 @@ export function ElementShowcase() {
             </h3>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
               {Object.entries(RARITY_INFO).map(([rarity, rarityInfo]) => {
+                const rarityKey = rarity as RarityLevel
                 const count = ALL_ELEMENTS.filter(
-                  el => el.rarity === rarity
+                  el => el.rarity === rarityKey
                 ).length
                 return (
                   <div key={rarity} className="text-center">
@@ -450,7 +638,11 @@ export function ElementShowcase() {
               </div>
               <div className="text-center">
                 <div className="text-lg font-bold text-green-600">
-                  {ALL_ELEMENTS.filter(el => el.season).length}
+                  {
+                    ALL_ELEMENTS.filter(
+                      el => el.season !== undefined && el.season !== null
+                    ).length
+                  }
                 </div>
                 <div className="text-xs text-gray-600">Сезонных вариаций</div>
               </div>

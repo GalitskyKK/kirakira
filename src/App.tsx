@@ -407,9 +407,17 @@ function App() {
   // Не показываем ошибки во время загрузки
   const shouldCheckAuth = !initState.isLoading && !userLoading
 
+  const isDevShowcaseRoute =
+    import.meta.env.DEV && window.location.pathname.startsWith('/showcase')
+
   // Show auth screen for non-authenticated users in browser
   // В Telegram Mini App авторизация автоматическая, если нет telegramId - это ошибка
-  if (shouldCheckAuth && !isAuthenticated && !isTelegramEnv) {
+  if (
+    shouldCheckAuth &&
+    !isAuthenticated &&
+    !isTelegramEnv &&
+    !isDevShowcaseRoute
+  ) {
     if (isDevelopment) {
       console.log('🔍 РЕНДЕРИМ AUTH PAGE (нет авторизации в браузере)', {
         actualTelegramId: actualTelegramId ?? null,

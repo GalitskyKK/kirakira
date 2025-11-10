@@ -18,11 +18,24 @@ interface GardenCompanionProps {
   readonly className?: string
 }
 
-interface EyeRenderOptions {
-  readonly left: string
-  readonly right: string
-  readonly strokeWidth: number
+interface EyeCircleOptions {
+  readonly cx: number
+  readonly cy: number
+  readonly r: number
 }
+
+type EyeRenderOptions =
+  | {
+      readonly variant: 'circle'
+      readonly left: EyeCircleOptions
+      readonly right: EyeCircleOptions
+    }
+  | {
+      readonly variant: 'path'
+      readonly left: string
+      readonly right: string
+      readonly strokeWidth: number
+    }
 
 interface MouthRenderOptions {
   readonly path: string
@@ -34,39 +47,43 @@ function getEyePaths(shape: CompanionEyeShape): EyeRenderOptions {
   switch (shape) {
     case 'smile':
       return {
-        left: 'M36 76 Q 40 72 44 76',
-        right: 'M76 76 Q 80 72 84 76',
-        strokeWidth: 3,
+        variant: 'circle',
+        left: { cx: 64, cy: 82, r: 6 },
+        right: { cx: 96, cy: 82, r: 6 },
       }
     case 'calm':
       return {
-        left: 'M36 74 Q 40 70 44 74 Q 40 78 36 74',
-        right: 'M76 74 Q 80 70 84 74 Q 80 78 76 74',
-        strokeWidth: 2.2,
+        variant: 'path',
+        left: 'M56 82 Q 64 76 72 82',
+        right: 'M88 82 Q 96 76 104 82',
+        strokeWidth: 4.4,
       }
     case 'wide':
       return {
-        left: 'M38 72 Q 40 68 44 68 Q 46 72 44 76 Q 40 78 38 72',
-        right: 'M78 72 Q 80 68 84 68 Q 86 72 84 76 Q 80 78 78 72',
-        strokeWidth: 2.4,
+        variant: 'circle',
+        left: { cx: 64, cy: 80, r: 7.2 },
+        right: { cx: 96, cy: 80, r: 7.2 },
       }
     case 'sad':
       return {
-        left: 'M36 74 Q 40 78 44 74',
-        right: 'M76 74 Q 80 78 84 74',
-        strokeWidth: 3,
+        variant: 'path',
+        left: 'M56 80 Q 64 88 72 80',
+        right: 'M88 80 Q 96 88 104 80',
+        strokeWidth: 4.6,
       }
     case 'focused':
       return {
-        left: 'M36 72 Q 41 69 46 72',
-        right: 'M74 72 Q 79 69 84 72',
-        strokeWidth: 3.2,
+        variant: 'path',
+        left: 'M56 78 Q 64 74 72 76',
+        right: 'M88 76 Q 96 74 104 78',
+        strokeWidth: 4.8,
       }
     default:
       return {
-        left: 'M36 74 Q 40 70 44 74',
-        right: 'M76 74 Q 80 70 84 74',
-        strokeWidth: 2.4,
+        variant: 'path',
+        left: 'M56 82 Q 64 78 72 82',
+        right: 'M88 82 Q 96 78 104 82',
+        strokeWidth: 4.2,
       }
   }
 }
@@ -75,38 +92,38 @@ function getMouthPath(shape: CompanionMouthShape): MouthRenderOptions {
   switch (shape) {
     case 'smile':
       return {
-        path: 'M50 92 Q 60 100 70 92',
-        strokeWidth: 3,
+        path: 'M64 112 Q 80 124 96 112',
+        strokeWidth: 4.4,
         isFilled: false,
       }
     case 'soft':
       return {
-        path: 'M50 90 Q 60 94 70 90',
-        strokeWidth: 2.4,
+        path: 'M66 112 Q 80 118 94 112',
+        strokeWidth: 3.4,
         isFilled: false,
       }
     case 'frown':
       return {
-        path: 'M50 94 Q 60 88 70 94',
-        strokeWidth: 3,
+        path: 'M64 118 Q 80 104 96 118',
+        strokeWidth: 4.4,
         isFilled: false,
       }
     case 'open':
       return {
-        path: 'M52 90 Q 60 98 68 90 Q 60 102 52 90',
-        strokeWidth: 2.4,
+        path: 'M72 108 Q 80 96 88 108 Q 80 128 72 108',
+        strokeWidth: 3.4,
         isFilled: true,
       }
     case 'determined':
       return {
-        path: 'M50 92 L70 90',
-        strokeWidth: 3.2,
+        path: 'M66 116 L94 114',
+        strokeWidth: 4.4,
         isFilled: false,
       }
     default:
       return {
-        path: 'M50 90 Q 60 94 70 90',
-        strokeWidth: 2.4,
+        path: 'M66 112 Q 80 118 94 112',
+        strokeWidth: 3.8,
         isFilled: false,
       }
   }
@@ -220,6 +237,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   const visual = useCompanionVisual()
 
   const reduceMotion = useReducedMotion()
+  const shouldReduceMotion = Boolean(reduceMotion)
 
   const gradientId = useMemo(
     () => `companion-body-${activeCompanionId}-${visual?.emotion ?? 'neutral'}`,
@@ -227,6 +245,11 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   )
   const coreGradientId = useMemo(
     () => `companion-core-${activeCompanionId}-${visual?.emotion ?? 'neutral'}`,
+    [activeCompanionId, visual?.emotion]
+  )
+  const shineGradientId = useMemo(
+    () =>
+      `companion-shine-${activeCompanionId}-${visual?.emotion ?? 'neutral'}`,
     [activeCompanionId, visual?.emotion]
   )
 
@@ -242,12 +265,12 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   }, [particlePreset])
 
   const ambientMotion = useMemo(
-    () => getAmbientMotionConfig(activeAmbientAnimation, !!reduceMotion),
-    [activeAmbientAnimation, reduceMotion]
+    () => getAmbientMotionConfig(activeAmbientAnimation, shouldReduceMotion),
+    [activeAmbientAnimation, shouldReduceMotion]
   )
 
   const reactionEffect = useMemo(() => {
-    if (!activeReaction || reduceMotion) {
+    if (!activeReaction || shouldReduceMotion) {
       return null
     }
 
@@ -425,7 +448,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
       default:
         return null
     }
-  }, [activeReaction, reduceMotion, visual?.accentColor, lastMood])
+  }, [activeReaction, shouldReduceMotion, visual?.accentColor, lastMood])
 
   if (!visual || !isVisible) {
     return null
@@ -434,7 +457,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   const eyePaths = getEyePaths(visual.eyeShape)
   const mouthPath = getMouthPath(visual.mouthShape)
   const [scaleMin, scaleMax] = visual.scaleRange
-  const scaleAnimation: number | number[] = reduceMotion
+  const scaleAnimation: number | number[] = shouldReduceMotion
     ? 1
     : [scaleMin, scaleMax, scaleMin]
 
@@ -467,7 +490,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
               toggleInfo()
             }
           }}
-          whileTap={{ scale: reduceMotion ? 1 : 0.95 }}
+          whileTap={{ scale: shouldReduceMotion ? 1 : 0.95 }}
         >
           <motion.div
             className="absolute inset-0"
@@ -492,7 +515,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
             <motion.div
               animate={{
                 scale: scaleAnimation,
-                rotate: reduceMotion
+                rotate: shouldReduceMotion
                   ? 0
                   : [
                       0,
@@ -504,14 +527,14 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
               }}
               transition={{
                 duration: visual.sway.duration,
-                repeat: reduceMotion ? 0 : Infinity,
+                repeat: shouldReduceMotion ? 0 : Infinity,
                 repeatType: 'mirror',
                 ease: 'easeInOut',
               }}
             >
               <motion.div
                 animate={{
-                  y: reduceMotion
+                  y: shouldReduceMotion
                     ? 0
                     : [
                         0,
@@ -523,33 +546,28 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
                 }}
                 transition={{
                   duration: visual.float.duration,
-                  repeat: reduceMotion ? 0 : Infinity,
+                  repeat: shouldReduceMotion ? 0 : Infinity,
                   ease: 'easeInOut',
                 }}
               >
                 <svg
-                  width="80"
+                  width="96"
                   height="108"
-                  viewBox="0 0 120 150"
+                  viewBox="0 0 160 160"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <defs>
-                    <linearGradient
-                      id={gradientId}
-                      x1="20"
-                      y1="20"
-                      x2="100"
-                      y2="130"
-                    >
+                    <radialGradient id={gradientId} cx="50%" cy="42%" r="64%">
                       <stop offset="0%" stopColor={visual.bodyGradient[0]} />
+                      <stop offset="60%" stopColor={visual.bodyGradient[0]} />
                       <stop offset="100%" stopColor={visual.bodyGradient[1]} />
-                    </linearGradient>
+                    </radialGradient>
                     <radialGradient
                       id={coreGradientId}
                       cx="50%"
-                      cy="45%"
-                      r="60%"
+                      cy="40%"
+                      r="52%"
                     >
                       <stop offset="0%" stopColor={visual.coreGlow[0]} />
                       <stop
@@ -558,77 +576,185 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
                         stopOpacity="0"
                       />
                     </radialGradient>
+                    <linearGradient
+                      id={`${gradientId}-arms`}
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="100%"
+                    >
+                      <stop
+                        offset="0%"
+                        stopColor={visual.bodyGradient[0]}
+                        stopOpacity="0.9"
+                      />
+                      <stop
+                        offset="100%"
+                        stopColor={visual.bodyGradient[1]}
+                        stopOpacity="0.85"
+                      />
+                    </linearGradient>
+                    <linearGradient
+                      id={shineGradientId}
+                      x1="24%"
+                      y1="18%"
+                      x2="76%"
+                      y2="0%"
+                    >
+                      <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.8" />
+                      <stop
+                        offset="50%"
+                        stopColor="#FFFFFF"
+                        stopOpacity="0.42"
+                      />
+                      <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+                    </linearGradient>
+                    <radialGradient
+                      id={`${gradientId}-blush`}
+                      cx="50%"
+                      cy="50%"
+                      r="50%"
+                    >
+                      <stop
+                        offset="0%"
+                        stopColor="#FFC2D6"
+                        stopOpacity="0.85"
+                      />
+                      <stop offset="100%" stopColor="#FFC2D6" stopOpacity="0" />
+                    </radialGradient>
+                    <filter
+                      id="companion-soft-shadow"
+                      x="-20%"
+                      y="-20%"
+                      width="140%"
+                      height="160%"
+                    >
+                      <feGaussianBlur in="SourceGraphic" stdDeviation="6" />
+                    </filter>
                   </defs>
 
-                  <g>
-                    <path
-                      d="M60 12C86 18 106 42 100 80C96 110 80 132 60 142C40 132 24 110 20 80C14 42 34 18 60 12Z"
-                      fill={`url(#${gradientId})`}
-                      stroke={visual.accentColor}
-                      strokeOpacity="0.45"
-                      strokeWidth="2"
-                    />
-                    <path
-                      d="M60 24C78 30 90 48 86 72C83 92 72 108 60 114C48 108 37 92 34 72C30 48 42 30 60 24Z"
-                      fill={`url(#${coreGradientId})`}
-                      opacity="0.85"
+                  <g filter="url(#companion-soft-shadow)" opacity="0.55">
+                    <ellipse
+                      cx="80"
+                      cy="136"
+                      rx="42"
+                      ry="12"
+                      fill={visual.coreGlow[1]}
                     />
                   </g>
 
-                  {/* Tail */}
+                  <g>
+                    <path
+                      d="M40 88C24 80 12 90 10 108C8 126 20 136 34 134C48 132 62 118 60 104C58 96 52 92 40 88Z"
+                      fill={`url(#${gradientId}-arms)`}
+                    />
+                    <path
+                      d="M120 88C136 80 148 90 150 108C152 126 140 136 126 134C112 132 98 118 100 104C102 96 108 92 120 88Z"
+                      fill={`url(#${gradientId}-arms)`}
+                    />
+                  </g>
+
+                  <g>
+                    <path
+                      d="M80 24C116 24 140 52 140 90C140 126 114 148 80 148C46 148 20 126 20 90C20 52 44 24 80 24Z"
+                      fill={`url(#${gradientId})`}
+                    />
+                    <path
+                      d="M80 36C108 36 128 60 128 90C128 120 108 134 80 134C52 134 32 120 32 90C32 60 52 36 80 36Z"
+                      fill={`url(#${coreGradientId})`}
+                      opacity="0.72"
+                    />
+                  </g>
+
                   <path
-                    d="M60 142C72 134 86 124 93 108C96 100 92 90 96 82"
-                    stroke={visual.accentColor}
-                    strokeWidth="2"
+                    d="M50 60C60 46 78 36 100 36C116 36 130 42 138 52"
+                    stroke="#FFFFFF"
+                    strokeOpacity="0.16"
+                    strokeWidth="6"
                     strokeLinecap="round"
-                    strokeOpacity="0.58"
                   />
 
-                  {/* Eyes */}
                   <path
-                    d={eyePaths.left}
-                    stroke="#1F2933"
-                    strokeWidth={eyePaths.strokeWidth}
+                    d="M56 54C66 46 90 38 110 48"
+                    stroke="#FFFFFF"
+                    strokeOpacity="0.26"
+                    strokeWidth="4"
                     strokeLinecap="round"
-                    strokeLinejoin="round"
-                    fill="none"
-                  />
-                  <path
-                    d={eyePaths.right}
-                    stroke="#1F2933"
-                    strokeWidth={eyePaths.strokeWidth}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    fill="none"
                   />
 
-                  {/* Mouth */}
+                  <path
+                    d="M48 76C50 66 60 58 72 56C102 52 126 64 134 78"
+                    fill={`url(#${shineGradientId})`}
+                    opacity="0.7"
+                  />
+
+                  <g>
+                    <circle
+                      cx="56"
+                      cy="110"
+                      r="9.5"
+                      fill={`url(#${gradientId}-blush)`}
+                      opacity="0.9"
+                    />
+                    <circle
+                      cx="104"
+                      cy="110"
+                      r="9.5"
+                      fill={`url(#${gradientId}-blush)`}
+                      opacity="0.9"
+                    />
+                  </g>
+
+                  {eyePaths.variant === 'circle' ? (
+                    <>
+                      <circle
+                        cx={eyePaths.left.cx}
+                        cy={eyePaths.left.cy}
+                        r={eyePaths.left.r}
+                        fill="#121217"
+                      />
+                      <circle
+                        cx={eyePaths.right.cx}
+                        cy={eyePaths.right.cy}
+                        r={eyePaths.right.r}
+                        fill="#121217"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <path
+                        d={eyePaths.left}
+                        stroke="#121217"
+                        strokeWidth={eyePaths.strokeWidth}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        fill="none"
+                      />
+                      <path
+                        d={eyePaths.right}
+                        stroke="#121217"
+                        strokeWidth={eyePaths.strokeWidth}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        fill="none"
+                      />
+                    </>
+                  )}
+
                   <path
                     d={mouthPath.path}
-                    stroke="#1F2933"
+                    stroke="#121217"
                     strokeWidth={mouthPath.strokeWidth}
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    fill={mouthPath.isFilled ? '#1F2933' : 'none'}
+                    fill={mouthPath.isFilled ? '#121217' : 'none'}
                   />
 
-                  {/* Cheek glow */}
-                  <ellipse
-                    cx="36"
-                    cy="88"
-                    rx="6"
-                    ry="4.5"
-                    fill={visual.coreGlow[0]}
-                    opacity="0.35"
-                  />
-                  <ellipse
-                    cx="84"
-                    cy="88"
-                    rx="6"
-                    ry="4.5"
-                    fill={visual.coreGlow[0]}
-                    opacity="0.35"
-                  />
+                  <g opacity="0.55">
+                    <circle cx="92" cy="62" r="4" fill="white" />
+                    <circle cx="66" cy="50" r="3.2" fill="white" />
+                    <circle cx="120" cy="76" r="2.8" fill="white" />
+                  </g>
                 </svg>
               </motion.div>
 
@@ -636,11 +762,11 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
                 <div className="absolute inset-0">
                   {particles.map(index => {
                     const angle = (index / particles.length) * Math.PI * 2
-                    const radius = 46 + (index % 2 === 0 ? 6 : 10)
+                    const radius = 56 + (index % 3) * 8
                     const x = Math.cos(angle) * radius
-                    const y = Math.sin(angle) * radius * 0.6
+                    const y = Math.sin(angle) * radius * 0.68
 
-                    const motionProps = reduceMotion
+                    const motionProps = shouldReduceMotion
                       ? { animate: false as const }
                       : {
                           animate: {
@@ -650,16 +776,16 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
                               particlePreset.opacity[0],
                             ],
                             scale: [
-                              0.8,
+                              0.82,
                               particlePreset.size[1] / particlePreset.size[0],
-                              0.8,
+                              0.82,
                             ],
                             y: [0, -particlePreset.travel.amplitude, 0],
                           },
                           transition: {
                             duration: particlePreset.travel.duration,
                             repeat: Infinity,
-                            delay: index * 0.3,
+                            delay: index * 0.22,
                             ease: 'easeInOut' as const,
                           },
                         }
