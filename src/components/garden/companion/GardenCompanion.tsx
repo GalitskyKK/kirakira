@@ -473,7 +473,6 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           className={clsx(
             'pointer-events-auto select-none',
             'relative flex h-16 w-12 items-center justify-center sm:h-24 sm:w-20',
-            '-translate-x-1 transform sm:-translate-x-2',
             'cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/70',
             className
           )}

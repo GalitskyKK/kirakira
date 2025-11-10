@@ -14,7 +14,8 @@ export function CompanionOverlay() {
   const { isInfoOpen, setInfoOpen } = useCompanionInfoPanel()
 
   const telegramId = useTelegramId()
-  const { data: userData } = useUserSync(telegramId, !!telegramId)
+  const isTelegramIdAvailable = telegramId !== undefined && telegramId !== null
+  const { data: userData } = useUserSync(telegramId, isTelegramIdAvailable)
   const userLevel = userData?.user?.level ?? 1
   const isUnlocked = userLevel >= 3
   const levelsRemaining = Math.max(3 - userLevel, 0)
@@ -28,7 +29,7 @@ export function CompanionOverlay() {
   if (!isUnlocked) {
     return (
       <div
-        className="pointer-events-none fixed right-2 z-[1500] sm:bottom-auto sm:right-6 sm:top-6"
+        className="pointer-events-none fixed right-4 z-[1500] sm:bottom-auto sm:right-8 sm:top-6"
         style={{ bottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}
       >
         <CompanionLockedPreview levelsRemaining={levelsRemaining} />
@@ -42,7 +43,7 @@ export function CompanionOverlay() {
 
   return (
     <div
-      className="pointer-events-none fixed right-2 z-[1500] sm:bottom-auto sm:right-6 sm:top-6"
+      className="pointer-events-none fixed right-4 z-[1500] sm:bottom-auto sm:right-8 sm:top-6"
       style={{ bottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}
     >
       <GardenCompanion className="pointer-events-auto" />
