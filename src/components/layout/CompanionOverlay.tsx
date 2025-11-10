@@ -29,7 +29,7 @@ export function CompanionOverlay() {
   if (!isUnlocked) {
     return (
       <div
-        className="pointer-events-none fixed right-4 z-[1500] sm:bottom-auto sm:right-8 sm:top-6"
+        className="pointer-events-none fixed right-6 z-[1500] sm:bottom-auto sm:right-8 sm:top-6"
         style={{ bottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}
       >
         <CompanionLockedPreview levelsRemaining={levelsRemaining} />
