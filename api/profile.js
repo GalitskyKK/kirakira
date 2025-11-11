@@ -296,6 +296,351 @@ async function addExperience(telegramId, experiencePoints) {
 // Импортируем middleware аутентификации
 import { withAuth, verifyTelegramId } from './_auth.js'
 
+const LEADERBOARD_CATEGORIES = ['level', 'streak', 'elements']
+const LEADERBOARD_PERIODS = ['all_time', 'monthly']
+const DEFAULT_LEADERBOARD_LIMIT = 20
+const MAX_LEADERBOARD_LIMIT = 50
+const LEADERBOARD_VISIBILITY_FILTER =
+  'privacy_settings->>showProfile.eq.true,privacy_settings.is.null'
+
+function parseBooleanParam(value, defaultValue) {
+  if (value === undefined) {
+    return defaultValue
+  }
+  if (typeof value === 'boolean') {
+    return value
+  }
+  const normalized = String(value).trim().toLowerCase()
+  if (normalized === 'true' || normalized === '1') {
+    return true
+  }
+  if (normalized === 'false' || normalized === '0') {
+    return false
+  }
+  return defaultValue
+}
+
+function parseIntegerParam(value, defaultValue, min, max) {
+  const parsed = Number.parseInt(value, 10)
+  if (Number.isNaN(parsed)) {
+    return defaultValue
+  }
+  return Math.min(Math.max(parsed, min), max)
+}
+
+function normalizePrivacySettings(rawValue) {
+  if (!rawValue) {
+    return {}
+  }
+  if (typeof rawValue === 'string') {
+    try {
+      return JSON.parse(rawValue) ?? {}
+    } catch {
+      return {}
+    }
+  }
+  if (typeof rawValue === 'object') {
+    return rawValue
+  }
+  return {}
+}
+
+function getPeriodStart(period) {
+  if (period !== 'monthly') {
+    return null
+  }
+  const now = new Date()
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+}
+
+const LEADERBOARD_METRICS = {
+  level: {
+    primaryField: 'level',
+    secondaryField: 'experience',
+    scoreFromRecord: record => Number(record?.level ?? 0),
+    tieBreaker: record => Number(record?.experience ?? 0),
+  },
+  streak: {
+    primaryField: 'current_streak',
+    secondaryField: 'longest_streak',
+    scoreFromRecord: record => Number(record?.current_streak ?? 0),
+    tieBreaker: record => Number(record?.longest_streak ?? 0),
+  },
+  elements: {
+    primaryField: 'total_elements',
+    secondaryField: 'rare_elements_found',
+    scoreFromRecord: record => Number(record?.total_elements ?? 0),
+    tieBreaker: record => Number(record?.rare_elements_found ?? 0),
+  },
+}
+
+function mapLeaderboardEntry(record, category, period, rank) {
+  const privacySettings = normalizePrivacySettings(record.privacy_settings)
+  const metricConfig = LEADERBOARD_METRICS[category]
+  const score = metricConfig.scoreFromRecord(record)
+  const tieScore = metricConfig.tieBreaker(record)
+
+  const sanitizedUser = {
+    telegram_id: record.telegram_id,
+    first_name: record.first_name ?? null,
+    last_name: record.last_name ?? null,
+    username: record.username ?? null,
+    photo_url: record.photo_url ?? null,
+    level: Number.isFinite(Number(record.level)) ? Number(record.level) : 0,
+    garden_theme: record.garden_theme ?? 'light',
+    privacy_settings: {
+      showProfile: privacySettings.showProfile !== false,
+      shareGarden: privacySettings.shareGarden !== false,
+      shareAchievements: privacySettings.shareAchievements !== false,
+    },
+  }
+
+  return {
+    rank,
+    score,
+    category,
+    period,
+    visibility: {
+      isProfileHidden: privacySettings.showProfile === false,
+      isGardenHidden: privacySettings.shareGarden === false,
+      isAchievementsHidden: privacySettings.shareAchievements === false,
+    },
+    user: sanitizedUser,
+    stats: {
+      level: Number.isFinite(Number(record.level)) ? Number(record.level) : 0,
+      experience: Number.isFinite(Number(record.experience))
+        ? Number(record.experience)
+        : 0,
+      current_streak: Number.isFinite(Number(record.current_streak))
+        ? Number(record.current_streak)
+        : 0,
+      longest_streak: Number.isFinite(Number(record.longest_streak))
+        ? Number(record.longest_streak)
+        : 0,
+      total_elements: Number.isFinite(Number(record.total_elements))
+        ? Number(record.total_elements)
+        : 0,
+      rare_elements_found: Number.isFinite(Number(record.rare_elements_found))
+        ? Number(record.rare_elements_found)
+        : 0,
+      tieScore,
+    },
+  }
+}
+
+function sortLeaderboardRecords(records, category) {
+  const config = LEADERBOARD_METRICS[category]
+  return [...records].sort((a, b) => {
+    const primaryDiff =
+      (Number(b[config.primaryField]) || 0) -
+      (Number(a[config.primaryField]) || 0)
+    if (primaryDiff !== 0) {
+      return primaryDiff
+    }
+    const secondaryDiff =
+      (Number(b[config.secondaryField]) || 0) -
+      (Number(a[config.secondaryField]) || 0)
+    if (secondaryDiff !== 0) {
+      return secondaryDiff
+    }
+    return (Number(a.telegram_id) || 0) - (Number(b.telegram_id) || 0)
+  })
+}
+
+function applyPeriodFilter(query, category, period, periodStart) {
+  if (period !== 'monthly' || !periodStart) {
+    return query
+  }
+  const isoString = periodStart.toISOString()
+  const isoDate = isoString.slice(0, 10)
+
+  switch (category) {
+    case 'level':
+      return query.gte('last_visit_date', isoString)
+    case 'streak':
+      return query.gte('streak_last_checkin', isoDate)
+    case 'elements':
+      return query.gte('last_visit_date', isoString)
+    default:
+      return query
+  }
+}
+
+async function fetchLeaderboardEntries({
+  supabaseClient,
+  category,
+  period,
+  limit,
+  periodStart,
+}) {
+  const metricConfig = LEADERBOARD_METRICS[category]
+  const selectColumns = `
+    telegram_id,
+    first_name,
+    last_name,
+    username,
+    photo_url,
+    level,
+    experience,
+    current_streak,
+    longest_streak,
+    total_elements,
+    rare_elements_found,
+    privacy_settings,
+    garden_theme,
+    streak_last_checkin,
+    last_visit_date,
+    updated_at
+  `
+
+  const fetchLimit = Math.min(limit * 3, 150)
+
+  let query = supabaseClient
+    .from('users')
+    .select(selectColumns)
+    .order(metricConfig.primaryField, { ascending: false, nullsFirst: false })
+    .order(metricConfig.secondaryField, { ascending: false, nullsFirst: false })
+    .limit(fetchLimit)
+
+  query = applyPeriodFilter(query, category, period, periodStart)
+
+  const { data, error } = await query
+
+  if (error) {
+    throw new Error(`Failed to fetch leaderboard data: ${error.message}`)
+  }
+
+  const sortedRecords = sortLeaderboardRecords(data ?? [], category)
+
+  const entries = []
+  for (const record of sortedRecords) {
+    const mapped = mapLeaderboardEntry(
+      record,
+      category,
+      period,
+      entries.length + 1
+    )
+
+    const score = LEADERBOARD_METRICS[category].scoreFromRecord(record)
+    if (!Number.isFinite(score)) {
+      continue
+    }
+    entries.push(mapped)
+    if (entries.length >= limit) {
+      break
+    }
+  }
+
+  return entries
+}
+
+async function fetchViewerLeaderboardPosition({
+  supabaseClient,
+  category,
+  period,
+  periodStart,
+  viewerTelegramId,
+}) {
+  if (!viewerTelegramId) {
+    return null
+  }
+
+  const metricConfig = LEADERBOARD_METRICS[category]
+  const selectColumns = `
+    telegram_id,
+    first_name,
+    last_name,
+    username,
+    photo_url,
+    level,
+    experience,
+    current_streak,
+    longest_streak,
+    total_elements,
+    rare_elements_found,
+    privacy_settings,
+    garden_theme,
+    streak_last_checkin,
+    last_visit_date,
+    updated_at
+  `
+
+  let viewerQuery = supabaseClient
+    .from('users')
+    .select(selectColumns)
+    .eq('telegram_id', viewerTelegramId)
+    .limit(1)
+
+  viewerQuery = applyPeriodFilter(viewerQuery, category, period, periodStart)
+
+  const { data: viewerRows, error: viewerError } = await viewerQuery
+
+  if (viewerError) {
+    throw new Error(`Failed to fetch viewer data: ${viewerError.message}`)
+  }
+
+  const viewerRecord = viewerRows?.[0]
+  if (!viewerRecord) {
+    return null
+  }
+
+  const viewerScore = metricConfig.scoreFromRecord(viewerRecord)
+  if (!Number.isFinite(viewerScore)) {
+    return null
+  }
+
+  const viewerTieScore = metricConfig.tieBreaker(viewerRecord)
+
+  const higherPrimaryQuery = applyPeriodFilter(
+    supabaseClient
+      .from('users')
+      .select('telegram_id', { count: 'exact', head: true })
+      .or(LEADERBOARD_VISIBILITY_FILTER)
+      .neq('telegram_id', viewerTelegramId)
+      .gt(metricConfig.primaryField, viewerScore),
+    category,
+    period,
+    periodStart
+  )
+
+  const { count: higherPrimaryCount, error: higherPrimaryError } =
+    await higherPrimaryQuery
+
+  if (higherPrimaryError) {
+    throw new Error(
+      `Failed to count higher ranks: ${higherPrimaryError.message}`
+    )
+  }
+
+  let higherTieCount = 0
+  if (metricConfig.secondaryField) {
+    const higherTieQuery = applyPeriodFilter(
+      supabaseClient
+        .from('users')
+        .select('telegram_id', { count: 'exact', head: true })
+        .or(LEADERBOARD_VISIBILITY_FILTER)
+        .neq('telegram_id', viewerTelegramId)
+        .eq(metricConfig.primaryField, viewerScore)
+        .gt(metricConfig.secondaryField, viewerTieScore),
+      category,
+      period,
+      periodStart
+    )
+
+    const { count: tieCount, error: tieError } = await higherTieQuery
+
+    if (tieError) {
+      throw new Error(`Failed to count tie ranks: ${tieError.message}`)
+    }
+
+    higherTieCount = tieCount ?? 0
+  }
+
+  const rank = (higherPrimaryCount ?? 0) + higherTieCount + 1
+
+  return mapLeaderboardEntry(viewerRecord, category, period, rank)
+}
+
 /**
  * 🔒 Функция для получения Supabase клиента с JWT (RLS-защищенный)
  */
@@ -524,6 +869,101 @@ async function protectedHandler(req, res) {
             newlyUnlocked: achievementUpdates.filter(a => a.newly_unlocked),
           },
         })
+      }
+
+      case 'get_leaderboard': {
+        if (req.method !== 'GET') {
+          return res
+            .status(405)
+            .json({ success: false, error: 'Method not allowed' })
+        }
+
+        const rawCategory = String(req.query.category ?? '').toLowerCase()
+        const rawPeriod = String(req.query.period ?? '').toLowerCase()
+
+        if (!LEADERBOARD_CATEGORIES.includes(rawCategory)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid category',
+          })
+        }
+
+        if (!LEADERBOARD_PERIODS.includes(rawPeriod)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid period',
+          })
+        }
+
+        const limit = parseIntegerParam(
+          req.query.limit,
+          DEFAULT_LEADERBOARD_LIMIT,
+          1,
+          MAX_LEADERBOARD_LIMIT
+        )
+
+        const includeViewer = parseBooleanParam(req.query.includeViewer, true)
+
+        const viewerTelegramIdRaw = req.query.viewerTelegramId
+        let viewerTelegramId = null
+        if (viewerTelegramIdRaw !== undefined) {
+          viewerTelegramId = Number.parseInt(viewerTelegramIdRaw, 10)
+          if (Number.isNaN(viewerTelegramId)) {
+            return res.status(400).json({
+              success: false,
+              error: 'viewerTelegramId must be a number',
+            })
+          }
+        }
+
+        try {
+          const adminSupabase = await getSupabaseClient(null)
+          const periodStart = getPeriodStart(rawPeriod)
+
+          const entries = await fetchLeaderboardEntries({
+            supabaseClient: adminSupabase,
+            category: rawCategory,
+            period: rawPeriod,
+            limit,
+            periodStart,
+          })
+
+          let viewerPosition = null
+          if (includeViewer && viewerTelegramId) {
+            const existing = entries.find(
+              entry => entry.user.telegram_id === viewerTelegramId
+            )
+
+            if (existing) {
+              viewerPosition = existing
+            } else {
+              viewerPosition = await fetchViewerLeaderboardPosition({
+                supabaseClient: adminSupabase,
+                category: rawCategory,
+                period: rawPeriod,
+                periodStart,
+                viewerTelegramId,
+              })
+            }
+          }
+
+          return res.status(200).json({
+            success: true,
+            data: {
+              entries,
+              viewerPosition: viewerPosition ?? null,
+              category: rawCategory,
+              period: rawPeriod,
+              timestamp: new Date().toISOString(),
+            },
+          })
+        } catch (leaderboardError) {
+          console.error('Leaderboard error:', leaderboardError)
+          return res.status(500).json({
+            success: false,
+            error: 'Failed to load leaderboard',
+          })
+        }
       }
 
       case 'update_privacy': {

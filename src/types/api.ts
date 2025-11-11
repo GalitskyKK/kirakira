@@ -477,15 +477,6 @@ export interface LeaderboardEntryStats {
   readonly total_days?: number
 }
 
-export interface LeaderboardEntry {
-  readonly rank: number
-  readonly score: number
-  readonly category: LeaderboardCategory
-  readonly period: LeaderboardPeriod
-  readonly user: LeaderboardEntryUserInfo
-  readonly stats?: LeaderboardEntryStats
-}
-
 export interface LeaderboardResponsePayload {
   readonly entries: readonly LeaderboardEntry[]
   readonly viewerPosition?: {
@@ -497,6 +488,22 @@ export interface LeaderboardResponsePayload {
   readonly category: LeaderboardCategory
   readonly period: LeaderboardPeriod
   readonly timestamp: string
+}
+
+export interface LeaderboardEntryVisibility {
+  readonly isProfileHidden: boolean
+  readonly isGardenHidden: boolean
+  readonly isAchievementsHidden: boolean
+}
+
+export interface LeaderboardEntry {
+  readonly rank: number
+  readonly score: number
+  readonly category: LeaderboardCategory
+  readonly period: LeaderboardPeriod
+  readonly user: LeaderboardEntryUserInfo
+  readonly stats?: LeaderboardEntryStats
+  readonly visibility?: LeaderboardEntryVisibility
 }
 
 // ===========================================

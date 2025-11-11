@@ -70,7 +70,7 @@ export function LeaderboardPage() {
   const navigate = useNavigate()
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, telegramId != null)
-  const currentUser = (userData?.user as User | undefined) ?? null
+  const currentUser: User | null = userData?.user ?? null
 
   const [category, setCategory] = useState<LeaderboardCategory>('level')
   const [period, setPeriod] = useState<LeaderboardPeriod>('all_time')
@@ -90,7 +90,12 @@ export function LeaderboardPage() {
     viewerTelegramId: telegramId ?? undefined,
   })
 
-  const entries = leaderboardData?.entries ?? []
+  const entries = useMemo(() => {
+    if (!leaderboardData?.entries) {
+      return []
+    }
+    return leaderboardData.entries
+  }, [leaderboardData])
   const viewerPosition = leaderboardData?.viewerPosition ?? null
 
   const isViewerInList = useMemo(() => {
@@ -102,12 +107,20 @@ export function LeaderboardPage() {
     )
   }, [entries, viewerPosition])
 
-  const categoryConfig = useMemo(
-    () =>
-      CATEGORY_CONFIGS.find(config => config.id === category) ??
-      CATEGORY_CONFIGS[0]!,
-    [category]
-  )
+  const categoryConfig = useMemo<CategoryConfig>(() => {
+    const foundConfig = CATEGORY_CONFIGS.find(config => config.id === category)
+    if (foundConfig !== undefined) {
+      return foundConfig
+    }
+    if (CATEGORY_CONFIGS.length === 0) {
+      throw new Error('CATEGORY_CONFIGS must contain at least one entry')
+    }
+    const fallbackConfig = CATEGORY_CONFIGS[0]
+    if (fallbackConfig === undefined) {
+      throw new Error('CATEGORY_CONFIGS fallback is undefined')
+    }
+    return fallbackConfig
+  }, [category])
 
   const handleChangeCategory = useCallback(
     (newCategory: LeaderboardCategory) => {
@@ -160,13 +173,29 @@ export function LeaderboardPage() {
         currentUser != null &&
         shareGardenSetting !== false &&
         entry.user.telegram_id !== currentUser.telegramId
-      const displayName =
-        entry.user.first_name ??
-        entry.user.username ??
-        `Садовник ${entry.user.telegram_id}`
-      const usernameLabel = entry.user.username
-        ? `@${entry.user.username}`
-        : null
+      const firstNameRaw = entry.user.first_name
+      const usernameRaw = entry.user.username
+      const hasFirstName =
+        typeof firstNameRaw === 'string' && firstNameRaw.trim().length > 0
+      const hasUsername =
+        typeof usernameRaw === 'string' && usernameRaw.trim().length > 0
+      const displayName = hasFirstName
+        ? firstNameRaw.trim()
+        : hasUsername
+          ? usernameRaw.trim()
+          : `Садовник ${entry.user.telegram_id}`
+      const usernameLabel =
+        hasUsername && typeof usernameRaw === 'string'
+          ? `@${usernameRaw.trim()}`
+          : null
+      const isProfileHidden =
+        typeof entry.visibility === 'object' &&
+        entry.visibility !== null &&
+        'isProfileHidden' in entry.visibility &&
+        Boolean(
+          (entry.visibility as { readonly isProfileHidden?: boolean })
+            .isProfileHidden
+        )
 
       return (
         <motion.div
@@ -202,11 +231,11 @@ export function LeaderboardPage() {
               <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
                 {displayName}
               </div>
-              {usernameLabel && (
+              {usernameLabel !== null ? (
                 <div className="text-xs text-neutral-500 dark:text-neutral-400">
                   {usernameLabel}
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -217,19 +246,28 @@ export function LeaderboardPage() {
               <div className="text-xs text-neutral-500 dark:text-neutral-400">
                 {categoryConfig.metricLabel}
               </div>
+              {isProfileHidden ? (
+                <div className="mt-1 text-xs text-amber-500 dark:text-amber-300">
+                  Профиль скрыт
+                </div>
+              ) : null}
             </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => handleViewProfile(entry)}
+                onClick={() => {
+                  handleViewProfile(entry)
+                }}
               >
                 Профиль
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleViewGarden(entry)}
+                onClick={() => {
+                  handleViewGarden(entry)
+                }}
                 disabled={!canViewGarden}
               >
                 Сад
@@ -267,7 +305,9 @@ export function LeaderboardPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => refetch()}
+            onClick={() => {
+              void refetch()
+            }}
             isLoading={isFetching && !isLoading}
             leftIcon={<RefreshCw className="h-4 w-4" />}
           >
@@ -328,7 +368,9 @@ export function LeaderboardPage() {
               variant="secondary"
               size="sm"
               className="mt-4"
-              onClick={() => refetch()}
+              onClick={() => {
+                void refetch()
+              }}
             >
               Попробовать снова
             </Button>
@@ -365,7 +407,7 @@ export function LeaderboardPage() {
         )}
       </div>
 
-      {leaderboardData?.timestamp && (
+      {leaderboardData?.timestamp != null ? (
         <div className="text-center text-xs text-neutral-500 dark:text-neutral-400">
           Обновлено:{' '}
           {new Date(leaderboardData.timestamp).toLocaleString('ru-RU', {
@@ -375,7 +417,7 @@ export function LeaderboardPage() {
             minute: '2-digit',
           })}
         </div>
-      )}
+      ) : null}
 
       <Modal
         isOpen={isGardenModalOpen}
