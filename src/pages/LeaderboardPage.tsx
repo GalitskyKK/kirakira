@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { Trophy, RefreshCw, Crown, Flame, Leaf } from 'lucide-react'
+import { Trophy, RefreshCw, Crown, Flame, Leaf, ArrowLeft } from 'lucide-react'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useUserSync } from '@/hooks/index.v2'
 import { useLeaderboard } from '@/hooks/queries/useLeaderboardQueries'
@@ -304,19 +304,15 @@ export function LeaderboardPage() {
       className="space-y-6 p-4 pb-24"
     >
       <div className="glass-card rounded-3xl border border-neutral-200/60 bg-white/80 p-5 shadow-xl dark:border-neutral-700/60 dark:bg-neutral-900/70">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-kira-500">
-              <Trophy className="h-4 w-4" />
-              Глобальный рейтинг
-            </div>
-            <h1 className="mt-1 text-xl font-bold text-neutral-900 dark:text-neutral-100">
-              Таблица лидеров
-            </h1>
-            <p className="mt-1 line-clamp-2 text-xs text-neutral-600 dark:text-neutral-400">
-              {categoryConfig.description}
-            </p>
-          </div>
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 shadow-sm transition hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:border-neutral-600"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Назад
+          </button>
           <Button
             variant="outline"
             size="sm"
@@ -328,6 +324,19 @@ export function LeaderboardPage() {
           >
             Обновить
           </Button>
+        </div>
+
+        <div className="mt-4 min-w-0">
+          <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-kira-500">
+            <Trophy className="h-4 w-4" />
+            Глобальный рейтинг
+          </div>
+          <h1 className="mt-1 text-xl font-bold text-neutral-900 dark:text-neutral-100">
+            Таблица лидеров
+          </h1>
+          <p className="mt-1 line-clamp-2 text-xs text-neutral-600 dark:text-neutral-400">
+            {categoryConfig.description}
+          </p>
         </div>
 
         <div className="mt-5 flex flex-wrap gap-2">

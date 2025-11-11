@@ -1,7 +1,17 @@
 import { useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Lock, Eye, Users, UserPlus, UserCheck, Ban, Check, X } from 'lucide-react'
+import {
+  ArrowLeft,
+  Lock,
+  Eye,
+  Users,
+  UserPlus,
+  UserCheck,
+  Ban,
+  Check,
+  X,
+} from 'lucide-react'
 import { LoadingSpinner, UserAvatar, Button } from '@/components/ui'
 import { useFriendProfileData } from '@/hooks/useProfile'
 import { GARDENER_LEVELS } from '@/utils/achievements'
@@ -69,7 +79,8 @@ export default function FriendProfilePage() {
 
   const currentUserTelegramId = useTelegramId()
   const { hapticFeedback, showAlert } = useTelegram()
-  const [isProcessingFriendAction, setIsProcessingFriendAction] = useState(false)
+  const [isProcessingFriendAction, setIsProcessingFriendAction] =
+    useState(false)
 
   useEffect(() => {
     if (!friendTelegramId) {
@@ -97,17 +108,51 @@ export default function FriendProfilePage() {
     : null
 
   const relationshipStatus = useMemo(() => {
-    if (!profileData?.relationship) {
-      return 'none'
+    const relationship = profileData?.relationship
+    if (relationship?.status) {
+      if (
+        relationship.status === 'pending' &&
+        relationship.pendingDirection === 'incoming'
+      ) {
+        return 'pending_incoming'
+      }
+      if (
+        relationship.status === 'pending' &&
+        relationship.pendingDirection === 'outgoing'
+      ) {
+        return 'pending_outgoing'
+      }
+      return relationship.status
     }
-    return profileData.relationship.status ?? 'none'
+    const rawStatusValue =
+      profileData?.user.privacy_settings?.['relationshipStatus']
+    const rawStatus =
+      typeof rawStatusValue === 'string' ? rawStatusValue : undefined
+    if (rawStatus === 'accepted') {
+      return 'friend'
+    }
+    if (rawStatus === 'pending') {
+      return 'pending_outgoing'
+    }
+    if (rawStatus === 'blocked') {
+      return 'blocked'
+    }
+    return 'none'
   }, [profileData])
 
   const canSendFriendRequest = useMemo(() => {
-    if (!profileData?.relationship) {
-      return true
+    const relationship = profileData?.relationship
+    if (relationship?.canSendRequest != null) {
+      return relationship.canSendRequest
     }
-    return profileData.relationship.canSendRequest !== false
+    const rawStatusValue =
+      profileData?.user.privacy_settings?.['relationshipStatus']
+    const rawStatus =
+      typeof rawStatusValue === 'string' ? rawStatusValue : undefined
+    if (rawStatus === 'accepted' || rawStatus === 'blocked') {
+      return false
+    }
+    return true
   }, [profileData])
 
   const handleAddFriend = useCallback(async () => {
@@ -225,8 +270,7 @@ export default function FriendProfilePage() {
     if (relationshipStatus === 'friend') {
       return (
         <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-600 dark:border-emerald-500/40 dark:bg-emerald-900/20 dark:text-emerald-300">
-          <UserCheck className="h-3.5 w-3.5" />
-          В друзьях
+          <UserCheck className="h-3.5 w-3.5" />В друзьях
         </div>
       )
     }
@@ -293,6 +337,8 @@ export default function FriendProfilePage() {
       </Button>
     )
   }
+
+  const friendshipActionElement = renderFriendshipAction()
 
   useEffect(() => {
     if (profileData) {
@@ -394,9 +440,7 @@ export default function FriendProfilePage() {
           <h1 className="font-semibold text-gray-900 dark:text-gray-100">
             Профиль друга
           </h1>
-          <div className="flex items-center gap-2">
-            {renderFriendshipAction()}
-          </div>
+          <div className="w-16" />
         </div>
       </div>
 
@@ -461,6 +505,10 @@ export default function FriendProfilePage() {
                   </span>
                 </div>
               </div>
+
+              {friendshipActionElement !== null && (
+                <div className="pt-2">{friendshipActionElement}</div>
+              )}
             </div>
           </div>
         </motion.div>
