@@ -40,6 +40,7 @@ const StreakDebugPage = import.meta.env.DEV
 
 // Lazy import для страницы профиля друга
 const FriendProfilePage = lazy(() => import('@/pages/FriendProfilePage'))
+const LeaderboardPage = lazy(() => import('@/pages/LeaderboardPage'))
 import { TelegramDiagnostic } from '@/components/TelegramDiagnostic'
 import { useTelegram, useTelegramTheme, useAppInitialization } from '@/hooks'
 import { InitializationStage } from '@/types/initialization'
@@ -649,6 +650,22 @@ function App() {
                   >
                     <Suspense fallback={<LoadingSpinner />}>
                       <FriendProfilePage />
+                    </Suspense>
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/leaderboard"
+                element={
+                  <motion.div
+                    key="leaderboard"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <LeaderboardPage />
                     </Suspense>
                   </motion.div>
                 }

@@ -20,3 +20,6 @@ export * from './useChallengeQueries'
 
 // Currency Queries
 export * from './useCurrencyQueries'
+
+// Leaderboard Queries
+export * from './useLeaderboardQueries'

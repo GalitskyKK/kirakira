@@ -450,6 +450,56 @@ export interface FriendApiRespondRequestRequest {
 }
 
 // ===========================================
+// 🏆 LEADERBOARD TYPES
+// ===========================================
+
+export type LeaderboardCategory = 'level' | 'streak' | 'elements'
+
+export type LeaderboardPeriod = 'all_time' | 'monthly'
+
+export interface LeaderboardEntryUserInfo {
+  readonly telegram_id: number
+  readonly first_name?: string
+  readonly last_name?: string
+  readonly username?: string
+  readonly photo_url?: string
+  readonly level?: number
+  readonly garden_theme?: string
+  readonly privacy_settings?: Record<string, boolean>
+}
+
+export interface LeaderboardEntryStats {
+  readonly level?: number
+  readonly experience?: number
+  readonly current_streak?: number
+  readonly total_elements?: number
+  readonly rare_elements_found?: number
+  readonly total_days?: number
+}
+
+export interface LeaderboardEntry {
+  readonly rank: number
+  readonly score: number
+  readonly category: LeaderboardCategory
+  readonly period: LeaderboardPeriod
+  readonly user: LeaderboardEntryUserInfo
+  readonly stats?: LeaderboardEntryStats
+}
+
+export interface LeaderboardResponsePayload {
+  readonly entries: readonly LeaderboardEntry[]
+  readonly viewerPosition?: {
+    readonly rank: number
+    readonly score: number
+    readonly user: LeaderboardEntryUserInfo
+    readonly stats?: LeaderboardEntryStats
+  }
+  readonly category: LeaderboardCategory
+  readonly period: LeaderboardPeriod
+  readonly timestamp: string
+}
+
+// ===========================================
 // 💰 CURRENCY API TYPES (/api/currency)
 // ===========================================
 

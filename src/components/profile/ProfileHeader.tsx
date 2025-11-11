@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { Settings, BarChart3 } from 'lucide-react'
+import { Settings, BarChart3, Trophy } from 'lucide-react'
 import { User } from '@/types'
 import { UserAvatar } from '@/components/ui'
 import {
@@ -39,9 +39,17 @@ interface ProfileHeaderProps {
         totalMoodEntries?: number
       }
     | undefined
+  readonly leaderboardPosition?: {
+    readonly position: number | null
+    readonly isLoading: boolean
+  }
 }
 
-export function ProfileHeader({ user, stats }: ProfileHeaderProps) {
+export function ProfileHeader({
+  user,
+  stats,
+  leaderboardPosition,
+}: ProfileHeaderProps) {
   const navigate = useNavigate()
   const displayName = user.firstName ?? user.username ?? 'Пользователь'
   const username = user.username != null ? `@${user.username}` : null
@@ -97,6 +105,16 @@ export function ProfileHeader({ user, stats }: ProfileHeaderProps) {
     return Math.max(1, calculated + 1)
   })()
 
+  const leaderboardLabel = (() => {
+    if (leaderboardPosition?.isLoading) {
+      return 'Топ...'
+    }
+    if (leaderboardPosition?.position != null) {
+      return `Топ #${leaderboardPosition.position}`
+    }
+    return 'Вне топа'
+  })()
+
   return (
     <motion.div
       className="glass-card rounded-3xl border border-neutral-200/50 p-6 dark:border-neutral-700/50"
@@ -136,6 +154,13 @@ export function ProfileHeader({ user, stats }: ProfileHeaderProps) {
           {/* Actions - кнопки настроек и статистики */}
           <div className="ml-2 flex flex-shrink-0 space-x-2">
             <button
+              onClick={() => navigate('/leaderboard')}
+              className="flex items-center justify-center rounded-lg bg-white p-2 text-gray-600 shadow-sm transition-colors hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              title="Рейтинг"
+            >
+              <Trophy className="h-4 w-4" />
+            </button>
+            <button
               onClick={() => navigate('/mobile/stats')}
               className="flex items-center justify-center rounded-lg bg-white p-2 text-gray-600 shadow-sm transition-colors hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
               title="Статистика"
@@ -167,6 +192,10 @@ export function ProfileHeader({ user, stats }: ProfileHeaderProps) {
               <span className="ml-1.5 rounded-full bg-white/20 px-2 py-0.5 text-xs dark:bg-black/20">
                 Ур. {levelInfo.currentLevel.level}
               </span>
+            </div>
+            <div className="inline-flex items-center rounded-full border border-garden-200/70 bg-white/80 px-3 py-1 text-xs font-semibold text-garden-600 shadow-sm backdrop-blur dark:border-garden-400/30 dark:bg-garden-900/40 dark:text-garden-100">
+              <Trophy className="mr-1 h-3.5 w-3.5" />
+              <span>{leaderboardLabel}</span>
             </div>
 
             {/* Quick Stats */}

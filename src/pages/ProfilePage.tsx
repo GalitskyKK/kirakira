@@ -6,6 +6,7 @@ import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { ProfileStats } from '@/components/profile/ProfileStats'
 import { ProfileAchievements } from '@/components/profile/ProfileAchievements'
 import { LoadingSpinner } from '@/components/ui'
+import { useViewerLeaderboardPosition } from '@/hooks/queries/useLeaderboardQueries'
 
 export function ProfilePage() {
   // ✅ Получаем данные через React Query v2 хуки
@@ -157,6 +158,14 @@ export function ProfilePage() {
     },
   }
 
+  const { data: levelLeaderboardPosition, isLoading: leaderboardPositionLoading } =
+    useViewerLeaderboardPosition({
+      category: 'level',
+      period: 'all_time',
+      viewerTelegramId: renderUser.telegramId > 0 ? renderUser.telegramId : undefined,
+      enabled: renderUser.telegramId > 0,
+    })
+
   return (
     <motion.div
       className="space-y-6 pb-8" // Убрал p-4
@@ -166,7 +175,14 @@ export function ProfilePage() {
       transition={{ duration: 0.3 }}
     >
       {/* Заголовок профиля */}
-      <ProfileHeader user={renderUser} stats={profileData?.stats} />
+      <ProfileHeader
+        user={renderUser}
+        stats={profileData?.stats}
+        leaderboardPosition={{
+          position: levelLeaderboardPosition?.rank ?? null,
+          isLoading: leaderboardPositionLoading,
+        }}
+      />
 
       {/* Статистика */}
       <ProfileStats
