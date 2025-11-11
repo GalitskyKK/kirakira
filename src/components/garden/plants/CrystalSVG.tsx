@@ -587,7 +587,7 @@ export function CrystalSVG({
             opacity="0.7"
           />
 
-          {/* Moving reflection */}
+          {/* Moving reflection gr*/}
           <motion.rect
             x="15"
             y="12"
