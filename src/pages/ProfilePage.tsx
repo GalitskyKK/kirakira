@@ -27,6 +27,19 @@ export function ProfilePage() {
     error: profileError,
   } = useProfile()
 
+  const viewerTelegramId =
+    currentUser?.telegramId ?? profileData?.user?.telegram_id ?? null
+
+  const {
+    data: levelLeaderboardPosition,
+    isLoading: leaderboardPositionLoading,
+  } = useViewerLeaderboardPosition({
+    category: 'level',
+    period: 'all_time',
+    viewerTelegramId: viewerTelegramId ?? undefined,
+    enabled: viewerTelegramId != null,
+  })
+
   // Вспомогательная функция для подсчета элементов
   const getElementsCount = () => currentGarden?.elements.length ?? 0
 
@@ -157,14 +170,6 @@ export function ProfilePage() {
       garden: currentUser?.preferences?.garden ?? {},
     },
   }
-
-  const { data: levelLeaderboardPosition, isLoading: leaderboardPositionLoading } =
-    useViewerLeaderboardPosition({
-      category: 'level',
-      period: 'all_time',
-      viewerTelegramId: renderUser.telegramId > 0 ? renderUser.telegramId : undefined,
-      enabled: renderUser.telegramId > 0,
-    })
 
   return (
     <motion.div

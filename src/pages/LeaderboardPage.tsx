@@ -12,7 +12,7 @@ import {
   Modal,
   ModalBody,
 } from '@/components/ui'
-import { FriendGardenView } from '@/components/garden'
+import { FriendGardenView } from '@/components/garden/FriendGardenView'
 import type {
   LeaderboardCategory,
   LeaderboardEntry,
@@ -103,13 +103,18 @@ export function LeaderboardPage() {
   }, [entries, viewerPosition])
 
   const categoryConfig = useMemo(
-    () => CATEGORY_CONFIGS.find(config => config.id === category) ?? CATEGORY_CONFIGS[0]!,
+    () =>
+      CATEGORY_CONFIGS.find(config => config.id === category) ??
+      CATEGORY_CONFIGS[0]!,
     [category]
   )
 
-  const handleChangeCategory = useCallback((newCategory: LeaderboardCategory) => {
-    setCategory(newCategory)
-  }, [])
+  const handleChangeCategory = useCallback(
+    (newCategory: LeaderboardCategory) => {
+      setCategory(newCategory)
+    },
+    []
+  )
 
   const handleChangePeriod = useCallback((newPeriod: LeaderboardPeriod) => {
     setPeriod(newPeriod)
@@ -130,17 +135,14 @@ export function LeaderboardPage() {
     [currentUser?.telegramId, navigate]
   )
 
-  const handleViewGarden = useCallback(
-    (entry: LeaderboardEntry) => {
-      const entryTelegramId = entry.user.telegram_id
-      if (!entryTelegramId) {
-        return
-      }
-      setGardenFriendId(entryTelegramId)
-      setIsGardenModalOpen(true)
-    },
-    []
-  )
+  const handleViewGarden = useCallback((entry: LeaderboardEntry) => {
+    const entryTelegramId = entry.user.telegram_id
+    if (!entryTelegramId) {
+      return
+    }
+    setGardenFriendId(entryTelegramId)
+    setIsGardenModalOpen(true)
+  }, [])
 
   const closeGardenModal = useCallback(() => {
     setIsGardenModalOpen(false)
@@ -375,7 +377,12 @@ export function LeaderboardPage() {
         </div>
       )}
 
-      <Modal isOpen={isGardenModalOpen} onClose={closeGardenModal} size="xl" title="Сад садовника">
+      <Modal
+        isOpen={isGardenModalOpen}
+        onClose={closeGardenModal}
+        size="xl"
+        title="Сад садовника"
+      >
         <ModalBody className="bg-gradient-to-br from-kira-50 to-garden-50 dark:from-neutral-900 dark:to-neutral-800">
           {gardenFriendId != null && currentUser != null ? (
             <FriendGardenView
@@ -395,5 +402,3 @@ export function LeaderboardPage() {
 }
 
 export default LeaderboardPage
-
-
