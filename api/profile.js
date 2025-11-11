@@ -1135,12 +1135,27 @@ async function protectedHandler(req, res) {
           })
         }
 
+        const viewerTelegramId = Number.parseInt(telegramId, 10)
+        const targetTelegramId = Number.parseInt(friendTelegramId, 10)
+
+        if (
+          Number.isNaN(viewerTelegramId) ||
+          Number.isNaN(targetTelegramId) ||
+          viewerTelegramId <= 0 ||
+          targetTelegramId <= 0
+        ) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid telegramId values',
+          })
+        }
+
         // Проверяем, что пользователи - друзья (если профиль приватный)
         const { data: friendship, error: friendshipError } = await supabase
           .from('friendships')
           .select('*')
           .or(
-            `and(requester_telegram_id.eq.${telegramId},addressee_telegram_id.eq.${friendTelegramId}),and(requester_telegram_id.eq.${friendTelegramId},addressee_telegram_id.eq.${telegramId})`
+            `and(requester_telegram_id.eq.${viewerTelegramId},addressee_telegram_id.eq.${targetTelegramId}),and(requester_telegram_id.eq.${targetTelegramId},addressee_telegram_id.eq.${viewerTelegramId})`
           )
           .eq('status', 'accepted')
           .single()
@@ -1148,7 +1163,7 @@ async function protectedHandler(req, res) {
         // Если не друзья, проверим настройки приватности
         if (friendshipError || !friendship) {
           // Получаем данные друга для проверки приватности
-          const friend = await ensureUser(parseInt(friendTelegramId))
+          const friend = await ensureUser(targetTelegramId)
           const privacySettings = friend.privacy_settings || {}
 
           // Если профиль приватный - требуем дружбу
@@ -1166,7 +1181,7 @@ async function protectedHandler(req, res) {
         }
 
         // Получаем данные друга
-        const friend = await ensureUser(parseInt(friendTelegramId))
+        const friend = await ensureUser(targetTelegramId)
 
         // Получаем настройки приватности друга
         // 🔥 ИСПРАВЛЕНИЕ: Нормализуем privacy_settings (может быть строкой или объектом)
@@ -1281,6 +1296,61 @@ async function protectedHandler(req, res) {
               shareGarden: privacySettings.shareGarden,
               shareAchievements: privacySettings.shareAchievements,
             },
+            relationship: await (async () => {
+              const { data: relationRow, error: relationError } = await supabase
+                .from('friendships')
+                .select(
+                  'status, requester_telegram_id, addressee_telegram_id, blocked_by'
+                )
+                .or(
+                  `and(requester_telegram_id.eq.${viewerTelegramId},addressee_telegram_id.eq.${targetTelegramId}),and(requester_telegram_id.eq.${targetTelegramId},addressee_telegram_id.eq.${viewerTelegramId})`
+                )
+                .maybeSingle()
+
+              if (relationError) {
+                console.warn(
+                  'Failed to fetch relationship info:',
+                  relationError
+                )
+              }
+
+              let status = 'none'
+              let canSendRequest = true
+              let pendingDirection = null
+
+              if (relationRow) {
+                const requesterId = relationRow.requester_telegram_id
+                const dbStatus = relationRow.status
+
+                if (dbStatus === 'accepted') {
+                  status = 'friend'
+                  canSendRequest = false
+                } else if (dbStatus === 'pending') {
+                  canSendRequest = false
+                  if (requesterId === viewerTelegramId) {
+                    status = 'pending_outgoing'
+                    pendingDirection = 'outgoing'
+                  } else if (requesterId === targetTelegramId) {
+                    status = 'pending_incoming'
+                    pendingDirection = 'incoming'
+                  } else {
+                    status = 'pending'
+                  }
+                } else if (dbStatus === 'blocked') {
+                  status = 'blocked'
+                  canSendRequest = false
+                } else if (dbStatus === 'declined') {
+                  status = 'none'
+                  canSendRequest = true
+                }
+              }
+
+              return {
+                status,
+                canSendRequest,
+                pendingDirection,
+              }
+            })(),
           },
         })
       }

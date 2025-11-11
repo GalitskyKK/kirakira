@@ -25,6 +25,7 @@ interface CategoryConfig {
   readonly label: string
   readonly description: string
   readonly metricLabel: string
+  readonly metricShortLabel: string
   readonly icon: React.ReactNode
   readonly scoreAccessor: (entry: LeaderboardEntry) => number | undefined
 }
@@ -35,6 +36,7 @@ const CATEGORY_CONFIGS: readonly CategoryConfig[] = [
     label: 'Уровень',
     description: 'Кто быстрее всех прокачивает своего садовника',
     metricLabel: 'Уровень',
+    metricShortLabel: 'Ур.',
     icon: <Crown className="h-4 w-4" />,
     scoreAccessor: entry => entry.stats?.level ?? entry.score,
   },
@@ -43,6 +45,7 @@ const CATEGORY_CONFIGS: readonly CategoryConfig[] = [
     label: 'Стрик',
     description: 'Самые дисциплинированные садовники',
     metricLabel: 'Дней подряд',
+    metricShortLabel: 'Стрик',
     icon: <Flame className="h-4 w-4" />,
     scoreAccessor: entry => entry.stats?.current_streak ?? entry.score,
   },
@@ -51,6 +54,7 @@ const CATEGORY_CONFIGS: readonly CategoryConfig[] = [
     label: 'Растений',
     description: 'Чьи сады самые пышные и редкие',
     metricLabel: 'Растений',
+    metricShortLabel: 'Раст.',
     icon: <Leaf className="h-4 w-4" />,
     scoreAccessor: entry => entry.stats?.total_elements ?? entry.score,
   },
@@ -170,9 +174,8 @@ export function LeaderboardPage() {
       const shareGardenSetting =
         entry.user.privacy_settings?.['shareGarden'] ?? undefined
       const canViewGarden =
-        currentUser != null &&
-        shareGardenSetting !== false &&
-        entry.user.telegram_id !== currentUser.telegramId
+        currentUser != null && entry.user.telegram_id !== currentUser.telegramId
+      const shareGardenAllowed = shareGardenSetting !== false
       const firstNameRaw = entry.user.first_name
       const usernameRaw = entry.user.username
       const hasFirstName =
@@ -197,6 +200,10 @@ export function LeaderboardPage() {
             .isProfileHidden
         )
 
+      const openProfile = () => {
+        handleViewProfile(entry)
+      }
+
       return (
         <motion.div
           key={`${entry.user.telegram_id}-${entry.rank}`}
@@ -209,6 +216,15 @@ export function LeaderboardPage() {
                 ? 'border-amber-300/80 bg-amber-50/70 dark:border-amber-500/40 dark:bg-amber-900/20'
                 : 'border-neutral-200/70 bg-white/70 hover:border-kira-200/70 hover:bg-kira-50/60 dark:border-neutral-700/60 dark:bg-neutral-800/60 dark:hover:border-kira-500/40 dark:hover:bg-neutral-800/80'
           }`}
+          role="button"
+          tabIndex={0}
+          onClick={openProfile}
+          onKeyDown={event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault()
+              openProfile()
+            }
+          }}
         >
           <div className="flex items-center gap-3">
             <div
@@ -244,7 +260,7 @@ export function LeaderboardPage() {
                 {scoreValue ?? '—'}
               </div>
               <div className="text-xs text-neutral-500 dark:text-neutral-400">
-                {categoryConfig.metricLabel}
+                {categoryConfig.metricShortLabel}
               </div>
               {isProfileHidden ? (
                 <div className="mt-1 text-xs text-amber-500 dark:text-amber-300">
@@ -253,25 +269,24 @@ export function LeaderboardPage() {
               ) : null}
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  handleViewProfile(entry)
-                }}
-              >
-                Профиль
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  handleViewGarden(entry)
-                }}
-                disabled={!canViewGarden}
-              >
-                Сад
-              </Button>
+              {shareGardenAllowed ? (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="px-3 py-1 text-xs"
+                  onClick={event => {
+                    event.stopPropagation()
+                    handleViewGarden(entry)
+                  }}
+                  disabled={!canViewGarden}
+                >
+                  Сад
+                </Button>
+              ) : (
+                <span className="rounded-lg bg-neutral-100 px-2 py-1 text-xs text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+                  Сад скрыт
+                </span>
+              )}
             </div>
           </div>
         </motion.div>
@@ -288,17 +303,17 @@ export function LeaderboardPage() {
       transition={{ duration: 0.25 }}
       className="space-y-6 p-4 pb-24"
     >
-      <div className="glass-card rounded-3xl border border-neutral-200/60 bg-white/80 p-6 shadow-xl dark:border-neutral-700/60 dark:bg-neutral-900/70">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-kira-500">
+      <div className="glass-card rounded-3xl border border-neutral-200/60 bg-white/80 p-5 shadow-xl dark:border-neutral-700/60 dark:bg-neutral-900/70">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-kira-500">
               <Trophy className="h-4 w-4" />
               Глобальный рейтинг
             </div>
-            <h1 className="mt-2 text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+            <h1 className="mt-1 text-xl font-bold text-neutral-900 dark:text-neutral-100">
               Таблица лидеров
             </h1>
-            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+            <p className="mt-1 line-clamp-2 text-xs text-neutral-600 dark:text-neutral-400">
               {categoryConfig.description}
             </p>
           </div>
@@ -315,30 +330,30 @@ export function LeaderboardPage() {
           </Button>
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-5 flex flex-wrap gap-2">
           {CATEGORY_CONFIGS.map(config => (
             <button
               key={config.id}
               onClick={() => handleChangeCategory(config.id)}
-              className={`flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium transition-all ${
+              className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-medium transition-all ${
                 config.id === category
-                  ? 'bg-gradient-to-r from-kira-500 to-garden-500 text-white shadow-lg'
+                  ? 'bg-gradient-to-r from-kira-500 to-garden-500 text-white shadow-md'
                   : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
               }`}
               type="button"
             >
               {config.icon}
-              {config.label}
+              <span className="max-w-[78px] truncate">{config.label}</span>
             </button>
           ))}
         </div>
 
-        <div className="mt-4 flex gap-2">
+        <div className="mt-3 flex gap-1.5">
           {PERIOD_OPTIONS.map(option => (
             <button
               key={option.id}
               onClick={() => handleChangePeriod(option.id)}
-              className={`rounded-2xl px-3 py-1 text-xs font-semibold transition ${
+              className={`rounded-xl px-3 py-1 text-[11px] font-semibold transition ${
                 option.id === period
                   ? 'bg-kira-500/90 text-white shadow'
                   : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'

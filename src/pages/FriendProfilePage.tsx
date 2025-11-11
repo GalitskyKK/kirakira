@@ -1,15 +1,20 @@
 import { useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Lock, Eye, Users } from 'lucide-react'
-import { LoadingSpinner, UserAvatar } from '@/components/ui'
+import { ArrowLeft, Lock, Eye, Users, UserPlus, UserCheck, Ban, Check, X } from 'lucide-react'
+import { LoadingSpinner, UserAvatar, Button } from '@/components/ui'
 import { useFriendProfileData } from '@/hooks/useProfile'
 import { GARDENER_LEVELS } from '@/utils/achievements'
 import type {
   DatabaseUser,
   DatabaseUserStats,
   DatabaseAchievement,
+  FriendRelationshipInfo,
 } from '@/types/api'
+import { useTelegramId } from '@/hooks/useTelegramId'
+import { useTelegram } from '@/hooks'
+import { useCallback, useMemo, useState } from 'react'
+import { authenticatedFetch } from '@/utils/apiClient'
 
 interface FriendProfileData {
   readonly user: DatabaseUser
@@ -20,6 +25,7 @@ interface FriendProfileData {
     readonly shareGarden: boolean
     readonly shareAchievements: boolean
   }
+  readonly relationship?: FriendRelationshipInfo | undefined
 }
 
 // Debug component for friend profile
@@ -58,8 +64,12 @@ export default function FriendProfilePage() {
   const friendTelegramIdNum = friendTelegramId
     ? parseInt(friendTelegramId)
     : undefined
-  const { friendProfile, isLoading, error } =
+  const { friendProfile, isLoading, error, loadFriendProfile } =
     useFriendProfileData(friendTelegramIdNum)
+
+  const currentUserTelegramId = useTelegramId()
+  const { hapticFeedback, showAlert } = useTelegram()
+  const [isProcessingFriendAction, setIsProcessingFriendAction] = useState(false)
 
   useEffect(() => {
     if (!friendTelegramId) {
@@ -82,8 +92,207 @@ export default function FriendProfilePage() {
           shareAchievements:
             friendProfile.user.privacy_settings?.['shareAchievements'] ?? true,
         },
+        relationship: friendProfile.relationship,
       }
     : null
+
+  const relationshipStatus = useMemo(() => {
+    if (!profileData?.relationship) {
+      return 'none'
+    }
+    return profileData.relationship.status ?? 'none'
+  }, [profileData])
+
+  const canSendFriendRequest = useMemo(() => {
+    if (!profileData?.relationship) {
+      return true
+    }
+    return profileData.relationship.canSendRequest !== false
+  }, [profileData])
+
+  const handleAddFriend = useCallback(async () => {
+    if (!profileData?.user.telegram_id || !currentUserTelegramId) {
+      showAlert?.('Не удалось отправить запрос: нет данных пользователя')
+      return
+    }
+    if (!canSendFriendRequest) {
+      showAlert?.('Запрос уже отправлен или недоступен')
+      return
+    }
+    try {
+      setIsProcessingFriendAction(true)
+      const response = await authenticatedFetch(
+        '/api/friends?action=send-request',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            requesterTelegramId: currentUserTelegramId,
+            addresseeTelegramId: profileData.user.telegram_id,
+          }),
+        }
+      )
+
+      const result = await response.json()
+      if (response.ok && result?.success) {
+        hapticFeedback('success')
+        showAlert?.(result.data?.message ?? 'Запрос отправлен')
+        if (friendTelegramIdNum) {
+          await loadFriendProfile(friendTelegramIdNum)
+        }
+      } else {
+        showAlert?.(result?.error ?? 'Не удалось отправить запрос')
+        hapticFeedback('error')
+      }
+    } catch (sendError) {
+      console.error('Failed to send friend request:', sendError)
+      showAlert?.('Не удалось отправить запрос')
+      hapticFeedback('error')
+    } finally {
+      setIsProcessingFriendAction(false)
+    }
+  }, [
+    currentUserTelegramId,
+    friendTelegramIdNum,
+    hapticFeedback,
+    loadFriendProfile,
+    profileData?.user.telegram_id,
+    showAlert,
+    canSendFriendRequest,
+  ])
+
+  const handleRespondRequest = useCallback(
+    async (action: 'accept' | 'decline') => {
+      if (!profileData?.user.telegram_id || !currentUserTelegramId) {
+        showAlert?.('Нет данных для обработки запроса')
+        return
+      }
+      try {
+        setIsProcessingFriendAction(true)
+        const response = await authenticatedFetch(
+          '/api/friends?action=respond-request',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              telegramId: currentUserTelegramId,
+              requesterTelegramId: profileData.user.telegram_id,
+              action,
+            }),
+          }
+        )
+
+        const result = await response.json()
+        if (response.ok && result?.success) {
+          hapticFeedback(action === 'accept' ? 'success' : 'warning')
+          showAlert?.(result.data?.message ?? 'Запрос обновлён')
+          if (friendTelegramIdNum) {
+            await loadFriendProfile(friendTelegramIdNum)
+          }
+        } else {
+          showAlert?.(result?.error ?? 'Не удалось обработать запрос')
+          hapticFeedback('error')
+        }
+      } catch (respondError) {
+        console.error('Failed to respond to friend request:', respondError)
+        showAlert?.('Ошибка при обработке запроса')
+        hapticFeedback('error')
+      } finally {
+        setIsProcessingFriendAction(false)
+      }
+    },
+    [
+      currentUserTelegramId,
+      friendTelegramIdNum,
+      hapticFeedback,
+      loadFriendProfile,
+      profileData?.user.telegram_id,
+      showAlert,
+    ]
+  )
+
+  const renderFriendshipAction = () => {
+    if (!profileData || !currentUserTelegramId) {
+      return null
+    }
+    if (
+      profileData.user.telegram_id === currentUserTelegramId ||
+      relationshipStatus === 'blocked'
+    ) {
+      return null
+    }
+
+    if (relationshipStatus === 'friend') {
+      return (
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-600 dark:border-emerald-500/40 dark:bg-emerald-900/20 dark:text-emerald-300">
+          <UserCheck className="h-3.5 w-3.5" />
+          В друзьях
+        </div>
+      )
+    }
+
+    if (relationshipStatus === 'pending_outgoing') {
+      return (
+        <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-600 dark:border-amber-500/40 dark:bg-amber-900/20 dark:text-amber-300">
+          <Ban className="h-3.5 w-3.5" />
+          Запрос отправлен
+        </div>
+      )
+    }
+
+    if (relationshipStatus === 'pending_incoming') {
+      return (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="primary"
+            size="sm"
+            className="flex items-center gap-2 px-3 py-1 text-xs"
+            onClick={() => {
+              void handleRespondRequest('accept')
+            }}
+            isLoading={isProcessingFriendAction}
+          >
+            <Check className="h-4 w-4" />
+            Принять
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2 px-3 py-1 text-xs"
+            onClick={() => {
+              void handleRespondRequest('decline')
+            }}
+            isLoading={isProcessingFriendAction}
+          >
+            <X className="h-4 w-4" />
+            Отклонить
+          </Button>
+        </div>
+      )
+    }
+
+    if (!canSendFriendRequest) {
+      return (
+        <div className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-500 dark:border-neutral-700/60 dark:bg-neutral-800/60 dark:text-neutral-300">
+          <Ban className="h-3.5 w-3.5" />
+          Запрос недоступен
+        </div>
+      )
+    }
+
+    return (
+      <Button
+        variant="primary"
+        size="sm"
+        className="flex items-center gap-2 px-3 py-1 text-xs"
+        onClick={handleAddFriend}
+        isLoading={isProcessingFriendAction}
+      >
+        <UserPlus className="h-4 w-4" />
+        Добавить в друзья
+      </Button>
+    )
+  }
 
   useEffect(() => {
     if (profileData) {
@@ -185,7 +394,9 @@ export default function FriendProfilePage() {
           <h1 className="font-semibold text-gray-900 dark:text-gray-100">
             Профиль друга
           </h1>
-          <div className="w-16" /> {/* Spacer */}
+          <div className="flex items-center gap-2">
+            {renderFriendshipAction()}
+          </div>
         </div>
       </div>
 

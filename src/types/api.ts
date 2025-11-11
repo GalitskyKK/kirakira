@@ -152,6 +152,21 @@ export interface ProfileData {
   readonly stats: DatabaseUserStats
   readonly achievements: readonly DatabaseAchievement[]
   readonly newlyUnlocked?: readonly DatabaseAchievement[]
+  readonly relationship?: FriendRelationshipInfo | undefined
+}
+
+export type FriendRelationshipStatus =
+  | 'none'
+  | 'pending'
+  | 'pending_incoming'
+  | 'pending_outgoing'
+  | 'friend'
+  | 'blocked'
+
+export interface FriendRelationshipInfo {
+  readonly status: FriendRelationshipStatus
+  readonly canSendRequest: boolean
+  readonly pendingDirection?: 'incoming' | 'outgoing' | null
 }
 
 // Дополнительные типы для garden_elements
