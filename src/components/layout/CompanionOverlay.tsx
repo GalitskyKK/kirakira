@@ -134,24 +134,27 @@ export function CompanionOverlay() {
   }
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={`companion-container-${position.side}`}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.15 }}
-      >
-        <div
-          className="pointer-events-none fixed z-[1500]"
-          style={containerStyle}
+    <>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`companion-container-${position.side}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
         >
-          <GardenCompanion className="pointer-events-auto" />
+          <div
+            className="pointer-events-none fixed z-[1500]"
+            style={containerStyle}
+          >
+            <GardenCompanion className="pointer-events-auto" />
+          </div>
+        </motion.div>
+      </AnimatePresence>
 
-          <CompanionInfoPanel />
-        </div>
-      </motion.div>
-    </AnimatePresence>
+      {/* Рендерим модалку отдельно на верхнем уровне */}
+      <CompanionInfoPanel />
+    </>
   )
 }
 

@@ -238,23 +238,21 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   )
   const activeReaction = useCompanionStore(state => state.activeReaction)
   const lastMood = useCompanionStore(state => state.lastMood)
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return
+
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
   const position: { yPosition: number; side: CompanionSide } =
     useCompanionStore(state => state.position)
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   const isDragging = Boolean(useCompanionStore(state => state.isDragging))
 
   // Явно типизируем функции из store
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   const toggleInfo: () => void = useCompanionStore(state => state.toggleInfo)
   const isInfoOpen = useCompanionStore(state => state.isInfoOpen)
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return
   const setPosition: (yPosition: number, side: CompanionSide) => void =
     useCompanionStore(state => state.setPosition)
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return
   const setIsDragging: (isDragging: boolean) => void = useCompanionStore(
     state => state.setIsDragging
   )
+  /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
   const visual = useCompanionVisual()
 
   const reduceMotion = useReducedMotion()
@@ -517,17 +515,20 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   ) => {
     setIsDragging(false)
 
-    // Проверяем был ли это клик или drag по смещению
-    // info.offset - это смещение от начальной позиции
+    // Проверяем было ли перемещение
     const dragDistance = Math.sqrt(
       info.offset.x * info.offset.x + info.offset.y * info.offset.y
     )
 
-    // Если смещение меньше 5px - считаем это кликом
+    console.log('🎯 Drag end - distance:', dragDistance, 'offset:', info.offset)
+
+    // Если смещение меньше 5px - это был просто клик, не обрабатываем
     if (dragDistance < 5) {
-      toggleInfo()
+      console.log('👆 Short drag - ignoring (will be handled by onTap)')
       return
     }
+
+    console.log('🔄 Drag detected! Moving companion')
 
     // Получаем размеры viewport
     const viewportWidth = window.innerWidth
@@ -603,6 +604,10 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           dragSnapToOrigin
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
+          onTap={() => {
+            console.log('👆 Tap detected!')
+            toggleInfo()
+          }}
           onKeyDown={event => {
             if (event.key === 'Enter' || event.key === ' ') {
               event.preventDefault()

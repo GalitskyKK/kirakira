@@ -15,6 +15,8 @@ export function CompanionInfoPanel() {
   const definition = getCompanionDefinition(activeCompanionId)
   const emotionVisual = definition.emotions[currentEmotion]
 
+  console.log('📋 CompanionInfoPanel render - isInfoOpen:', isInfoOpen)
+
   return (
     <AnimatePresence>
       {isInfoOpen && (
