@@ -9,11 +9,15 @@ import {
 } from '@/stores/companionStore'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useUserSync } from '@/hooks/index.v2'
+import type { CompanionPosition } from '@/types'
 
 export function CompanionOverlay() {
   const { isVisible } = useCompanionVisibility()
   const { isInfoOpen, setInfoOpen } = useCompanionInfoPanel()
-  const position = useCompanionStore(state => state.position)
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  const position = useCompanionStore(
+    state => state.position
+  ) as CompanionPosition
 
   const telegramId = useTelegramId()
   const isTelegramIdAvailable = telegramId !== undefined && telegramId !== null
@@ -22,11 +26,28 @@ export function CompanionOverlay() {
   const isUnlocked = userLevel >= 3
   const levelsRemaining = Math.max(3 - userLevel, 0)
 
+  // Отслеживаем размер экрана для определения mobile/desktop
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 640
+    }
+    return true
+  })
+
   useEffect(() => {
     if ((!isUnlocked || !isVisible) && isInfoOpen) {
       setInfoOpen(false)
     }
   }, [isUnlocked, isVisible, isInfoOpen, setInfoOpen])
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Определяем позицию для locked preview (используем дефолтную позицию)
   const lockedPositionStyle = {
@@ -34,14 +55,21 @@ export function CompanionOverlay() {
   }
 
   // Определяем динамическую позицию для компаньона
-  const companionPositionStyle = {
-    bottom: `calc(${position.yPosition}px + env(safe-area-inset-bottom, 0px))`,
-    [position.side]: '24px', // 24px = 1.5rem = ~6 в Tailwind (right-6 или left-6)
-  }
-
-  // Для мобильных устройств (sm: breakpoint) используем топ позицию
-  // Это делается через медиа-запрос в классах
-  const sideClass = position.side === 'right' ? 'sm:right-8' : 'sm:left-8'
+  // ВАЖНО: при смене стороны нужно явно сбрасывать противоположную сторону
+  const companionPositionStyle: React.CSSProperties = isMobile
+    ? {
+        // Для мобильных - позиционируем снизу
+        bottom: `calc(${position.yPosition}px + env(safe-area-inset-bottom, 0px))`,
+        [position.side]: '24px', // 24px = 1.5rem (right-6 или left-6)
+        [position.side === 'right' ? 'left' : 'right']: 'auto', // Сбрасываем противоположную
+      }
+    : {
+        // Для десктопа - позиционируем сверху
+        top: '24px',
+        bottom: 'auto',
+        [position.side]: '32px', // 32px = 2rem (right-8 или left-8)
+        [position.side === 'right' ? 'left' : 'right']: 'auto',
+      }
 
   if (!isUnlocked) {
     return (
@@ -60,7 +88,7 @@ export function CompanionOverlay() {
 
   return (
     <div
-      className={`pointer-events-none fixed z-[1500] sm:bottom-auto sm:top-6 ${sideClass}`}
+      className="pointer-events-none fixed z-[1500] transition-all duration-300 ease-out"
       style={companionPositionStyle}
     >
       <GardenCompanion className="pointer-events-auto" />
