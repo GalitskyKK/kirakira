@@ -486,7 +486,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   ])
 
   const containerRef = useRef<HTMLDivElement>(null)
-  const isActuallyDragging = useRef(false)
+  const wasDragged = useRef(false)
 
   useEffect(() => {
     if (!isDragging && containerRef.current) {
@@ -501,18 +501,19 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   }, [isDragging])
 
   const handleDragStart = () => {
+    wasDragged.current = false
     setIsDragging(true)
   }
 
   const handleDrag = () => {
-    isActuallyDragging.current = true
+    wasDragged.current = true
   }
 
   const handleDragEnd = (
     _event: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
   ) => {
-    if (isActuallyDragging.current) {
+    if (wasDragged.current) {
       const viewportWidth = window.innerWidth
       const viewportHeight = window.innerHeight
       const { x, y } = info.point
@@ -534,11 +535,10 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     }
 
     setIsDragging(false)
-    isActuallyDragging.current = false
   }
 
   const handleTap = () => {
-    if (!isActuallyDragging.current) {
+    if (!wasDragged.current) {
       toggleInfo()
     }
   }
