@@ -491,6 +491,8 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   // Отслеживаем начало drag для различения клика и перетаскивания
   const dragStartTimeRef = useRef<number>(0)
   const dragStartPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
+  // Флаг для блокировки onTap после реального drag
+  const shouldBlockTapRef = useRef<boolean>(false)
 
   // Сбрасываем transform после окончания drag
   useEffect(() => {
@@ -512,6 +514,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     info: PanInfo
   ) => {
     setIsDragging(true)
+    shouldBlockTapRef.current = false
     dragStartTimeRef.current = Date.now()
     dragStartPosRef.current = { x: info.point.x, y: info.point.y }
   }
@@ -536,18 +539,25 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
       startPoint: dragStartPosRef.current,
     })
 
-    // КЛИК: Если время < 300ms И расстояние < 10px - это клик
-    if (dragDuration < 300 && dragDistance < 10) {
-      console.log('✅ Click detected!')
-      setIsDragging(false)
-      toggleInfo()
-      return
+    // Если это было реальное перетаскивание - блокируем onTap
+    if (dragDistance >= 10) {
+      console.log('🔄 Real drag detected - blocking tap, moving companion')
+      shouldBlockTapRef.current = true
+      // Сбрасываем флаг через небольшую задержку
+      setTimeout(() => {
+        shouldBlockTapRef.current = false
+      }, 50)
+    } else {
+      console.log('👆 Small movement - allowing tap')
+      shouldBlockTapRef.current = false
     }
 
-    console.log('🔄 Drag detected - moving companion')
-
-    // Было реальное перетаскивание - перемещаем компаньона
     setIsDragging(false)
+
+    // Если движение было меньше 10px - не перемещаем компаньона, пусть onTap обработает
+    if (dragDistance < 10) {
+      return
+    }
 
     // Получаем размеры viewport
     const viewportWidth = window.innerWidth
@@ -623,6 +633,16 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           dragSnapToOrigin
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
+          onTap={() => {
+            console.log('👆 Tap event! shouldBlock:', shouldBlockTapRef.current)
+            // Если был реальный drag - не открываем модалку
+            if (shouldBlockTapRef.current) {
+              console.log('❌ Tap blocked - was dragging')
+              return
+            }
+            console.log('✅ Opening info panel')
+            toggleInfo()
+          }}
           onKeyDown={event => {
             if (event.key === 'Enter' || event.key === ' ') {
               event.preventDefault()
