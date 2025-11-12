@@ -3,6 +3,8 @@
  * Включает: add-element, history, update-position
  */
 
+import { createAdminSupabaseClient } from './_jwt.js'
+
 // 🔒 Функция для инициализации Supabase с JWT (RLS-защищенный)
 async function getSupabaseClient(jwt = null) {
   if (!process.env.SUPABASE_URL) {

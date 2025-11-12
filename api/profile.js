@@ -10,6 +10,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
+import { createAdminSupabaseClient } from './_jwt.js'
 
 // Инициализация Supabase
 const supabaseUrl = process.env.SUPABASE_URL
