@@ -18,6 +18,8 @@ export function CompanionOverlay() {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     state => state.position
   ) as CompanionPosition
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  const isDragging = Boolean(useCompanionStore(state => state.isDragging))
 
   const telegramId = useTelegramId()
   const isTelegramIdAvailable = telegramId !== undefined && telegramId !== null
@@ -76,12 +78,14 @@ export function CompanionOverlay() {
 
   // Debug логирование (можно удалить позже)
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/restrict-template-expressions
     console.log('🎨 Companion overlay style:', {
       position,
       isMobile,
+      isDragging,
       style: companionPositionStyle,
     })
-  }, [position, isMobile, companionPositionStyle])
+  }, [position, isMobile, isDragging, companionPositionStyle])
 
   if (!isUnlocked) {
     return (
@@ -101,7 +105,13 @@ export function CompanionOverlay() {
   return (
     <div
       className="pointer-events-none fixed z-[1500]"
-      style={companionPositionStyle}
+      style={{
+        ...companionPositionStyle,
+        // Добавляем transition только когда НЕ идет drag
+        transition: isDragging
+          ? 'none'
+          : 'left 0.25s ease-out, right 0.25s ease-out, top 0.25s ease-out, bottom 0.25s ease-out',
+      }}
     >
       <GardenCompanion className="pointer-events-auto" />
 

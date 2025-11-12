@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useEffect } from 'react'
 import { AnimatePresence, motion, useReducedMotion, PanInfo } from 'framer-motion'
 import { clsx } from 'clsx'
 import { useCompanionStore } from '@/stores/companionStore'
@@ -550,14 +550,28 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     }
   }
 
-  // Используем округленное значение для ключа чтобы избежать частых пересозданий
-  const companionKey = `garden-companion-${position.side}-${Math.round(position.yPosition / 10) * 10}`
+  // Используем ref для прямого управления transform
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Сбрасываем transform после окончания drag
+  useEffect(() => {
+    if (!isDragging && containerRef.current) {
+      // Сбрасываем transform через небольшую задержку
+      const timer = setTimeout(() => {
+        if (containerRef.current) {
+          containerRef.current.style.transform = 'none'
+        }
+      }, 50)
+      return () => clearTimeout(timer)
+    }
+  }, [isDragging])
 
   return (
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          key={companionKey}
+          ref={containerRef}
+          key="garden-companion"
           data-companion-container
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -577,6 +591,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           drag
           dragMomentum={false}
           dragElastic={0.05}
+          dragSnapToOrigin
           onDragStart={handleDragStart}
           onDrag={handleDrag}
           onDragEnd={handleDragEnd}
