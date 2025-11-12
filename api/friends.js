@@ -911,14 +911,22 @@ async function handleRemoveFriend(req, res) {
       })
     }
 
-    // Удаляем дружбу
-    const { error: deleteError } = await supabase
+    // Преобразуем дружбу в "подписку":
+    // - Тот, кого удалили, становится requester (подписчик)
+    // - Тот, кто удалил, становится addressee (может принять обратно)
+    // - Статус меняется на pending
+    const { error: updateError } = await supabase
       .from('friendships')
-      .delete()
+      .update({
+        requester_telegram_id: friendTelegramId, // Удаленный становится подписчиком
+        addressee_telegram_id: telegramId, // Тот кто удалил
+        status: 'pending',
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', friendship.id)
 
-    if (deleteError) {
-      console.error('Delete friendship error:', deleteError)
+    if (updateError) {
+      console.error('Convert friendship to subscription error:', updateError)
       return res.status(500).json({
         success: false,
         error: 'Ошибка при удалении из друзей',
@@ -928,11 +936,79 @@ async function handleRemoveFriend(req, res) {
     res.status(200).json({
       success: true,
       data: {
-        message: 'Пользователь удалён из друзей',
+        message:
+          'Пользователь удалён из друзей. У него осталась заявка на добавление.',
       },
     })
   } catch (error) {
     console.error('Remove friend error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    })
+  }
+}
+
+// ===============================================
+// 🚫 ACTION: CANCEL-REQUEST - Отмена исходящего запроса
+// ===============================================
+async function handleCancelRequest(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  try {
+    const { telegramId, addresseeTelegramId } = req.body
+
+    // Валидация входных данных
+    if (!telegramId || !addresseeTelegramId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameters: telegramId, addresseeTelegramId',
+      })
+    }
+
+    // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+
+    // Находим исходящий запрос
+    const { data: request, error: findError } = await supabase
+      .from('friendships')
+      .select('*')
+      .eq('requester_telegram_id', telegramId)
+      .eq('addressee_telegram_id', addresseeTelegramId)
+      .eq('status', 'pending')
+      .single()
+
+    if (findError || !request) {
+      return res.status(404).json({
+        success: false,
+        error: 'Исходящий запрос не найден',
+      })
+    }
+
+    // Удаляем запрос
+    const { error: deleteError } = await supabase
+      .from('friendships')
+      .delete()
+      .eq('id', request.id)
+
+    if (deleteError) {
+      console.error('Cancel request error:', deleteError)
+      return res.status(500).json({
+        success: false,
+        error: 'Ошибка при отмене запроса',
+      })
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        message: 'Запрос отменён',
+      },
+    })
+  } catch (error) {
+    console.error('Cancel request error:', error)
     res.status(500).json({
       success: false,
       error: 'Internal server error',
@@ -1138,6 +1214,8 @@ async function protectedHandler(req, res) {
         return await handleSendRequest(req, res)
       case 'respond-request':
         return await handleRespondRequest(req, res)
+      case 'cancel-request':
+        return await handleCancelRequest(req, res)
       case 'remove-friend':
         return await handleRemoveFriend(req, res)
       case 'update-photos':
@@ -1145,7 +1223,7 @@ async function protectedHandler(req, res) {
       default:
         return res.status(400).json({
           success: false,
-          error: `Unknown action: ${action}. Available actions: list, search, send-request, respond-request, remove-friend, update-photos`,
+          error: `Unknown action: ${action}. Available actions: list, search, send-request, respond-request, cancel-request, remove-friend, update-photos`,
         })
     }
   } catch (error) {

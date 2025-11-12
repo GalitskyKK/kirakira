@@ -165,6 +165,58 @@ export default function FriendProfilePage() {
     canSendFriendRequest,
   ])
 
+  const handleCancelRequest = useCallback(async () => {
+    if (!profileData?.user.telegram_id || !currentUserTelegramId) {
+      showAlert?.('Не удалось отменить запрос')
+      return
+    }
+
+    try {
+      setIsProcessingFriendAction(true)
+      const response = await authenticatedFetch(
+        '/api/friends?action=cancel-request',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            telegramId: currentUserTelegramId,
+            addresseeTelegramId: profileData.user.telegram_id,
+          }),
+        }
+      )
+
+      const result = (await response.json()) as {
+        success?: boolean
+        data?: { message?: string }
+        error?: string
+      }
+
+      if (response.ok && result?.success) {
+        hapticFeedback('success')
+        showAlert?.(result.data?.message ?? 'Запрос отменён')
+        if (friendTelegramIdNum) {
+          await loadFriendProfile(friendTelegramIdNum)
+        }
+      } else {
+        showAlert?.(result?.error ?? 'Не удалось отменить запрос')
+        hapticFeedback('error')
+      }
+    } catch (error) {
+      console.error('Failed to cancel friend request:', error)
+      showAlert?.('Не удалось отменить запрос')
+      hapticFeedback('error')
+    } finally {
+      setIsProcessingFriendAction(false)
+    }
+  }, [
+    currentUserTelegramId,
+    friendTelegramIdNum,
+    hapticFeedback,
+    loadFriendProfile,
+    profileData?.user.telegram_id,
+    showAlert,
+  ])
+
   const handleRemoveFriend = useCallback(async () => {
     if (!profileData?.user.telegram_id || !currentUserTelegramId) {
       showAlert?.('Не удалось удалить из друзей')
@@ -338,10 +390,18 @@ export default function FriendProfilePage() {
 
     if (relationshipStatus === 'pending_outgoing') {
       return (
-        <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-600 dark:border-amber-500/40 dark:bg-amber-900/20 dark:text-amber-300">
-          <Ban className="h-3.5 w-3.5" />
-          Запрос отправлен
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2 border-amber-300 px-3 py-1 text-xs text-amber-600 hover:border-red-400 hover:bg-red-50 hover:text-red-600 dark:border-amber-500/40 dark:text-amber-300 dark:hover:border-red-500/40 dark:hover:bg-red-900/20 dark:hover:text-red-300"
+          onClick={() => {
+            void handleCancelRequest()
+          }}
+          isLoading={isProcessingFriendAction}
+        >
+          <X className="h-3.5 w-3.5" />
+          Отменить запрос
+        </Button>
       )
     }
 

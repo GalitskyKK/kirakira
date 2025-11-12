@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { Trophy, RefreshCw, Crown, Flame, Leaf, ArrowLeft } from 'lucide-react'
+import { Trophy, RefreshCw, Crown, Flame, Leaf } from 'lucide-react'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useUserSync } from '@/hooks/index.v2'
 import { useLeaderboard } from '@/hooks/queries/useLeaderboardQueries'
@@ -13,6 +13,7 @@ import {
   ModalBody,
 } from '@/components/ui'
 import { FriendGardenView } from '@/components/garden/FriendGardenView'
+import { PageHeader } from '@/components/layout'
 import type {
   LeaderboardCategory,
   LeaderboardEntry,
@@ -296,23 +297,11 @@ export function LeaderboardPage() {
   )
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -16 }}
-      transition={{ duration: 0.25 }}
-      className="space-y-6 p-4 pb-24"
-    >
-      <div className="glass-card rounded-3xl border border-neutral-200/60 bg-white/80 p-5 shadow-xl dark:border-neutral-700/60 dark:bg-neutral-900/70">
-        <div className="flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 shadow-sm transition hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:border-neutral-600"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Назад
-          </button>
+    <div className="min-h-screen bg-gradient-to-br from-kira-50 via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
+      <PageHeader
+        title="Глобальный рейтинг"
+        icon={<Trophy className="h-5 w-5" />}
+        actions={
           <Button
             variant="outline"
             size="sm"
@@ -320,26 +309,23 @@ export function LeaderboardPage() {
               void refetch()
             }}
             isLoading={isFetching && !isLoading}
-            leftIcon={<RefreshCw className="h-4 w-4" />}
+            className="p-2"
+            aria-label="Обновить"
           >
-            Обновить
+            <RefreshCw className="h-4 w-4" />
           </Button>
-        </div>
+        }
+      />
 
-        <div className="mt-4 min-w-0">
-          <div className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-kira-500">
-            <Trophy className="h-4 w-4" />
-            Глобальный рейтинг
-          </div>
-          <h1 className="mt-1 text-xl font-bold text-neutral-900 dark:text-neutral-100">
-            Таблица лидеров
-          </h1>
-          <p className="mt-1 line-clamp-2 text-xs text-neutral-600 dark:text-neutral-400">
-            {categoryConfig.description}
-          </p>
-        </div>
-
-        <div className="mt-5 flex flex-wrap gap-2">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -16 }}
+        transition={{ duration: 0.25 }}
+        className="space-y-6 p-4 pb-24"
+      >
+        <div className="glass-card rounded-3xl border border-neutral-200/60 bg-white/80 p-4 shadow-xl dark:border-neutral-700/60 dark:bg-neutral-900/70">
+          <div className="flex flex-wrap gap-2">
           {CATEGORY_CONFIGS.map(config => (
             <button
               key={config.id}
@@ -373,9 +359,9 @@ export function LeaderboardPage() {
             </button>
           ))}
         </div>
-      </div>
+        </div>
 
-      <div className="space-y-4">
+        <div className="space-y-4">
         {isLoading ? (
           <div className="flex min-h-[240px] items-center justify-center rounded-3xl border border-neutral-200/60 bg-white/70 dark:border-neutral-700/60 dark:bg-neutral-900/60">
             <LoadingSpinner size="lg" />
@@ -429,41 +415,42 @@ export function LeaderboardPage() {
             )}
           </div>
         )}
-      </div>
-
-      {leaderboardData?.timestamp != null ? (
-        <div className="text-center text-xs text-neutral-500 dark:text-neutral-400">
-          Обновлено:{' '}
-          {new Date(leaderboardData.timestamp).toLocaleString('ru-RU', {
-            day: 'numeric',
-            month: 'long',
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
         </div>
-      ) : null}
 
-      <Modal
-        isOpen={isGardenModalOpen}
-        onClose={closeGardenModal}
-        size="xl"
-        title="Сад садовника"
-      >
-        <ModalBody className="bg-gradient-to-br from-kira-50 to-garden-50 dark:from-neutral-900 dark:to-neutral-800">
-          {gardenFriendId != null && currentUser != null ? (
-            <FriendGardenView
-              friendTelegramId={gardenFriendId}
-              currentUser={currentUser}
-              onBack={closeGardenModal}
-            />
-          ) : (
-            <div className="p-6 text-center text-sm text-neutral-600 dark:text-neutral-300">
-              Чтобы посмотреть чужой сад, авторизуйся в системе.
-            </div>
-          )}
-        </ModalBody>
-      </Modal>
-    </motion.div>
+        {leaderboardData?.timestamp != null ? (
+          <div className="text-center text-xs text-neutral-500 dark:text-neutral-400">
+            Обновлено:{' '}
+            {new Date(leaderboardData.timestamp).toLocaleString('ru-RU', {
+              day: 'numeric',
+              month: 'long',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </div>
+        ) : null}
+
+        <Modal
+          isOpen={isGardenModalOpen}
+          onClose={closeGardenModal}
+          size="xl"
+          title="Сад садовника"
+        >
+          <ModalBody className="bg-gradient-to-br from-kira-50 to-garden-50 dark:from-neutral-900 dark:to-neutral-800">
+            {gardenFriendId != null && currentUser != null ? (
+              <FriendGardenView
+                friendTelegramId={gardenFriendId}
+                currentUser={currentUser}
+                onBack={closeGardenModal}
+              />
+            ) : (
+              <div className="p-6 text-center text-sm text-neutral-600 dark:text-neutral-300">
+                Чтобы посмотреть чужой сад, авторизуйся в системе.
+              </div>
+            )}
+          </ModalBody>
+        </Modal>
+      </motion.div>
+    </div>
   )
 }
 
