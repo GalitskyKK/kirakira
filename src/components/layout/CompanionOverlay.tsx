@@ -21,6 +21,10 @@ export function CompanionOverlay() {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   const isDragging = Boolean(useCompanionStore(state => state.isDragging))
 
+  // Отслеживаем предыдущую сторону для определения смены
+  const prevSideRef = useRef(position.side)
+  const [isChangingSide, setIsChangingSide] = useState(false)
+
   const telegramId = useTelegramId()
   const isTelegramIdAvailable = telegramId !== undefined && telegramId !== null
   const { data: userData } = useUserSync(telegramId, isTelegramIdAvailable)
@@ -50,6 +54,22 @@ export function CompanionOverlay() {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  // Отслеживаем смену стороны
+  useEffect(() => {
+    if (prevSideRef.current !== position.side) {
+      setIsChangingSide(true)
+      prevSideRef.current = position.side
+
+      // Сбрасываем флаг после короткой анимации
+      const timer = setTimeout(() => {
+        setIsChangingSide(false)
+      }, 100)
+
+      return () => clearTimeout(timer)
+    }
+    return undefined
+  }, [position.side])
 
   // Определяем позицию для locked preview (используем дефолтную позицию)
   const lockedPositionStyle = {
@@ -83,9 +103,10 @@ export function CompanionOverlay() {
       position,
       isMobile,
       isDragging,
+      isChangingSide,
       style: companionPositionStyle,
     })
-  }, [position, isMobile, isDragging, companionPositionStyle])
+  }, [position, isMobile, isDragging, isChangingSide, companionPositionStyle])
 
   if (!isUnlocked) {
     return (
@@ -102,21 +123,35 @@ export function CompanionOverlay() {
     return null
   }
 
-  return (
-    <div
-      className="pointer-events-none fixed z-[1500]"
-      style={{
-        ...companionPositionStyle,
-        // Добавляем transition только когда НЕ идет drag
-        transition: isDragging
-          ? 'none'
-          : 'left 0.25s ease-out, right 0.25s ease-out, top 0.25s ease-out, bottom 0.25s ease-out',
-      }}
-    >
-      <GardenCompanion className="pointer-events-auto" />
+  // Стили с CSS transition
+  const containerStyle: React.CSSProperties = {
+    ...companionPositionStyle,
+    // Transition только для bottom (Y позиция), НЕ для left/right
+    transition:
+      isDragging || isChangingSide
+        ? 'none'
+        : 'bottom 0.25s ease-out, top 0.25s ease-out',
+  }
 
-      <CompanionInfoPanel />
-    </div>
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={`companion-container-${position.side}`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15 }}
+      >
+        <div
+          className="pointer-events-none fixed z-[1500]"
+          style={containerStyle}
+        >
+          <GardenCompanion className="pointer-events-auto" />
+
+          <CompanionInfoPanel />
+        </div>
+      </motion.div>
+    </AnimatePresence>
   )
 }
 
