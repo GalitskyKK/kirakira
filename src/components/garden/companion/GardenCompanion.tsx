@@ -488,6 +488,9 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
 
   // Используем ref для прямого управления transform
   const containerRef = useRef<HTMLDivElement>(null)
+  // Отслеживаем начало drag для различения клика и перетаскивания
+  const dragStartTimeRef = useRef<number>(0)
+  const dragStartPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
 
   // Сбрасываем transform после окончания drag
   useEffect(() => {
@@ -504,8 +507,13 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   }, [isDragging])
 
   // Обработчик начала drag
-  const handleDragStart = () => {
+  const handleDragStart = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
     setIsDragging(true)
+    dragStartTimeRef.current = Date.now()
+    dragStartPosRef.current = { x: info.point.x, y: info.point.y }
   }
 
   // Обработчик окончания drag
@@ -513,17 +521,30 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     _event: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
   ) => {
-    // Проверяем было ли перемещение
-    const dragDistance = Math.sqrt(
-      info.offset.x * info.offset.x + info.offset.y * info.offset.y
-    )
+    const dragDuration = Date.now() - dragStartTimeRef.current
 
-    // Если смещение меньше 5px - это был клик, открываем модалку
-    if (dragDistance < 5) {
+    // Вычисляем реальное расстояние перемещения
+    const dx = info.point.x - dragStartPosRef.current.x
+    const dy = info.point.y - dragStartPosRef.current.y
+    const dragDistance = Math.sqrt(dx * dx + dy * dy)
+
+    console.log('🎯 Drag end:', {
+      duration: dragDuration,
+      distance: dragDistance,
+      offset: info.offset,
+      point: info.point,
+      startPoint: dragStartPosRef.current,
+    })
+
+    // КЛИК: Если время < 300ms И расстояние < 10px - это клик
+    if (dragDuration < 300 && dragDistance < 10) {
+      console.log('✅ Click detected!')
       setIsDragging(false)
       toggleInfo()
       return
     }
+
+    console.log('🔄 Drag detected - moving companion')
 
     // Было реальное перетаскивание - перемещаем компаньона
     setIsDragging(false)
