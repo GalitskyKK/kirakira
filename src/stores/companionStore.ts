@@ -5,11 +5,24 @@ import type {
   CompanionEmotion,
   CompanionId,
   CompanionReactionType,
+  CompanionPosition,
+  CompanionSide,
   MoodType,
 } from '@/types'
-import { loadCompanionSelection, saveCompanionSelection } from '@/utils/storage'
+import {
+  loadCompanionSelection,
+  saveCompanionSelection,
+  loadCompanionPosition,
+  saveCompanionPosition,
+} from '@/utils/storage'
 
 type CompanionBaseEmotion = Exclude<CompanionEmotion, 'celebration'>
+
+// Дефолтная позиция компаньона - правый нижний угол
+const DEFAULT_POSITION: CompanionPosition = {
+  yPosition: 96, // 96px от нижнего края (как было в оригинале)
+  side: 'right',
+}
 
 interface CompanionState {
   readonly activeCompanionId: CompanionId
@@ -22,6 +35,8 @@ interface CompanionState {
   readonly isInfoOpen: boolean
   readonly activeAmbientAnimation: CompanionAmbientAnimation | null
   readonly activeReaction: CompanionReactionType | null
+  readonly position: CompanionPosition
+  readonly isDragging: boolean
 
   setActiveCompanion: (id: CompanionId) => void
   setVisible: (visible: boolean) => void
@@ -35,6 +50,8 @@ interface CompanionState {
   clearAmbientAnimation: () => void
   triggerReaction: (reaction: CompanionReactionType) => void
   clearReaction: () => void
+  setPosition: (yPosition: number, side: CompanionSide) => void
+  setIsDragging: (isDragging: boolean) => void
 }
 
 function persistSelectionState(
@@ -45,6 +62,7 @@ function persistSelectionState(
 }
 
 const persistedSelection = loadCompanionSelection()
+const persistedPosition = loadCompanionPosition()
 
 export const useCompanionStore = create<CompanionState>()(
   subscribeWithSelector(set => ({
@@ -58,6 +76,8 @@ export const useCompanionStore = create<CompanionState>()(
     isInfoOpen: false,
     activeAmbientAnimation: null,
     activeReaction: null,
+    position: persistedPosition ?? DEFAULT_POSITION,
+    isDragging: false,
 
     setActiveCompanion: (id: CompanionId) => {
       set(state => {
@@ -152,6 +172,20 @@ export const useCompanionStore = create<CompanionState>()(
     clearReaction: () => {
       set({
         activeReaction: null,
+      })
+    },
+
+    setPosition: (yPosition: number, side: CompanionSide) => {
+      const newPosition: CompanionPosition = { yPosition, side }
+      saveCompanionPosition(newPosition)
+      set({
+        position: newPosition,
+      })
+    },
+
+    setIsDragging: (isDragging: boolean) => {
+      set({
+        isDragging,
       })
     },
   }))

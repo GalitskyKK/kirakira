@@ -82,3 +82,10 @@ export interface CompanionSelection {
   readonly activeCompanionId: CompanionId
   readonly isVisible: boolean
 }
+
+export type CompanionSide = 'left' | 'right'
+
+export interface CompanionPosition {
+  readonly yPosition: number // Y-координата в пикселях от нижней границы
+  readonly side: CompanionSide // Сторона экрана
+}

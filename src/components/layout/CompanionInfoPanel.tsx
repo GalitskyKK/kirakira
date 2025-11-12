@@ -15,15 +15,28 @@ export function CompanionInfoPanel() {
   return (
     <AnimatePresence>
       {isInfoOpen && (
-        <motion.div
-          key="companion-info"
-          initial={{ opacity: 0, y: 12, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 12, scale: 0.96 }}
-          transition={{ duration: 0.22, ease: 'easeOut' }}
-          className="pointer-events-auto fixed right-2 top-auto z-[1600] w-[260px] max-w-[80vw] rounded-2xl border border-white/20 bg-white/90 p-4 shadow-lg backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85 sm:right-6 sm:top-28"
-          style={{ bottom: 'calc(160px + env(safe-area-inset-bottom, 0px))' }}
-        >
+        <>
+          {/* Фоновый overlay */}
+          <motion.div
+            key="companion-info-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="pointer-events-auto fixed inset-0 z-[1599] bg-black/30 backdrop-blur-sm"
+            onClick={() => setInfoOpen(false)}
+          />
+          
+          {/* Панель информации */}
+          <motion.div
+            key="companion-info"
+            initial={{ opacity: 0, y: 12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.96 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="pointer-events-auto fixed left-1/2 top-1/2 z-[1600] w-[280px] max-w-[90vw] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/20 bg-white/90 p-4 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/85"
+            onClick={(e) => e.stopPropagation()}
+          >
           <div className="flex items-start justify-between gap-2">
             <div>
               <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -70,6 +83,7 @@ export function CompanionInfoPanel() {
             ✨ В будущих обновлениях вы сможете менять облик Лумины и открывать коллекцию питомцев.
           </div>
         </motion.div>
+        </>
       )}
     </AnimatePresence>
   )

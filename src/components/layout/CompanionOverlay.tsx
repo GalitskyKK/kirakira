@@ -5,6 +5,7 @@ import { CompanionInfoPanel } from './CompanionInfoPanel'
 import {
   useCompanionVisibility,
   useCompanionInfoPanel,
+  useCompanionStore,
 } from '@/stores/companionStore'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useUserSync } from '@/hooks/index.v2'
@@ -12,6 +13,7 @@ import { useUserSync } from '@/hooks/index.v2'
 export function CompanionOverlay() {
   const { isVisible } = useCompanionVisibility()
   const { isInfoOpen, setInfoOpen } = useCompanionInfoPanel()
+  const position = useCompanionStore(state => state.position)
 
   const telegramId = useTelegramId()
   const isTelegramIdAvailable = telegramId !== undefined && telegramId !== null
@@ -26,11 +28,26 @@ export function CompanionOverlay() {
     }
   }, [isUnlocked, isVisible, isInfoOpen, setInfoOpen])
 
+  // Определяем позицию для locked preview (используем дефолтную позицию)
+  const lockedPositionStyle = {
+    bottom: 'calc(72px + env(safe-area-inset-bottom, 0px))',
+  }
+
+  // Определяем динамическую позицию для компаньона
+  const companionPositionStyle = {
+    bottom: `calc(${position.yPosition}px + env(safe-area-inset-bottom, 0px))`,
+    [position.side]: '24px', // 24px = 1.5rem = ~6 в Tailwind (right-6 или left-6)
+  }
+
+  // Для мобильных устройств (sm: breakpoint) используем топ позицию
+  // Это делается через медиа-запрос в классах
+  const sideClass = position.side === 'right' ? 'sm:right-8' : 'sm:left-8'
+
   if (!isUnlocked) {
     return (
       <div
         className="pointer-events-none fixed right-6 z-[1500] sm:bottom-auto sm:right-8 sm:top-6"
-        style={{ bottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}
+        style={lockedPositionStyle}
       >
         <CompanionLockedPreview levelsRemaining={levelsRemaining} />
       </div>
@@ -43,8 +60,8 @@ export function CompanionOverlay() {
 
   return (
     <div
-      className="pointer-events-none fixed right-6 z-[1500] sm:bottom-auto sm:right-8 sm:top-6"
-      style={{ bottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}
+      className={`pointer-events-none fixed z-[1500] sm:bottom-auto sm:top-6 ${sideClass}`}
+      style={companionPositionStyle}
     >
       <GardenCompanion className="pointer-events-auto" />
 

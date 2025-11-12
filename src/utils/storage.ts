@@ -2,7 +2,7 @@
  * Local storage utilities with type safety and error handling
  */
 
-import type { Garden, MoodEntry, User, CompanionSelection } from '@/types'
+import type { Garden, MoodEntry, User, CompanionSelection, CompanionPosition } from '@/types'
 
 // Storage keys
 export const STORAGE_KEYS = {
@@ -13,6 +13,7 @@ export const STORAGE_KEYS = {
   ONBOARDING: 'kirakira_onboarding_completed',
   LAST_VISIT: 'kirakira_last_visit',
   COMPANION: 'kirakira_companion',
+  COMPANION_POSITION: 'kirakira_companion_position',
 } as const
 
 /**
@@ -294,6 +295,45 @@ export function loadCompanionSelection(): CompanionSelection | null {
   const selection = safeJsonParse<CompanionSelection | null>(stored, null)
   if (selection && typeof selection === 'object' && 'activeCompanionId' in selection) {
     return selection
+  }
+
+  return null
+}
+
+/**
+ * Save companion position to storage
+ */
+export function saveCompanionPosition(position: CompanionPosition): boolean {
+  const serialized = safeJsonStringify(position)
+  if (serialized === null) {
+    return false
+  }
+
+  try {
+    storage.setItem(STORAGE_KEYS.COMPANION_POSITION, serialized)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Load companion position from storage
+ */
+export function loadCompanionPosition(): CompanionPosition | null {
+  const stored = storage.getItem(STORAGE_KEYS.COMPANION_POSITION)
+  if (stored === null) {
+    return null
+  }
+
+  const position = safeJsonParse<CompanionPosition | null>(stored, null)
+  if (
+    position &&
+    typeof position === 'object' &&
+    'yPosition' in position &&
+    'side' in position
+  ) {
+    return position
   }
 
   return null

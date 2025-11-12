@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { useMemo, useRef } from 'react'
+import { AnimatePresence, motion, useReducedMotion, PanInfo } from 'framer-motion'
 import { clsx } from 'clsx'
 import { useCompanionStore } from '@/stores/companionStore'
 import {
@@ -12,6 +12,7 @@ import type {
   CompanionEmotionVisual,
   CompanionEyeShape,
   CompanionMouthShape,
+  CompanionSide,
 } from '@/types'
 
 interface GardenCompanionProps {
@@ -234,6 +235,10 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   const toggleInfo = useCompanionStore(state => state.toggleInfo)
   const isInfoOpen = useCompanionStore(state => state.isInfoOpen)
   const lastMood = useCompanionStore(state => state.lastMood)
+  const position = useCompanionStore(state => state.position)
+  const setPosition = useCompanionStore(state => state.setPosition)
+  const setIsDragging = useCompanionStore(state => state.setIsDragging)
+  const isDragging = useCompanionStore(state => state.isDragging)
   const visual = useCompanionVisual()
 
   const reduceMotion = useReducedMotion()
@@ -286,6 +291,15 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
       return options[randomIndex] ?? options[0]
     })()
 
+    // Определяем позиционирование пузыря в зависимости от стороны компаньона
+    const isOnLeft = position.side === 'left'
+    const bubblePositionClass = isOnLeft
+      ? 'right-[-10rem] sm:right-[-12rem] justify-start' // Компаньон слева - пузырь справа
+      : 'left-[-10rem] sm:left-[-12rem] justify-end' // Компаньон справа - пузырь слева
+    const tailPositionClass = isOnLeft
+      ? 'left-[-0.65rem] sm:left-[-0.8rem]' // Хвостик слева
+      : 'right-[-0.65rem] sm:right-[-0.8rem]' // Хвостик справа
+
     switch (activeReaction) {
       case 'mood-checkin':
         return (
@@ -318,7 +332,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
               </motion.span>
             ))}
             <motion.div
-              className="absolute -top-20 left-[-10rem] flex w-[14rem] justify-end sm:-top-24 sm:left-[-12rem] sm:w-[16rem]"
+              className={`absolute -top-20 flex w-[14rem] sm:-top-24 sm:w-[16rem] ${bubblePositionClass}`}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
@@ -326,7 +340,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
             >
               <span className="relative inline-flex min-h-[3.5rem] w-full items-center justify-center rounded-[1.8rem] bg-white/95 px-4 py-3 text-left text-sm font-medium leading-relaxed text-slate-600 shadow-xl backdrop-blur dark:bg-slate-900/95 dark:text-slate-200 sm:min-h-[4rem] sm:px-5 sm:py-4 sm:text-base">
                 {moodMessage}
-                <span className="absolute right-[-0.65rem] top-1/2 h-3.5 w-3.5 -translate-y-1/2 rotate-45 bg-white/95 shadow-sm dark:bg-slate-900/95 sm:right-[-0.8rem]" />
+                <span className={`absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rotate-45 bg-white/95 shadow-sm dark:bg-slate-900/95 ${tailPositionClass}`} />
               </span>
             </motion.div>
           </motion.div>
@@ -448,7 +462,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
       default:
         return null
     }
-  }, [activeReaction, shouldReduceMotion, visual?.accentColor, lastMood])
+  }, [activeReaction, shouldReduceMotion, visual?.accentColor, lastMood, position])
 
   if (!visual || !isVisible) {
     return null
@@ -461,11 +475,62 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     ? 1
     : [scaleMin, scaleMax, scaleMin]
 
+  // Состояние для отслеживания drag
+  const dragStartTimeRef = useRef<number>(0)
+  const hasDraggedRef = useRef<boolean>(false)
+
+  // Обработчик начала drag
+  const handleDragStart = () => {
+    dragStartTimeRef.current = Date.now()
+    hasDraggedRef.current = false
+    setIsDragging(true)
+  }
+
+  // Обработчик drag (проверяем был ли действительно drag)
+  const handleDrag = () => {
+    hasDraggedRef.current = true
+  }
+
+  // Обработчик окончания drag
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    setIsDragging(false)
+    
+    // Если это был короткий клик без drag - открываем info panel
+    const dragDuration = Date.now() - dragStartTimeRef.current
+    if (!hasDraggedRef.current && dragDuration < 200) {
+      toggleInfo()
+      return
+    }
+
+    // Используем info.point для получения финальной позиции курсора/тача
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    
+    // info.point содержит координаты относительно viewport
+    const { x, y } = info.point
+
+    // Определяем сторону: левая или правая половина экрана
+    const side: CompanionSide = x < viewportWidth / 2 ? 'left' : 'right'
+
+    // Определяем Y позицию от низа viewport
+    // y - это расстояние от верха viewport, поэтому:
+    const distanceFromBottom = viewportHeight - y
+    
+    // Ограничиваем позицию: минимум 72px (навбар), максимум viewport height - 150px
+    const minYPosition = 72
+    const maxYPosition = viewportHeight - 150
+    const newYPosition = Math.max(minYPosition, Math.min(maxYPosition, distanceFromBottom))
+
+    // Сохраняем новую позицию
+    setPosition(newYPosition, side)
+  }
+
   return (
     <AnimatePresence>
       {isVisible && (
         <motion.div
           key="garden-companion"
+          data-companion-container
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 12 }}
@@ -473,17 +538,20 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           className={clsx(
             'pointer-events-auto select-none',
             'relative flex h-16 w-12 items-center justify-center sm:h-24 sm:w-20',
-            'cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/70',
+            'cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/70',
+            isDragging && 'cursor-grabbing',
             className
           )}
           role="button"
           tabIndex={0}
           aria-label="Лумина, дух сада"
           aria-expanded={isInfoOpen}
-          onClick={event => {
-            event.stopPropagation()
-            toggleInfo()
-          }}
+          drag
+          dragMomentum={false}
+          dragElastic={0.05}
+          onDragStart={handleDragStart}
+          onDrag={handleDrag}
+          onDragEnd={handleDragEnd}
           onKeyDown={event => {
             if (event.key === 'Enter' || event.key === ' ') {
               event.preventDefault()
