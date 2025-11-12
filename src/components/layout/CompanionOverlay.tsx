@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GardenCompanion } from '@/components/garden'
 import { CompanionInfoPanel } from './CompanionInfoPanel'
@@ -14,8 +14,8 @@ import type { CompanionPosition } from '@/types'
 export function CompanionOverlay() {
   const { isVisible } = useCompanionVisibility()
   const { isInfoOpen, setInfoOpen } = useCompanionInfoPanel()
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   const position = useCompanionStore(
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     state => state.position
   ) as CompanionPosition
 
@@ -55,21 +55,33 @@ export function CompanionOverlay() {
   }
 
   // Определяем динамическую позицию для компаньона
-  // ВАЖНО: при смене стороны нужно явно сбрасывать противоположную сторону
-  const companionPositionStyle: React.CSSProperties = isMobile
-    ? {
-        // Для мобильных - позиционируем снизу
-        bottom: `calc(${position.yPosition}px + env(safe-area-inset-bottom, 0px))`,
-        [position.side]: '24px', // 24px = 1.5rem (right-6 или left-6)
-        [position.side === 'right' ? 'left' : 'right']: 'auto', // Сбрасываем противоположную
-      }
-    : {
-        // Для десктопа - позиционируем сверху
-        top: '24px',
-        bottom: 'auto',
-        [position.side]: '32px', // 32px = 2rem (right-8 или left-8)
-        [position.side === 'right' ? 'left' : 'right']: 'auto',
-      }
+  // ВАЖНО: явно устанавливаем все 4 стороны для избежания конфликтов
+  const companionPositionStyle: React.CSSProperties = useMemo(() => {
+    return isMobile
+      ? {
+          // Для мобильных - позиционируем снизу
+          bottom: `calc(${position.yPosition}px + env(safe-area-inset-bottom, 0px))`,
+          top: 'auto',
+          left: position.side === 'left' ? '24px' : 'auto',
+          right: position.side === 'right' ? '24px' : 'auto',
+        }
+      : {
+          // Для десктопа - позиционируем сверху
+          top: '24px',
+          bottom: 'auto',
+          left: position.side === 'left' ? '32px' : 'auto',
+          right: position.side === 'right' ? '32px' : 'auto',
+        }
+  }, [isMobile, position.yPosition, position.side])
+
+  // Debug логирование (можно удалить позже)
+  useEffect(() => {
+    console.log('🎨 Companion overlay style:', {
+      position,
+      isMobile,
+      style: companionPositionStyle,
+    })
+  }, [position, isMobile, companionPositionStyle])
 
   if (!isUnlocked) {
     return (

@@ -502,27 +502,49 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
       return
     }
 
-    // Используем info.point для получения финальной позиции курсора/тача
+    // Получаем размеры viewport
     const viewportWidth = window.innerWidth
     const viewportHeight = window.innerHeight
     
-    // info.point содержит координаты относительно viewport
+    // info.point содержит координаты курсора относительно viewport
     const { x, y } = info.point
 
     // Определяем сторону: левая или правая половина экрана
     const side: CompanionSide = x < viewportWidth / 2 ? 'left' : 'right'
 
-    // Определяем Y позицию от низа viewport
-    // y - это расстояние от верха viewport, поэтому:
+    // Вычисляем Y позицию от низа viewport
+    // y - это расстояние от верха viewport
     const distanceFromBottom = viewportHeight - y
     
-    // Ограничиваем позицию: минимум 72px (навбар), максимум viewport height - 150px
-    const minYPosition = 72
-    const maxYPosition = viewportHeight - 150
-    const newYPosition = Math.max(minYPosition, Math.min(maxYPosition, distanceFromBottom))
-
-    // Сохраняем новую позицию
-    setPosition(newYPosition, side)
+    // Определяем ограничения в зависимости от размера экрана
+    const isMobileScreen = viewportWidth < 640
+    
+    if (isMobileScreen) {
+      // Мобильный: компаньон позиционируется от низа
+      // Минимум 100px от низа (над навбаром), максимум 200px от верха
+      const minDistanceFromBottom = 100 // Минимум 100px от низа экрана
+      const maxDistanceFromBottom = viewportHeight - 200 // Максимум - оставляем 200px сверху
+      
+      const constrainedDistance = Math.max(
+        minDistanceFromBottom,
+        Math.min(maxDistanceFromBottom, distanceFromBottom)
+      )
+      
+      // Debug логирование (можно будет удалить позже)
+      console.log('📍 Companion position update:', {
+        side,
+        distanceFromBottom,
+        constrainedDistance,
+        viewportHeight,
+        y: info.point.y,
+      })
+      
+      setPosition(constrainedDistance, side)
+    } else {
+      // Десктоп: компаньон всегда сверху, запоминаем только сторону
+      // Для десктопа Y позиция фиксирована (24px от верха)
+      setPosition(position.yPosition, side) // Сохраняем текущую Y, меняем только сторону
+    }
   }
 
   return (
