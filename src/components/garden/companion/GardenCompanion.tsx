@@ -489,10 +489,9 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   // Используем ref для прямого управления transform
   const containerRef = useRef<HTMLDivElement>(null)
   // Отслеживаем начало drag для различения клика и перетаскивания
-  const dragStartTimeRef = useRef<number>(0)
   const dragStartPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
-  // Флаг для блокировки onTap после реального drag
-  const shouldBlockTapRef = useRef<boolean>(false)
+  // Флаг, что было реальное перетаскивание (расстояние >= 10px)
+  const wasRealDragRef = useRef<boolean>(false)
 
   // Сбрасываем transform после окончания drag
   useEffect(() => {
@@ -514,8 +513,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     info: PanInfo
   ) => {
     setIsDragging(true)
-    shouldBlockTapRef.current = false
-    dragStartTimeRef.current = Date.now()
+    wasRealDragRef.current = false
     dragStartPosRef.current = { x: info.point.x, y: info.point.y }
   }
 
@@ -524,40 +522,22 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     _event: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
   ) => {
-    const dragDuration = Date.now() - dragStartTimeRef.current
-
     // Вычисляем реальное расстояние перемещения
     const dx = info.point.x - dragStartPosRef.current.x
     const dy = info.point.y - dragStartPosRef.current.y
     const dragDistance = Math.sqrt(dx * dx + dy * dy)
 
-    console.log('🎯 Drag end:', {
-      duration: dragDuration,
-      distance: dragDistance,
-      offset: info.offset,
-      point: info.point,
-      startPoint: dragStartPosRef.current,
-    })
-
-    // Если это было реальное перетаскивание - блокируем onTap
-    if (dragDistance >= 10) {
-      console.log('🔄 Real drag detected - blocking tap, moving companion')
-      shouldBlockTapRef.current = true
-      // Сбрасываем флаг через небольшую задержку
-      setTimeout(() => {
-        shouldBlockTapRef.current = false
-      }, 50)
-    } else {
-      console.log('👆 Small movement - allowing tap')
-      shouldBlockTapRef.current = false
-    }
-
     setIsDragging(false)
 
-    // Если движение было меньше 10px - не перемещаем компаньона, пусть onTap обработает
+    // Если движение было меньше 10px - это был клик, открываем модалку
     if (dragDistance < 10) {
+      wasRealDragRef.current = false
+      toggleInfo()
       return
     }
+
+    // Это было реальное перетаскивание - перемещаем компаньона
+    wasRealDragRef.current = true
 
     // Получаем размеры viewport
     const viewportWidth = window.innerWidth
@@ -631,17 +611,16 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           dragMomentum={false}
           dragElastic={0.05}
           dragSnapToOrigin
+          dragConstraints={false}
+          dragDirectionLock={false}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
           onTap={() => {
-            console.log('👆 Tap event! shouldBlock:', shouldBlockTapRef.current)
-            // Если был реальный drag - не открываем модалку
-            if (shouldBlockTapRef.current) {
-              console.log('❌ Tap blocked - was dragging')
-              return
+            // Fallback для быстрых кликов, когда drag не начался
+            // Открываем модалку только если не было реального перетаскивания
+            if (!wasRealDragRef.current && !isDragging) {
+              toggleInfo()
             }
-            console.log('✅ Opening info panel')
-            toggleInfo()
           }}
           onKeyDown={event => {
             if (event.key === 'Enter' || event.key === ' ') {
