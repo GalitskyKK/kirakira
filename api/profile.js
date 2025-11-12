@@ -1154,17 +1154,18 @@ async function protectedHandler(req, res) {
         // Проверяем, что пользователи - друзья (если профиль приватный)
         // 🔓 Используем admin client для чтения данных о дружбе (обход RLS)
         const adminSupabase = await createAdminSupabaseClient()
-        
+
         // 🔒 Безопасный запрос с параметризацией (защита от SQL инъекций)
-        const { data: friendships, error: friendshipError } = await adminSupabase
-          .from('friendships')
-          .select('*')
-          .eq('status', 'accepted')
-          .or(
-            `and(requester_telegram_id.eq.${viewerTelegramId},addressee_telegram_id.eq.${targetTelegramId}),and(requester_telegram_id.eq.${targetTelegramId},addressee_telegram_id.eq.${viewerTelegramId})`
-          )
-          .limit(1)
-        
+        const { data: friendships, error: friendshipError } =
+          await adminSupabase
+            .from('friendships')
+            .select('*')
+            .eq('status', 'accepted')
+            .or(
+              `and(requester_telegram_id.eq.${viewerTelegramId},addressee_telegram_id.eq.${targetTelegramId}),and(requester_telegram_id.eq.${targetTelegramId},addressee_telegram_id.eq.${viewerTelegramId})`
+            )
+            .limit(1)
+
         const friendship = friendships?.[0] || null
 
         console.log('🔍 [PROFILE] Initial friendship check:', {
@@ -1317,15 +1318,16 @@ async function protectedHandler(req, res) {
               })
 
               // 🔓 Используем admin client для чтения relationship (обход RLS)
-              const { data: relationRow, error: relationError } = await adminSupabase
-                .from('friendships')
-                .select(
-                  'status, requester_telegram_id, addressee_telegram_id, blocked_by'
-                )
-                .or(
-                  `and(requester_telegram_id.eq.${viewerTelegramId},addressee_telegram_id.eq.${targetTelegramId}),and(requester_telegram_id.eq.${targetTelegramId},addressee_telegram_id.eq.${viewerTelegramId})`
-                )
-                .maybeSingle()
+              const { data: relationRow, error: relationError } =
+                await adminSupabase
+                  .from('friendships')
+                  .select(
+                    'status, requester_telegram_id, addressee_telegram_id'
+                  )
+                  .or(
+                    `and(requester_telegram_id.eq.${viewerTelegramId},addressee_telegram_id.eq.${targetTelegramId}),and(requester_telegram_id.eq.${targetTelegramId},addressee_telegram_id.eq.${viewerTelegramId})`
+                  )
+                  .maybeSingle()
 
               console.log('🔍 [PROFILE] Relationship query result:', {
                 relationRow,
