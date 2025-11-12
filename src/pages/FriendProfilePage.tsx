@@ -338,12 +338,14 @@ export default function FriendProfilePage() {
     if (relationshipStatus === 'friend') {
       return (
         <>
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setShowRemoveConfirm(true)}
-            className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-600 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-emerald-500/40 dark:bg-emerald-900/20 dark:text-emerald-300 dark:hover:border-red-500/40 dark:hover:bg-red-900/20 dark:hover:text-red-300"
+            className="flex items-center gap-2 border-emerald-300 bg-emerald-50 text-emerald-700 hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-emerald-500/40 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:border-red-500/40 dark:hover:bg-red-900/30 dark:hover:text-red-300"
           >
-            <UserCheck className="h-3.5 w-3.5" />В друзьях
-          </button>
+            <UserCheck className="h-4 w-4" />В друзьях
+          </Button>
 
           {/* Confirmation Modal */}
           {showRemoveConfirm && (
@@ -393,13 +395,13 @@ export default function FriendProfilePage() {
         <Button
           variant="outline"
           size="sm"
-          className="flex items-center gap-2 border-amber-300 px-3 py-1 text-xs text-amber-600 hover:border-red-400 hover:bg-red-50 hover:text-red-600 dark:border-amber-500/40 dark:text-amber-300 dark:hover:border-red-500/40 dark:hover:bg-red-900/20 dark:hover:text-red-300"
+          className="flex items-center gap-2 border-amber-300 bg-amber-50 text-amber-700 hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-amber-500/40 dark:bg-amber-900/30 dark:text-amber-300 dark:hover:border-red-500/40 dark:hover:bg-red-900/30 dark:hover:text-red-300"
           onClick={() => {
             void handleCancelRequest()
           }}
           isLoading={isProcessingFriendAction}
         >
-          <X className="h-3.5 w-3.5" />
+          <X className="h-4 w-4" />
           Отменить запрос
         </Button>
       )
@@ -411,7 +413,7 @@ export default function FriendProfilePage() {
           <Button
             variant="primary"
             size="sm"
-            className="flex items-center gap-2 px-3 py-1 text-xs"
+            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600"
             onClick={() => {
               void handleRespondRequest('accept')
             }}
@@ -423,7 +425,7 @@ export default function FriendProfilePage() {
           <Button
             variant="outline"
             size="sm"
-            className="flex items-center gap-2 px-3 py-1 text-xs"
+            className="flex items-center gap-2 border-red-300 text-red-600 hover:border-red-400 hover:bg-red-50 dark:border-red-500/40 dark:text-red-400 dark:hover:bg-red-900/30"
             onClick={() => {
               void handleRespondRequest('decline')
             }}
@@ -438,10 +440,15 @@ export default function FriendProfilePage() {
 
     if (!canSendFriendRequest) {
       return (
-        <div className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-500 dark:border-neutral-700/60 dark:bg-neutral-800/60 dark:text-neutral-300">
-          <Ban className="h-3.5 w-3.5" />
+        <Button
+          variant="outline"
+          size="sm"
+          disabled
+          className="flex cursor-not-allowed items-center gap-2 opacity-50"
+        >
+          <Ban className="h-4 w-4" />
           Запрос недоступен
-        </div>
+        </Button>
       )
     }
 
@@ -449,7 +456,7 @@ export default function FriendProfilePage() {
       <Button
         variant="primary"
         size="sm"
-        className="flex items-center gap-2 px-3 py-1 text-xs"
+        className="flex items-center gap-2 bg-kira-500 hover:bg-kira-600"
         onClick={handleAddFriend}
         isLoading={isProcessingFriendAction}
       >
