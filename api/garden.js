@@ -400,7 +400,7 @@ async function handleViewFriendGarden(req, res) {
   try {
     const { viewerTelegramId, friendTelegramId } = req.query
 
-    // Валидация входных данных
+    // 🔒 СТРОГАЯ валидация входных данных (защита от инъекций)
     if (!viewerTelegramId || !friendTelegramId) {
       return res.status(400).json({
         success: false,
@@ -409,8 +409,24 @@ async function handleViewFriendGarden(req, res) {
       })
     }
 
+    // Проверяем что это валидные числа
+    const viewerIdNum = Number.parseInt(viewerTelegramId, 10)
+    const friendIdNum = Number.parseInt(friendTelegramId, 10)
+
+    if (
+      Number.isNaN(viewerIdNum) ||
+      Number.isNaN(friendIdNum) ||
+      viewerIdNum <= 0 ||
+      friendIdNum <= 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid telegram ID format. Must be positive integers.',
+      })
+    }
+
     // Проверяем что не пытаются посмотреть свой собственный сад
-    if (parseInt(viewerTelegramId) === parseInt(friendTelegramId)) {
+    if (viewerIdNum === friendIdNum) {
       return res.status(400).json({
         success: false,
         error: 'Cannot view your own garden through friend view',
@@ -418,22 +434,35 @@ async function handleViewFriendGarden(req, res) {
     }
 
     console.log(
-      `👀 Friend garden view request: ${viewerTelegramId} wants to view ${friendTelegramId}'s garden`
+      `👀 Friend garden view request: ${viewerIdNum} wants to view ${friendIdNum}'s garden`
     )
 
     // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
     const supabase = await getSupabaseClient(req.auth?.jwt)
 
+    // 🔓 Для чтения публичных данных используем admin client (обход RLS)
+    const adminSupabase = await createAdminSupabaseClient()
+
     // 1. Сначала проверяем настройки приватности владельца сада
-    const { data: ownerSettings, error: settingsError } = await supabase
+    const { data: ownerSettings, error: settingsError } = await adminSupabase
       .from('users')
       .select(
         'first_name, last_name, username, photo_url, share_garden, garden_theme'
       )
-      .eq('telegram_id', friendTelegramId)
+      .eq('telegram_id', friendIdNum)
       .single()
 
+    console.log('🔍 [GARDEN] Owner settings:', {
+      friendTelegramId: friendIdNum,
+      ownerSettings,
+      settingsError,
+    })
+
     if (settingsError) {
+      console.error(
+        '❌ [GARDEN] Failed to fetch owner settings:',
+        settingsError
+      )
       return res.status(404).json({
         success: false,
         error: 'Friend not found',
@@ -445,15 +474,22 @@ async function handleViewFriendGarden(req, res) {
 
     // 2. Если сад публичный (shareGarden=true), разрешаем доступ всем
     if (!canShareGarden) {
-      // Сад приватный - проверяем дружбу
-      const { data: friendship, error: friendshipError } = await supabase
+      // Сад приватный - проверяем дружбу (используем adminSupabase для чтения)
+      const { data: friendship, error: friendshipError } = await adminSupabase
         .from('friendships')
         .select('status')
         .or(
-          `and(requester_telegram_id.eq.${viewerTelegramId},addressee_telegram_id.eq.${friendTelegramId}),and(requester_telegram_id.eq.${friendTelegramId},addressee_telegram_id.eq.${viewerTelegramId})`
+          `and(requester_telegram_id.eq.${viewerIdNum},addressee_telegram_id.eq.${friendIdNum}),and(requester_telegram_id.eq.${friendIdNum},addressee_telegram_id.eq.${viewerIdNum})`
         )
         .eq('status', 'accepted')
         .single()
+
+      console.log('🔍 [GARDEN] Friendship check:', {
+        viewerTelegramId: viewerIdNum,
+        friendTelegramId: friendIdNum,
+        friendship,
+        friendshipError,
+      })
 
       if (friendshipError || !friendship) {
         return res.status(403).json({
@@ -464,12 +500,18 @@ async function handleViewFriendGarden(req, res) {
       }
     }
 
-    // 3. Получаем элементы сада друга
-    const { data: gardenElements, error: gardenError } = await supabase
+    // 3. Получаем элементы сада друга (используем adminSupabase для публичных данных)
+    const { data: gardenElements, error: gardenError } = await adminSupabase
       .from('garden_elements')
       .select('*')
-      .eq('telegram_id', friendTelegramId)
+      .eq('telegram_id', friendIdNum)
       .order('unlock_date', { ascending: true }) // Сортируем по дате создания
+
+    console.log('🔍 [GARDEN] Garden elements:', {
+      friendTelegramId: friendIdNum,
+      elementsCount: gardenElements?.length,
+      gardenError,
+    })
 
     if (gardenError) {
       console.error('Failed to fetch friend garden elements:', gardenError)

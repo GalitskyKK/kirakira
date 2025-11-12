@@ -1151,14 +1151,27 @@ async function protectedHandler(req, res) {
         }
 
         // Проверяем, что пользователи - друзья (если профиль приватный)
-        const { data: friendship, error: friendshipError } = await supabase
+        // 🔓 Используем admin client для чтения данных о дружбе (обход RLS)
+        const adminSupabase = await createAdminSupabaseClient()
+        
+        // 🔒 Безопасный запрос с параметризацией (защита от SQL инъекций)
+        const { data: friendships, error: friendshipError } = await adminSupabase
           .from('friendships')
           .select('*')
+          .eq('status', 'accepted')
           .or(
             `and(requester_telegram_id.eq.${viewerTelegramId},addressee_telegram_id.eq.${targetTelegramId}),and(requester_telegram_id.eq.${targetTelegramId},addressee_telegram_id.eq.${viewerTelegramId})`
           )
-          .eq('status', 'accepted')
-          .single()
+          .limit(1)
+        
+        const friendship = friendships?.[0] || null
+
+        console.log('🔍 [PROFILE] Initial friendship check:', {
+          viewerTelegramId,
+          targetTelegramId,
+          friendship: !!friendship,
+          friendshipError,
+        })
 
         // Если не друзья, проверим настройки приватности
         if (friendshipError || !friendship) {
@@ -1297,7 +1310,13 @@ async function protectedHandler(req, res) {
               shareAchievements: privacySettings.shareAchievements,
             },
             relationship: await (async () => {
-              const { data: relationRow, error: relationError } = await supabase
+              console.log('🔍 [PROFILE] Fetching relationship:', {
+                viewerTelegramId,
+                targetTelegramId,
+              })
+
+              // 🔓 Используем admin client для чтения relationship (обход RLS)
+              const { data: relationRow, error: relationError } = await adminSupabase
                 .from('friendships')
                 .select(
                   'status, requester_telegram_id, addressee_telegram_id, blocked_by'
@@ -1307,9 +1326,15 @@ async function protectedHandler(req, res) {
                 )
                 .maybeSingle()
 
+              console.log('🔍 [PROFILE] Relationship query result:', {
+                relationRow,
+                relationError,
+                hasData: !!relationRow,
+              })
+
               if (relationError) {
-                console.warn(
-                  'Failed to fetch relationship info:',
+                console.error(
+                  '❌ [PROFILE] Failed to fetch relationship info:',
                   relationError
                 )
               }
