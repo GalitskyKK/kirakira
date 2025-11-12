@@ -564,6 +564,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
       }, 50)
       return () => clearTimeout(timer)
     }
+    return undefined
   }, [isDragging])
 
   return (
