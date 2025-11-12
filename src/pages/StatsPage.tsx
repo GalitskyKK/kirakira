@@ -11,13 +11,12 @@ export function StatsPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <PageHeader
-        title="Статистика"
-        subtitle="Ваша история настроений и активности"
-        icon={<BarChart3 className="h-5 w-5" />}
-      />
+    <PageHeader
+      title="Статистика"
+      icon={<BarChart3 className="h-5 w-5" />}
+    />
 
-      <div className="p-4">
+      <div className="p-4 pb-24">
         <MoodStats />
       </div>
     </motion.div>

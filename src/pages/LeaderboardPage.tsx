@@ -299,7 +299,7 @@ export function LeaderboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-kira-50 via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
       <PageHeader
-        title="Глобальный рейтинг"
+        title="Рейтинг"
         icon={<Trophy className="h-5 w-5" />}
         actions={
           <Button

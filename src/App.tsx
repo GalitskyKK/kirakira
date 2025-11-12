@@ -546,9 +546,36 @@ function App() {
                 <Route path="tasks" element={<TasksPage />} />
                 <Route path="community" element={<CommunityPage />} />
                 <Route path="profile" element={<ProfilePage />} />
-                <Route path="settings" element={<SettingsPage />} />
-                <Route path="stats" element={<StatsPage />} />
               </Route>
+              {/* Settings и Stats без navbar (как Friend и Leaderboard) */}
+              <Route
+                path="/mobile/settings"
+                element={
+                  <motion.div
+                    key="settings"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <SettingsPage />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/mobile/stats"
+                element={
+                  <motion.div
+                    key="stats"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <StatsPage />
+                  </motion.div>
+                }
+              />
               {/* Dev роуты доступны только в DEV режиме */}
               {import.meta.env.DEV && ShowcasePage && (
                 <Route

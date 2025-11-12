@@ -36,11 +36,10 @@ export function SettingsPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <PageHeader
-        title="Настройки"
-        subtitle="Персонализация и приватность"
-        icon={<Settings className="h-5 w-5" />}
-      />
+    <PageHeader
+      title="Настройки"
+      icon={<Settings className="h-5 w-5" />}
+    />
 
       <div className="space-y-6 p-4 pb-24">
         {/* Внешний вид */}
