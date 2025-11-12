@@ -486,6 +486,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   ])
 
   const containerRef = useRef<HTMLDivElement>(null)
+  const isActuallyDragging = useRef(false)
 
   useEffect(() => {
     if (!isDragging && containerRef.current) {
@@ -499,49 +500,46 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     return undefined
   }, [isDragging])
 
-  const dragStartPosRef = useRef({ x: 0, y: 0 })
-
-  const handleDragStart = (
-    _event: MouseEvent | TouchEvent | PointerEvent,
-    info: PanInfo
-  ) => {
-    dragStartPosRef.current = info.point
+  const handleDragStart = () => {
     setIsDragging(true)
+  }
+
+  const handleDrag = () => {
+    isActuallyDragging.current = true
   }
 
   const handleDragEnd = (
     _event: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
   ) => {
-    setIsDragging(false)
+    if (isActuallyDragging.current) {
+      const viewportWidth = window.innerWidth
+      const viewportHeight = window.innerHeight
+      const { x, y } = info.point
+      const side: CompanionSide = x < viewportWidth / 2 ? 'left' : 'right'
+      const distanceFromBottom = viewportHeight - y
+      const isMobileScreen = viewportWidth < 640
 
-    const dragDistance = Math.sqrt(
-      (info.point.x - dragStartPosRef.current.x) ** 2 +
-        (info.point.y - dragStartPosRef.current.y) ** 2
-    )
-
-    if (dragDistance < 10) {
-      toggleInfo()
-      return
+      if (isMobileScreen) {
+        const minDistanceFromBottom = 80
+        const maxDistanceFromBottom = viewportHeight - 150
+        const constrainedDistance = Math.max(
+          minDistanceFromBottom,
+          Math.min(maxDistanceFromBottom, distanceFromBottom)
+        )
+        setPosition(constrainedDistance, side)
+      } else {
+        setPosition(position.yPosition, side)
+      }
     }
 
-    const viewportWidth = window.innerWidth
-    const viewportHeight = window.innerHeight
-    const { x, y } = info.point
-    const side: CompanionSide = x < viewportWidth / 2 ? 'left' : 'right'
-    const distanceFromBottom = viewportHeight - y
-    const isMobileScreen = viewportWidth < 640
+    setIsDragging(false)
+    isActuallyDragging.current = false
+  }
 
-    if (isMobileScreen) {
-      const minDistanceFromBottom = 80
-      const maxDistanceFromBottom = viewportHeight - 150
-      const constrainedDistance = Math.max(
-        minDistanceFromBottom,
-        Math.min(maxDistanceFromBottom, distanceFromBottom)
-      )
-      setPosition(constrainedDistance, side)
-    } else {
-      setPosition(position.yPosition, side)
+  const handleTap = () => {
+    if (!isActuallyDragging.current) {
+      toggleInfo()
     }
   }
 
@@ -585,7 +583,9 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           dragConstraints={false}
           dragDirectionLock={false}
           onDragStart={handleDragStart}
+          onDrag={handleDrag}
           onDragEnd={handleDragEnd}
+          onTap={handleTap}
           onKeyDown={event => {
             if (event.key === 'Enter' || event.key === ' ') {
               event.preventDefault()
