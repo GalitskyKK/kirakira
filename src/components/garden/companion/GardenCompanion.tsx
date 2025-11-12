@@ -492,7 +492,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   }
 
   // Обработчик окончания drag
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     setIsDragging(false)
     
     // Если это был короткий клик без drag - открываем info panel
