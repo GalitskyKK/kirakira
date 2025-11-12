@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Users, Calendar, Flame, MapPin, Info } from 'lucide-react'
+import { ArrowLeft, Calendar, Flame, MapPin, Info } from 'lucide-react'
 import { Button, Card, UserAvatar } from '@/components/ui'
 import { GardenStats, GardenRoomManager } from '@/components/garden'
 import { useTelegram } from '@/hooks'
@@ -117,10 +117,6 @@ export function FriendGardenView({
       setIsLoading(true)
       setError(null)
 
-      console.log(
-        `🌱 Loading friend garden: viewer=${currentUser.telegramId}, friend=${friendTelegramId}`
-      )
-
       const response = await authenticatedFetch(
         `/api/garden?action=view-friend-garden&viewerTelegramId=${currentUser.telegramId}&friendTelegramId=${friendTelegramId}`
       )
@@ -128,10 +124,22 @@ export function FriendGardenView({
       const result = await response.json()
 
       if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Failed to load friend garden')
+        // Преобразуем английские ошибки в русские user-friendly сообщения
+        const errorMessage = result.error || 'Failed to load friend garden'
+        let russianError = 'Не удалось загрузить сад друга'
+        
+        if (errorMessage.includes('not your friend') || errorMessage.includes('not friends')) {
+          russianError = 'Вы не являетесь друзьями с этим пользователем'
+        } else if (errorMessage.includes('private') || errorMessage.includes('hidden')) {
+          russianError = 'Этот пользователь скрыл свой сад'
+        } else if (errorMessage.includes('not found')) {
+          russianError = 'Пользователь не найден'
+        } else if (errorMessage.includes('permission')) {
+          russianError = 'Нет доступа к саду этого пользователя'
+        }
+        
+        throw new Error(russianError)
       }
-
-      console.log(`✅ Friend garden loaded:`, result.data)
       setFriendGarden(result.data)
       // Сбрасываем индекс комнаты при загрузке нового сада
       setCurrentRoomIndex(0)
@@ -148,41 +156,15 @@ export function FriendGardenView({
               friendTelegramId: friendTelegramId,
             },
             questsData.quests
-          )
-            .then(() => {
-              console.log(
-                '✅ Visit friend garden quest updated with validation'
-              )
-            })
-            .catch(error => {
-              console.warn(
-                '⚠️ Failed to update visit_friend_garden quest with validation:',
-                error
-              )
-              // Сбрасываем флаг при ошибке, чтобы можно было повторить
-              questUpdatedRef.current = false
-            })
-        } else {
-          // Fallback к старому методу если квесты не загружены
-          // questActions
-          //   .visitFriendGarden() // Removed complex quest
-          //   .then(() => {
-          //     console.log('✅ Visit friend garden quest updated (fallback)')
-          //   })
-          //   .catch(error => {
-          //     console.warn(
-          //       '⚠️ Failed to update visit_friend_garden quest (fallback):',
-          //       error
-          //     )
-          //     // Сбрасываем флаг при ошибке, чтобы можно было повторить
-          //     questUpdatedRef.current = false
-          //   })
+          ).catch(() => {
+            // Сбрасываем флаг при ошибке, чтобы можно было повторить
+            questUpdatedRef.current = false
+          })
         }
       }
     } catch (error) {
-      console.error('Failed to load friend garden:', error)
       const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error'
+        error instanceof Error ? error.message : 'Не удалось загрузить сад'
       setError(errorMessage)
       showAlert?.(errorMessage)
       hapticFeedback('error')
@@ -275,6 +257,9 @@ export function FriendGardenView({
 
   // ❌ Состояние ошибки
   if (error || !friendGarden) {
+    const isFriendshipError = error?.includes('не являетесь друзьями') || false
+    const isPrivacyError = error?.includes('скрыл свой сад') || false
+    
     return (
       <div className="space-y-4">
         <Button onClick={onBack} variant="outline" size="sm" className="mb-4">
@@ -283,25 +268,45 @@ export function FriendGardenView({
         </Button>
 
         <Card className="p-6 text-center">
-          <div className="mb-4 text-gray-400">
-            <Users className="mx-auto h-12 w-12" />
+          <div className="mb-4 text-6xl">
+            {isFriendshipError ? '👥' : isPrivacyError ? '🔒' : '😔'}
           </div>
-          <h3 className="mb-2 text-lg font-semibold">
-            Не удалось загрузить сад
+          <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-gray-100">
+            {isFriendshipError 
+              ? 'Сад доступен только друзьям' 
+              : isPrivacyError 
+              ? 'Сад скрыт' 
+              : 'Не удалось загрузить сад'}
           </h3>
-          <p className="mb-4 text-gray-600">
-            {error || 'Возможно, друг запретил просмотр своего сада'}
+          <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
+            {error || 'Возможно, пользователь ограничил доступ к своему саду'}
           </p>
-          <Button
-            onClick={() => void loadFriendGarden()}
-            size="sm"
-            className="mr-2"
-          >
-            Попробовать снова
-          </Button>
-          <Button onClick={onBack} variant="outline" size="sm">
-            Назад
-          </Button>
+          
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+            {isFriendshipError && (
+              <Button
+                onClick={() => {
+                  // Переходим на профиль пользователя для добавления в друзья
+                  onBack()
+                  window.location.href = `/friend/${friendTelegramId}`
+                }}
+                size="sm"
+                variant="primary"
+              >
+                Добавить в друзья
+              </Button>
+            )}
+            <Button
+              onClick={() => void loadFriendGarden()}
+              size="sm"
+              variant={isFriendshipError ? 'outline' : 'primary'}
+            >
+              Попробовать снова
+            </Button>
+            <Button onClick={onBack} variant="outline" size="sm">
+              Вернуться
+            </Button>
+          </div>
         </Card>
       </div>
     )

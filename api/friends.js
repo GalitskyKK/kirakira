@@ -865,6 +865,82 @@ async function handleRespondRequest(req, res) {
 }
 
 // ===============================================
+// ❌ ACTION: REMOVE-FRIEND - Удаление из друзей
+// ===============================================
+async function handleRemoveFriend(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  try {
+    const { telegramId, friendTelegramId } = req.body
+
+    // Валидация входных данных
+    if (!telegramId || !friendTelegramId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameters: telegramId, friendTelegramId',
+      })
+    }
+
+    // Нельзя удалить себя
+    if (parseInt(telegramId) === parseInt(friendTelegramId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot remove yourself',
+      })
+    }
+
+    // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+
+    // Находим дружбу (в любом направлении)
+    const { data: friendship, error: findError } = await supabase
+      .from('friendships')
+      .select('*')
+      .or(
+        `and(requester_telegram_id.eq.${telegramId},addressee_telegram_id.eq.${friendTelegramId}),and(requester_telegram_id.eq.${friendTelegramId},addressee_telegram_id.eq.${telegramId})`
+      )
+      .eq('status', 'accepted')
+      .single()
+
+    if (findError || !friendship) {
+      return res.status(404).json({
+        success: false,
+        error: 'Вы не являетесь друзьями',
+      })
+    }
+
+    // Удаляем дружбу
+    const { error: deleteError } = await supabase
+      .from('friendships')
+      .delete()
+      .eq('id', friendship.id)
+
+    if (deleteError) {
+      console.error('Delete friendship error:', deleteError)
+      return res.status(500).json({
+        success: false,
+        error: 'Ошибка при удалении из друзей',
+      })
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        message: 'Пользователь удалён из друзей',
+      },
+    })
+  } catch (error) {
+    console.error('Remove friend error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    })
+  }
+}
+
+// ===============================================
 // 📸 ACTION: UPDATE-PHOTOS - Обновление аватарок друзей
 // ===============================================
 async function handleUpdatePhotos(req, res) {
@@ -1062,12 +1138,14 @@ async function protectedHandler(req, res) {
         return await handleSendRequest(req, res)
       case 'respond-request':
         return await handleRespondRequest(req, res)
+      case 'remove-friend':
+        return await handleRemoveFriend(req, res)
       case 'update-photos':
         return await handleUpdatePhotos(req, res)
       default:
         return res.status(400).json({
           success: false,
-          error: `Unknown action: ${action}. Available actions: list, search, send-request, respond-request, update-photos`,
+          error: `Unknown action: ${action}. Available actions: list, search, send-request, respond-request, remove-friend, update-photos`,
         })
     }
   } catch (error) {

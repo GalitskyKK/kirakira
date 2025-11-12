@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import { useQueryClient } from '@tanstack/react-query'
 import { User } from '@/types'
 import { updatePrivacySettings } from '@/api'
@@ -56,25 +55,19 @@ function PrivacySetting({
   enabled,
   onChange,
   disabled = false,
-  delay = 0,
 }: PrivacySettingProps) {
   return (
-    <motion.div
-      className="flex items-start justify-between gap-4 py-1"
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay, duration: 0.3 }}
-    >
-      <div className="flex min-w-0 flex-1 items-start space-x-3">
+    <div className="flex items-start justify-between gap-4">
+      <div className="flex min-w-0 flex-1 items-start gap-3">
         <div className="mt-0.5 flex-shrink-0 text-xl">{emoji}</div>
         <div className="min-w-0 flex-1">
           <div
-            className={`font-medium leading-tight ${disabled ? 'text-gray-400 dark:text-gray-500' : 'text-gray-900 dark:text-gray-100'}`}
+            className={`font-medium leading-tight ${disabled ? 'text-neutral-400 dark:text-neutral-500' : 'text-neutral-900 dark:text-neutral-100'}`}
           >
             {title}
           </div>
           <div
-            className={`mt-0.5 text-sm leading-tight ${disabled ? 'text-gray-300 dark:text-gray-600' : 'text-gray-600 dark:text-gray-400'}`}
+            className={`mt-0.5 text-sm leading-tight ${disabled ? 'text-neutral-300 dark:text-neutral-600' : 'text-neutral-600 dark:text-neutral-400'}`}
           >
             {description}
           </div>
@@ -87,7 +80,7 @@ function PrivacySetting({
           disabled={disabled}
         />
       </div>
-    </motion.div>
+    </div>
   )
 }
 
@@ -129,97 +122,72 @@ export function ProfilePrivacySettings({ user }: ProfilePrivacySettingsProps) {
   }
 
   return (
-    <motion.div
-      className="space-y-4"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.4 }}
-    >
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-        🔒 Приватность
-      </h2>
+    <div className="space-y-5">
+      <PrivacySetting
+        emoji="👁️"
+        title="Показывать профиль"
+        description="Другие пользователи могут видеть ваш профиль"
+        enabled={safePrivacy.showProfile}
+        onChange={enabled => handlePrivacyChange('showProfile', enabled)}
+        disabled={isUpdating}
+      />
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
-        <div className="space-y-6">
-          <PrivacySetting
-            emoji="👁️"
-            title="Показывать профиль"
-            description="Другие пользователи могут видеть ваш профиль"
-            enabled={safePrivacy.showProfile}
-            onChange={enabled => handlePrivacyChange('showProfile', enabled)}
-            disabled={isUpdating}
-            delay={0.1}
-          />
+      <PrivacySetting
+        emoji="🌱"
+        title="Поделиться садом"
+        description="Разрешить просмотр вашего сада другим пользователям"
+        enabled={safePrivacy.shareGarden}
+        onChange={enabled => handlePrivacyChange('shareGarden', enabled)}
+        disabled={isUpdating}
+      />
 
-          <PrivacySetting
-            emoji="🌱"
-            title="Поделиться садом"
-            description="Разрешить просмотр вашего сада другим пользователям"
-            enabled={safePrivacy.shareGarden}
-            onChange={enabled => handlePrivacyChange('shareGarden', enabled)}
-            disabled={isUpdating}
-            delay={0.15}
-          />
+      <PrivacySetting
+        emoji="🏆"
+        title="Показывать достижения"
+        description="Делиться вашими достижениями с друзьями"
+        enabled={safePrivacy.shareAchievements}
+        onChange={enabled =>
+          handlePrivacyChange('shareAchievements', enabled)
+        }
+        disabled={isUpdating}
+      />
 
-          <PrivacySetting
-            emoji="🏆"
-            title="Показывать достижения"
-            description="Делиться вашими достижениями с друзьями"
-            enabled={safePrivacy.shareAchievements}
-            onChange={enabled =>
-              handlePrivacyChange('shareAchievements', enabled)
-            }
-            disabled={isUpdating}
-            delay={0.2}
-          />
+      <PrivacySetting
+        emoji="👥"
+        title="Запросы в друзья"
+        description="Разрешить другим отправлять запросы в друзья"
+        enabled={safePrivacy.allowFriendRequests}
+        onChange={enabled =>
+          handlePrivacyChange('allowFriendRequests', enabled)
+        }
+        disabled={isUpdating}
+      />
 
-          <PrivacySetting
-            emoji="👥"
-            title="Запросы в друзья"
-            description="Разрешить другим отправлять запросы в друзья"
-            enabled={safePrivacy.allowFriendRequests}
-            onChange={enabled =>
-              handlePrivacyChange('allowFriendRequests', enabled)
-            }
-            disabled={isUpdating}
-            delay={0.25}
-          />
+      <div className="border-t border-neutral-200 pt-4 dark:border-neutral-700">
+        <PrivacySetting
+          emoji="☁️"
+          title="Синхронизация с облаком"
+          description="Сохранять данные в облаке для синхронизации между устройствами"
+          enabled={safePrivacy.cloudSync}
+          onChange={enabled => handlePrivacyChange('cloudSync', enabled)}
+          disabled={isUpdating}
+        />
+      </div>
 
-          <div className="border-t border-gray-100 pt-4 dark:border-gray-700">
-            <PrivacySetting
-              emoji="☁️"
-              title="Синхронизация с облаком"
-              description="Сохранять данные в облаке для синхронизации между устройствами"
-              enabled={safePrivacy.cloudSync}
-              onChange={enabled => handlePrivacyChange('cloudSync', enabled)}
-              disabled={isUpdating}
-              delay={0.3}
-            />
+      {/* Privacy Info */}
+      <div className="rounded-xl border border-kira-200 bg-kira-50 p-3 dark:border-kira-800 dark:bg-kira-900/30">
+        <div className="flex items-start gap-3">
+          <div className="text-kira-500 dark:text-kira-400">ℹ️</div>
+          <div className="flex-1 text-xs">
+            <div className="font-medium text-kira-800 dark:text-kira-200">
+              О ваших данных
+            </div>
+            <div className="mt-1 text-kira-700 dark:text-kira-300">
+              Данные о настроениях хранятся локально. Облачная синхронизация — только с вашего согласия.
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Additional Privacy Info */}
-      <motion.div
-        className="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/30"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
-        <div className="flex items-start space-x-3">
-          <div className="text-blue-500 dark:text-blue-400">ℹ️</div>
-          <div className="flex-1">
-            <div className="text-sm font-medium text-blue-800 dark:text-blue-200">
-              О ваших данных
-            </div>
-            <div className="mt-1 text-xs text-blue-600 dark:text-blue-300">
-              Мы заботимся о вашей приватности. Данные о настроениях хранятся
-              локально на вашем устройстве. Облачная синхронизация используется
-              только при вашем согласии.
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
+    </div>
   )
 }

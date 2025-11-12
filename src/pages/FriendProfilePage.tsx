@@ -38,34 +38,6 @@ interface FriendProfileData {
   readonly relationship?: FriendRelationshipInfo | undefined
 }
 
-// Debug component for friend profile
-// function FriendProfileDebug({
-//   profileData,
-//   error,
-//   isLoading,
-//   friendTelegramId,
-// }: any) {
-//   return (
-//     <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-xs">
-//       <h3 className="mb-2 font-bold text-blue-900">🔍 Friend Debug Info</h3>
-//       <div className="space-y-1 text-blue-800">
-//         <div>friendTelegramId: {friendTelegramId}</div>
-//         <div>isLoading: {isLoading ? '✅' : '❌'}</div>
-//         <div>error: {error || '❌'}</div>
-//         <div>profileData: {profileData ? '✅' : '❌'}</div>
-//         {profileData && (
-//           <details className="mt-2">
-//             <summary className="cursor-pointer">Profile Data</summary>
-//             <pre className="mt-1 overflow-auto rounded bg-blue-100 p-2 text-xs">
-//               {JSON.stringify(profileData, null, 2)}
-//             </pre>
-//           </details>
-//         )}
-//       </div>
-//     </div>
-//   )
-// }
-
 export default function FriendProfilePage() {
   const { friendTelegramId } = useParams<{ friendTelegramId: string }>()
   const navigate = useNavigate()
@@ -81,6 +53,7 @@ export default function FriendProfilePage() {
   const { hapticFeedback, showAlert } = useTelegram()
   const [isProcessingFriendAction, setIsProcessingFriendAction] =
     useState(false)
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
 
   useEffect(() => {
     if (!friendTelegramId) {
@@ -107,53 +80,35 @@ export default function FriendProfilePage() {
       }
     : null
 
+  // Упрощенная логика определения статуса дружбы
   const relationshipStatus = useMemo(() => {
     const relationship = profileData?.relationship
-    if (relationship?.status) {
-      if (
-        relationship.status === 'pending' &&
-        relationship.pendingDirection === 'incoming'
-      ) {
-        return 'pending_incoming'
-      }
-      if (
-        relationship.status === 'pending' &&
-        relationship.pendingDirection === 'outgoing'
-      ) {
-        return 'pending_outgoing'
-      }
-      return relationship.status
+    if (!relationship) return 'none'
+
+    // Используем напрямую статус из relationship API
+    if (relationship.status === 'friend') return 'friend'
+    if (relationship.status === 'blocked') return 'blocked'
+
+    // Для pending определяем направление
+    if (
+      relationship.status === 'pending' ||
+      relationship.status === 'pending_outgoing'
+    ) {
+      return relationship.pendingDirection === 'incoming'
+        ? 'pending_incoming'
+        : 'pending_outgoing'
     }
-    const rawStatusValue =
-      profileData?.user.privacy_settings?.['relationshipStatus']
-    const rawStatus =
-      typeof rawStatusValue === 'string' ? rawStatusValue : undefined
-    if (rawStatus === 'accepted') {
-      return 'friend'
+
+    if (relationship.status === 'pending_incoming') {
+      return 'pending_incoming'
     }
-    if (rawStatus === 'pending') {
-      return 'pending_outgoing'
-    }
-    if (rawStatus === 'blocked') {
-      return 'blocked'
-    }
+
     return 'none'
   }, [profileData])
 
   const canSendFriendRequest = useMemo(() => {
-    const relationship = profileData?.relationship
-    if (relationship?.canSendRequest != null) {
-      return relationship.canSendRequest
-    }
-    const rawStatusValue =
-      profileData?.user.privacy_settings?.['relationshipStatus']
-    const rawStatus =
-      typeof rawStatusValue === 'string' ? rawStatusValue : undefined
-    if (rawStatus === 'accepted' || rawStatus === 'blocked') {
-      return false
-    }
-    return true
-  }, [profileData])
+    return relationshipStatus === 'none'
+  }, [relationshipStatus])
 
   const handleAddFriend = useCallback(async () => {
     if (!profileData?.user.telegram_id || !currentUserTelegramId) {
@@ -178,7 +133,11 @@ export default function FriendProfilePage() {
         }
       )
 
-      const result = await response.json()
+      const result = (await response.json()) as {
+        success?: boolean
+        data?: { message?: string }
+        error?: string
+      }
       if (response.ok && result?.success) {
         hapticFeedback('success')
         showAlert?.(result.data?.message ?? 'Запрос отправлен')
@@ -206,6 +165,59 @@ export default function FriendProfilePage() {
     canSendFriendRequest,
   ])
 
+  const handleRemoveFriend = useCallback(async () => {
+    if (!profileData?.user.telegram_id || !currentUserTelegramId) {
+      showAlert?.('Не удалось удалить из друзей')
+      return
+    }
+
+    try {
+      setIsProcessingFriendAction(true)
+      const response = await authenticatedFetch(
+        '/api/friends?action=remove-friend',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            telegramId: currentUserTelegramId,
+            friendTelegramId: profileData.user.telegram_id,
+          }),
+        }
+      )
+
+      const result = (await response.json()) as {
+        success?: boolean
+        data?: { message?: string }
+        error?: string
+      }
+
+      if (response.ok && result?.success) {
+        hapticFeedback('success')
+        showAlert?.(result.data?.message ?? 'Удалено из друзей')
+        setShowRemoveConfirm(false)
+        if (friendTelegramIdNum) {
+          await loadFriendProfile(friendTelegramIdNum)
+        }
+      } else {
+        showAlert?.(result?.error ?? 'Не удалось удалить из друзей')
+        hapticFeedback('error')
+      }
+    } catch (error) {
+      console.error('Failed to remove friend:', error)
+      showAlert?.('Не удалось удалить из друзей')
+      hapticFeedback('error')
+    } finally {
+      setIsProcessingFriendAction(false)
+    }
+  }, [
+    currentUserTelegramId,
+    friendTelegramIdNum,
+    hapticFeedback,
+    loadFriendProfile,
+    profileData?.user.telegram_id,
+    showAlert,
+  ])
+
   const handleRespondRequest = useCallback(
     async (action: 'accept' | 'decline') => {
       if (!profileData?.user.telegram_id || !currentUserTelegramId) {
@@ -227,7 +239,11 @@ export default function FriendProfilePage() {
           }
         )
 
-        const result = await response.json()
+        const result = (await response.json()) as {
+          success?: boolean
+          data?: { message?: string }
+          error?: string
+        }
         if (response.ok && result?.success) {
           hapticFeedback(action === 'accept' ? 'success' : 'warning')
           showAlert?.(result.data?.message ?? 'Запрос обновлён')
@@ -269,9 +285,54 @@ export default function FriendProfilePage() {
 
     if (relationshipStatus === 'friend') {
       return (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-600 dark:border-emerald-500/40 dark:bg-emerald-900/20 dark:text-emerald-300">
-          <UserCheck className="h-3.5 w-3.5" />В друзьях
-        </div>
+        <>
+          <button
+            onClick={() => setShowRemoveConfirm(true)}
+            className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-600 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-emerald-500/40 dark:bg-emerald-900/20 dark:text-emerald-300 dark:hover:border-red-500/40 dark:hover:bg-red-900/20 dark:hover:text-red-300"
+          >
+            <UserCheck className="h-3.5 w-3.5" />В друзьях
+          </button>
+
+          {/* Confirmation Modal */}
+          {showRemoveConfirm && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <motion.div
+                className="max-w-sm rounded-2xl border border-neutral-200 bg-white p-6 shadow-xl dark:border-neutral-700 dark:bg-neutral-800"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+              >
+                <h3 className="mb-2 text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                  Удалить из друзей?
+                </h3>
+                <p className="mb-6 text-sm text-neutral-600 dark:text-neutral-400">
+                  Вы уверены, что хотите удалить{' '}
+                  {profileData?.user.first_name || 'пользователя'} из друзей?
+                </p>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowRemoveConfirm(false)}
+                    className="flex-1"
+                  >
+                    Отмена
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      void handleRemoveFriend()
+                    }}
+                    isLoading={isProcessingFriendAction}
+                    className="flex-1 bg-red-500 hover:bg-red-600"
+                  >
+                    Удалить
+                  </Button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </>
       )
     }
 
@@ -340,20 +401,6 @@ export default function FriendProfilePage() {
 
   const friendshipActionElement = renderFriendshipAction()
 
-  useEffect(() => {
-    if (profileData) {
-      // 🔍 ОТЛАДКА: Логируем полученные данные друга
-      console.log('🔍 Friend Profile Data Received:', {
-        friendTelegramId,
-        hasUser: !!profileData.user,
-        hasStats: !!profileData.stats,
-        registrationDate: profileData.user?.registration_date,
-        statsData: profileData.stats,
-        userData: profileData.user,
-      })
-    }
-  }, [friendTelegramId, profileData])
-
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-kira-50 via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
@@ -408,22 +455,11 @@ export default function FriendProfilePage() {
   const currentLevel =
     GARDENER_LEVELS.find(l => l.level === user.level) || GARDENER_LEVELS[0]!
 
-  // 🔍 ОТЛАДКА: Сравниваем два способа подсчета дней
-  const daysSinceRegistrationLocal = Math.floor(
+  // Подсчет дней с регистрации
+  const daysSinceRegistration = Math.floor(
     (Date.now() - new Date(user.registration_date).getTime()) /
       (1000 * 60 * 60 * 24)
   )
-
-  const daysSinceRegistrationFromStats = stats?.totalDays || 0
-
-  console.log('🔍 Friend Days Comparison:', {
-    localCalculation: daysSinceRegistrationLocal,
-    statsCalculation: daysSinceRegistrationFromStats,
-    registrationDate: user.registration_date,
-    usingForDisplay: daysSinceRegistrationLocal,
-  })
-
-  const daysSinceRegistration = daysSinceRegistrationLocal
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-kira-50 via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
@@ -445,14 +481,6 @@ export default function FriendProfilePage() {
       </div>
 
       <div className="space-y-6 p-4 pb-8">
-        {/* Debug Info */}
-        {/* <FriendProfileDebug
-          profileData={profileData}
-          error={error}
-          isLoading={isLoading}
-          friendTelegramId={friendTelegramId}
-        /> */}
-
         {/* Profile Header */}
         <motion.div
           className="rounded-2xl border border-gray-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 dark:border-gray-700 dark:from-blue-900/30 dark:to-indigo-900/30"
@@ -547,14 +575,6 @@ export default function FriendProfilePage() {
                 value={stats.rareElementsFound || 0}
               />
             </div>
-
-            {/* 🔍 ОТЛАДКА: Показываем сырые данные статистики в DEV режиме */}
-            {import.meta.env.DEV && (
-              <div className="mt-4 rounded-lg bg-yellow-50 p-3 text-xs text-yellow-800">
-                <strong>DEBUG - Raw Stats:</strong>
-                <pre>{JSON.stringify(stats, null, 2)}</pre>
-              </div>
-            )}
           </motion.div>
         ) : (
           <motion.div

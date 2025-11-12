@@ -424,24 +424,7 @@ async function handleViewFriendGarden(req, res) {
     // 🔑 Используем JWT из req.auth для RLS-защищенного запроса
     const supabase = await getSupabaseClient(req.auth?.jwt)
 
-    // 1. Проверяем что пользователи являются друзьями
-    const { data: friendship, error: friendshipError } = await supabase
-      .from('friendships')
-      .select('status')
-      .or(
-        `and(requester_telegram_id.eq.${viewerTelegramId},addressee_telegram_id.eq.${friendTelegramId}),and(requester_telegram_id.eq.${friendTelegramId},addressee_telegram_id.eq.${viewerTelegramId})`
-      )
-      .eq('status', 'accepted')
-      .single()
-
-    if (friendshipError || !friendship) {
-      return res.status(403).json({
-        success: false,
-        error: 'Access denied: you are not friends with this user',
-      })
-    }
-
-    // 2. Проверяем настройки приватности владельца сада
+    // 1. Сначала проверяем настройки приватности владельца сада
     const { data: ownerSettings, error: settingsError } = await supabase
       .from('users')
       .select(
@@ -460,11 +443,25 @@ async function handleViewFriendGarden(req, res) {
     // Проверяем разрешение на просмотр сада (по умолчанию true если поле не задано)
     const canShareGarden = ownerSettings.share_garden !== false
 
+    // 2. Если сад публичный (shareGarden=true), разрешаем доступ всем
     if (!canShareGarden) {
-      return res.status(403).json({
-        success: false,
-        error: 'This user has disabled garden sharing',
-      })
+      // Сад приватный - проверяем дружбу
+      const { data: friendship, error: friendshipError } = await supabase
+        .from('friendships')
+        .select('status')
+        .or(
+          `and(requester_telegram_id.eq.${viewerTelegramId},addressee_telegram_id.eq.${friendTelegramId}),and(requester_telegram_id.eq.${friendTelegramId},addressee_telegram_id.eq.${viewerTelegramId})`
+        )
+        .eq('status', 'accepted')
+        .single()
+
+      if (friendshipError || !friendship) {
+        return res.status(403).json({
+          success: false,
+          error:
+            'This user has disabled garden sharing. You need to be friends to view their garden.',
+        })
+      }
     }
 
     // 3. Получаем элементы сада друга

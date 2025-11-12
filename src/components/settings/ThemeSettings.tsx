@@ -18,7 +18,7 @@ import { Button, Card } from '@/components/ui'
 const loadOwnedThemesFromStorage = (): string[] => {
   try {
     const stored = localStorage.getItem('garden_owned_themes')
-    return stored ? JSON.parse(stored) : []
+    return stored ? (JSON.parse(stored) as string[]) : []
   } catch {
     return []
   }
@@ -69,10 +69,8 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
     isProcessingRef.current = true
 
     try {
-
       const theme = themes.find(t => t.id === themeId)
       if (!theme) {
-        console.error('❌ Theme not found')
         return
       }
 
@@ -96,9 +94,6 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
               sprouts: result.balance_after,
               lastUpdated: new Date(),
             })
-            console.log('✅ Currency balance updated optimistically:', {
-              newBalance: result.balance_after,
-            })
           }
         }
 
@@ -109,7 +104,7 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
         await queryClient.invalidateQueries({
           queryKey: ['themes', 'catalog'],
         })
-        
+
         // Инвалидируем валюту для полной синхронизации
         await queryClient.invalidateQueries({
           queryKey: currencyKeys.balance(currentUser.telegramId),
@@ -121,36 +116,38 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
         saveOwnedThemesToStorage(updatedOwned)
 
         // Принудительно обновляем React Query кеш
-        queryClient.setQueryData(
-          ['themes', 'catalog'],
-          (oldData: ReturnType<typeof Object> | undefined) => {
-            type ThemesCatalogResponse = {
-              success: boolean
-              data?: { themes: Array<{ id: string; name: string; priceSprouts: number; isDefault: boolean }>; ownedThemeIds: string[] }
-              error?: string
+        queryClient.setQueryData(['themes', 'catalog'], (oldData: unknown) => {
+          type ThemesCatalogResponse = {
+            success: boolean
+            data?: {
+              themes: Array<{
+                id: string
+                name: string
+                priceSprouts: number
+                isDefault: boolean
+              }>
+              ownedThemeIds: string[]
             }
-            const casted = oldData as ThemesCatalogResponse | undefined
-            if (casted?.success && casted.data?.ownedThemeIds) {
-              return {
-                ...casted,
-                data: {
-                  ...casted.data,
-                  ownedThemeIds: [...casted.data.ownedThemeIds, themeId],
-                },
-              }
-            }
-            return oldData
+            error?: string
           }
-        )
+          const casted = oldData as ThemesCatalogResponse | undefined
+          if (casted?.success && casted.data?.ownedThemeIds) {
+            return {
+              ...casted,
+              data: {
+                ...casted.data,
+                ownedThemeIds: [...casted.data.ownedThemeIds, themeId],
+              },
+            }
+          }
+          return oldData
+        })
 
         // Принудительно обновляем localStorage версию для useGardenTheme
         window.dispatchEvent(new Event('storage'))
-
-        console.log('✅ Theme purchased successfully!')
-        console.log('🎨 Updated owned themes:', updatedOwned)
       }
-    } catch (error) {
-      console.error('Failed to buy theme:', error)
+    } catch {
+      // Ошибка логируется через React Query
     } finally {
       // Разблокируем через небольшую задержку для предотвращения двойных кликов
       setTimeout(() => {
@@ -160,32 +157,16 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
   }
 
   const handleSelectTheme = async (themeId: string) => {
-    console.log('🎨 ThemeSettings - handleSelectTheme:', {
-      themeId,
-      ownedThemeIds,
-      canUseTheme: canUseTheme(themeId),
-      currentUser: currentUser?.telegramId,
-    })
-
     if (canUseTheme(themeId)) {
       await setGardenTheme(themeId)
     }
   }
 
   return (
-    <div className={className}>
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-          🎨 Темы сада
-        </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          Персонализируйте внешний вид вашего сада
-        </p>
-      </div>
-
+    <div className={`space-y-4 ${className || ''}`}>
       {isLoadingThemes ? (
         <div className="flex items-center justify-center py-8">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-300 border-t-kira-600 dark:border-neutral-700 dark:border-t-kira-400" />
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -193,16 +174,6 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
             const isOwned = ownedThemeIds.includes(theme.id)
             const canBuy = canUseTheme(theme.id)
             const isSelected = currentTheme.id === theme.id
-
-            console.log('🎨 ThemeSettings - rendering theme:', {
-              themeId: theme.id,
-              themeName: theme.name,
-              isOwned,
-              canBuy,
-              isSelected,
-              ownedThemeIds,
-              isDefault: theme.isDefault,
-            })
 
             return (
               <motion.div
@@ -213,7 +184,7 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
                 <Card
                   className={`cursor-pointer overflow-hidden transition-all ${
                     isSelected
-                      ? 'bg-blue-50 ring-2 ring-blue-500 dark:bg-blue-900/20'
+                      ? 'bg-kira-50 ring-2 ring-kira-500 dark:bg-kira-900/20'
                       : 'hover:shadow-md'
                   } ${!canBuy ? 'opacity-60' : ''}`}
                   onClick={() => handleSelectTheme(theme.id)}
@@ -252,18 +223,18 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
                   {/* Theme Info */}
                   <div className="p-3">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-medium text-gray-900 dark:text-white">
+                      <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
                         {theme.name}
                       </h3>
                       <div className="flex items-center gap-1">
                         {isSelected && (
-                          <Check className="h-4 w-4 text-blue-500" />
+                          <Check className="h-4 w-4 text-kira-500" />
                         )}
                         {isOwned && !isSelected && (
                           <Check className="h-4 w-4 text-green-500" />
                         )}
                         {!canBuy && !isOwned && (
-                          <Lock className="h-4 w-4 text-gray-400" />
+                          <Lock className="h-4 w-4 text-neutral-400" />
                         )}
                       </div>
                     </div>
@@ -271,7 +242,7 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
                     <div className="mt-1 flex items-center justify-between">
                       <div className="flex items-center gap-1">
                         <Leaf className="h-3 w-3 text-green-500" />
-                        <span className="text-xs text-gray-600 dark:text-gray-400">
+                        <span className="text-xs text-neutral-600 dark:text-neutral-400">
                           {theme.priceSprouts === 0
                             ? 'Бесплатно'
                             : theme.priceSprouts}
@@ -285,7 +256,7 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
                           className="h-6 px-2 text-xs"
                           onClick={e => {
                             e.stopPropagation()
-                            handleBuyTheme(theme.id)
+                            void handleBuyTheme(theme.id)
                           }}
                         >
                           Купить
@@ -301,15 +272,17 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
       )}
 
       {/* Balance Info */}
-      <div className="mt-4 flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+      <div className="flex items-center justify-between rounded-xl bg-neutral-100/80 p-3 dark:bg-neutral-800/80">
         <div className="flex items-center gap-2">
           <Leaf className="h-4 w-4 text-green-500" />
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            Ваш баланс: {userCurrency?.sprouts || 0} ростков
+          <span className="text-sm text-neutral-700 dark:text-neutral-300">
+            Баланс:{' '}
+            <span className="font-semibold">{userCurrency?.sprouts || 0}</span>{' '}
+            ростков
           </span>
         </div>
-        <div className="text-xs text-gray-500 dark:text-gray-500">
-          Нажмите на валюту в шапке для открытия магазина
+        <div className="text-xs text-neutral-500 dark:text-neutral-500">
+          💡 Магазин в шапке
         </div>
       </div>
     </div>

@@ -1,14 +1,14 @@
 import { motion } from 'framer-motion'
-import { ArrowLeft } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Settings, Palette, Sparkles, Lock } from 'lucide-react'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { ProfilePrivacySettings } from '@/components/profile/ProfilePrivacySettings'
 import { ThemeSettings } from '@/components/settings/ThemeSettings'
 import { CompanionSettings } from '@/components/settings/CompanionSettings'
+import { SettingsSection } from '@/components/settings/SettingsSection'
+import { PageHeader } from '@/components/layout'
 
 export function SettingsPage() {
-  const navigate = useNavigate()
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
   const currentUser = userData?.user
@@ -36,26 +36,42 @@ export function SettingsPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Header */}
-      <div className="glass-card border-b border-neutral-200/50 shadow-sm dark:border-neutral-700/50">
-        <div className="flex items-center px-4 py-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="mr-3 flex items-center justify-center rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-700"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
-            Настройки
-          </h1>
-        </div>
-      </div>
+      <PageHeader
+        title="Настройки"
+        subtitle="Персонализация и приватность"
+        icon={<Settings className="h-5 w-5" />}
+      />
 
-      {/* Content */}
-      <div className="space-y-6 p-4">
-        <ThemeSettings />
-        <CompanionSettings user={currentUser} />
-        <ProfilePrivacySettings user={currentUser} />
+      <div className="space-y-6 p-4 pb-24">
+        {/* Внешний вид */}
+        <SettingsSection
+          title="Внешний вид"
+          description="Персонализируйте внешний вид вашего сада"
+          icon={<Palette className="h-5 w-5" />}
+          delay={0}
+        >
+          <ThemeSettings />
+        </SettingsSection>
+
+        {/* Игровые настройки */}
+        <SettingsSection
+          title="Лумина — дух сада"
+          description="Настройки вашего живого спутника"
+          icon={<Sparkles className="h-5 w-5" />}
+          delay={0.1}
+        >
+          <CompanionSettings user={currentUser} />
+        </SettingsSection>
+
+        {/* Приватность */}
+        <SettingsSection
+          title="Приватность"
+          description="Управление доступом к вашим данным"
+          icon={<Lock className="h-5 w-5" />}
+          delay={0.2}
+        >
+          <ProfilePrivacySettings user={currentUser} />
+        </SettingsSection>
       </div>
     </motion.div>
   )
