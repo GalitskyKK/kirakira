@@ -486,7 +486,6 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   ])
 
   const containerRef = useRef<HTMLDivElement>(null)
-  const wasDragged = useRef(false)
 
   useEffect(() => {
     if (!isDragging && containerRef.current) {
@@ -501,19 +500,18 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   }, [isDragging])
 
   const handleDragStart = () => {
-    wasDragged.current = false
     setIsDragging(true)
-  }
-
-  const handleDrag = () => {
-    wasDragged.current = true
   }
 
   const handleDragEnd = (
     _event: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
   ) => {
-    if (wasDragged.current) {
+    setIsDragging(false)
+
+    const isDrag = Math.abs(info.offset.x) > 5 || Math.abs(info.offset.y) > 5
+
+    if (isDrag) {
       const viewportWidth = window.innerWidth
       const viewportHeight = window.innerHeight
       const { x, y } = info.point
@@ -532,13 +530,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
       } else {
         setPosition(position.yPosition, side)
       }
-    }
-
-    setIsDragging(false)
-  }
-
-  const handleTap = () => {
-    if (!wasDragged.current) {
+    } else {
       toggleInfo()
     }
   }
@@ -583,9 +575,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           dragConstraints={false}
           dragDirectionLock={false}
           onDragStart={handleDragStart}
-          onDrag={handleDrag}
           onDragEnd={handleDragEnd}
-          onTap={handleTap}
           onKeyDown={event => {
             if (event.key === 'Enter' || event.key === ' ') {
               event.preventDefault()
