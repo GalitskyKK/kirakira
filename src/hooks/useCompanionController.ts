@@ -9,6 +9,7 @@ import type {
   GardenElement,
   MoodType,
   RarityLevel,
+  MoodEntry,
 } from '@/types'
 
 interface ElementMeta {
@@ -17,7 +18,9 @@ interface ElementMeta {
   readonly latestRarity: RarityLevel | null
 }
 
-function extractLatestElement(elements: readonly GardenElement[]): GardenElement | null {
+function extractLatestElement(
+  elements: readonly GardenElement[]
+): GardenElement | null {
   if (elements.length === 0) {
     return null
   }
@@ -30,7 +33,9 @@ function extractLatestElement(elements: readonly GardenElement[]): GardenElement
   }, null)
 }
 
-function buildElementMeta(elements: readonly GardenElement[] | undefined): ElementMeta {
+function buildElementMeta(
+  elements: readonly GardenElement[] | undefined
+): ElementMeta {
   if (!elements || elements.length === 0) {
     return {
       count: 0,
@@ -52,7 +57,9 @@ export function useCompanionController(): void {
   const activeCompanionId = useCompanionStore(state => state.activeCompanionId)
   const setBaseEmotion = useCompanionStore(state => state.setBaseEmotion)
   const setLastMood = useCompanionStore(state => state.setLastMood)
-  const triggerCelebration = useCompanionStore(state => state.triggerCelebration)
+  const triggerCelebration = useCompanionStore(
+    state => state.triggerCelebration
+  )
   const clearCelebration = useCompanionStore(state => state.clearCelebration)
   const celebrationUntil = useCompanionStore(state => state.celebrationUntil)
   const triggerAmbientAnimation = useCompanionStore(
@@ -68,21 +75,88 @@ export function useCompanionController(): void {
   )
   const activeReaction = useCompanionStore(state => state.activeReaction)
 
-  const { todaysMood } = useMoodTracking()
+  const { todaysMood, moodHistory } = useMoodTracking()
   const { garden } = useGardenState()
 
   const mood: MoodType | null = todaysMood?.mood ?? null
 
+  // Calculate dominant mood from last week for default appearance
+  const dominantMood: MoodType | null = useMemo(() => {
+    if (moodHistory.length === 0) {
+      return null
+    }
+
+    // Get entries from the last 7 days
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+    sevenDaysAgo.setHours(0, 0, 0, 0)
+
+    const recentEntries: readonly MoodEntry[] = moodHistory.filter(
+      (entry: MoodEntry) => {
+        const entryDate =
+          entry.date instanceof Date ? entry.date : new Date(entry.date)
+        return entryDate >= sevenDaysAgo
+      }
+    )
+
+    if (recentEntries.length === 0) {
+      return null
+    }
+
+    // Count mood occurrences
+    const moodCounts: Record<MoodType, number> = {
+      joy: 0,
+      calm: 0,
+      stress: 0,
+      sadness: 0,
+      anger: 0,
+      anxiety: 0,
+    }
+
+    recentEntries.forEach((entry: MoodEntry) => {
+      moodCounts[entry.mood]++
+    })
+
+    // Find the most frequent mood
+    let result: MoodType | null = null
+    let maxCount = 0
+
+    Object.entries(moodCounts).forEach(([moodKey, count]) => {
+      if (count > maxCount) {
+        maxCount = count
+        result = moodKey as MoodType
+      }
+    })
+
+    return result
+  }, [moodHistory])
+
   useEffect(() => {
     const definition = getCompanionDefinition(activeCompanionId)
-    const moodKey = mood ?? 'default'
-    const targetEmotion = definition.moodMap[moodKey] ?? definition.moodMap.default
+
+    // If there's a mood today, use it
+    // Otherwise, use dominant mood from last week
+    // If no dominant mood, fallback to 'default' (neutral)
+    let moodKey: MoodType | 'default'
+    if (mood !== null) {
+      moodKey = mood
+    } else if (dominantMood !== null) {
+      moodKey = dominantMood
+    } else {
+      moodKey = 'default'
+    }
+
+    const targetEmotion =
+      definition.moodMap[moodKey] ?? definition.moodMap.default
 
     setBaseEmotion(targetEmotion === 'celebration' ? 'neutral' : targetEmotion)
     setLastMood(mood)
-  }, [activeCompanionId, mood, setBaseEmotion, setLastMood])
+  }, [activeCompanionId, mood, dominantMood, setBaseEmotion, setLastMood])
 
-  const elementMeta = useMemo(() => buildElementMeta(garden?.elements), [garden])
+  const elementMeta = useMemo(
+    () => buildElementMeta(garden?.elements),
+    [garden]
+  )
   const previousMetaRef = useRef<ElementMeta>(elementMeta)
   const hasInitializedRef = useRef<boolean>(false)
   const previousMoodEntryRef = useRef<string | null>(null)
@@ -109,7 +183,8 @@ export function useCompanionController(): void {
 
       if (isRareDiscovery) {
         const celebrationDuration =
-          elementMeta.latestRarity === 'epic' || elementMeta.latestRarity === 'legendary'
+          elementMeta.latestRarity === 'epic' ||
+          elementMeta.latestRarity === 'legendary'
             ? 4200
             : 3600
 
@@ -253,4 +328,3 @@ export function useCompanionController(): void {
     }
   }, [activeReaction, clearReaction])
 }
-

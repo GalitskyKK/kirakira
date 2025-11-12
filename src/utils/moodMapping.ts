@@ -347,3 +347,56 @@ export function getRecommendedMood(recentHistory: readonly MoodEntry[]): {
     reason: `Чаще всего за последние дни: ${MOOD_CONFIG[mostCommon].label}`,
   }
 }
+
+/**
+ * Calculates the dominant (most frequent) mood from the last 7 days
+ * Used to determine companion's default appearance when no mood is logged today
+ */
+export function getDominantMoodFromLastWeek(
+  moodHistory: readonly MoodEntry[]
+): MoodType | null {
+  if (moodHistory.length === 0) {
+    return null
+  }
+
+  // Get entries from the last 7 days
+  const sevenDaysAgo = new Date()
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+  sevenDaysAgo.setHours(0, 0, 0, 0)
+
+  const recentEntries = moodHistory.filter(entry => {
+    const entryDate = entry.date instanceof Date ? entry.date : new Date(entry.date)
+    return entryDate >= sevenDaysAgo
+  })
+
+  if (recentEntries.length === 0) {
+    return null
+  }
+
+  // Count mood occurrences
+  const moodCounts: Record<MoodType, number> = {
+    joy: 0,
+    calm: 0,
+    stress: 0,
+    sadness: 0,
+    anger: 0,
+    anxiety: 0,
+  }
+
+  recentEntries.forEach(entry => {
+    moodCounts[entry.mood]++
+  })
+
+  // Find the most frequent mood
+  let dominantMood: MoodType | null = null
+  let maxCount = 0
+
+  Object.entries(moodCounts).forEach(([mood, count]) => {
+    if (count > maxCount) {
+      maxCount = count
+      dominantMood = mood as MoodType
+    }
+  })
+
+  return dominantMood
+}
