@@ -126,7 +126,7 @@ export function CompanionOverlay() {
   // Стили с CSS transition
   const containerStyle: React.CSSProperties = {
     ...companionPositionStyle,
-    // Transition только для bottom (Y позиция), НЕ для left/right
+    // Transition только для bottom (Y позиция), НЕ для left/right r
     transition:
       isDragging || isChangingSide
         ? 'none'
