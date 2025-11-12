@@ -486,24 +486,10 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     position,
   ])
 
-  // Используем ref для прямого управления transform
   const containerRef = useRef<HTMLDivElement>(null)
-  // Отслеживаем начало drag для различения клика и перетаскивания
-  const dragStartPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
-  // Флаг, что было реальное перетаскивание (расстояние >= 10px)
-  const wasRealDragRef = useRef<boolean>(false)
-  // Отслеживаем touch события для немедленной обработки клика на мобилке
-  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(
-    null
-  )
-  const touchMovedRef = useRef<boolean>(false)
-  // Флаг, что модалка уже была открыта через touch событие
-  const modalOpenedByTouchRef = useRef<boolean>(false)
 
-  // Сбрасываем transform после окончания drag
   useEffect(() => {
     if (!isDragging && containerRef.current) {
-      // Сбрасываем transform через небольшую задержку
       const timer = setTimeout(() => {
         if (containerRef.current) {
           containerRef.current.style.transform = 'none'
@@ -514,154 +500,32 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     return undefined
   }, [isDragging])
 
-  // Добавляем нативные touch обработчики для немедленной обработки клика на мобилке
-  useEffect(() => {
-    const element = containerRef.current
-    if (!element) {
-      return undefined
-    }
-
-    const handleTouchStart = (event: TouchEvent) => {
-      const touch = event.touches[0]
-      if (touch) {
-        touchStartRef.current = {
-          x: touch.clientX,
-          y: touch.clientY,
-          time: Date.now(),
-        }
-        touchMovedRef.current = false
-        modalOpenedByTouchRef.current = false
-      }
-    }
-
-    const handleTouchMove = (event: TouchEvent) => {
-      if (!touchStartRef.current) {
-        return
-      }
-      const touch = event.touches[0]
-      if (touch) {
-        const dx = touch.clientX - touchStartRef.current.x
-        const dy = touch.clientY - touchStartRef.current.y
-        const distance = Math.sqrt(dx * dx + dy * dy)
-        if (distance > 5) {
-          touchMovedRef.current = true
-        }
-      }
-    }
-
-    const handleTouchEnd = (event: TouchEvent) => {
-      if (!touchStartRef.current) {
-        return
-      }
-
-      const touch = event.changedTouches[0]
-      if (!touch) {
-        return
-      }
-
-      const touchEndTime = Date.now()
-      const touchDuration = touchEndTime - touchStartRef.current.time
-
-      const dx = touch.clientX - touchStartRef.current.x
-      const dy = touch.clientY - touchStartRef.current.y
-      const distance = Math.sqrt(dx * dx + dy * dy)
-
-      // Если это быстрый клик (время < 300ms, расстояние < 10px, не было движения) - открываем модалку
-      if (
-        !touchMovedRef.current &&
-        touchDuration < 300 &&
-        distance < 10 &&
-        !wasRealDragRef.current
-      ) {
-        // Открываем модалку немедленно для мобильных устройств
-        modalOpenedByTouchRef.current = true
-        toggleInfo()
-      }
-
-      touchStartRef.current = null
-      touchMovedRef.current = false
-    }
-
-    element.addEventListener('touchstart', handleTouchStart, { passive: true })
-    element.addEventListener('touchmove', handleTouchMove, { passive: true })
-    element.addEventListener('touchend', handleTouchEnd, { passive: true })
-
-    return () => {
-      element.removeEventListener('touchstart', handleTouchStart)
-      element.removeEventListener('touchmove', handleTouchMove)
-      element.removeEventListener('touchend', handleTouchEnd)
-    }
-  }, [isDragging, toggleInfo])
-
-  // Обработчик начала drag
-  const handleDragStart = (
-    _event: MouseEvent | TouchEvent | PointerEvent,
-    info: PanInfo
-  ) => {
+  const handleDragStart = () => {
     setIsDragging(true)
-    wasRealDragRef.current = false
-    dragStartPosRef.current = { x: info.point.x, y: info.point.y }
-    // Не сбрасываем modalOpenedByTouchRef здесь, так как он может быть установлен в touchEnd
   }
 
-  // Обработчик окончания drag
   const handleDragEnd = (
     _event: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
   ) => {
-    // Вычисляем реальное расстояние перемещения
-    const dx = info.point.x - dragStartPosRef.current.x
-    const dy = info.point.y - dragStartPosRef.current.y
-    const dragDistance = Math.sqrt(dx * dx + dy * dy)
-
     setIsDragging(false)
 
-    // Если движение было меньше 10px - это был клик, открываем модалку
-    if (dragDistance < 10) {
-      wasRealDragRef.current = false
-      // Открываем модалку только если она еще не была открыта через touch событие
-      if (!modalOpenedByTouchRef.current) {
-        toggleInfo()
-      }
-      modalOpenedByTouchRef.current = false
-      return
-    }
-
-    // Это было реальное перетаскивание - перемещаем компаньона
-    wasRealDragRef.current = true
-    modalOpenedByTouchRef.current = false
-
-    // Получаем размеры viewport
     const viewportWidth = window.innerWidth
     const viewportHeight = window.innerHeight
-
-    // info.point содержит координаты курсора относительно viewport
     const { x, y } = info.point
-
-    // Определяем сторону: левая или правая половина экрана
     const side: CompanionSide = x < viewportWidth / 2 ? 'left' : 'right'
-
-    // Вычисляем Y позицию от низа viewport
-    // y - это расстояние от верха viewport
     const distanceFromBottom = viewportHeight - y
-
-    // Определяем ограничения в зависимости от размера экрана
     const isMobileScreen = viewportWidth < 640
 
     if (isMobileScreen) {
-      // Мобильный: компаньон позиционируется от низа
-      // Более мягкие ограничения: минимум 80px от низа, максимум 150px от верха
-      const minDistanceFromBottom = 80 // Минимум 80px от низа экрана
-      const maxDistanceFromBottom = viewportHeight - 150 // Максимум - оставляем 150px сверху
-
+      const minDistanceFromBottom = 80
+      const maxDistanceFromBottom = viewportHeight - 150
       const constrainedDistance = Math.max(
         minDistanceFromBottom,
         Math.min(maxDistanceFromBottom, distanceFromBottom)
       )
-
       setPosition(constrainedDistance, side)
     } else {
-      // Десктоп: компаньон всегда сверху, запоминаем только сторону
       setPosition(position.yPosition, side)
     }
   }
@@ -707,18 +571,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           dragDirectionLock={false}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
-          onTap={() => {
-            // Fallback для быстрых кликов на десктопе, когда drag не начался
-            // Открываем модалку только если не было реального перетаскивания и не была открыта через touch
-            if (
-              !wasRealDragRef.current &&
-              !isDragging &&
-              !modalOpenedByTouchRef.current
-            ) {
-              toggleInfo()
-            }
-            modalOpenedByTouchRef.current = false
-          }}
+          onTap={toggleInfo}
           onKeyDown={event => {
             if (event.key === 'Enter' || event.key === ' ') {
               event.preventDefault()
