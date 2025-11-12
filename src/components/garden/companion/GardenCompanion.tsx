@@ -513,22 +513,20 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     _event: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
   ) => {
-    setIsDragging(false)
-
     // Проверяем было ли перемещение
     const dragDistance = Math.sqrt(
       info.offset.x * info.offset.x + info.offset.y * info.offset.y
     )
 
-    console.log('🎯 Drag end - distance:', dragDistance, 'offset:', info.offset)
-
-    // Если смещение меньше 5px - это был просто клик, не обрабатываем
+    // Если смещение меньше 5px - это был клик, открываем модалку
     if (dragDistance < 5) {
-      console.log('👆 Short drag - ignoring (will be handled by onTap)')
+      setIsDragging(false)
+      toggleInfo()
       return
     }
 
-    console.log('🔄 Drag detected! Moving companion')
+    // Было реальное перетаскивание - перемещаем компаньона
+    setIsDragging(false)
 
     // Получаем размеры viewport
     const viewportWidth = window.innerWidth
@@ -604,10 +602,6 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           dragSnapToOrigin
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
-          onTap={() => {
-            console.log('👆 Tap detected!')
-            toggleInfo()
-          }}
           onKeyDown={event => {
             if (event.key === 'Enter' || event.key === ' ') {
               event.preventDefault()

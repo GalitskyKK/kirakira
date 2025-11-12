@@ -96,18 +96,6 @@ export function CompanionOverlay() {
         }
   }, [isMobile, position.yPosition, position.side])
 
-  // Debug логирование (можно удалить позже)
-  useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/restrict-template-expressions
-    console.log('🎨 Companion overlay style:', {
-      position,
-      isMobile,
-      isDragging,
-      isChangingSide,
-      style: companionPositionStyle,
-    })
-  }, [position, isMobile, isDragging, isChangingSide, companionPositionStyle])
-
   if (!isUnlocked) {
     return (
       <div
