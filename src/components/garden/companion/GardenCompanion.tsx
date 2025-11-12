@@ -255,8 +255,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
   const visual = useCompanionVisual()
 
-  const reduceMotion = useReducedMotion()
-  const shouldReduceMotion = Boolean(reduceMotion)
+  const shouldReduceMotion = !!useReducedMotion()
 
   const gradientId = useMemo(
     () => `companion-body-${activeCompanionId}-${visual?.emotion ?? 'neutral'}`,
@@ -487,6 +486,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   ])
 
   const containerRef = useRef<HTMLDivElement>(null)
+  const dragStartedRef = useRef(false)
 
   useEffect(() => {
     if (!isDragging && containerRef.current) {
@@ -501,6 +501,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   }, [isDragging])
 
   const handleDragStart = () => {
+    dragStartedRef.current = true
     setIsDragging(true)
   }
 
@@ -509,6 +510,9 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     info: PanInfo
   ) => {
     setIsDragging(false)
+    setTimeout(() => {
+      dragStartedRef.current = false
+    }, 0)
 
     const viewportWidth = window.innerWidth
     const viewportHeight = window.innerHeight
@@ -527,6 +531,12 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
       setPosition(constrainedDistance, side)
     } else {
       setPosition(position.yPosition, side)
+    }
+  }
+
+  const handleTap = () => {
+    if (!dragStartedRef.current) {
+      toggleInfo()
     }
   }
 
@@ -571,7 +581,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           dragDirectionLock={false}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
-          onTap={toggleInfo}
+          onTap={handleTap}
           onKeyDown={event => {
             if (event.key === 'Enter' || event.key === ' ') {
               event.preventDefault()
