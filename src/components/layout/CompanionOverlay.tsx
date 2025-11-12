@@ -100,7 +100,7 @@ export function CompanionOverlay() {
 
   return (
     <div
-      className="pointer-events-none fixed z-[1500] transition-all duration-300 ease-out"
+      className="pointer-events-none fixed z-[1500]"
       style={companionPositionStyle}
     >
       <GardenCompanion className="pointer-events-auto" />

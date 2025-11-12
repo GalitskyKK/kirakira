@@ -492,7 +492,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   }
 
   // Обработчик окончания drag
-  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     setIsDragging(false)
     
     // Если это был короткий клик без drag - открываем info panel
@@ -521,42 +521,48 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     
     if (isMobileScreen) {
       // Мобильный: компаньон позиционируется от низа
-      // Минимум 100px от низа (над навбаром), максимум 200px от верха
-      const minDistanceFromBottom = 100 // Минимум 100px от низа экрана
-      const maxDistanceFromBottom = viewportHeight - 200 // Максимум - оставляем 200px сверху
+      // Более мягкие ограничения: минимум 80px от низа, максимум 150px от верха
+      const minDistanceFromBottom = 80 // Минимум 80px от низа экрана
+      const maxDistanceFromBottom = viewportHeight - 150 // Максимум - оставляем 150px сверху
       
       const constrainedDistance = Math.max(
         minDistanceFromBottom,
         Math.min(maxDistanceFromBottom, distanceFromBottom)
       )
       
-      // Debug логирование (можно будет удалить позже)
+      // Debug логирование
       console.log('📍 Companion position update:', {
         side,
+        rawY: y,
         distanceFromBottom,
         constrainedDistance,
+        minDistanceFromBottom,
+        maxDistanceFromBottom,
         viewportHeight,
-        y: info.point.y,
+        isMobileScreen,
       })
       
       setPosition(constrainedDistance, side)
     } else {
       // Десктоп: компаньон всегда сверху, запоминаем только сторону
-      // Для десктопа Y позиция фиксирована (24px от верха)
-      setPosition(position.yPosition, side) // Сохраняем текущую Y, меняем только сторону
+      console.log('🖥️ Desktop drag - only changing side:', { side, currentY: position.yPosition })
+      setPosition(position.yPosition, side)
     }
   }
+
+  // Используем округленное значение для ключа чтобы избежать частых пересозданий
+  const companionKey = `garden-companion-${position.side}-${Math.round(position.yPosition / 10) * 10}`
 
   return (
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          key="garden-companion"
+          key={companionKey}
           data-companion-container
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 12 }}
-          transition={{ duration: 0.35, ease: 'easeOut' }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
           className={clsx(
             'pointer-events-auto select-none',
             'relative flex h-16 w-12 items-center justify-center sm:h-24 sm:w-20',
