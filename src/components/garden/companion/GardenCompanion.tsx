@@ -1,5 +1,10 @@
 import { useMemo, useRef, useEffect } from 'react'
-import { AnimatePresence, motion, useReducedMotion, PanInfo } from 'framer-motion'
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+  PanInfo,
+} from 'framer-motion'
 import { clsx } from 'clsx'
 import { useCompanionStore } from '@/stores/companionStore'
 import {
@@ -232,13 +237,24 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     state => state.activeAmbientAnimation
   )
   const activeReaction = useCompanionStore(state => state.activeReaction)
-  const toggleInfo = useCompanionStore(state => state.toggleInfo)
-  const isInfoOpen = useCompanionStore(state => state.isInfoOpen)
   const lastMood = useCompanionStore(state => state.lastMood)
-  const position = useCompanionStore(state => state.position)
-  const setPosition = useCompanionStore(state => state.setPosition)
-  const setIsDragging = useCompanionStore(state => state.setIsDragging)
-  const isDragging = useCompanionStore(state => state.isDragging)
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return
+  const position: { yPosition: number; side: CompanionSide } =
+    useCompanionStore(state => state.position)
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  const isDragging = Boolean(useCompanionStore(state => state.isDragging))
+
+  // Явно типизируем функции из store
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  const toggleInfo: () => void = useCompanionStore(state => state.toggleInfo)
+  const isInfoOpen = useCompanionStore(state => state.isInfoOpen)
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return
+  const setPosition: (yPosition: number, side: CompanionSide) => void =
+    useCompanionStore(state => state.setPosition)
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return
+  const setIsDragging: (isDragging: boolean) => void = useCompanionStore(
+    state => state.setIsDragging
+  )
   const visual = useCompanionVisual()
 
   const reduceMotion = useReducedMotion()
@@ -340,7 +356,9 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
             >
               <span className="relative inline-flex min-h-[3.5rem] w-full items-center justify-center rounded-[1.8rem] bg-white/95 px-4 py-3 text-left text-sm font-medium leading-relaxed text-slate-600 shadow-xl backdrop-blur dark:bg-slate-900/95 dark:text-slate-200 sm:min-h-[4rem] sm:px-5 sm:py-4 sm:text-base">
                 {moodMessage}
-                <span className={`absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rotate-45 bg-white/95 shadow-sm dark:bg-slate-900/95 ${tailPositionClass}`} />
+                <span
+                  className={`absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rotate-45 bg-white/95 shadow-sm dark:bg-slate-900/95 ${tailPositionClass}`}
+                />
               </span>
             </motion.div>
           </motion.div>
@@ -462,93 +480,13 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
       default:
         return null
     }
-  }, [activeReaction, shouldReduceMotion, visual?.accentColor, lastMood, position])
-
-  if (!visual || !isVisible) {
-    return null
-  }
-
-  const eyePaths = getEyePaths(visual.eyeShape)
-  const mouthPath = getMouthPath(visual.mouthShape)
-  const [scaleMin, scaleMax] = visual.scaleRange
-  const scaleAnimation: number | number[] = shouldReduceMotion
-    ? 1
-    : [scaleMin, scaleMax, scaleMin]
-
-  // Состояние для отслеживания drag
-  const dragStartTimeRef = useRef<number>(0)
-  const hasDraggedRef = useRef<boolean>(false)
-
-  // Обработчик начала drag
-  const handleDragStart = () => {
-    dragStartTimeRef.current = Date.now()
-    hasDraggedRef.current = false
-    setIsDragging(true)
-  }
-
-  // Обработчик drag (проверяем был ли действительно drag)
-  const handleDrag = () => {
-    hasDraggedRef.current = true
-  }
-
-  // Обработчик окончания drag
-  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    setIsDragging(false)
-    
-    // Если это был короткий клик без drag - открываем info panel
-    const dragDuration = Date.now() - dragStartTimeRef.current
-    if (!hasDraggedRef.current && dragDuration < 200) {
-      toggleInfo()
-      return
-    }
-
-    // Получаем размеры viewport
-    const viewportWidth = window.innerWidth
-    const viewportHeight = window.innerHeight
-    
-    // info.point содержит координаты курсора относительно viewport
-    const { x, y } = info.point
-
-    // Определяем сторону: левая или правая половина экрана
-    const side: CompanionSide = x < viewportWidth / 2 ? 'left' : 'right'
-
-    // Вычисляем Y позицию от низа viewport
-    // y - это расстояние от верха viewport
-    const distanceFromBottom = viewportHeight - y
-    
-    // Определяем ограничения в зависимости от размера экрана
-    const isMobileScreen = viewportWidth < 640
-    
-    if (isMobileScreen) {
-      // Мобильный: компаньон позиционируется от низа
-      // Более мягкие ограничения: минимум 80px от низа, максимум 150px от верха
-      const minDistanceFromBottom = 80 // Минимум 80px от низа экрана
-      const maxDistanceFromBottom = viewportHeight - 150 // Максимум - оставляем 150px сверху
-      
-      const constrainedDistance = Math.max(
-        minDistanceFromBottom,
-        Math.min(maxDistanceFromBottom, distanceFromBottom)
-      )
-      
-      // Debug логирование
-      console.log('📍 Companion position update:', {
-        side,
-        rawY: y,
-        distanceFromBottom,
-        constrainedDistance,
-        minDistanceFromBottom,
-        maxDistanceFromBottom,
-        viewportHeight,
-        isMobileScreen,
-      })
-      
-      setPosition(constrainedDistance, side)
-    } else {
-      // Десктоп: компаньон всегда сверху, запоминаем только сторону
-      console.log('🖥️ Desktop drag - only changing side:', { side, currentY: position.yPosition })
-      setPosition(position.yPosition, side)
-    }
-  }
+  }, [
+    activeReaction,
+    shouldReduceMotion,
+    visual?.accentColor,
+    lastMood,
+    position,
+  ])
 
   // Используем ref для прямого управления transform
   const containerRef = useRef<HTMLDivElement>(null)
@@ -567,6 +505,76 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     return undefined
   }, [isDragging])
 
+  // Обработчик начала drag
+  const handleDragStart = () => {
+    setIsDragging(true)
+  }
+
+  // Обработчик окончания drag
+  const handleDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
+    setIsDragging(false)
+
+    // Проверяем был ли это клик или drag по смещению
+    // info.offset - это смещение от начальной позиции
+    const dragDistance = Math.sqrt(
+      info.offset.x * info.offset.x + info.offset.y * info.offset.y
+    )
+
+    // Если смещение меньше 5px - считаем это кликом
+    if (dragDistance < 5) {
+      toggleInfo()
+      return
+    }
+
+    // Получаем размеры viewport
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+
+    // info.point содержит координаты курсора относительно viewport
+    const { x, y } = info.point
+
+    // Определяем сторону: левая или правая половина экрана
+    const side: CompanionSide = x < viewportWidth / 2 ? 'left' : 'right'
+
+    // Вычисляем Y позицию от низа viewport
+    // y - это расстояние от верха viewport
+    const distanceFromBottom = viewportHeight - y
+
+    // Определяем ограничения в зависимости от размера экрана
+    const isMobileScreen = viewportWidth < 640
+
+    if (isMobileScreen) {
+      // Мобильный: компаньон позиционируется от низа
+      // Более мягкие ограничения: минимум 80px от низа, максимум 150px от верха
+      const minDistanceFromBottom = 80 // Минимум 80px от низа экрана
+      const maxDistanceFromBottom = viewportHeight - 150 // Максимум - оставляем 150px сверху
+
+      const constrainedDistance = Math.max(
+        minDistanceFromBottom,
+        Math.min(maxDistanceFromBottom, distanceFromBottom)
+      )
+
+      setPosition(constrainedDistance, side)
+    } else {
+      // Десктоп: компаньон всегда сверху, запоминаем только сторону
+      setPosition(position.yPosition, side)
+    }
+  }
+
+  if (!visual || !isVisible) {
+    return null
+  }
+
+  const eyePaths = getEyePaths(visual.eyeShape)
+  const mouthPath = getMouthPath(visual.mouthShape)
+  const [scaleMin, scaleMax] = visual.scaleRange
+  const scaleAnimation: number | number[] = shouldReduceMotion
+    ? 1
+    : [scaleMin, scaleMax, scaleMin]
+
   return (
     <AnimatePresence>
       {isVisible && (
@@ -581,7 +589,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           className={clsx(
             'pointer-events-auto select-none',
             'relative flex h-16 w-12 items-center justify-center sm:h-24 sm:w-20',
-            'cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/70',
+            'cursor-grab focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/70 active:cursor-grabbing',
             isDragging && 'cursor-grabbing',
             className
           )}
@@ -594,7 +602,6 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           dragElastic={0.05}
           dragSnapToOrigin
           onDragStart={handleDragStart}
-          onDrag={handleDrag}
           onDragEnd={handleDragEnd}
           onKeyDown={event => {
             if (event.key === 'Enter' || event.key === ' ') {
