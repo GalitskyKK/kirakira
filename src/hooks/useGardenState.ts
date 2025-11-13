@@ -20,6 +20,7 @@ import {
 import { useChallengeGardenIntegration } from '@/hooks/useChallengeIntegration'
 import { useQuestIntegration } from '@/hooks/useQuestIntegration'
 import type { MoodType, Position2D, GardenElement, Garden } from '@/types'
+import { SHELVES_PER_ROOM, MAX_POSITIONS_PER_SHELF } from '@/types'
 import { loadGarden, saveGarden } from '@/utils/storage'
 import {
   generateDailyElement,
@@ -32,6 +33,8 @@ import { awardElementSprouts } from '@/utils/currencyRewards'
  * Хук для управления состоянием сада
  * Объединяет серверное состояние (React Query) и клиентское состояние (Zustand)
  */
+const MAX_ROOMS_SUPPORTED = 200
+
 export function useGardenState() {
   // Получаем telegramId через контекст для оптимизации
   const telegramId = useTelegramId()
@@ -118,6 +121,27 @@ export function useGardenState() {
     return null
   }, [gardenData, currentUser, isLoading])
 
+  const resolveTotalRooms = useCallback((): number => {
+    if (!currentGarden) {
+      return 1
+    }
+
+    const { elements } = currentGarden
+
+    if (elements.length === 0) {
+      return 1
+    }
+
+    const maxRoomIndex = elements.reduce((max, element) => {
+      const elementRoomIndex = Math.floor(element.position.y / SHELVES_PER_ROOM)
+      return elementRoomIndex > max ? elementRoomIndex : max
+    }, 0)
+
+    const totalRooms = maxRoomIndex + 2
+
+    return Math.min(totalRooms, MAX_ROOMS_SUPPORTED)
+  }, [currentGarden])
+
   // Статистика сада
   const gardenStats = useMemo(() => {
     if (!currentGarden) {
@@ -196,10 +220,12 @@ export function useGardenState() {
   // Получение доступных позиций
   const getAvailablePositions = useCallback((): Position2D[] => {
     const availablePositions: Position2D[] = []
+    const totalRooms = resolveTotalRooms()
+    const totalShelves = totalRooms * SHELVES_PER_ROOM
 
-    for (let x = 0; x < 10; x++) {
-      for (let y = 0; y < 10; y++) {
-        const position = { x, y }
+    for (let shelfIndex = 0; shelfIndex < totalShelves; shelfIndex++) {
+      for (let x = 0; x < MAX_POSITIONS_PER_SHELF; x++) {
+        const position: Position2D = { x, y: shelfIndex }
         if (!isPositionOccupied(position)) {
           availablePositions.push(position)
         }
@@ -207,7 +233,7 @@ export function useGardenState() {
     }
 
     return availablePositions
-  }, [isPositionOccupied])
+  }, [isPositionOccupied, resolveTotalRooms])
 
   // Разблокировка элемента за сегодня
   const unlockElement = useCallback(
@@ -386,20 +412,28 @@ export function useGardenState() {
         return false
       }
 
+      if (!currentGarden) {
+        console.error('❌ No garden data available')
+        return false
+      }
+
+      const totalRooms = resolveTotalRooms()
+      const maxShelfIndex = totalRooms * SHELVES_PER_ROOM - 1
+
       // Валидация позиции
-      if (
-        newPosition.x < 0 ||
-        newPosition.x >= 10 ||
-        newPosition.y < 0 ||
-        newPosition.y >= 10
-      ) {
+      if (newPosition.x < 0 || newPosition.x >= MAX_POSITIONS_PER_SHELF) {
+        console.error('❌ Position is out of bounds (horizontal)')
+        return false
+      }
+
+      if (newPosition.y < 0 || newPosition.y > maxShelfIndex) {
         console.error('❌ Position is out of bounds')
         return false
       }
 
       // Проверка занятости позиции
       if (
-        currentGarden?.elements.some(
+        currentGarden.elements.some(
           el =>
             el.id !== elementId &&
             el.position.x === newPosition.x &&
@@ -424,7 +458,7 @@ export function useGardenState() {
         return false
       }
     },
-    [currentUser, currentGarden, updatePositionMutation]
+    [currentUser, currentGarden, resolveTotalRooms, updatePositionMutation]
   )
 
   // Проверка возможности разблокировки сегодня
