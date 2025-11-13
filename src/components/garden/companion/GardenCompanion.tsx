@@ -522,7 +522,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
         toggleInfo()
       }
       tapTimeoutRef.current = null
-    }, 50)
+    }, 300)
   }
 
   const handleTap = () => {
