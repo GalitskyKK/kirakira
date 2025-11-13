@@ -487,12 +487,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
 
   const containerRef = useRef<HTMLDivElement>(null)
   const wasDraggedRef = useRef(false)
-  const pointerDownRef = useRef<{
-    time: number
-    x: number
-    y: number
-  } | null>(null)
-  const pointerMovedRef = useRef(false)
+  const tapStartTimeRef = useRef<number | null>(null)
 
   useEffect(() => {
     if (!isDragging && containerRef.current) {
@@ -506,42 +501,20 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     return undefined
   }, [isDragging])
 
-  const handlePointerDown = (event: React.PointerEvent) => {
-    pointerDownRef.current = {
-      time: Date.now(),
-      x: event.clientX,
-      y: event.clientY,
-    }
-    pointerMovedRef.current = false
+  const handleTapStart = () => {
+    tapStartTimeRef.current = Date.now()
     wasDraggedRef.current = false
   }
 
-  const handlePointerMove = (event: React.PointerEvent) => {
-    if (!pointerDownRef.current) {
-      return
-    }
-    const dx = Math.abs(event.clientX - pointerDownRef.current.x)
-    const dy = Math.abs(event.clientY - pointerDownRef.current.y)
-    const distance = Math.sqrt(dx * dx + dy * dy)
-    if (distance > 5) {
-      pointerMovedRef.current = true
-    }
-  }
-
-  const handlePointerUp = () => {
-    if (!pointerDownRef.current) {
-      return
-    }
-    const pressDuration = Date.now() - pointerDownRef.current.time
-    const isQuickTap =
-      pressDuration < 300 && !pointerMovedRef.current && !wasDraggedRef.current
-
-    if (isQuickTap) {
+  const handleTap = () => {
+    if (!wasDraggedRef.current) {
       toggleInfo()
     }
+    tapStartTimeRef.current = null
+  }
 
-    pointerDownRef.current = null
-    pointerMovedRef.current = false
+  const handleTapCancel = () => {
+    tapStartTimeRef.current = null
   }
 
   const handleDragStart = () => {
@@ -579,7 +552,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
       }
     }
 
-    // Сбрасываем флаг с задержкой
+    // Сбрасываем флаг с задержкой, чтобы onTap успел проверить
     setTimeout(() => {
       wasDraggedRef.current = false
     }, 0)
@@ -624,9 +597,9 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           dragSnapToOrigin
           dragConstraints={false}
           dragDirectionLock={false}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
+          onTapStart={handleTapStart}
+          onTap={handleTap}
+          onTapCancel={handleTapCancel}
           onDragStart={handleDragStart}
           onDrag={handleDrag}
           onDragEnd={handleDragEnd}
