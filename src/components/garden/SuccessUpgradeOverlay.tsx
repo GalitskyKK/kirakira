@@ -24,7 +24,7 @@ export function SuccessUpgradeOverlay({
   xpReward,
   elementEmoji,
   onComplete,
-  autoReturnDelay = 300000,
+  autoReturnDelay = 3000,
 }: SuccessUpgradeOverlayProps) {
   const [countdown, setCountdown] = useState(3)
 
@@ -146,7 +146,7 @@ export function SuccessUpgradeOverlay({
 
         <div className="relative z-10 flex flex-col items-center gap-4 px-6 py-8 text-center">
           {/* Иконка успеха */}
-          <motion.div
+          {/* <motion.div
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{
@@ -171,7 +171,7 @@ export function SuccessUpgradeOverlay({
                 className="absolute inset-0 -z-10 rounded-full bg-green-400 blur-md"
               />
             </div>
-          </motion.div>
+          </motion.div> */}
 
           {/* Эмодзи элемента */}
           <motion.div
