@@ -487,6 +487,12 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
 
   const containerRef = useRef<HTMLDivElement>(null)
   const wasDraggedRef = useRef(false)
+  const pointerDownRef = useRef<{
+    time: number
+    x: number
+    y: number
+  } | null>(null)
+  const pointerMovedRef = useRef(false)
 
   useEffect(() => {
     if (!isDragging && containerRef.current) {
@@ -500,8 +506,45 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     return undefined
   }, [isDragging])
 
-  const handleDragStart = () => {
+  const handlePointerDown = (event: React.PointerEvent) => {
+    pointerDownRef.current = {
+      time: Date.now(),
+      x: event.clientX,
+      y: event.clientY,
+    }
+    pointerMovedRef.current = false
     wasDraggedRef.current = false
+  }
+
+  const handlePointerMove = (event: React.PointerEvent) => {
+    if (!pointerDownRef.current) {
+      return
+    }
+    const dx = Math.abs(event.clientX - pointerDownRef.current.x)
+    const dy = Math.abs(event.clientY - pointerDownRef.current.y)
+    const distance = Math.sqrt(dx * dx + dy * dy)
+    if (distance > 5) {
+      pointerMovedRef.current = true
+    }
+  }
+
+  const handlePointerUp = () => {
+    if (!pointerDownRef.current) {
+      return
+    }
+    const pressDuration = Date.now() - pointerDownRef.current.time
+    const isQuickTap =
+      pressDuration < 300 && !pointerMovedRef.current && !wasDraggedRef.current
+
+    if (isQuickTap) {
+      toggleInfo()
+    }
+
+    pointerDownRef.current = null
+    pointerMovedRef.current = false
+  }
+
+  const handleDragStart = () => {
     setIsDragging(true)
   }
 
@@ -536,16 +579,10 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
       }
     }
 
-    // Сбрасываем флаг с задержкой, чтобы onTap успел проверить его значение
+    // Сбрасываем флаг с задержкой
     setTimeout(() => {
       wasDraggedRef.current = false
     }, 0)
-  }
-
-  const handleTap = () => {
-    if (!wasDraggedRef.current) {
-      toggleInfo()
-    }
   }
 
   if (!visual || !isVisible) {
@@ -587,10 +624,12 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           dragSnapToOrigin
           dragConstraints={false}
           dragDirectionLock={false}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
           onDragStart={handleDragStart}
           onDrag={handleDrag}
           onDragEnd={handleDragEnd}
-          onTap={handleTap}
           onKeyDown={event => {
             if (event.key === 'Enter' || event.key === ' ') {
               event.preventDefault()
