@@ -37,7 +37,7 @@ export function SuccessUpgradeOverlay({
     // Обратный отсчет
     const countdownInterval = setInterval(() => {
       setCountdown(prev => Math.max(0, prev - 1))
-    }, 1000)
+    }, 10000)
 
     // Автоматический возврат
     const timer = setTimeout(() => {
