@@ -54,10 +54,6 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
         setTimeout(() => {
           setCurrentElement(updatedElement)
           setIsUpgrading(false)
-          console.log(
-            '✅ Element details updated with new rarity:',
-            updatedElement.rarity
-          )
           // Скролл будет вызван из callback onUpgradeComplete
         }, 500) // Небольшая задержка для анимации
       }
@@ -328,7 +324,6 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
             element={currentElement}
             onUpgradeSuccess={(newRarity: RarityLevel, xpReward: number) => {
               // 🎉 Показываем оверлей успешного улучшения
-              console.log('🎉 Showing success overlay', { newRarity, xpReward })
               setSuccessData({ newRarity, xpReward })
               setShowSuccessOverlay(true)
               // Скроллим наверх после успешного улучшения
@@ -358,7 +353,6 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
           xpReward={successData.xpReward}
           elementEmoji={currentElement.emoji}
           onComplete={() => {
-            console.log('🏡 Returning to garden after successful upgrade')
             setShowSuccessOverlay(false)
             setSuccessData(null)
             // Скроллим наверх перед возвратом в сад

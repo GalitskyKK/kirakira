@@ -107,11 +107,6 @@ export function useTelegramSync() {
           // Проверяем статус онбординга ПЕРЕД очисткой
           const hadCompletedOnboarding = isOnboardingCompleted()
 
-          console.log(
-            `🔄 Очистка данных для нового пользователя (onboarding: ${hadCompletedOnboarding}):`,
-            telegramUser.telegramId
-          )
-
           // Очищаем локальное хранилище (кроме онбординга если нужно)
           if (hadCompletedOnboarding) {
             // Частичная очистка - сохраняем онбординг
@@ -157,20 +152,15 @@ export function useTelegramSync() {
             userData: telegramUserData,
           })
 
-          console.log('✅ Новый пользователь синхронизирован')
+          // Успешная синхронизация нового пользователя
         } else {
           // Принудительная синхронизация для существующих пользователей
-          console.log(
-            '🔄 Синхронизация существующего пользователя:',
-            telegramUser.telegramId
-          )
-
           await syncUserMutation.mutateAsync({
             telegramId: telegramUser.telegramId,
             userData: telegramUserData,
           })
 
-          console.log('✅ Пользователь синхронизирован')
+          // Успешная синхронизация существующего пользователя
         }
 
         return { success: true, mode: 'telegram', user: telegramUser }

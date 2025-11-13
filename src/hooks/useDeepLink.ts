@@ -16,8 +16,6 @@ export function useDeepLink() {
   const processedParam = useRef<string | null>(null)
 
   const parseStartParam = useCallback((startParam: string): DeepLinkData => {
-    console.log('🔗 Parsing start param:', startParam)
-
     // Формат: friend_CODE123, challenge_ID456, garden_USER123, etc.
     const parts = startParam.split('_')
 
@@ -71,7 +69,6 @@ export function useDeepLink() {
 
   const getStartParam = useCallback((): string | null => {
     if (!webApp?.initDataUnsafe) {
-      console.log('🔗 No initDataUnsafe available')
       return null
     }
 
@@ -79,17 +76,14 @@ export function useDeepLink() {
     const startParam = webApp.initDataUnsafe.start_param
 
     if (!startParam) {
-      console.log('🔗 No start_param in initDataUnsafe')
       return null
     }
 
     // Проверяем, что мы еще не обработали этот параметр
     if (processedParam.current === startParam) {
-      console.log('🔗 Start param already processed:', startParam)
       return null
     }
 
-    console.log('🔗 Found new start param:', startParam)
     return startParam
   }, [webApp])
 
@@ -103,19 +97,13 @@ export function useDeepLink() {
     // Помечаем как обработанный
     processedParam.current = startParam
 
-    const deepLinkData = parseStartParam(startParam)
-    console.log('🔗 Processed deep link:', deepLinkData)
-
-    return deepLinkData
+    return parseStartParam(startParam)
   }, [getStartParam, parseStartParam])
 
   const handleFriendInvite = useCallback((referralCode: string): boolean => {
-    console.log('🤝 Handling friend invite with code:', referralCode)
-
     // Сохраняем код в localStorage для обработки компонентом FriendsList
     try {
       localStorage.setItem('pending_friend_invite', referralCode)
-      console.log('✅ Friend invite code saved to localStorage')
       return true
     } catch (error) {
       console.error('❌ Failed to save friend invite code:', error)
@@ -127,7 +115,6 @@ export function useDeepLink() {
     try {
       const pendingCode = localStorage.getItem('pending_friend_invite')
       if (pendingCode) {
-        console.log('📥 Found pending friend invite:', pendingCode)
         return pendingCode
       }
     } catch (error) {
@@ -139,7 +126,6 @@ export function useDeepLink() {
   const clearPendingInvite = useCallback((): void => {
     try {
       localStorage.removeItem('pending_friend_invite')
-      console.log('🧹 Cleared pending friend invite')
     } catch (error) {
       console.error('❌ Failed to clear pending invite:', error)
     }
@@ -157,8 +143,6 @@ export function useDeepLink() {
       return
     }
 
-    console.log('🔗 Processing deep link on app ready:', deepLinkData)
-
     switch (deepLinkData.type) {
       case 'friend_invite':
         if (deepLinkData.payload) {
@@ -167,17 +151,14 @@ export function useDeepLink() {
         break
 
       case 'challenge':
-        console.log('🏆 Challenge deep link detected:', deepLinkData.payload)
         // TODO: Реализовать обработку челленджей
         break
 
       case 'garden_share':
-        console.log('🌸 Garden share deep link detected:', deepLinkData.payload)
         // TODO: Реализовать обработку поделиться садом
         break
 
       default:
-        console.log('❓ Unknown deep link type:', deepLinkData)
         break
     }
   }, [isReady, processDeepLink, handleFriendInvite])

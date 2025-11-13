@@ -40,12 +40,6 @@ export function useQuestIntegration(options: QuestIntegrationOptions = {}) {
         if (result.quest !== null && result.quest !== undefined) {
           const isCompleted = result.isCompleted
           options.onQuestUpdated?.(questType, isCompleted)
-
-          console.log(`🎯 Quest updated: ${questType} (+${increment})`, {
-            isCompleted,
-            progress: result.quest.currentProgress,
-            target: result.quest.targetValue,
-          })
         }
 
         return true
@@ -79,15 +73,6 @@ export function useQuestIntegration(options: QuestIntegrationOptions = {}) {
           validUpdates.push({
             questType: quest.questType,
             increment: validation.shouldIncrement,
-          })
-
-          console.log(`✅ Quest validation passed: ${quest.questType}`, {
-            reason: validation.reason,
-            increment: validation.shouldIncrement,
-          })
-        } else {
-          console.log(`❌ Quest validation failed: ${quest.questType}`, {
-            reason: validation.reason,
           })
         }
       }

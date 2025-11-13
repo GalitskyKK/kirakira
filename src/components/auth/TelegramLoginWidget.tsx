@@ -50,7 +50,6 @@ export function TelegramLoginWidget({
     ;(window as unknown as Record<string, (user: TelegramLoginData) => void>)[
       callbackName
     ] = (user: TelegramLoginData) => {
-      console.log('Telegram login successful:', user)
       onAuth(user)
     }
 
@@ -76,7 +75,6 @@ export function TelegramLoginWidget({
     }
 
     script.onload = () => {
-      console.log('Telegram login widget loaded')
       scriptLoadedRef.current = true
     }
 

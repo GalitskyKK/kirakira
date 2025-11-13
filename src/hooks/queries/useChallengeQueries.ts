@@ -98,7 +98,7 @@ export function useJoinChallenge() {
 
   return useMutation({
     mutationFn: joinChallenge,
-    onSuccess: (result, request) => {
+    onSuccess: (_, request) => {
       // Инвалидируем список челленджей для обновления участия
       queryClient.invalidateQueries({
         queryKey: challengeKeys.list(request.telegramId),
@@ -112,7 +112,6 @@ export function useJoinChallenge() {
         ),
       })
 
-      console.log(`✅ Joined challenge: ${result.challenge.title}`)
     },
     onError: error => {
       console.error('❌ Failed to join challenge:', error)
@@ -194,10 +193,6 @@ export function useUpdateChallengeProgress() {
       queryClient.invalidateQueries({
         queryKey: ['user', request.telegramId],
       })
-
-      console.log(
-        `✅ Updated challenge progress: ${request.value} (all related caches invalidated)`
-      )
 
       // ✅ УБРАНО: Автоматический показ модалки
       // Теперь пользователь сам получает награду через кнопку "Получить награду"
@@ -284,7 +279,6 @@ export function useClaimChallengeReward() {
         )
       }
 
-      console.log('✅ Challenge reward claimed successfully')
     },
     onError: error => {
       console.error('Claim challenge reward error:', error)
@@ -320,7 +314,6 @@ export function useRefreshLeaderboard() {
             : old
       )
 
-      console.log('✅ Leaderboard refreshed')
     },
     onError: error => {
       console.error('❌ Failed to refresh leaderboard:', error)

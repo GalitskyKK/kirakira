@@ -44,7 +44,6 @@ export const useUserClientStore = create<UserClientState>()(
 
     // Actions
     completeOnboarding: () => {
-      console.log('✅ User: Completing onboarding')
       set({ hasCompletedOnboarding: true })
       saveOnboardingCompleted(true)
     },
@@ -54,12 +53,10 @@ export const useUserClientStore = create<UserClientState>()(
     },
 
     setAuthModalOpen: (isOpen: boolean) => {
-      console.log('🔐 User: Setting auth modal:', isOpen)
       set({ isAuthModalOpen: isOpen })
     },
 
     setSelectedTab: (tab: string) => {
-      console.log('📑 User: Setting selected tab:', tab)
       set({ selectedTab: tab })
     },
 

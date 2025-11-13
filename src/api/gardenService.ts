@@ -286,7 +286,6 @@ export async function updateElementPosition(
       return false
     }
 
-    console.log('✅ Element position synced to server successfully')
     return true
   } catch (error) {
     console.warn('⚠️ Server position sync failed:', error)

@@ -119,16 +119,14 @@ export function useAddGardenElement() {
 
         // Обновляем локальное хранилище
         const currentGarden = loadGarden()
-        if (currentGarden) {
-          const updatedGarden = {
-            ...currentGarden,
-            elements: [...currentGarden.elements, result.element],
-            lastVisited: new Date(),
-          }
-          saveGarden(updatedGarden)
+      if (currentGarden) {
+        const updatedGarden = {
+          ...currentGarden,
+          elements: [...currentGarden.elements, result.element],
+          lastVisited: new Date(),
         }
-
-        console.log('✅ Garden element added successfully')
+        saveGarden(updatedGarden)
+      }
       }
     },
     onError: (error, _request, context) => {
@@ -216,9 +214,6 @@ export function useUpdateElementPosition() {
       }
     },
     onSuccess: (_result, request) => {
-      // Обновление уже применено оптимистично, просто логируем
-      console.log('✅ Element position updated successfully')
-
       // Инвалидируем queries для консистентности
       queryClient.invalidateQueries({
         queryKey: gardenKeys.sync(request.telegramId),
@@ -267,7 +262,7 @@ export function useUpgradeElement() {
       elementId: string
       useFree?: boolean
     }) => upgradeElement(telegramId, elementId, useFree),
-    onSuccess: (result, variables) => {
+    onSuccess: (_result, variables) => {
       // ✅ ИСПРАВЛЕНИЕ: Инвалидируем все связанные queries для перезагрузки данных
       queryClient.invalidateQueries({
         queryKey: gardenKeys.sync(variables.telegramId),
@@ -290,8 +285,6 @@ export function useUpgradeElement() {
       queryClient.invalidateQueries({
         queryKey: ['user', 'sync', variables.telegramId],
       })
-
-      console.log('✅ Element upgrade completed:', result)
     },
     onError: error => {
       console.error('❌ Failed to upgrade element:', error)

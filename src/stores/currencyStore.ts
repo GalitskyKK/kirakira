@@ -49,19 +49,12 @@ export const useCurrencyClientStore = create<CurrencyClientState>()(
 
     // Обновление из React Query (временное решение)
     updateCurrencyFromQuery: (currency: UserCurrency) => {
-      console.log('💰 Currency: Updating from React Query', {
-        sprouts: currency.sprouts,
-        gems: currency.gems,
-      })
       set({ userCurrency: currency })
     },
 
     updateTransactionsFromQuery: (
       transactions: readonly CurrencyTransaction[]
     ) => {
-      console.log('💰 Currency: Updating transactions from React Query', {
-        count: transactions.length,
-      })
       set({ recentTransactions: transactions })
     },
 

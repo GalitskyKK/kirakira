@@ -10,14 +10,11 @@ export function UpdatePrompt() {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegisteredSW(swUrl, registration) {
-      console.log('Service Worker зарегистрирован:', swUrl)
-
+    onRegisteredSW(_swUrl, registration) {
       // Проверяем обновления каждые 30 минут
       if (registration) {
         setInterval(
           () => {
-            console.log('Проверяем обновления Service Worker...')
             void registration.update()
           },
           30 * 60 * 1000
@@ -25,7 +22,6 @@ export function UpdatePrompt() {
 
         // Также проверяем при фокусе окна
         const handleFocus = () => {
-          console.log('Окно получило фокус, проверяем обновления...')
           void registration.update()
         }
 
@@ -46,7 +42,6 @@ export function UpdatePrompt() {
 
   useEffect(() => {
     if (needRefresh) {
-      console.log('Доступно обновление приложения!')
       setShowToast(true)
 
       // Автоматически показываем уведомление через 2 секунды
@@ -64,7 +59,7 @@ export function UpdatePrompt() {
 
   useEffect(() => {
     if (offlineReady) {
-      console.log('Приложение готово к работе оффлайн')
+      // Можно показать toast или другой индикатор при желании
     }
   }, [offlineReady])
 
@@ -74,7 +69,6 @@ export function UpdatePrompt() {
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistration().then(registration => {
           if (registration) {
-            console.log('Проверяем обновления при загрузке страницы...')
             void registration.update()
           }
         })
@@ -91,7 +85,6 @@ export function UpdatePrompt() {
   }, [])
 
   const handleUpdate = () => {
-    console.log('Обновляем приложение...')
     setShowToast(false)
     void updateServiceWorker(true)
   }

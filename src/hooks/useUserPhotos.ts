@@ -155,10 +155,7 @@ export function useUserPhotos() {
     async (forceUpdate = false) => {
       // 🔥 УБРАНО: Уведомления пользователям не нужны - это техническая операция
       const result = await updateCurrentUserPhoto(forceUpdate)
-      // Результаты логируются в консоль для отладки, но не показываются пользователю
-      if (result.success) {
-        console.log('✅ User photo updated:', result.message)
-      } else {
+      if (!result.success) {
         console.error('❌ Failed to update user photo:', result.error)
       }
       return result
@@ -173,10 +170,7 @@ export function useUserPhotos() {
   const updateFriendsPhotosWithAlert = useCallback(async () => {
     // 🔥 УБРАНО: Уведомления пользователям не нужны - это техническая операция
     const result = await updateFriendsPhotos()
-    // Результаты логируются в консоль для отладки, но не показываются пользователю
-    if (result.success) {
-      console.log('✅ Friends photos updated:', result.message)
-    } else {
+    if (!result.success) {
       console.error('❌ Failed to update friends photos:', result.error)
     }
     return result

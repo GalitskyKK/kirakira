@@ -307,7 +307,6 @@ export function useGardenState() {
         })
 
         if (result) {
-          console.log('✅ Element unlocked successfully')
 
           // 💰 Начисляем валюту за получение элемента
           const currencyResult = await awardElementSprouts(
@@ -317,9 +316,6 @@ export function useGardenState() {
           )
 
           if (currencyResult.success) {
-            console.log(
-              `💰 Awarded ${currencyResult.amount} sprouts for ${result.element.rarity} element`
-            )
           }
 
           // 🎯 Обновляем прогресс daily quests с умной валидацией
@@ -329,9 +325,6 @@ export function useGardenState() {
             questsData.quests.length > 0
           ) {
             try {
-              console.log(
-                '🎯 Updating garden-related daily quests with validation...'
-              )
 
               await updateQuestsWithValidation(
                 {
@@ -349,9 +342,6 @@ export function useGardenState() {
           } else if (telegramId) {
             // Fallback к старому методу если квесты не загружены
             try {
-              console.log(
-                '🎯 Updating garden-related daily quests (fallback)...'
-              )
 
               const gardenQuests = ['collect_elements']
               if (
@@ -383,7 +373,6 @@ export function useGardenState() {
 
           // 🏆 Обновляем прогресс челенджей
           try {
-            console.log('🏆 Updating challenge progress...')
             await onGardenElementAdded()
           } catch (challengeError) {
             console.warn(

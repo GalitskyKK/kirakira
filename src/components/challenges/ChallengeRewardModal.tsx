@@ -33,14 +33,11 @@ export function ChallengeRewardModal({
   useEffect(() => {
     if (!isOpen) return
 
-    console.log('🎁 Challenge reward modal opened, setting close timer...')
     const timer = setTimeout(() => {
-      console.log('⏰ Auto-closing challenge reward modal')
       onCloseRef.current()
     }, 4000)
 
     return () => {
-      console.log('🧹 Clearing challenge reward modal timer')
       clearTimeout(timer)
     }
   }, [isOpen])

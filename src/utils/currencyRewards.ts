@@ -67,10 +67,6 @@ export async function awardCurrency(
       }
     }
 
-    console.log(
-      `✅ Awarded ${amount} ${currencyType} for ${reason}: ${description || getReasonDescription(reason)}`
-    )
-
     return {
       success: true,
       newBalance: result.data?.balance_after,

@@ -108,20 +108,10 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
 
     try {
       const theme = themes.find(t => t.id === themeId)
-      console.log('🎨 Found theme:', theme)
       if (!theme) {
         console.error('❌ Theme not found')
         return
       }
-
-      console.log('💸 Calling spendCurrency with:', {
-        telegramId: telegramId,
-        currency: 'sprouts',
-        amount: theme.priceSprouts,
-        reason: 'buy_theme',
-        description: `Покупка темы "${theme.name}"`,
-        metadata: { themeId, themeName: theme.name },
-      })
 
       const result = await spendCurrencyMutation.mutateAsync({
         telegramId,
@@ -143,14 +133,10 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
               sprouts: result.balance_after,
               lastUpdated: new Date(),
             })
-            console.log('✅ Currency balance updated optimistically:', {
-              newBalance: result.balance_after,
-            })
           }
         }
 
         // Обновляем список купленных тем
-        console.log('🔄 Refetching owned themes...')
         await refetchOwnedThemes()
 
         // Принудительно обновляем кеш React Query
@@ -202,8 +188,6 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
         // Принудительно обновляем localStorage версию для useGardenTheme
         window.dispatchEvent(new Event('storage'))
 
-        console.log('✅ Theme purchased successfully!')
-        console.log('🎨 Updated owned themes:', updatedOwned)
         // Можно добавить toast уведомление
       } else {
         console.error('❌ Failed to buy theme:', result.error)
@@ -375,10 +359,6 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
                                 className="w-full"
                                 disabled={isPurchasing}
                                 onClick={e => {
-                                  console.log(
-                                    '🖱️ Buy button clicked for theme:',
-                                    theme.id
-                                  )
                                   e.stopPropagation()
                                   handleBuyTheme(theme.id)
                                 }}

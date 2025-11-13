@@ -41,11 +41,7 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
   const telegramId = useTelegramId()
   const { data: questsData } = useDailyQuests(telegramId ?? 0)
   const { questActions, updateQuestsWithValidation } = useQuestIntegration({
-    onQuestUpdated: (questType, isCompleted) => {
-      if (isCompleted) {
-        console.log(`🎉 Quest completed: ${questType}`)
-      }
-    },
+    onQuestUpdated: () => undefined,
   })
 
   const [showSuccess, setShowSuccess] = useState(false)

@@ -15,8 +15,6 @@ export function useStoresSync() {
       try {
         // Если есть Telegram ID - инвалидируем queries для принудительной синхронизации
         if (telegramId != null && telegramId > 0) {
-          console.log('🔄 Принудительная синхронизация stores для:', telegramId)
-
           // Инвалидируем все queries связанные с пользователем для перезагрузки данных
           await Promise.all([
             queryClient.invalidateQueries({
@@ -32,10 +30,6 @@ export function useStoresSync() {
               refetchType: 'active',
             }),
           ])
-
-          console.log('✅ Stores синхронизированы через React Query')
-        } else {
-          console.log('ℹ️ Telegram ID не предоставлен, синхронизация пропущена')
         }
 
         return { success: true }

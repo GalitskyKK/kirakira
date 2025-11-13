@@ -95,21 +95,16 @@ export function ElementUpgradeManager({
 
         // 🔄 ВАЛЮТА АВТОМАТИЧЕСКИ СИНХРОНИЗИРУЕТСЯ ЧЕРЕЗ React Query
         // useCurrencySync() в MobileLayout автоматически обновит store
-        console.log('✅ Currency will sync automatically via React Query')
 
         if (result) {
           // 🎉 УСПЕХ - показываем оверлей на странице элемента
           if (result.upgraded && result.newRarity !== undefined) {
-            console.log(
-              '✅ Element upgraded successfully, showing success overlay'
-            )
             // Вызываем callback для показа оверлея
             if (onUpgradeSuccess) {
               onUpgradeSuccess(result.newRarity, result.xpReward ?? 0)
             }
           } else {
             // ❌ НЕУДАЧА - показываем модальное окно
-            console.log('❌ Upgrade failed, showing failure modal')
             setUpgradeResult({
               success: false,
               progressBonus: result.progressBonus ?? 0,
@@ -140,12 +135,10 @@ export function ElementUpgradeManager({
   )
 
   const handleCloseResult = useCallback(() => {
-    console.log('🚪 Closing upgrade result modal')
     setShowResultModal(false)
     setUpgradeResult(null)
 
     if (onUpgradeComplete) {
-      console.log('📞 Calling onUpgradeComplete callback')
       // Используем requestAnimationFrame для гарантии выполнения после анимации
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {

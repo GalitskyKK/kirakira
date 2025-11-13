@@ -26,11 +26,7 @@ export function TelegramShare({
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
   const { questActions, updateQuestsWithValidation } = useQuestIntegration({
-    onQuestUpdated: (questType, isCompleted) => {
-      if (isCompleted) {
-        console.log(`🎉 Quest completed: ${questType}`)
-      }
-    },
+    onQuestUpdated: () => undefined,
   })
 
   // Получаем квесты для умной валидации
@@ -113,7 +109,6 @@ export function TelegramShare({
           )
 
           if (response.ok) {
-            console.log('🏆 Added XP for sharing garden text')
             showAlert('🏆 +25 XP за шеринг сада!')
 
             // 🎯 Обновляем прогресс daily quest для поделиться садом с умной валидацией
@@ -125,11 +120,6 @@ export function TelegramShare({
                   },
                   questsData.quests
                 )
-                  .then(() => {
-                    console.log(
-                      '✅ Share garden quest updated with validation (text)'
-                    )
-                  })
                   .catch(error => {
                     console.warn(
                       '⚠️ Failed to update share_garden quest with validation (text):', // Removed complex quest
@@ -141,7 +131,7 @@ export function TelegramShare({
                 // questActions
                 //   .shareGarden() // Removed complex quest
                 //   .then(() => {
-                //     console.log('✅ Share garden quest updated (fallback text)')
+                //     // Share garden quest updated (fallback text)
                 //   })
                 //   .catch((error: any) => {
                 //     console.warn(
@@ -196,11 +186,6 @@ export function TelegramShare({
             },
             questsData.quests
           )
-            .then(() => {
-              console.log(
-                '✅ Share garden quest updated with validation (image)'
-              )
-            })
             .catch(error => {
               console.warn(
                 '⚠️ Failed to update share_garden quest with validation (image):', // Removed complex quest
@@ -212,7 +197,7 @@ export function TelegramShare({
           // questActions
           //   .shareGarden() // Removed complex quest
           //   .then(() => {
-          //     console.log('✅ Share garden quest updated (fallback image)')
+          //     // Share garden quest updated (fallback image)
           //   })
           //   .catch((error: any) => {
           //     console.warn(

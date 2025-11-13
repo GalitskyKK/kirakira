@@ -360,11 +360,6 @@ export function useGardenTheme() {
   } = useQuery({
     queryKey: ['themes', 'catalog'],
     queryFn: async (): Promise<ThemesCatalogResponse> => {
-      console.log('🔍 useGardenTheme - fetching themes:', {
-        currentUser: currentUser?.telegramId,
-        hasTelegramId: !!currentUser?.telegramId,
-      })
-
       if (!currentUser?.telegramId || currentUser.telegramId === 0) {
         throw new Error('No user logged in')
       }
@@ -378,7 +373,6 @@ export function useGardenTheme() {
       }
 
       const result = (await response.json()) as ThemesCatalogResponse
-      console.log('🎨 useGardenTheme - themes data received:', result)
       return result
     },
     enabled: Boolean(currentUser?.telegramId && currentUser.telegramId > 0),
@@ -452,8 +446,6 @@ export function useGardenTheme() {
               'Failed to save garden theme to database:',
               result.error
             )
-          } else {
-            console.log('✅ Garden theme saved to database:', id)
           }
         } catch (error) {
           console.warn('Failed to save garden theme to database:', error)

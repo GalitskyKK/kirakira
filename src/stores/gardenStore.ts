@@ -47,17 +47,14 @@ export const useGardenClientStore = create<GardenClientState>()(
 
     // Actions
     setViewMode: (mode: ViewMode) => {
-      console.log('🎨 Garden: Setting view mode:', mode)
       set({ viewMode: mode })
     },
 
     selectElement: (element: GardenElement | null) => {
-      console.log('👆 Garden: Selecting element:', element?.id ?? 'none')
       set({ selectedElement: element })
     },
 
     setCurrentRoomIndex: (roomIndex: number) => {
-      console.log('🏠 Garden: Switching to room:', roomIndex)
       set({ currentRoomIndex: roomIndex })
     },
 
@@ -70,7 +67,6 @@ export const useGardenClientStore = create<GardenClientState>()(
     },
 
     clearSelection: () => {
-      console.log('🧹 Garden: Clearing selection')
       set({ selectedElement: null })
     },
   }))

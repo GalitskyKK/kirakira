@@ -77,26 +77,17 @@ export function StreakDebugger() {
 
       // 🔍 Проверяем dev режим
       const isDev = import.meta.env.DEV
-      console.log(`🔍 Development mode: ${isDev}`)
 
       // 2. Backend calculation (только в продакшн режиме или если указан полный URL)
       const telegramIdToUse = currentUser?.telegramId || testTelegramId
       if (telegramIdToUse && !isDev) {
         try {
-          console.log(
-            `🔍 Fetching backend stats for telegramId: ${telegramIdToUse}`
-          )
           const response = await authenticatedFetch(
             `/api/profile?action=get_profile&telegramId=${telegramIdToUse}`
           )
 
-          console.log(
-            `🔍 Backend response status: ${response.status} ${response.statusText}`
-          )
-
           if (response.ok) {
             const responseText = await response.text()
-            console.log(`🔍 Backend response text:`, responseText)
 
             try {
               const result = JSON.parse(
@@ -111,7 +102,6 @@ export function StreakDebugger() {
                   algorithm: 'calculateUserStats (profile.js)',
                   source: 'API /profile get_profile',
                 }
-                console.log(`✅ Backend stats parsed:`, backendInfo)
               } else {
                 console.warn(
                   `⚠️ Backend API returned unsuccessful result:`,
@@ -135,20 +125,12 @@ export function StreakDebugger() {
 
         // 3. Database calculation (через отдельный запрос)
         try {
-          console.log(
-            `🔍 Fetching mood history for telegramId: ${telegramIdToUse}`
-          )
           const historyResponse = await authenticatedFetch(
             `/api/mood?action=history&telegramId=${telegramIdToUse}`
           )
 
-          console.log(
-            `🔍 Mood history response status: ${historyResponse.status} ${historyResponse.statusText}`
-          )
-
           if (historyResponse.ok) {
             const historyResponseText = await historyResponse.text()
-            console.log(`🔍 Mood history response text:`, historyResponseText)
 
             try {
               const historyResult = JSON.parse(historyResponseText)
@@ -156,7 +138,6 @@ export function StreakDebugger() {
               if (historyResult.success && historyResult.data.moodHistory) {
                 // Вычисляем streak напрямую из БД данных
                 const dbMoods = historyResult.data.moodHistory
-                console.log(`🔍 Database moods count: ${dbMoods.length}`)
                 const dbStreak = calculateDatabaseStreak(dbMoods)
 
                 databaseInfo = {
@@ -164,7 +145,6 @@ export function StreakDebugger() {
                   longest: dbStreak.longest,
                   source: 'Database mood_entries',
                 }
-                console.log(`✅ Database stats calculated:`, databaseInfo)
               } else {
                 console.warn(
                   `⚠️ Mood history API returned unsuccessful result:`,
@@ -189,15 +169,6 @@ export function StreakDebugger() {
           console.error('❌ Database streak fetch failed:', error)
         }
       } else if (telegramIdToUse && isDev) {
-        console.log(
-          `⚠️ Development mode detected. API endpoints not available locally.`
-        )
-        console.log(`💡 To test backend/database streaks:`)
-        console.log(`   1. Use 'npx vercel dev' for local API emulation`)
-        console.log(
-          `   2. Or test on production: https://kirakira-theta.vercel.app/streak-debug`
-        )
-
         backendInfo = {
           current: -1, // Используем -1 как индикатор недоступности
           longest: -1,

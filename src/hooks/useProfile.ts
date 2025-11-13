@@ -63,11 +63,8 @@ export function useProfile() {
         reason,
       })
 
-      if (result) {
-        console.log(`✅ Added ${experiencePoints} XP for ${reason}`)
-        if (result.leveledUp) {
-          console.log(`🎉 Level up! New level: ${result.level}`)
-        }
+      if (result && result.leveledUp) {
+        // Дополнительная логика при повышении уровня обрабатывается без логирования
       }
 
       return result

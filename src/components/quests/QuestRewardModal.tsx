@@ -31,14 +31,11 @@ export function QuestRewardModal({
   useEffect(() => {
     if (!isOpen) return
 
-    console.log('🎁 Quest reward modal opened, setting close timer...')
     const timer = setTimeout(() => {
-      console.log('⏰ Auto-closing quest reward modal')
       onCloseRef.current()
     }, 3000)
 
     return () => {
-      console.log('🧹 Clearing quest reward modal timer')
       clearTimeout(timer)
     }
   }, [isOpen]) // 🔑 Только isOpen в зависимостях - таймер запустится один раз при открытии

@@ -125,13 +125,24 @@ export function TelegramDiagnostic() {
         {/* Действия */}
         <div className="space-y-3">
           <button
-            onClick={() => {
-              console.log('🔍 DIAGNOSTIC DATA:', diagnosticData)
-              alert('Данные диагностики выведены в консоль')
+            onClick={async () => {
+              try {
+                const serialized = JSON.stringify(diagnosticData, null, 2)
+                await navigator.clipboard.writeText(serialized)
+                alert('Данные диагностики скопированы в буфер обмена')
+              } catch (error) {
+                console.error(
+                  'Не удалось скопировать данные диагностики:',
+                  error
+                )
+                alert(
+                  'Не удалось скопировать данные. Посмотрите блок "Подробности" выше.'
+                )
+              }
             }}
             className="w-full rounded-lg bg-blue-500 px-4 py-3 text-white hover:bg-blue-600"
           >
-            📋 Вывести в консоль
+            📋 Скопировать данные
           </button>
 
           <button

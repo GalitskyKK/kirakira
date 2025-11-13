@@ -41,11 +41,6 @@ export const ShelfElement = memo(function ShelfElement({
   const [wasLongPress, setWasLongPress] = useState(false) // Флаг для предотвращения клика после долгого нажатия
   const touchStartTimeRef = useRef<number>(0) // Время начала touch
 
-  // Debug: отслеживаем изменения флага wasLongPress
-  useEffect(() => {
-    console.log('🏁 wasLongPress changed for', element.name, ':', wasLongPress)
-  }, [wasLongPress, element.name])
-
   // Cleanup timer on unmount
   useEffect(() => {
     return () => {
@@ -68,8 +63,6 @@ export const ShelfElement = memo(function ShelfElement({
     epic: 'Эпический',
     legendary: 'Легендарный',
   }
-
-  // Debug: console.log('ShelfElement render:', element.name, 'viewMode:', viewMode)
 
   // Responsive design hook
   const [isMobile, setIsMobile] = useState(false)
@@ -111,38 +104,19 @@ export const ShelfElement = memo(function ShelfElement({
   }
 
   const handleMouseLeave = () => {
-    console.log(
-      '🏃 Mouse left element:',
-      element.name,
-      'wasLongPress:',
-      wasLongPress
-    )
     setIsHovered(false)
     setShowTooltip(false)
     // НЕ отменяем долгое нажатие при уходе курсора - позволяем ему завершиться
     // handleLongPressEnd()
     // Сбрасываем флаг долгого нажатия через некоторое время
     setTimeout(() => {
-      console.log('🔄 Resetting wasLongPress for:', element.name)
       setWasLongPress(false)
     }, 200)
   }
 
   const handleLongPressStart = () => {
-    console.log(
-      'Long press started for:',
-      element.name,
-      'viewMode:',
-      viewMode,
-      'onLongPress:',
-      !!onLongPress,
-      'hasActiveTimer:',
-      !!longPressTimerRef.current
-    )
-
     // Предотвращаем множественные срабатывания
     if (longPressTimerRef.current) {
-      console.log('🚫 Long press already active, ignoring for:', element.name)
       return
     }
 
@@ -153,28 +127,15 @@ export const ShelfElement = memo(function ShelfElement({
 
     // Долгое нажатие работает в любом режиме (кроме детального просмотра)
     if (onLongPress && viewMode !== 'detail') {
-      console.log('Setting long press timer for:', element.name)
       longPressTimerRef.current = setTimeout(() => {
-        console.log('Long press timer fired for:', element.name)
         // Проверяем, что таймер не был отменен
         if (longPressTimerRef.current) {
           setWasLongPress(true) // Устанавливаем флаг ПЕРЕД вызовом onLongPress
           onLongPress(element)
-          console.log('🧹 Long press timer cleared for:', element.name)
-        } else {
-          console.log(
-            '🚫 Long press timer was cancelled, ignoring for:',
-            element.name
-          )
         }
         // Очищаем таймер после выполнения
         longPressTimerRef.current = null
       }, 1000) // 500ms долгое нажатие
-    } else {
-      console.log('Long press ignored:', {
-        hasOnLongPress: !!onLongPress,
-        viewMode,
-      })
     }
   }
 
@@ -183,46 +144,24 @@ export const ShelfElement = memo(function ShelfElement({
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current)
       longPressTimerRef.current = null
-      console.log('🚫 Long press cancelled for:', element.name)
     }
   }
 
   // Умная обработка touchEnd - отменяем ТОЛЬКО если касание очень короткое
   const handleTouchEnd = () => {
     const touchDuration = Date.now() - touchStartTimeRef.current
-    console.log('📱 Touch ended for:', element.name, 'duration:', touchDuration)
 
     // Отменяем ТОЛЬКО если касание очень короткое (возможная ошибка)
     if (touchDuration < 50) {
-      console.log(
-        '📱 Very short touch, cancelling long press for:',
-        element.name
-      )
       handleLongPressCancel()
-    } else {
-      console.log(
-        '📱 Normal touch duration, keeping long press active for:',
-        element.name
-      )
     }
   }
 
   const handleClick = () => {
     const touchDuration = Date.now() - touchStartTimeRef.current
-    console.log(
-      'handleClick called for:',
-      element.name,
-      'wasLongPress:',
-      wasLongPress,
-      'hasActiveTimer:',
-      !!longPressTimerRef.current,
-      'touchDuration:',
-      touchDuration
-    )
 
     // Предотвращаем обычный клик если уже было долгое нажатие
     if (wasLongPress) {
-      console.log('Click prevented - was long press')
       // Сбрасываем флаг через короткое время
       setTimeout(() => setWasLongPress(false), 100)
       return
@@ -230,31 +169,21 @@ export const ShelfElement = memo(function ShelfElement({
 
     // Если есть активный таймер долгого нажатия - это ОБЫЧНЫЙ клик, отменяем long press
     if (longPressTimerRef.current) {
-      console.log('🚫 Normal click detected - cancelling long press timer')
       handleLongPressCancel()
 
       // Продолжаем с обычным кликом только если это действительно быстрый клик
       if (touchDuration < 300) {
         // Быстрый клик
         if (onClick) {
-          console.log(
-            'Executing normal click after cancelling long press for:',
-            element.name
-          )
           onClick(element)
         }
-      } else {
-        console.log('Touch too long, not executing click for:', element.name)
       }
       return
     }
 
     // Обычный клик без активного таймера
     if (onClick && touchDuration < 300) {
-      console.log('Executing normal click for:', element.name)
       onClick(element)
-    } else {
-      console.log('Click ignored - touch too long:', touchDuration)
     }
   }
 
@@ -296,7 +225,6 @@ export const ShelfElement = memo(function ShelfElement({
         // Предотвращаем контекстное меню на долгое нажатие
         if (onLongPress && viewMode !== 'detail') {
           e.preventDefault()
-          console.log('🚫 Prevented context menu for:', element.name)
         }
       }}
       onMouseEnter={handleMouseEnter}

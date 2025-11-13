@@ -60,10 +60,6 @@ interface AppInitState {
 function App() {
   const isDevelopment = import.meta.env.DEV
 
-  if (isDevelopment) {
-    console.log('🔍 APP.TSX COMPONENT MOUNTING...')
-  }
-
   // 🚨 ПРОВЕРКА ДИАГНОСТИЧЕСКОГО РЕЖИМА
   const urlParams = new URLSearchParams(window.location.search)
   const forceDiagnostic =
@@ -131,33 +127,8 @@ function App() {
   }, [isTelegramEnv, colorScheme])
 
   // ✅ ЛОГИРОВАНИЕ ПОСЛЕ ВСЕХ ХУКОВ
-  if (isDevelopment) {
-    console.log('🔍 USER STORE LOADED:', {
-      currentUser: !!currentUser,
-      hasCompletedOnboarding,
-      isAuthenticated,
-      isLoading: userStoreLoading,
-    })
-
-    console.log('🔍 TELEGRAM HOOKS LOADED:', {
-      telegramUser: !!telegramUser,
-      isTelegramEnv,
-      telegramReady,
-    })
-
-    console.log('🔍 INITIALIZATION STATE:', {
-      stage: initState.stage,
-      isLoading: initState.isLoading,
-      progress: initState.progress,
-      error: initState.error,
-    })
-  }
-
   // 🚨 ПОКАЗАТЬ ДИАГНОСТИКУ ПРИ ПРОБЛЕМАХ В TELEGRAM (после всех хуков)
   if (forceDiagnostic || (isTelegramEnv && urlParams.get('debug') === '1')) {
-    if (isDevelopment) {
-      console.log('🚨 ПОКАЗЫВАЕМ ДИАГНОСТИЧЕСКУЮ СТРАНИЦУ')
-    }
     return <TelegramDiagnostic />
   }
 
@@ -166,31 +137,11 @@ function App() {
     // Обновляем состояние в userStore без reload
     const { completeOnboarding } = useUserClientStore.getState()
     completeOnboarding()
-
-    if (isDevelopment) {
-      console.log('✅ Онбординг завершён без reload')
-    }
   }
 
   // Show loading state during initialization
   if (initState.isLoading) {
     // 🔍 ОТЛАДКА ЭКРАНА ЗАГРУЗКИ (только в dev режиме)
-    if (isDevelopment) {
-      console.log('🔍 РЕНДЕРИМ ЭКРАН ЗАГРУЗКИ:', {
-        initStage: initState.stage,
-        initLoading: initState.isLoading,
-        initProgress: initState.progress,
-        userStoreLoading,
-        userLoading,
-        isTelegramEnv,
-        telegramReady,
-        telegramUser: !!telegramUser,
-        currentUser: !!currentUser,
-        hasCompletedOnboarding,
-        isAuthenticated,
-      })
-    }
-
     const bgClass = isTelegramEnv
       ? 'bg-[var(--tg-bg-color,#ffffff)]'
       : 'from-kira-50 bg-gradient-to-br via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900'
@@ -345,21 +296,8 @@ function App() {
     )
   }
 
-  if (isDevelopment) {
-    console.log('🔍 ОСНОВНАЯ ЛОГИКА РЕНДЕРИНГА:', {
-      initError: Boolean(initState.error?.trim()),
-      initFailed: initState.isFailed,
-      hasCompletedOnboarding,
-      isAuthenticated,
-      isTelegramEnv,
-    })
-  }
-
   // Show error state if initialization failed
   if (initState.isFailed && Boolean(initState.error?.trim())) {
-    if (isDevelopment) {
-      console.log('🔍 РЕНДЕРИМ ERROR STATE')
-    }
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-red-50 via-orange-50 to-neutral-50 dark:from-neutral-900 dark:to-neutral-800">
         <motion.div
@@ -398,9 +336,6 @@ function App() {
 
   // Show onboarding for new users
   if (!hasCompletedOnboarding) {
-    if (isDevelopment) {
-      console.log('🔍 РЕНДЕРИМ ONBOARDING PAGE')
-    }
     return <OnboardingPage onComplete={handleOnboardingComplete} />
   }
 
@@ -419,16 +354,6 @@ function App() {
     !isTelegramEnv &&
     !isDevShowcaseRoute
   ) {
-    if (isDevelopment) {
-      console.log('🔍 РЕНДЕРИМ AUTH PAGE (нет авторизации в браузере)', {
-        actualTelegramId: actualTelegramId ?? null,
-        jwtTelegramId: jwtTelegramId ?? null,
-        telegramUser: telegramUser != null,
-        currentUser: currentUser != null,
-        userLoading,
-        initStateLoading: initState.isLoading,
-      })
-    }
     return (
       <AuthPage
         onSuccess={() => {
@@ -451,22 +376,6 @@ function App() {
     hasNoTelegramId &&
     !userLoading
   ) {
-    if (isDevelopment) {
-      console.log('🔍 РЕНДЕРИМ ОШИБКУ (Telegram без telegramId)', {
-        isTelegramEnv,
-        telegramUser: telegramUser != null,
-        telegramUserTelegramId: telegramUser?.telegramId ?? null,
-        actualTelegramId: actualTelegramId ?? null,
-        userLoading,
-        initStateLoading: initState.isLoading,
-        windowTelegram: window.Telegram != null,
-        windowTelegramWebApp: window.Telegram?.WebApp != null,
-        initData:
-          window.Telegram?.WebApp?.initData != null &&
-          window.Telegram.WebApp.initData.length > 0,
-        initDataUnsafe: window.Telegram?.WebApp?.initDataUnsafe != null,
-      })
-    }
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-red-50 via-orange-50 to-neutral-50 dark:from-neutral-900 dark:to-neutral-800">
         <motion.div
@@ -512,10 +421,6 @@ function App() {
         </motion.div>
       </div>
     )
-  }
-
-  if (isDevelopment) {
-    console.log('🔍 РЕНДЕРИМ ОСНОВНОЕ ПРИЛОЖЕНИЕ (ROUTER)')
   }
 
   // Main app routing
