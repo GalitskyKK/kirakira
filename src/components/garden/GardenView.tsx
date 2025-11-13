@@ -33,14 +33,40 @@ export function GardenView({ className }: GardenViewProps) {
   const handleElementClick = useCallback(
     (element: GardenElementType) => {
       if (elementBeingMoved) {
-        setElementBeingMoved(null)
-        selectElement(null)
-      } else {
-        selectElement(element)
-        setViewMode(ViewMode.DETAIL)
+        if (elementBeingMoved.id === element.id) {
+          return
+        }
+
+        void (async () => {
+          try {
+            const success = await moveElementSafely(
+              elementBeingMoved.id,
+              element.position,
+              { swapWithId: element.id }
+            )
+
+            if (success) {
+              setElementBeingMoved(null)
+              selectElement(null)
+            }
+          } catch (error) {
+            console.error('❌ Error during element swap:', error)
+          }
+        })()
+
+        return
       }
+
+      selectElement(element)
+      setViewMode(ViewMode.DETAIL)
     },
-    [viewMode, elementBeingMoved, selectElement, setViewMode]
+    [
+      elementBeingMoved,
+      moveElementSafely,
+      selectElement,
+      setElementBeingMoved,
+      setViewMode,
+    ]
   )
 
   const handleElementLongPress = useCallback(
@@ -55,25 +81,46 @@ export function GardenView({ className }: GardenViewProps) {
   )
 
   const handleSlotClick = useCallback(
-    async (globalShelfIndex: number, position: number) => {
-      if (elementBeingMoved) {
+    (globalShelfIndex: number, position: number) => {
+      if (!elementBeingMoved) {
+        return
+      }
+
+      const gridX = position
+      const gridY = globalShelfIndex
+      const occupyingElement =
+        garden?.elements.find(
+          currentElement =>
+            currentElement.position.x === gridX &&
+            currentElement.position.y === gridY
+        ) ?? null
+
+      void (async () => {
         try {
-          // GardenRoomManager передаёт уже глобальные координаты
-          // globalShelfIndex уже учитывает текущую комнату
-          const gridX = position
-          const gridY = globalShelfIndex
+          const success = await moveElementSafely(
+            elementBeingMoved.id,
+            { x: gridX, y: gridY },
+            occupyingElement && occupyingElement.id !== elementBeingMoved.id
+              ? { swapWithId: occupyingElement.id }
+              : undefined
+          )
 
-          await moveElementSafely(elementBeingMoved.id, { x: gridX, y: gridY })
-
-          // Сбрасываем состояние перемещения
-          setElementBeingMoved(null)
-          selectElement(null)
+          if (success) {
+            setElementBeingMoved(null)
+            selectElement(null)
+          }
         } catch (error) {
           console.error('❌ Error during movement:', error)
         }
-      }
+      })()
     },
-    [elementBeingMoved, moveElementSafely, selectElement]
+    [
+      elementBeingMoved,
+      garden,
+      moveElementSafely,
+      selectElement,
+      setElementBeingMoved,
+    ]
   )
 
   const handleConfirmMovement = useCallback(() => {

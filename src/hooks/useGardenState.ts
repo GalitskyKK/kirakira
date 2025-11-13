@@ -35,6 +35,10 @@ import { awardElementSprouts } from '@/utils/currencyRewards'
  */
 const MAX_ROOMS_SUPPORTED = 200
 
+interface MoveElementOptions {
+  readonly swapWithId?: string
+}
+
 export function useGardenState() {
   // Получаем telegramId через контекст для оптимизации
   const telegramId = useTelegramId()
@@ -55,7 +59,7 @@ export function useGardenState() {
   const { onGardenElementAdded } = useChallengeGardenIntegration()
 
   // Получаем квесты для умной валидации
-  const { data: questsData } = useDailyQuests(telegramId || 0)
+  const { data: questsData } = useDailyQuests(telegramId ?? 0)
   const { updateQuestsWithValidation } = useQuestIntegration({
     onQuestUpdated: (questType, isCompleted) => {
       if (isCompleted) {
@@ -307,16 +311,12 @@ export function useGardenState() {
         })
 
         if (result) {
-
           // 💰 Начисляем валюту за получение элемента
-          const currencyResult = await awardElementSprouts(
+          await awardElementSprouts(
             currentUser.telegramId,
             result.element.rarity,
             result.element.id
           )
-
-          if (currencyResult.success) {
-          }
 
           // 🎯 Обновляем прогресс daily quests с умной валидацией
           if (
@@ -325,7 +325,6 @@ export function useGardenState() {
             questsData.quests.length > 0
           ) {
             try {
-
               await updateQuestsWithValidation(
                 {
                   elementType: newElement.type,
@@ -342,7 +341,6 @@ export function useGardenState() {
           } else if (telegramId) {
             // Fallback к старому методу если квесты не загружены
             try {
-
               const gardenQuests = ['collect_elements']
               if (
                 newElement.rarity === 'rare' ||
@@ -395,7 +393,11 @@ export function useGardenState() {
 
   // Безопасное перемещение элемента
   const moveElementSafely = useCallback(
-    async (elementId: string, newPosition: Position2D): Promise<boolean> => {
+    async (
+      elementId: string,
+      newPosition: Position2D,
+      options?: MoveElementOptions
+    ): Promise<boolean> => {
       if (!currentUser?.telegramId) {
         console.error('❌ No user available')
         return false
@@ -420,16 +422,90 @@ export function useGardenState() {
         return false
       }
 
-      // Проверка занятости позиции
-      if (
-        currentGarden.elements.some(
-          el =>
-            el.id !== elementId &&
-            el.position.x === newPosition.x &&
-            el.position.y === newPosition.y
-        )
-      ) {
-        console.error('❌ Position is already occupied')
+      const movingElement = currentGarden.elements.find(
+        element => element.id === elementId
+      )
+
+      if (!movingElement) {
+        console.error('❌ Element to move not found')
+        return false
+      }
+
+      const occupyingElement = currentGarden.elements.find(
+        element =>
+          element.id !== elementId &&
+          element.position.x === newPosition.x &&
+          element.position.y === newPosition.y
+      )
+
+      if (occupyingElement) {
+        if (options?.swapWithId !== occupyingElement.id) {
+          console.error('❌ Position is already occupied')
+          return false
+        }
+
+        const movingOriginalPosition = movingElement.position
+        const occupyingOriginalPosition = occupyingElement.position
+
+        let occupyingMoved = false
+
+        try {
+          const occupantResult = await updatePositionMutation.mutateAsync({
+            telegramId: currentUser.telegramId,
+            elementId: occupyingElement.id,
+            position: movingOriginalPosition,
+          })
+
+          if (!occupantResult) {
+            console.error('❌ Failed to move occupying element during swap')
+            return false
+          }
+
+          occupyingMoved = true
+        } catch (error) {
+          console.error(
+            '❌ Failed to move occupying element during swap:',
+            error
+          )
+          return false
+        }
+
+        try {
+          const moved = await updatePositionMutation.mutateAsync({
+            telegramId: currentUser.telegramId,
+            elementId,
+            position: newPosition,
+          })
+
+          if (moved) {
+            return true
+          }
+
+          console.error(
+            '❌ Failed to complete swap, reverting occupying element to original position'
+          )
+        } catch (error) {
+          console.error(
+            '❌ Failed to complete swap, reverting occupying element to original position:',
+            error
+          )
+        }
+
+        if (occupyingMoved) {
+          try {
+            await updatePositionMutation.mutateAsync({
+              telegramId: currentUser.telegramId,
+              elementId: occupyingElement.id,
+              position: occupyingOriginalPosition,
+            })
+          } catch (revertError) {
+            console.error(
+              '⚠️ Failed to revert occupying element after swap error:',
+              revertError
+            )
+          }
+        }
+
         return false
       }
 
