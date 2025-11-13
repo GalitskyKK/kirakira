@@ -535,6 +535,11 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
         setPosition(position.yPosition, side)
       }
     }
+
+    // Сбрасываем флаг с задержкой, чтобы onTap успел проверить его значение
+    setTimeout(() => {
+      wasDraggedRef.current = false
+    }, 0)
   }
 
   const handleTap = () => {
