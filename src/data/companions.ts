@@ -28,7 +28,7 @@ export const COMPANION_DEFINITIONS: Readonly<
     description:
       'Маленький дух света, который отражает настроение сада и мягко направляет садовника.',
     unlockLevel: 1,
-    baseScale: 1,
+    baseScale: 0.8,
     moodMap: {
       joy: 'joy',
       calm: 'calm',
