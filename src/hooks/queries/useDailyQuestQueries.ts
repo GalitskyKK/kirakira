@@ -481,7 +481,7 @@ export function useOptimisticQuestProgress() {
     try {
       await updateMutation.mutateAsync({ telegramId, questId, increment })
     } catch (error) {
-      // В случае ошибки возвращаем предыдущие данные
+      // В случае ошибки возвращаем предыдущие данные r
       if (previousData) {
         queryClient.setQueryData(queryKey, previousData)
       }
