@@ -283,7 +283,7 @@ export function UpgradeConfirmModal({
                     disabled={isLoading}
                     className="flex-1 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-2 text-sm font-bold text-white transition-all hover:from-green-600 hover:to-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {isLoading ? 'Улучшение...' : `🌿 За ${cost} ростков`}
+                    {isLoading ? 'Улучшение...' : `🌿 ${cost}`}
                   </button>
                 </div>
               )}
