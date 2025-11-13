@@ -300,7 +300,6 @@ export function StreakFreezeModal({
                     ? onClose
                     : onResetStreak
                       ? () => {
-                          console.log('🔄 Reset streak button clicked')
                           void onResetStreak()
                         }
                       : onClose

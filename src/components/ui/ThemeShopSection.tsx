@@ -96,9 +96,6 @@ export function ThemeShopSection() {
               sprouts: result.balance_after,
               lastUpdated: new Date(),
             })
-            console.log('✅ Currency balance updated optimistically:', {
-              newBalance: result.balance_after,
-            })
           }
         }
 
@@ -154,7 +151,6 @@ export function ThemeShopSection() {
         // Принудительно обновляем localStorage версию для useGardenTheme
         window.dispatchEvent(new Event('storage'))
 
-        console.log('✅ Theme purchased successfully!')
       } else {
         console.error('❌ Failed to buy theme:', result.error)
       }

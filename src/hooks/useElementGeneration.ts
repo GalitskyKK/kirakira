@@ -120,12 +120,6 @@ export function useElementGeneration() {
     for (let y = 0; y < SHELF_COUNT; y++) {
       for (let x = 0; x < MAX_POSITIONS_PER_SHELF; x++) {
         if (!occupiedPositions.has(`${x},${y}`)) {
-          console.log('📍 Next available position found:', {
-            position: { x, y },
-            shelfNumber: y,
-            positionOnShelf: x,
-            totalOccupied: occupiedPositions.size,
-          })
           return { x, y }
         }
       }

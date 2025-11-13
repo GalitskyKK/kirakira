@@ -146,13 +146,6 @@ export function isTimeForCheckin(lastCheckin: Date | null): boolean {
   const entryDateStr = getLocalDateString(lastCheckin)
   const todayStr = getLocalDateString(today)
 
-  console.log('🕐 isTimeForCheckin check:', {
-    lastCheckin: lastCheckin.toISOString(),
-    entryDateStr,
-    todayStr,
-    canCheckin: entryDateStr !== todayStr,
-  })
-
   return entryDateStr !== todayStr // Можно отметить если даты разные
 }
 

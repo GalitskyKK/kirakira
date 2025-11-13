@@ -43,24 +43,20 @@ export const useMoodClientStore = create<MoodClientState>()(
 
     // Actions
     setDateRange: (from: Date | null, to: Date | null) => {
-      console.log('📅 Mood: Setting date range:', { from, to })
       set({
         selectedDateRange: { from, to },
       })
     },
 
     setFilterModalOpen: (isOpen: boolean) => {
-      console.log('🔍 Mood: Setting filter modal:', isOpen)
       set({ isFilterModalOpen: isOpen })
     },
 
     setSelectedMoodFilter: (mood: string | null) => {
-      console.log('🎭 Mood: Setting mood filter:', mood)
       set({ selectedMoodFilter: mood })
     },
 
     clearFilters: () => {
-      console.log('🧹 Mood: Clearing filters')
       set({
         selectedDateRange: { from: null, to: null },
         selectedMoodFilter: null,

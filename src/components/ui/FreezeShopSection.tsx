@@ -99,7 +99,6 @@ export function FreezeShopSection() {
       })
 
       if (result.success && telegramId) {
-        console.log('✅ Freeze purchased successfully:', result.data)
 
         // 🔄 1. Оптимистичное обновление баланса валюты
         if (
@@ -121,10 +120,6 @@ export function FreezeShopSection() {
                   : currentCurrency.gems,
               lastUpdated: new Date(),
             })
-            console.log('✅ Currency balance updated optimistically:', {
-              currencyUsed: result.data.currencyUsed,
-              newBalance: result.data.newBalance,
-            })
           }
         }
 
@@ -133,11 +128,6 @@ export function FreezeShopSection() {
           setFreezeData({
             ...freezeData,
             [freezeType]: result.data.newAmount,
-          })
-          console.log('✅ Freeze data updated optimistically:', {
-            freezeType,
-            oldAmount: freezeData[freezeType],
-            newAmount: result.data.newAmount,
           })
         }
 

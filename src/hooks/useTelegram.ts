@@ -24,25 +24,8 @@ export function useTelegram() {
   // Инициализация Telegram WebApp
   useEffect(() => {
     const initTelegramWebApp = () => {
-      console.log('🔍 TELEGRAM WEBAPP INIT ATTEMPT:', {
-        windowDefined: typeof window !== 'undefined',
-        windowTelegram: !!window.Telegram,
-        windowTelegramWebApp: !!window.Telegram?.WebApp,
-        userAgent: navigator.userAgent,
-        telegramScript: !!document.querySelector(
-          'script[src*="telegram-web-app.js"]'
-        ),
-      })
-
       if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
         const tg = window.Telegram.WebApp
-        console.log('✅ Telegram WebApp обнаружен:', {
-          version: tg.version,
-          platform: tg.platform,
-          initData: !!tg.initData,
-          initDataUnsafe: !!tg.initDataUnsafe,
-          user: !!tg.initDataUnsafe?.user,
-        })
 
         setWebApp(tg)
 
@@ -75,18 +58,15 @@ export function useTelegram() {
         setThemeParams(tg.themeParams)
 
         // Готовность к работе
-        console.log('📱 Calling tg.ready() and tg.expand()')
         tg.ready()
         setIsReady(true)
 
         // Расширяем приложение на весь экран
         tg.expand()
 
-        console.log('✅ Telegram WebApp инициализирован успешно!')
         return true // Успешная инициализация
       }
 
-      console.log('❌ Telegram WebApp НЕ НАЙДЕН или недоступен')
       return false // Не инициализирован
     }
 
@@ -196,8 +176,6 @@ export function useTelegram() {
             )
 
             if (response.ok) {
-              console.log('🏆 Added XP for sharing garden')
-
               // Показываем уведомление о получении XP
               if (showAlert) {
                 showAlert('🏆 +25 XP за шеринг сада!')
@@ -209,9 +187,6 @@ export function useTelegram() {
                   telegramId: user.telegramId,
                   questType: 'share_garden', // Removed complex quest
                   increment: 1,
-                })
-                .then(() => {
-                  console.log('✅ Share garden quest updated')
                 })
                 .catch(error => {
                   console.warn('⚠️ Failed to update share_garden quest:', error) // Removed complex quest

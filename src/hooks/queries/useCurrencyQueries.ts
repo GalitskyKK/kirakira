@@ -285,8 +285,6 @@ export function useEarnCurrency() {
         queryClient.invalidateQueries({
           queryKey: currencyKeys.transactions(variables.telegramId),
         })
-
-        console.log('✅ Currency earned successfully')
       }
     },
     onError: error => {
@@ -326,8 +324,6 @@ export function useSpendCurrency() {
         queryClient.invalidateQueries({
           queryKey: currencyKeys.transactions(variables.telegramId),
         })
-
-        console.log('✅ Currency spent successfully')
       }
     },
     onError: error => {

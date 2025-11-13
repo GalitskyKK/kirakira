@@ -113,8 +113,6 @@ export async function addMoodEntry(
       return null
     }
 
-    console.log('✅ Mood synced to server successfully')
-
     // Конвертируем серверную запись в клиентский формат
     return convertServerMoodToClient(
       result.data.mood,

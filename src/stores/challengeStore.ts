@@ -40,10 +40,6 @@ export const useChallengeClientStore = create<ChallengeClientState>()(
 
     // Actions
     setCurrentChallenge: (challenge: Challenge | null) => {
-      console.log(
-        '🏆 Challenge: Setting current challenge:',
-        challenge?.id ?? 'none'
-      )
       set({ currentChallenge: challenge })
     },
 
@@ -56,7 +52,6 @@ export const useChallengeClientStore = create<ChallengeClientState>()(
     },
 
     clearCurrentChallenge: () => {
-      console.log('🧹 Challenge: Clearing current challenge')
       set({ currentChallenge: null })
     },
   }))

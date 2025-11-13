@@ -71,11 +71,7 @@ export function FriendGardenView({
 }: FriendGardenViewProps) {
   const { hapticFeedback, showAlert } = useTelegram()
   const { updateQuestsWithValidation } = useQuestIntegration({
-    onQuestUpdated: (questType, isCompleted) => {
-      if (isCompleted) {
-        console.log(`🎉 Quest completed: ${questType}`)
-      }
-    },
+    onQuestUpdated: () => undefined,
   })
 
   // Получаем квесты для умной валидации
@@ -127,17 +123,23 @@ export function FriendGardenView({
         // Преобразуем английские ошибки в русские user-friendly сообщения
         const errorMessage = result.error || 'Failed to load friend garden'
         let russianError = 'Не удалось загрузить сад друга'
-        
-        if (errorMessage.includes('not your friend') || errorMessage.includes('not friends')) {
+
+        if (
+          errorMessage.includes('not your friend') ||
+          errorMessage.includes('not friends')
+        ) {
           russianError = 'Вы не являетесь друзьями с этим пользователем'
-        } else if (errorMessage.includes('private') || errorMessage.includes('hidden')) {
+        } else if (
+          errorMessage.includes('private') ||
+          errorMessage.includes('hidden')
+        ) {
           russianError = 'Этот пользователь скрыл свой сад'
         } else if (errorMessage.includes('not found')) {
           russianError = 'Пользователь не найден'
         } else if (errorMessage.includes('permission')) {
           russianError = 'Нет доступа к саду этого пользователя'
         }
-        
+
         throw new Error(russianError)
       }
       setFriendGarden(result.data)
@@ -259,7 +261,7 @@ export function FriendGardenView({
   if (error || !friendGarden) {
     const isFriendshipError = error?.includes('не являетесь друзьями') || false
     const isPrivacyError = error?.includes('скрыл свой сад') || false
-    
+
     return (
       <div className="space-y-4">
         <Button onClick={onBack} variant="outline" size="sm" className="mb-4">
@@ -272,16 +274,16 @@ export function FriendGardenView({
             {isFriendshipError ? '👥' : isPrivacyError ? '🔒' : '😔'}
           </div>
           <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-gray-100">
-            {isFriendshipError 
-              ? 'Сад доступен только друзьям' 
-              : isPrivacyError 
-              ? 'Сад скрыт' 
-              : 'Не удалось загрузить сад'}
+            {isFriendshipError
+              ? 'Сад доступен только друзьям'
+              : isPrivacyError
+                ? 'Сад скрыт'
+                : 'Не удалось загрузить сад'}
           </h3>
           <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
             {error || 'Возможно, пользователь ограничил доступ к своему саду'}
           </p>
-          
+
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
             {isFriendshipError && (
               <Button

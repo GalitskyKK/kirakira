@@ -73,8 +73,6 @@ export function useSyncUserWithData() {
       queryClient.invalidateQueries({
         queryKey: userKeys.profile(variables.telegramId),
       })
-
-      console.log('✅ User synced with data successfully')
     },
     onError: error => {
       console.error('❌ Failed to sync user with data:', error)
@@ -105,8 +103,6 @@ export function useUpdatePrivacySettings() {
       queryClient.invalidateQueries({
         queryKey: userKeys.sync(variables.telegramId),
       })
-
-      console.log('✅ Privacy settings updated successfully')
     },
     onError: error => {
       console.error('❌ Failed to update privacy settings:', error)
@@ -158,8 +154,6 @@ export function useUpdateUserPhoto() {
       queryClient.invalidateQueries({
         queryKey: userKeys.sync(variables.telegramId),
       })
-
-      console.log('✅ User photo updated successfully')
     },
     onError: (error, variables, context) => {
       // Откатываем изменения при ошибке
@@ -190,7 +184,7 @@ export function useAddUserExperience() {
       experiencePoints: number
       reason: string
     }) => addUserExperience(telegramId, experiencePoints, reason),
-    onSuccess: (result, variables) => {
+    onSuccess: (_result, variables) => {
       // Инвалидируем queries для перезагрузки данных
       queryClient.invalidateQueries({
         queryKey: userKeys.sync(variables.telegramId),
@@ -198,8 +192,6 @@ export function useAddUserExperience() {
       queryClient.invalidateQueries({
         queryKey: userKeys.profile(variables.telegramId),
       })
-
-      console.log('✅ User experience added successfully:', result)
     },
     onError: error => {
       console.error('❌ Failed to add user experience:', error)
@@ -221,8 +213,6 @@ export function useClearUserData() {
       queryClient.invalidateQueries({
         queryKey: userKeys.all,
       })
-
-      console.log('✅ User data cleared successfully')
     },
     onError: error => {
       console.error('❌ Failed to clear user data:', error)

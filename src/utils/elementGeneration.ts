@@ -200,8 +200,6 @@ function selectElementTemplate(
     })
   }
 
-  const usePreferred = true // Always true now
-
   // ✨ НОВОЕ: Объединяем бонусы от настроения и уровня
   // moodRarityBonus: от 0 до 1 (из MOOD_CONFIG)
   // levelRarityBonus: от 0 до 100% (из уровня пользователя)
@@ -264,11 +262,6 @@ function selectElementTemplate(
   const templateIndex = random.nextInt(0, availableTemplates.length - 1)
   const selectedTemplate = availableTemplates[templateIndex]!
 
-  // Debug logging (remove in production)
-  console.log(
-    `Mood: ${mood}, UsePreferred: ${usePreferred}, FilteredCount: ${filteredTemplates.length}, SelectedRarity: ${selectedRarity}, AvailableCount: ${availableTemplates.length}, Selected: ${selectedTemplate.type} (${selectedTemplate.rarity})`
-  )
-
   return selectedTemplate
 }
 
@@ -293,11 +286,6 @@ function generatePosition(
   const SHELVES_PER_ROOM = 4
   const MAX_POSITIONS_PER_SHELF = 4 // ИСПРАВЛЕНО: 5 позиций (соответствует ShelfView)
 
-  console.log('🎯 Generating position for new element (Multi-room system):', {
-    existingPositionsCount: existingPositions.length,
-    existingPositions: existingPositions.map(p => `(${p.x},${p.y})`).join(', '),
-  })
-
   // Определяем текущую комнату на основе количества элементов
   const ELEMENTS_PER_ROOM = SHELVES_PER_ROOM * MAX_POSITIONS_PER_SHELF // 20 элементов
   const currentRoomIndex = Math.floor(
@@ -305,14 +293,6 @@ function generatePosition(
   )
   const startShelf = currentRoomIndex * SHELVES_PER_ROOM
   const endShelf = startShelf + SHELVES_PER_ROOM
-
-  console.log('🏠 Current room calculation:', {
-    elementsCount: existingPositions.length,
-    elementsPerRoom: ELEMENTS_PER_ROOM,
-    currentRoomIndex,
-    shelfRange: `${startShelf}-${endShelf - 1}`,
-    maxPositionsPerShelf: MAX_POSITIONS_PER_SHELF,
-  })
 
   // Пытаемся найти случайную позицию в текущей комнате
   while (attempts < maxAttempts) {
@@ -326,20 +306,7 @@ function generatePosition(
       pos => pos.x === position.x && pos.y === position.y
     )
 
-    console.log(
-      `🎲 Attempt ${attempts + 1}: position (${position.x}, ${position.y}) - ${isOccupied ? 'OCCUPIED' : 'FREE'}`
-    )
-
     if (!isOccupied) {
-      const localShelf = position.y - startShelf
-      console.log('✅ Generated random position for new element:', {
-        position,
-        roomIndex: currentRoomIndex,
-        globalShelfNumber: position.y,
-        localShelfNumber: localShelf,
-        positionOnShelf: position.x,
-        attempt: attempts + 1,
-      })
       return position
     }
 
@@ -363,15 +330,6 @@ function generatePosition(
           pos => pos.x === position.x && pos.y === position.y
         )
         if (!isOccupied) {
-          const localShelf = y - roomStartShelf
-          console.log('🔄 Fallback position found for new element:', {
-            position,
-            roomIndex,
-            globalShelfNumber: y,
-            localShelfNumber: localShelf,
-            positionOnShelf: x,
-            fallback: true,
-          })
           return position
         }
       }
@@ -463,22 +421,12 @@ export function generateDailyElement(
     scale,
   }
 
-  console.log('🌱 Generated element with deterministic seed:', {
-    id: elementId,
-    seed: characteristicsSeed,
-    type: template.type,
-    rarity: template.rarity,
-    name,
-    color,
-    scale,
-  })
-
   return element
 }
 
 /**
  * Validates if a user can unlock a new element today
- * 
+ *
  * 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Использует ЛОКАЛЬНУЮ дату для сравнения,
  * а не UTC, чтобы корректно работать с часовыми поясами (как isTimeForCheckin)
  */
@@ -491,13 +439,6 @@ export function canUnlockTodaysElement(
   // Используем ЛОКАЛЬНУЮ дату для сравнения (консистентно с isTimeForCheckin)
   const lastUnlockStr = getLocalDateString(lastUnlockDate)
   const todayStr = getLocalDateString(currentDate)
-
-  console.log('🔓 canUnlockTodaysElement check:', {
-    lastUnlockDate: lastUnlockDate.toISOString(),
-    lastUnlockStr,
-    todayStr,
-    canUnlock: todayStr !== lastUnlockStr,
-  })
 
   return todayStr !== lastUnlockStr // Можно разблокировать если даты разные
 }

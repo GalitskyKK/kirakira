@@ -106,10 +106,6 @@ export function useChallengeIntegration() {
     }
 
     try {
-      console.log(
-        `🧮 Requesting server calculation for ${activeParticipations.length} challenges`
-      )
-
       // ✅ УЛУЧШЕНИЕ: Один запрос для всех челленджей с правильной аутентификацией
       const response = await authenticatedFetch(
         '/api/challenges?action=calculate-all-progress',
@@ -132,10 +128,6 @@ export function useChallengeIntegration() {
       const result = await response.json()
 
       if (result.success) {
-        console.log(
-          `✅ Server calculated progress for ${result.data.updatedChallenges} challenges`
-        )
-
         // ✅ УЛУЧШЕНИЕ: Инвалидируем кеш только при успехе
         queryClient.invalidateQueries({
           queryKey: ['challenges', currentUser.telegramId],
@@ -189,17 +181,11 @@ export function useChallengeIntegration() {
             metric,
             value: cappedValue,
           })
-
-          console.log(
-            `🔄 Force updated challenge: ${participation.challengeId} - ${metric}: ${cappedValue}/${targetValue}`
-          )
         } catch (error) {
           console.error(`❌ Failed to force update challenge:`, error)
         }
       } else {
-        console.log(
-          `⚠️ Force update skipped for challenge ${participation.challengeId}: would decrease progress ${participation.currentProgress} → ${cappedValue}`
-        )
+        // Пропускаем обновление, чтобы не уменьшить прогресс
       }
     }
   }, [
@@ -233,10 +219,7 @@ export function useChallengeIntegration() {
   const recalculateAllChallenges = useCallback(async () => {
     if (!currentUser?.telegramId) return
 
-    console.log('🔄 Manual recalculation of all challenges...')
-
     const activeParticipations = getActiveParticipations()
-    console.log(`📋 Found ${activeParticipations.length} active participations`)
 
     for (const participation of activeParticipations) {
       const challenge = challenges.find(c => c.id === participation.challengeId)
@@ -247,21 +230,12 @@ export function useChallengeIntegration() {
 
       const startDate = participation.joinedAt
 
-      console.log(`🔄 Recalculating ${challenge.title}`)
-      console.log(`🔄 Joined time: ${participation.joinedAt.getTime()}`)
-      console.log(`🔄 Challenge start time: ${challenge.startDate.getTime()}`)
-      console.log(`🔄 Start date: ${startDate.toISOString()}`)
-
       const challengeMetrics = calculateChallengeMetrics(startDate)
       const metric = challenge.requirements.metric
       const currentValue = challengeMetrics[metric]
       const targetValue = challenge.requirements.targetValue
 
       const cappedValue = Math.min(currentValue, targetValue)
-
-      console.log(
-        `🔄 Recalculating ${challenge.title}: ${cappedValue}/${targetValue}`
-      )
 
       try {
         await updateProgressMutationRef.current.mutateAsync({
@@ -270,7 +244,6 @@ export function useChallengeIntegration() {
           metric,
           value: cappedValue,
         })
-        console.log(`✅ Recalculated ${challenge.title}: ${cappedValue}`)
       } catch (error) {
         console.error(`❌ Failed to recalculate ${challenge.title}:`, error)
       }

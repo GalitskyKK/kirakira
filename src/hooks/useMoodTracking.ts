@@ -43,11 +43,7 @@ export function useMoodTracking() {
   const addMoodMutation = useAddMoodEntry()
   const { onMoodEntryAdded } = useChallengeMoodIntegration()
   const { questActions } = useQuestIntegration({
-    onQuestUpdated: (questType, isCompleted) => {
-      if (isCompleted) {
-        console.log(`🎉 Quest completed: ${questType}`)
-      }
-    },
+    onQuestUpdated: () => undefined,
   })
 
   // Проверка возможности отметки настроения
@@ -184,8 +180,6 @@ export function useMoodTracking() {
 
         const entry = await addMoodMutation.mutateAsync(moodRequest)
 
-        console.log('✅ Mood checked in successfully')
-
         // 💰 Начисляем валюту за запись настроения
         const isFirstToday = !todaysMood
         const currencyResult = await awardMoodRewards(
@@ -194,17 +188,12 @@ export function useMoodTracking() {
         )
 
         if (currencyResult.success) {
-          console.log(
-            `💰 Awarded ${currencyResult.sprouts} sprouts for mood check-in`
-          )
+          // Успешная награда обрабатывается без дополнительного логирования
         }
 
         // 🎯 Обновляем прогресс daily quests
         if (telegramId) {
           try {
-            // Обновляем квесты связанные с настроением
-            console.log('🎯 Updating mood-related daily quests...')
-
             // Обновляем квесты настроения
             await questActions.recordMood(mood, !!note)
 
@@ -219,7 +208,6 @@ export function useMoodTracking() {
 
         // 🏆 Обновляем прогресс челенджей
         try {
-          console.log('🏆 Updating challenge progress...')
           await onMoodEntryAdded()
         } catch (challengeError) {
           console.warn(

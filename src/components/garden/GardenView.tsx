@@ -32,19 +32,10 @@ export function GardenView({ className }: GardenViewProps) {
 
   const handleElementClick = useCallback(
     (element: GardenElementType) => {
-      console.log('🖱️ Element clicked:', {
-        elementName: element.name,
-        elementBeingMoved: elementBeingMoved?.name,
-        viewMode,
-        hasElementBeingMoved: !!elementBeingMoved,
-      })
-
       if (elementBeingMoved) {
-        console.log('🚫 Cancelling movement mode due to element click')
         setElementBeingMoved(null)
         selectElement(null)
       } else {
-        console.log('📖 Showing details in normal mode')
         selectElement(element)
         setViewMode(ViewMode.DETAIL)
       }
@@ -54,20 +45,10 @@ export function GardenView({ className }: GardenViewProps) {
 
   const handleElementLongPress = useCallback(
     (element: GardenElementType) => {
-      console.log('🔄 Long press detected:', {
-        elementName: element.name,
-        viewMode,
-        currentElementBeingMoved: elementBeingMoved?.name,
-      })
-
       // Долгое нажатие активирует режим перемещения в любом режиме (кроме детального просмотра)
       if (viewMode !== ViewMode.DETAIL) {
-        console.log('✅ Activating movement mode for:', element.name)
         setElementBeingMoved(element)
         selectElement(element)
-        console.log('📌 Element set for movement:', element.name)
-      } else {
-        console.log('⚠️ Long press ignored - in detail mode')
       }
     },
     [viewMode, selectElement, elementBeingMoved]
@@ -75,41 +56,21 @@ export function GardenView({ className }: GardenViewProps) {
 
   const handleSlotClick = useCallback(
     async (globalShelfIndex: number, position: number) => {
-      console.log('🎯 handleSlotClick called (from GardenRoomManager):', {
-        globalShelfIndex,
-        position,
-        elementBeingMoved: elementBeingMoved?.name,
-        hasElementBeingMoved: !!elementBeingMoved,
-      })
-
       if (elementBeingMoved) {
-        console.log('✅ Element is being moved, proceeding with move')
         try {
           // GardenRoomManager передаёт уже глобальные координаты
           // globalShelfIndex уже учитывает текущую комнату
           const gridX = position
           const gridY = globalShelfIndex
 
-          console.log('📍 Moving element to coordinates:', {
-            elementName: elementBeingMoved.name,
-            globalShelfIndex,
-            position,
-            finalCoords: { gridX, gridY },
-          })
-
           await moveElementSafely(elementBeingMoved.id, { x: gridX, y: gridY })
-          console.log('✅ Move completed successfully')
 
           // Сбрасываем состояние перемещения
-          console.log('🧹 Resetting movement state')
           setElementBeingMoved(null)
           selectElement(null)
-          console.log('✅ Movement state reset')
         } catch (error) {
           console.error('❌ Error during movement:', error)
         }
-      } else {
-        console.log('⚠️ No element being moved, ignoring slot click')
       }
     },
     [elementBeingMoved, moveElementSafely, selectElement]

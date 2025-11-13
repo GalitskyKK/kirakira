@@ -78,14 +78,6 @@ export function ShelfView({
     }))
 
     // ИСПРАВЛЕНО: Distribute elements based on their EXACT SLOT COORDINATES
-    console.log(
-      '🔍 ALL ELEMENTS IN GARDEN:',
-      elements.map(el => ({
-        name: el.name,
-        position: el.position,
-        id: el.id,
-      }))
-    )
 
     elements.forEach(element => {
       const { x: gridX, y: gridY } = element.position
@@ -101,17 +93,6 @@ export function ShelfView({
           positionOnShelf -= ELEMENTS_PER_SHELF
           shelfIndex = (shelfIndex + 1) % SHELF_COUNT
         }
-
-        console.log(`📦 Placing element ${element.name} [GRID-BASED SYSTEM]:`, {
-          gridCoords: element.position,
-          shelfFromGridY: gridY,
-          positionFromGridX: gridX,
-          finalShelf: shelfIndex,
-          finalPosition: positionOnShelf,
-          ELEMENTS_PER_SHELF,
-          canPlace:
-            shelfIndex < SHELF_COUNT && positionOnShelf < ELEMENTS_PER_SHELF,
-        })
 
         if (
           shelfData[shelfIndex] &&
@@ -139,14 +120,6 @@ export function ShelfView({
           Math.floor(elementIndex / ELEMENTS_PER_SHELF) % SHELF_COUNT
         const positionOnShelf = elementIndex % ELEMENTS_PER_SHELF
 
-        console.log(`📦 Placing element ${element.name} [LINEAR FALLBACK]:`, {
-          gridCoords: element.position,
-          elementIndex,
-          shelfIndex,
-          positionOnShelf,
-          ELEMENTS_PER_SHELF,
-        })
-
         if (shelfData[shelfIndex] && positionOnShelf < ELEMENTS_PER_SHELF) {
           shelfData[shelfIndex].elements.push({
             element,
@@ -162,11 +135,6 @@ export function ShelfView({
     // Сортируем элементы на каждой полке по их вычисленной позиции для правильного отображения
     shelfData.forEach(shelf => {
       shelf.elements.sort((a, b) => a.position - b.position)
-
-      console.log(
-        `🗂️ Shelf ${shelf.index} elements:`,
-        shelf.elements.map(e => `${e.element.name}@pos${e.position}`).join(', ')
-      )
     })
 
     return shelfData
@@ -396,12 +364,6 @@ export function ShelfView({
                     {Array.from(
                       { length: ELEMENTS_PER_SHELF },
                       (_, position) => {
-                        console.log(`🎯 Slot ${shelfIndex}-${position}:`, {
-                          width: ELEMENT_WIDTH,
-                          spacing: ELEMENT_SPACING,
-                          marginLeft: position === 0 ? 0 : ELEMENT_SPACING,
-                        })
-
                         return (
                           <motion.div
                             key={`drop-zone-${shelfIndex}-${position}`}
@@ -430,52 +392,12 @@ export function ShelfView({
                               delay: position * 0.1,
                               duration: 0.3,
                             }}
-                            onMouseEnter={() => {
-                              console.log(
-                                '🖱️ Mouse entered slot:',
-                                shelfIndex,
-                                position,
-                                'isElementMoving:',
-                                isElementMoving
-                              )
-                            }}
-                            onMouseDown={() => {
-                              console.log(
-                                '🖱️ Mouse down on slot:',
-                                shelfIndex,
-                                position
-                              )
-                            }}
                             onClick={e => {
-                              console.log('🎪 SLOT CLICK EVENT:', {
-                                event: e.type,
-                                target: e.target,
-                                currentTarget: e.currentTarget,
-                                shelfIndex,
-                                position,
-                                isElementMoving,
-                                elementBeingMoved: elementBeingMoved?.name,
-                              })
-
                               e.preventDefault()
                               e.stopPropagation()
 
-                              console.log('🎪 Slot clicked in ShelfView:', {
-                                shelfIndex,
-                                position,
-                                isElementMoving,
-                                hasOnSlotClick: !!onSlotClick,
-                                elementBeingMoved: elementBeingMoved?.name,
-                              })
-
                               if (isElementMoving && onSlotClick) {
-                                console.log('🚀 Calling onSlotClick handler')
                                 onSlotClick(shelfIndex, position)
-                              } else {
-                                console.log('❌ Not calling onSlotClick:', {
-                                  isElementMoving,
-                                  hasOnSlotClick: !!onSlotClick,
-                                })
                               }
                             }}
                           >
@@ -514,13 +436,6 @@ export function ShelfView({
                         // Ищем элемент для этого слота
                         const elementInSlot = shelfElements.find(
                           ({ position }) => position === slotPosition
-                        )
-
-                        console.log(
-                          `🎲 Slot ${slotPosition}:`,
-                          elementInSlot
-                            ? `Element ${elementInSlot.element.name}`
-                            : 'Empty'
                         )
 
                         if (elementInSlot) {
@@ -610,18 +525,6 @@ export function ShelfView({
                     />
                   )}
                 </motion.div>
-
-                {/* Shelf label */}
-                {/* <motion.div
-                  className="shelf-label absolute -left-8 top-1/2 -translate-y-1/2"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: shelfIndex * 0.2 + 0.8 }}
-                >
-                  <div className="rounded-lg bg-amber-100/80 px-2 py-1 text-xs font-medium text-amber-800 shadow-sm">
-                    Полка {shelfIndex + 1}
-                  </div>
-                </motion.div> */}
               </motion.div>
             )
           })}

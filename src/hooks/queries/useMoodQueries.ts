@@ -236,8 +236,6 @@ export function useAddMoodEntry() {
           refetchType: 'active',
         }),
       ])
-
-      console.log('✅ Mood entry added successfully')
     },
     onError: (error, request, context) => {
       // Откатываем оптимистичное обновление при ошибке

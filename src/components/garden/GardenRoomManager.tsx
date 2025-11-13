@@ -120,14 +120,6 @@ export function GardenRoomManager({
       const globalShelfIndex =
         localShelfIndex + currentRoomIndex * SHELVES_PER_ROOM
 
-      console.log('🎯 GardenRoomManager: Slot clicked', {
-        localShelfIndex,
-        globalShelfIndex,
-        position,
-        currentRoomIndex,
-        SHELVES_PER_ROOM,
-      })
-
       if (onSlotClick) {
         onSlotClick(globalShelfIndex, position)
       }

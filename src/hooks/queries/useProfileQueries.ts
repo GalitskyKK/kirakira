@@ -146,14 +146,6 @@ export function useAddExperience() {
         queryClient.invalidateQueries({
           queryKey: profileKeys.own(request.telegramId),
         })
-
-        console.log(
-          `✅ Added ${request.experiencePoints} XP for ${request.reason}`
-        )
-
-        if (result.leveledUp) {
-          console.log(`🎉 Level up! New level: ${result.level}`)
-        }
       }
     },
     onError: (error, request, context) => {

@@ -49,7 +49,6 @@ export function useStreakFreeze() {
         freezeData?.auto !== newFreezeData.auto
       ) {
         setFreezeData(newFreezeData)
-        console.log('✅ Freeze data synced from userData:', newFreezeData)
       }
     }
   }, [userData, freezeData?.max])
@@ -58,7 +57,6 @@ export function useStreakFreeze() {
   const checkAndHandleStreak = useCallback(async () => {
     if (currentUser?.telegramId == null || hasProcessedStreakCheck) return
 
-    console.log(`🧐 [V2] Checking streak for user ${currentUser.telegramId}`)
     setIsLoading(true)
 
     try {
@@ -69,9 +67,6 @@ export function useStreakFreeze() {
       const streakStatus = await checkStreak(currentUser.telegramId)
       setHasProcessedStreakCheck(true)
 
-      console.log('✅ [V2] Server streak status:', streakStatus)
-      console.log('🧊 [V2] Freeze data loaded:', freezes)
-
       if (streakStatus.streakState === 'at_risk') {
         setMissedDays(streakStatus.missedDays)
 
@@ -81,11 +76,9 @@ export function useStreakFreeze() {
           freezes
         )
         if (recommendedType === 'auto') {
-          console.log('🧊 [V2] Auto-freeze recommended, applying...')
           // Авто-заморозка всегда покрывает ровно 1 день
           void performFreeze('auto', 1)
         } else {
-          console.log('🧊 [V2] Manual freeze or reset required, showing modal.')
           setShowModal(true)
         }
       } else if (streakStatus.streakState === 'broken') {
@@ -139,12 +132,6 @@ export function useStreakFreeze() {
         await queryClient.invalidateQueries({
           queryKey: userKeys.all,
         })
-
-        console.log('✅ [V2] User data invalidated, streak updated:', {
-          currentStreak: result.currentStreak,
-          streakFreezes: result.remaining.manual,
-          autoFreezes: result.remaining.auto,
-        })
       } catch (error) {
         console.error(`❌ [V2] Error using ${freezeType} freeze:`, error)
         setAutoUsedMessage(
@@ -165,7 +152,7 @@ export function useStreakFreeze() {
     if (currentUser?.telegramId == null) return
     try {
       setIsLoading(true)
-      const result = await resetStreakAPI({
+      await resetStreakAPI({
         telegramId: currentUser.telegramId,
       })
 
@@ -176,11 +163,6 @@ export function useStreakFreeze() {
       // Инвалидируем React Query кеш для обновления данных пользователя
       await queryClient.invalidateQueries({
         queryKey: userKeys.all,
-      })
-
-      console.log('✅ [V2] Streak reset, user data invalidated:', {
-        currentStreak: result.currentStreak,
-        longestStreak: result.longestStreak,
       })
     } catch (error) {
       console.error('❌ [V2] Failed to reset streak:', error)

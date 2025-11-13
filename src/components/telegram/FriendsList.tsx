@@ -150,9 +150,6 @@ export function FriendsList({ currentUser }: FriendsListProps) {
         // 📸 Автоматически обновляем аватарки друзей без фото (в фоне, один раз за сессию)
         const friendsWithoutPhotos = friends.filter(friend => !friend.photoUrl)
         if (friendsWithoutPhotos.length > 0 && !hasAutoUpdatedPhotos) {
-          console.log(
-            `🔄 Auto-updating photos for ${friendsWithoutPhotos.length} friends without avatars...`
-          )
           setHasAutoUpdatedPhotos(true) // Помечаем что уже обновляли
 
           // Запускаем в фоне без уведомлений (техническая операция)
@@ -449,8 +446,6 @@ export function FriendsList({ currentUser }: FriendsListProps) {
   useEffect(() => {
     const pendingInvite = checkPendingInvite()
     if (pendingInvite) {
-      console.log('🔗 Processing pending friend invite:', pendingInvite)
-
       // Переключаемся на вкладку поиска
       setActiveView('find')
 

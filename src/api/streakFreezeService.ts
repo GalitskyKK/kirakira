@@ -144,8 +144,6 @@ export async function applyStreakFreeze(
       throw new Error(result.error || 'Failed to apply streak freeze')
     }
 
-    console.log('✅ Streak freeze applied successfully:', result.data)
-
     return result.data
   } catch (error) {
     console.error('❌ Error applying streak freeze:', error)
@@ -180,8 +178,6 @@ export async function resetStreak(request: ResetStreakRequest): Promise<{
     if (!result.success || !result.data) {
       throw new Error(result.error || 'Failed to reset streak')
     }
-
-    console.log('✅ Streak reset successfully:', result.data)
 
     return result.data
   } catch (error) {
@@ -279,8 +275,6 @@ export async function buyStreakFreeze(
     if (!result.success) {
       throw new Error(result.error || 'Failed to buy streak freeze')
     }
-
-    console.log('✅ Streak freeze purchased successfully:', result.data)
 
     return result
   } catch (error) {

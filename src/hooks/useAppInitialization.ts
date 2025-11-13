@@ -99,9 +99,9 @@ export function useAppInitialization(
   }, [telegramUser, userLoading, userData, finalConfig.enableTelegram])
 
   const logIfDev = useCallback(
-    (message: string, data?: unknown) => {
+    (_message: string, _data?: unknown) => {
       if (finalConfig.isDevelopment) {
-        console.log(message, data ?? '')
+        // Intentionally left blank to avoid dev-only console output
       }
     },
     [finalConfig.isDevelopment]

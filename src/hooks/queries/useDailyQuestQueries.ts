@@ -107,7 +107,7 @@ export function useClaimDailyQuest() {
       telegramId: number
       questId: string
     }) => claimDailyQuest(telegramId, questId),
-    onSuccess: (data, variables) => {
+    onSuccess: (result, variables) => {
       // Инвалидируем кеш заданий
       queryClient.invalidateQueries({
         queryKey: dailyQuestKeys.quests(variables.telegramId),
@@ -131,10 +131,8 @@ export function useClaimDailyQuest() {
       // Обновляем конкретное задание в кеше
       queryClient.setQueryData(
         dailyQuestKeys.quest(variables.questId),
-        data.quest
+        result.quest
       )
-
-      console.log('✅ Quest reward claimed and all related caches invalidated')
     },
     onError: error => {
       console.error('Claim daily quest error:', error)
@@ -167,7 +165,7 @@ export function useUpdateQuestProgress() {
       const questIdOrType = questId || questType!
       return updateQuestProgress(telegramId, questIdOrType, increment)
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (result, variables) => {
       // Инвалидируем кеш заданий
       queryClient.invalidateQueries({
         queryKey: dailyQuestKeys.quests(variables.telegramId),
@@ -177,14 +175,13 @@ export function useUpdateQuestProgress() {
       if (variables.questId) {
         queryClient.setQueryData(
           dailyQuestKeys.quest(variables.questId),
-          data.quest
+          result.quest
         )
       }
 
       // Если задание только что завершено, показываем уведомление
-      if (data.isNewlyCompleted) {
+      if (result.isNewlyCompleted) {
         // Здесь можно добавить toast уведомление
-        console.log('🎉 Quest completed!', data.quest)
       }
     },
     onError: error => {
@@ -216,14 +213,14 @@ export function useUpdateMultipleQuestProgress() {
       )
       return Promise.all(promises)
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (results, variables) => {
       // Инвалидируем кеш заданий
       queryClient.invalidateQueries({
         queryKey: dailyQuestKeys.quests(variables.telegramId),
       })
 
       // Обновляем каждое задание в кеше
-      data.forEach((result, index) => {
+      results.forEach((result, index) => {
         const questUpdate = variables.questUpdates[index]
         if (questUpdate) {
           queryClient.setQueryData(
@@ -266,7 +263,7 @@ export function useClaimAllRewards() {
       }
       return results
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_results, variables) => {
       // Инвалидируем кеш заданий
       queryClient.invalidateQueries({
         queryKey: dailyQuestKeys.quests(variables.telegramId),
@@ -286,8 +283,6 @@ export function useClaimAllRewards() {
       queryClient.invalidateQueries({
         queryKey: ['user', variables.telegramId],
       })
-
-      console.log(`✅ Claimed ${data.length} quest rewards successfully`)
     },
     onError: error => {
       console.error('Claim all rewards error:', error)

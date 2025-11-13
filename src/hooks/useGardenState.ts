@@ -54,11 +54,7 @@ export function useGardenState() {
   // Получаем квесты для умной валидации
   const { data: questsData } = useDailyQuests(telegramId || 0)
   const { updateQuestsWithValidation } = useQuestIntegration({
-    onQuestUpdated: (questType, isCompleted) => {
-      if (isCompleted) {
-        console.log(`🎉 Quest completed: ${questType}`)
-      }
-    },
+    onQuestUpdated: () => undefined,
   })
 
   // Клиентское UI состояние через Zustand
@@ -281,8 +277,6 @@ export function useGardenState() {
         })
 
         if (result) {
-          console.log('✅ Element unlocked successfully')
-
           // 💰 Начисляем валюту за получение элемента
           const currencyResult = await awardElementSprouts(
             currentUser.telegramId,
@@ -290,10 +284,8 @@ export function useGardenState() {
             result.element.id
           )
 
-          if (currencyResult.success) {
-            console.log(
-              `💰 Awarded ${currencyResult.amount} sprouts for ${result.element.rarity} element`
-            )
+          if (!currencyResult.success) {
+            console.error('❌ Failed to award sprouts for element:', currencyResult.error)
           }
 
           // 🎯 Обновляем прогресс daily quests с умной валидацией
@@ -303,10 +295,6 @@ export function useGardenState() {
             questsData.quests.length > 0
           ) {
             try {
-              console.log(
-                '🎯 Updating garden-related daily quests with validation...'
-              )
-
               await updateQuestsWithValidation(
                 {
                   elementType: newElement.type,
@@ -323,10 +311,6 @@ export function useGardenState() {
           } else if (telegramId) {
             // Fallback к старому методу если квесты не загружены
             try {
-              console.log(
-                '🎯 Updating garden-related daily quests (fallback)...'
-              )
-
               const gardenQuests = ['collect_elements']
               if (
                 newElement.rarity === 'rare' ||
@@ -357,7 +341,6 @@ export function useGardenState() {
 
           // 🏆 Обновляем прогресс челенджей
           try {
-            console.log('🏆 Updating challenge progress...')
             await onGardenElementAdded()
           } catch (challengeError) {
             console.warn(
