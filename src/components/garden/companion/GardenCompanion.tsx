@@ -487,7 +487,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
 
   const containerRef = useRef<HTMLDivElement>(null)
   const wasDraggedRef = useRef(false)
-  const tapStartTimeRef = useRef<number | null>(null)
+  const tapTimeoutRef = useRef<number | null>(null)
 
   useEffect(() => {
     if (!isDragging && containerRef.current) {
@@ -501,20 +501,43 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     return undefined
   }, [isDragging])
 
+  useEffect(() => {
+    return () => {
+      if (tapTimeoutRef.current !== null) {
+        clearTimeout(tapTimeoutRef.current)
+        tapTimeoutRef.current = null
+      }
+    }
+  }, [])
+
   const handleTapStart = () => {
-    tapStartTimeRef.current = Date.now()
     wasDraggedRef.current = false
+
+    // Открываем модалку сразу с небольшой задержкой (для быстрого отклика)
+    if (tapTimeoutRef.current !== null) {
+      clearTimeout(tapTimeoutRef.current)
+    }
+    tapTimeoutRef.current = window.setTimeout(() => {
+      if (!wasDraggedRef.current) {
+        toggleInfo()
+      }
+      tapTimeoutRef.current = null
+    }, 50)
   }
 
   const handleTap = () => {
-    if (!wasDraggedRef.current) {
+    // onTap срабатывает как fallback, если таймер не успел сработать
+    if (!wasDraggedRef.current && tapTimeoutRef.current === null) {
       toggleInfo()
     }
-    tapStartTimeRef.current = null
   }
 
   const handleTapCancel = () => {
-    tapStartTimeRef.current = null
+    // Отменяем открытие модалки, если тап был отменен (начался драг)
+    if (tapTimeoutRef.current !== null) {
+      clearTimeout(tapTimeoutRef.current)
+      tapTimeoutRef.current = null
+    }
   }
 
   const handleDragStart = () => {
@@ -523,6 +546,11 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
 
   const handleDrag = () => {
     wasDraggedRef.current = true
+    // Отменяем открытие модалки, если начался драг
+    if (tapTimeoutRef.current !== null) {
+      clearTimeout(tapTimeoutRef.current)
+      tapTimeoutRef.current = null
+    }
   }
 
   const handleDragEnd = (
