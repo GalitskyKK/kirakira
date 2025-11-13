@@ -4,7 +4,7 @@
  */
 
 import { motion } from 'framer-motion'
-import { CheckCircle, Sparkles } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import { type RarityLevel } from '@/types/garden'
 import { useEffect, useState } from 'react'
 import { Modal, ModalBody } from '@/components/ui/Modal'
