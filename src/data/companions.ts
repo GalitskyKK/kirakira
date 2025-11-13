@@ -51,7 +51,7 @@ export const COMPANION_DEFINITIONS: Readonly<
         mouthShape: 'soft',
         float: { amplitude: 12, duration: 5 },
         sway: { amplitude: 6, duration: 7 },
-        scaleRange: [0.96, 1.02],
+        scaleRange: [0.86, 0.92],
         accentColor: '#5F6DFF',
         particlePreset: {
           variant: 'drift',
@@ -75,7 +75,7 @@ export const COMPANION_DEFINITIONS: Readonly<
         mouthShape: 'smile',
         float: { amplitude: 16, duration: 4.2 },
         sway: { amplitude: 9, duration: 3.6 },
-        scaleRange: [1, 1.08],
+        scaleRange: [0.9, 0.98],
         accentColor: '#FFB347',
         particlePreset: {
           variant: 'sparkle',
@@ -99,7 +99,7 @@ export const COMPANION_DEFINITIONS: Readonly<
         mouthShape: 'soft',
         float: { amplitude: 11, duration: 6.2 },
         sway: { amplitude: 7, duration: 5.4 },
-        scaleRange: [0.98, 1.04],
+        scaleRange: [0.88, 0.94],
         accentColor: '#4ABFAA',
         particlePreset: {
           variant: 'bubble',
@@ -123,7 +123,7 @@ export const COMPANION_DEFINITIONS: Readonly<
         mouthShape: 'frown',
         float: { amplitude: 8, duration: 6.6 },
         sway: { amplitude: 5, duration: 5.8 },
-        scaleRange: [0.94, 1],
+        scaleRange: [0.84, 0.9],
         accentColor: '#5260D3',
         particlePreset: {
           variant: 'drift',
@@ -147,7 +147,7 @@ export const COMPANION_DEFINITIONS: Readonly<
         mouthShape: 'determined',
         float: { amplitude: 13, duration: 3.6 },
         sway: { amplitude: 11, duration: 2.6 },
-        scaleRange: [1.02, 1.08],
+        scaleRange: [0.92, 0.98],
         accentColor: '#FF3B6B',
         particlePreset: {
           variant: 'ember',
@@ -171,7 +171,7 @@ export const COMPANION_DEFINITIONS: Readonly<
         mouthShape: 'open',
         float: { amplitude: 10, duration: 3.8 },
         sway: { amplitude: 12, duration: 4.1 },
-        scaleRange: [0.95, 1.05],
+        scaleRange: [0.85, 0.95],
         accentColor: '#D980FA',
         particlePreset: {
           variant: 'sparkle',
@@ -195,7 +195,7 @@ export const COMPANION_DEFINITIONS: Readonly<
         mouthShape: 'soft',
         float: { amplitude: 9, duration: 4.8 },
         sway: { amplitude: 13, duration: 4.4 },
-        scaleRange: [0.96, 1.03],
+        scaleRange: [0.86, 0.93],
         accentColor: '#7F8CFF',
         particlePreset: {
           variant: 'bubble',
@@ -219,7 +219,7 @@ export const COMPANION_DEFINITIONS: Readonly<
         mouthShape: 'open',
         float: { amplitude: 20, duration: 2.8 },
         sway: { amplitude: 16, duration: 2.4 },
-        scaleRange: [1.05, 1.16],
+        scaleRange: [0.95, 1],
         accentColor: '#FF85FF',
         particlePreset: {
           variant: 'sparkle',
