@@ -323,7 +323,7 @@ export function FriendGardenView({
           Назад
         </Button>
         <div className="text-center">
-          <h2 className="text-lg font-semibold">Сад друга</h2>
+          <h2 className="text-lg font-semibold">Сад пользователя</h2>
           <p className="text-sm text-gray-600">Только для просмотра</p>
         </div>
         <div className="w-20"></div> {/* Spacer для центровки заголовка */}
