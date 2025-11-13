@@ -255,7 +255,8 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return */
   const visual = useCompanionVisual()
 
-  const shouldReduceMotion = !!useReducedMotion()
+  const reduceMotionPreference = useReducedMotion()
+  const shouldReduceMotion = reduceMotionPreference === true
 
   const gradientId = useMemo(
     () => `companion-body-${activeCompanionId}-${visual?.emotion ?? 'neutral'}`,
@@ -486,6 +487,10 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   ])
 
   const containerRef = useRef<HTMLDivElement>(null)
+  const dragIntentRef = useRef(false)
+  const suppressTapRef = useRef(false)
+  const suppressTapTimeoutRef = useRef<number | null>(null)
+  const dragIntentThreshold = 6
 
   useEffect(() => {
     if (!isDragging && containerRef.current) {
@@ -499,8 +504,31 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     return undefined
   }, [isDragging])
 
+  useEffect(() => {
+    return () => {
+      if (suppressTapTimeoutRef.current !== null) {
+        window.clearTimeout(suppressTapTimeoutRef.current)
+        suppressTapTimeoutRef.current = null
+      }
+    }
+  }, [])
+
   const handleDragStart = () => {
+    dragIntentRef.current = false
     setIsDragging(true)
+  }
+
+  const handleDrag = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
+    if (dragIntentRef.current) {
+      return
+    }
+    const distance = Math.hypot(info.offset.x, info.offset.y)
+    if (distance >= dragIntentThreshold) {
+      dragIntentRef.current = true
+    }
   }
 
   const handleDragEnd = (
@@ -509,30 +537,45 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
   ) => {
     setIsDragging(false)
 
-    const isDrag = Math.abs(info.offset.x) > 5 || Math.abs(info.offset.y) > 5
-
-    if (isDrag) {
-      const viewportWidth = window.innerWidth
-      const viewportHeight = window.innerHeight
-      const { x, y } = info.point
-      const side: CompanionSide = x < viewportWidth / 2 ? 'left' : 'right'
-      const distanceFromBottom = viewportHeight - y
-      const isMobileScreen = viewportWidth < 640
-
-      if (isMobileScreen) {
-        const minDistanceFromBottom = 80
-        const maxDistanceFromBottom = viewportHeight - 150
-        const constrainedDistance = Math.max(
-          minDistanceFromBottom,
-          Math.min(maxDistanceFromBottom, distanceFromBottom)
-        )
-        setPosition(constrainedDistance, side)
-      } else {
-        setPosition(position.yPosition, side)
-      }
-    } else {
-      toggleInfo()
+    if (!dragIntentRef.current) {
+      return
     }
+
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    const { x, y } = info.point
+    const side: CompanionSide = x < viewportWidth / 2 ? 'left' : 'right'
+    const distanceFromBottom = viewportHeight - y
+    const isMobileScreen = viewportWidth < 640
+
+    if (isMobileScreen) {
+      const minDistanceFromBottom = 80
+      const maxDistanceFromBottom = viewportHeight - 150
+      const constrainedDistance = Math.max(
+        minDistanceFromBottom,
+        Math.min(maxDistanceFromBottom, distanceFromBottom)
+      )
+      setPosition(constrainedDistance, side)
+    } else {
+      setPosition(position.yPosition, side)
+    }
+
+    dragIntentRef.current = false
+    suppressTapRef.current = true
+    if (suppressTapTimeoutRef.current !== null) {
+      window.clearTimeout(suppressTapTimeoutRef.current)
+    }
+    suppressTapTimeoutRef.current = window.setTimeout(() => {
+      suppressTapRef.current = false
+      suppressTapTimeoutRef.current = null
+    }, 120)
+  }
+
+  const handleTap = () => {
+    if (suppressTapRef.current) {
+      return
+    }
+    toggleInfo()
   }
 
   if (!visual || !isVisible) {
@@ -575,7 +618,9 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           dragConstraints={false}
           dragDirectionLock={false}
           onDragStart={handleDragStart}
+          onDrag={handleDrag}
           onDragEnd={handleDragEnd}
+          onTap={handleTap}
           onKeyDown={event => {
             if (event.key === 'Enter' || event.key === ' ') {
               event.preventDefault()
