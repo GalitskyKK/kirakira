@@ -24,7 +24,7 @@ export function SuccessUpgradeOverlay({
   xpReward,
   elementEmoji,
   onComplete,
-  autoReturnDelay = 30000,
+  autoReturnDelay = 300000,
 }: SuccessUpgradeOverlayProps) {
   const [countdown, setCountdown] = useState(3)
 
