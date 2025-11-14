@@ -29,7 +29,7 @@ export function MoodRoadmapPage() {
 
   return (
     <motion.div
-      className="min-h-screen space-y-6 p-4 pb-8"
+      className="space-y-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -38,7 +38,7 @@ export function MoodRoadmapPage() {
       {/* Заголовок с кнопкой назад */}
       <div className="flex items-center space-x-4">
         <motion.button
-          onClick={() => navigate('/profile')}
+          onClick={() => navigate('/mobile/profile')}
           className="flex items-center justify-center rounded-full bg-white p-2 shadow-sm transition-colors hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -47,10 +47,10 @@ export function MoodRoadmapPage() {
         </motion.button>
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Роадмап настроений
+            Дневник настроений
           </h1>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Ваш путь эмоций
+            История ваших эмоций
           </p>
         </div>
       </div>
