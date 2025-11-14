@@ -5,6 +5,7 @@ import { useGardenState } from '@/hooks/index.v2'
 import { useGardenClientStore } from '@/stores/gardenStore'
 import { GardenRoomManager } from './GardenRoomManager'
 import { GardenStats } from './GardenStats'
+import { PaletteMoodStats } from './PaletteMoodStats'
 import { ElementDetails } from './ElementDetails'
 import { PaletteView } from './PaletteView'
 import { LoadingOverlay, Card } from '@/components/ui'
@@ -247,7 +248,13 @@ export function GardenView({ className }: GardenViewProps) {
               {/* Mobile-first adaptive layout */}
               <div className="flex flex-col lg:flex-row">
                 {/* Garden Display - Switch between display modes */}
-                <div className="flex-1 p-2 sm:p-4 lg:p-6">
+                <div
+                  className={clsx(
+                    displayMode === GardenDisplayMode.PALETTE
+                      ? 'flex-1 flex items-center justify-center p-2 sm:p-4 lg:p-6 min-h-[70vh]'
+                      : 'flex-1 p-2 sm:p-4 lg:p-6'
+                  )}
+                >
                   <AnimatePresence mode="wait">
                     {displayMode === GardenDisplayMode.PALETTE ? (
                       <motion.div
@@ -256,9 +263,9 @@ export function GardenView({ className }: GardenViewProps) {
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.3 }}
-                        className="flex h-full items-center justify-center"
+                        className="flex h-full w-full items-center justify-center"
                       >
-                        <PaletteView className="w-full max-w-2xl" />
+                        <PaletteView className="h-full w-full max-w-2xl" />
                       </motion.div>
                     ) : (
                       <motion.div
@@ -294,7 +301,11 @@ export function GardenView({ className }: GardenViewProps) {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.2 }}
                   >
-                    <GardenStats garden={garden} />
+                    {displayMode === GardenDisplayMode.PALETTE ? (
+                      <PaletteMoodStats />
+                    ) : (
+                      <GardenStats garden={garden} />
+                    )}
                   </motion.div>
                 )}
               </div>
@@ -307,7 +318,11 @@ export function GardenView({ className }: GardenViewProps) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
-                  <GardenStats garden={garden} />
+                  {displayMode === GardenDisplayMode.PALETTE ? (
+                    <PaletteMoodStats />
+                  ) : (
+                    <GardenStats garden={garden} />
+                  )}
                 </motion.div>
               )}
             </motion.div>

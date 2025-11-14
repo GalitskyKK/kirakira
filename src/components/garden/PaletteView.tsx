@@ -51,10 +51,13 @@ export function PaletteView({
       if (containerRef.current) {
         const containerRect = containerRef.current.getBoundingClientRect()
         const containerWidth = Math.min(containerRect.width, 650)
-        const containerHeight = Math.min(
-          containerRect.height || window.innerHeight * 0.6,
-          650
-        )
+        // Для палитры используем почти всю высоту доступного пространства
+        // Вычитаем отступы для header и статистики (примерно 150-200px)
+        const availableHeight =
+          containerRect.height > 0
+            ? containerRect.height
+            : window.innerHeight - 200
+        const containerHeight = Math.min(availableHeight, 650)
         setCanvasSize({
           width: width ?? containerWidth,
           height: height ?? containerHeight,
@@ -62,7 +65,8 @@ export function PaletteView({
       } else {
         // Fallback на window.innerWidth только если контейнер еще не отрендерен
         const containerWidth = Math.min(window.innerWidth - 32, 650)
-        const containerHeight = Math.min(window.innerHeight * 0.6, 650)
+        // Для палитры используем больше высоты
+        const containerHeight = Math.min(window.innerHeight - 200, 650)
         setCanvasSize({
           width: width ?? containerWidth,
           height: height ?? containerHeight,
@@ -117,10 +121,14 @@ export function PaletteView({
     }
 
     // Создаем более надежный хеш истории для отслеживания изменений
-    // Используем длину истории и даты первой/последней записи
-    const firstEntry = moodHistory[0]
-    const lastEntry = moodHistory[moodHistory.length - 1]
-    const historyHash = `${moodHistory.length}_${firstEntry?.date.getTime() ?? 0}_${lastEntry?.date.getTime() ?? 0}_${firstEntry?.mood ?? ''}_${lastEntry?.mood ?? ''}`
+    // Используем длину истории, дату последней записи и сумму всех настроений
+    // Это гарантирует обновление при любом изменении истории
+    const lastEntry = moodHistory[0] // Первая запись - самая новая (история отсортирована)
+    const moodSum = moodHistory.reduce((sum, entry) => {
+      // Создаем уникальный идентификатор для каждой записи
+      return sum + entry.date.getTime() + entry.mood.charCodeAt(0)
+    }, 0)
+    const historyHash = `${moodHistory.length}_${lastEntry?.date.getTime() ?? 0}_${lastEntry?.mood ?? ''}_${moodSum}`
 
     // Если история не изменилась, возвращаем существующие шары
     if (
