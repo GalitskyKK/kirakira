@@ -233,8 +233,8 @@ export function generatePaletteBalls(
         : (minRadius + maxRadius) / 2
 
     // Скорость с использованием детерминированного генератора
-    const speedX = (rng.next() - 0.5) * 1.5
-    const speedY = (rng.next() - 0.5) * 1.5
+    const speedX = (rng.next() - 0.5) * 1
+    const speedY = (rng.next() - 0.5) * 1
 
     balls.push({
       x,

@@ -47,24 +47,25 @@ export function PaletteView({
 
   useEffect(() => {
     const updateSize = () => {
-      // Фиксированные размеры для стабильности
+      // Максимальные размеры для стабильности генерации
       const fixedWidth = 650
       const fixedHeight = 650
 
-      // Используем реальную ширину контейнера с фиксированным максимумом
+      // Адаптивная ширина и высота с максимумом (для прямоугольной формы на мобильных)
       if (containerRef.current) {
         const containerRect = containerRef.current.getBoundingClientRect()
         const containerWidth = Math.min(containerRect.width, fixedWidth)
+        const containerHeight = Math.min(containerRect.height, fixedHeight)
         setCanvasSize({
           width: width ?? containerWidth,
-          height: height ?? fixedHeight, // Фиксированная высота
+          height: height ?? containerHeight,
         })
       } else {
-        // Используем фиксированную ширину и высоту
         const containerWidth = Math.min(window.innerWidth - 32, fixedWidth)
+        const containerHeight = Math.min(window.innerHeight - 200, fixedHeight)
         setCanvasSize({
           width: width ?? containerWidth,
-          height: height ?? fixedHeight, // Фиксированная высота
+          height: height ?? containerHeight,
         })
       }
     }
