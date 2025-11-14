@@ -4,7 +4,7 @@
  */
 
 import { motion } from 'framer-motion'
-import { Sprout, Palette, TreePine, Grid3x3, Lock } from 'lucide-react'
+import { Sprout, Palette, Lock } from 'lucide-react'
 import { useGardenClientStore } from '@/stores/gardenStore'
 import { GardenDisplayMode } from '@/types/garden'
 
@@ -32,22 +32,22 @@ const DISPLAY_MODES: readonly DisplayModeOption[] = [
     icon: <Palette className="h-5 w-5" />,
     available: true,
   },
-  {
-    mode: GardenDisplayMode.BONSAI,
-    label: 'Бонсай',
-    description: 'Дерево эмоций, растущее от ваших настроений',
-    icon: <TreePine className="h-5 w-5" />,
-    available: false,
-    comingSoon: true,
-  },
-  {
-    mode: GardenDisplayMode.BEDS,
-    label: 'Грядки',
-    description: 'Шесть грядок, каждая для своего настроения',
-    icon: <Grid3x3 className="h-5 w-5" />,
-    available: false,
-    comingSoon: true,
-  },
+  // {
+  //   mode: GardenDisplayMode.BONSAI,
+  //   label: 'Бонсай',
+  //   description: 'Дерево эмоций, растущее от ваших настроений',
+  //   icon: <TreePine className="h-5 w-5" />,
+  //   available: false,
+  //   comingSoon: true,
+  // },
+  // {
+  //   mode: GardenDisplayMode.BEDS,
+  //   label: 'Грядки',
+  //   description: 'Шесть грядок, каждая для своего настроения',
+  //   icon: <Grid3x3 className="h-5 w-5" />,
+  //   available: false,
+  //   comingSoon: true,
+  // },
 ] as const
 
 export function GardenDisplaySettings() {

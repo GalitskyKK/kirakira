@@ -47,17 +47,18 @@ export function PaletteView({
 
   useEffect(() => {
     const updateSize = () => {
-      // Используем реальную ширину контейнера вместо window.innerWidth
+      // Используем реальную ширину и высоту контейнера
       if (containerRef.current) {
         const containerRect = containerRef.current.getBoundingClientRect()
+        // Используем реальную ширину контейнера
         const containerWidth = Math.min(containerRect.width, 650)
-        // Для палитры используем почти всю высоту доступного пространства
-        // Вычитаем отступы для header и статистики (примерно 150-200px)
-        const availableHeight =
+        // Используем реальную высоту контейнера (почти весь доступный экран)
+        const containerHeight = Math.min(
           containerRect.height > 0
             ? containerRect.height
-            : window.innerHeight - 200
-        const containerHeight = Math.min(availableHeight, 650)
+            : window.innerHeight - 200,
+          650
+        )
         setCanvasSize({
           width: width ?? containerWidth,
           height: height ?? containerHeight,
@@ -400,8 +401,10 @@ export function PaletteView({
           background: 'transparent',
           display: 'block',
           width: '100%',
-          height: 'auto',
+          height: '100%',
           maxWidth: '100%',
+          maxHeight: '100%',
+          objectFit: 'contain',
         }}
       />
       {moodHistory.length === 0 && (
