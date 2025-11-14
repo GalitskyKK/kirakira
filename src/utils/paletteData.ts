@@ -204,8 +204,8 @@ export function generatePaletteBalls(
         : (minRadius + maxRadius) / 2
 
     // Скорость как в исходном HTML: (Math.random() - 0.5) * 0.5
-    const speedX = (Math.random() - 0.5) * 0.5
-    const speedY = (Math.random() - 0.5) * 0.5
+    const speedX = (Math.random() - 0.5) * 0.8
+    const speedY = (Math.random() - 0.5) * 0.8
 
     balls.push({
       x,
