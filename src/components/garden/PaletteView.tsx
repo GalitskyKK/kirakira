@@ -202,8 +202,10 @@ export function PaletteView({
 
       ctx.putImageData(imageData, 0, 0)
 
-      // Добавляем больше размытия для плавности краёв (как в HTML)
-      ctx.filter = 'blur(40px)'
+      // Добавляем многослойное размытие для максимально мягких краёв (как в HTML)
+      ctx.filter = 'blur(50px)'
+      ctx.drawImage(canvas, 0, 0)
+      ctx.filter = 'blur(30px)'
       ctx.drawImage(canvas, 0, 0)
       ctx.filter = 'none'
     }

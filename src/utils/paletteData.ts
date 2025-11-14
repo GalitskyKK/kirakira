@@ -53,10 +53,7 @@ function calculateMoodStats(
   period: 'week' | 'month'
 ): readonly MoodPeriodStats[] {
   const now = new Date()
-  const startDate =
-    period === 'week'
-      ? subDays(now, 7)
-      : subDays(now, 30)
+  const startDate = period === 'week' ? subDays(now, 7) : subDays(now, 30)
 
   const start = startOfDay(startDate)
   const end = startOfDay(now)
@@ -71,10 +68,16 @@ function calculateMoodStats(
   })
 
   // Группируем по типу настроения
-  const moodGroups = new Map<MoodType, { count: number; totalIntensity: number }>()
+  const moodGroups = new Map<
+    MoodType,
+    { count: number; totalIntensity: number }
+  >()
 
   for (const entry of periodMoods) {
-    const existing = moodGroups.get(entry.mood) ?? { count: 0, totalIntensity: 0 }
+    const existing = moodGroups.get(entry.mood) ?? {
+      count: 0,
+      totalIntensity: 0,
+    }
     moodGroups.set(entry.mood, {
       count: existing.count + 1,
       totalIntensity: existing.totalIntensity + entry.intensity,
@@ -200,16 +203,15 @@ export function generatePaletteBalls(
             (maxRadius - minRadius)
         : (minRadius + maxRadius) / 2
 
-    // Скорость зависит от интенсивности
-    const intensityFactor = stat.averageIntensity / 3
-    const speed = 0.3 + intensityFactor * 0.2
-    const angle = Math.random() * Math.PI * 2
+    // Скорость как в исходном HTML: (Math.random() - 0.5) * 0.5
+    const speedX = (Math.random() - 0.5) * 0.5
+    const speedY = (Math.random() - 0.5) * 0.5
 
     balls.push({
       x,
       y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
+      vx: speedX,
+      vy: speedY,
       radius,
       color: moodConfig.color,
       colorHsl,
@@ -244,4 +246,3 @@ export function convertMoodHistoryToPalette(
 
   return generatePaletteBalls(processedHistory, options)
 }
-
