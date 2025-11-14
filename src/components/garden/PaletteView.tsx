@@ -51,18 +51,65 @@ export function PaletteView({
       const fixedWidth = 650
       const fixedHeight = 650
 
+      // Используем минимальные значения, чтобы избежать постепенного уменьшения
+      const minWidth = 300
+      const minHeight = 400
+
       // Адаптивная ширина и высота с максимумом (для прямоугольной формы на мобильных)
+      // Используем доступную высоту окна для стабильности (не зависеть от размера контейнера)
+      const availableHeight = window.innerHeight - 200
+      const availableWidth = window.innerWidth - 32
+
       if (containerRef.current) {
         const containerRect = containerRef.current.getBoundingClientRect()
-        const containerWidth = Math.min(containerRect.width, fixedWidth)
-        const containerHeight = Math.min(containerRect.height, fixedHeight)
-        setCanvasSize({
-          width: width ?? containerWidth,
-          height: height ?? containerHeight,
+
+        // Ширина: берем из контейнера, но с защитой
+        const containerWidth = Math.max(
+          minWidth,
+          Math.min(containerRect.width || availableWidth, fixedWidth)
+        )
+        // Высота: всегда используем доступную высоту окна (не контейнера!) для избежания циклов
+        const containerHeight = Math.max(
+          minHeight,
+          Math.min(availableHeight, fixedHeight)
+        )
+
+        setCanvasSize(prevSize => {
+          // Обновляем только если новый размер больше предыдущего или если разница значительная
+          // Это предотвращает постепенное уменьшение
+          const newWidth = width ?? containerWidth
+          const newHeight = height ?? containerHeight
+
+          // Используем предыдущее значение, если новое значительно меньше (защита от циклов)
+          // Но позволяем увеличиваться без ограничений
+          const finalWidth =
+            newWidth > prevSize.width
+              ? newWidth
+              : newWidth < prevSize.width * 0.9
+                ? prevSize.width
+                : newWidth
+
+          const finalHeight =
+            newHeight > prevSize.height
+              ? newHeight
+              : newHeight < prevSize.height * 0.9
+                ? prevSize.height
+                : newHeight
+
+          return {
+            width: Math.min(finalWidth, fixedWidth),
+            height: Math.min(finalHeight, fixedHeight),
+          }
         })
       } else {
-        const containerWidth = Math.min(window.innerWidth - 32, fixedWidth)
-        const containerHeight = Math.min(window.innerHeight - 200, fixedHeight)
+        const containerWidth = Math.max(
+          minWidth,
+          Math.min(window.innerWidth - 32, fixedWidth)
+        )
+        const containerHeight = Math.max(
+          minHeight,
+          Math.min(window.innerHeight - 200, fixedHeight)
+        )
         setCanvasSize({
           width: width ?? containerWidth,
           height: height ?? containerHeight,
@@ -74,14 +121,25 @@ export function PaletteView({
     window.addEventListener('resize', updateSize)
 
     // Используем ResizeObserver для более точного отслеживания размера контейнера
+    // Но только для увеличения размеров, не для уменьшения (чтобы избежать циклов)
     const setupResizeObserver = () => {
       if (containerRef.current && typeof ResizeObserver !== 'undefined') {
-        resizeObserverRef.current = new ResizeObserver(updateSize)
+        resizeObserverRef.current = new ResizeObserver(entries => {
+          // Обновляем только при значительном изменении размера (больше чем на 50px)
+          // Это предотвращает микро-изменения, которые вызывают циклы уменьшения
+          for (const entry of entries) {
+            const { width, height } = entry.contentRect
+            // Обновляем только если размер увеличился или значительно изменился
+            if (width > 0 && height > 0) {
+              updateSize()
+            }
+          }
+        })
         resizeObserverRef.current.observe(containerRef.current)
       }
     }
 
-    const timeoutId = setTimeout(setupResizeObserver, 0)
+    const timeoutId = setTimeout(setupResizeObserver, 100) // Увеличиваем задержку для стабильности
 
     return () => {
       window.removeEventListener('resize', updateSize)
