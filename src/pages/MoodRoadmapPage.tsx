@@ -1,12 +1,13 @@
 import { motion } from 'framer-motion'
+import { BookOpen } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
 import { useMoodTracking } from '@/hooks/useMoodTracking'
 import { MOOD_CONFIG } from '@/types/mood'
 import { MoodImage } from '@/components/mood/MoodImage'
 import { formatDate } from '@/utils/dateHelpers'
 import { Card } from '@/components/ui'
 import { LoadingSpinner } from '@/components/ui'
+import { PageHeader } from '@/components/layout'
 
 export function MoodRoadmapPage() {
   const navigate = useNavigate()
@@ -35,25 +36,12 @@ export function MoodRoadmapPage() {
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Заголовок с кнопкой назад */}
-      <div className="flex items-center space-x-4">
-        <motion.button
-          onClick={() => navigate('/mobile/profile')}
-          className="flex items-center justify-center rounded-full bg-white p-2 shadow-sm transition-colors hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <ArrowLeft size={20} className="text-gray-700 dark:text-gray-300" />
-        </motion.button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Дневник настроений
-          </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            История ваших эмоций
-          </p>
-        </div>
-      </div>
+      {/* Sticky Header */}
+      <PageHeader
+        title="Дневник настроений"
+        icon={<BookOpen className="h-5 w-5" />}
+        onBack={() => navigate('/mobile/profile')}
+      />
 
       {/* Дорожка настроений */}
       {sortedHistory.length === 0 ? (
@@ -160,7 +148,8 @@ export function MoodRoadmapPage() {
           <Card padding="md" className="glass-card">
             <div className="text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Всего записей: <span className="font-semibold">{sortedHistory.length}</span>
+                Всего записей:{' '}
+                <span className="font-semibold">{sortedHistory.length}</span>
               </p>
             </div>
           </Card>
@@ -169,4 +158,3 @@ export function MoodRoadmapPage() {
     </motion.div>
   )
 }
-
