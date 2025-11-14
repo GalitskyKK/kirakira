@@ -28,7 +28,7 @@ const DISPLAY_MODES: readonly DisplayModeOption[] = [
   {
     mode: GardenDisplayMode.PALETTE,
     label: 'Палитра',
-    description: 'Визуализация настроений в стиле Яндекс Музыки',
+    description: 'Визуализация настроений',
     icon: <Palette className="h-5 w-5" />,
     available: true,
   },
