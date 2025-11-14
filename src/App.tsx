@@ -13,6 +13,7 @@ import { OnboardingPage } from '@/pages/OnboardingPage'
 import { AuthPage } from '@/pages/AuthPage'
 import { ProfilePage } from '@/pages/ProfilePage'
 import { MoodPage } from '@/pages/MoodPage'
+import { MoodRoadmapPage } from '@/pages/MoodRoadmapPage'
 import { GardenPage } from '@/pages/GardenPage'
 import { TasksPage } from '@/pages/TasksPage'
 import { CommunityPage } from '@/pages/CommunityPage'
@@ -567,6 +568,20 @@ function App() {
                     transition={{ duration: 0.3 }}
                   >
                     <ProfilePage />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/mood-roadmap"
+                element={
+                  <motion.div
+                    key="mood-roadmap"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <MoodRoadmapPage />
                   </motion.div>
                 }
               />

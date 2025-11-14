@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { useUserSync, useGardenSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useProfile } from '@/hooks/useProfile'
@@ -9,6 +10,7 @@ import { LoadingSpinner } from '@/components/ui'
 import { useViewerLeaderboardPosition } from '@/hooks/queries/useLeaderboardQueries'
 
 export function ProfilePage() {
+  const navigate = useNavigate()
   // ✅ Получаем данные через React Query v2 хуки
   const telegramId = useTelegramId()
   const { data: userData, isLoading: userLoading } = useUserSync(
@@ -203,6 +205,32 @@ export function ProfilePage() {
         moodStats={moodStats}
         totalElements={totalElements}
       />
+
+      {/* Кнопка просмотра роадмапа */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
+        <motion.button
+          onClick={() => navigate('/mood-roadmap')}
+          className="w-full rounded-xl border border-garden-200 bg-gradient-to-r from-garden-50 to-kira-50 p-4 text-center transition-all hover:from-garden-100 hover:to-kira-100 dark:border-garden-700 dark:from-garden-900/30 dark:to-kira-900/30 dark:hover:from-garden-900/50 dark:hover:to-kira-900/50"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <div className="flex items-center justify-center space-x-2">
+            <span className="text-2xl">🗺️</span>
+            <div className="text-left">
+              <p className="font-semibold text-gray-900 dark:text-gray-100">
+                Просмотр пути настроений
+              </p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                История ваших настроений
+              </p>
+            </div>
+          </div>
+        </motion.button>
+      </motion.div>
     </motion.div>
   )
 }
