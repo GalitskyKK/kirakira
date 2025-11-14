@@ -65,7 +65,7 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
 
     if (!currentUser?.telegramId) return
 
-    // Блокируем повторные вызовы
+    // Блокируем повторные вызовы 1
     isProcessingRef.current = true
 
     try {
