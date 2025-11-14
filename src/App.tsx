@@ -452,9 +452,8 @@ function App() {
                 <Route path="tasks" element={<TasksPage />} />
                 <Route path="community" element={<CommunityPage />} />
                 <Route path="profile" element={<ProfilePage />} />
-                <Route path="mood-roadmap" element={<MoodRoadmapPage />} />
               </Route>
-              {/* Settings и Stats без navbar (как Friend и Leaderboard) */}
+              {/* Settings, Stats и MoodRoadmap без navbar (как Friend и Leaderboard) */}
               <Route
                 path="/mobile/settings"
                 element={
@@ -480,6 +479,20 @@ function App() {
                     transition={{ duration: 0.3 }}
                   >
                     <StatsPage />
+                  </motion.div>
+                }
+              />
+              <Route
+                path="/mobile/mood-roadmap"
+                element={
+                  <motion.div
+                    key="mood-roadmap"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <MoodRoadmapPage />
                   </motion.div>
                 }
               />
