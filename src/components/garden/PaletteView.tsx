@@ -64,7 +64,7 @@ export function PaletteView({
           height: height ?? containerHeight,
         })
       } else {
-        // Fallback на window.innerWidth только если контейнер еще не отрендерен
+        
         const containerWidth = Math.min(window.innerWidth - 32, 650)
         // Для палитры используем больше высоты
         const containerHeight = Math.min(window.innerHeight - 200, 650)
