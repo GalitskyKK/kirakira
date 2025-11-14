@@ -63,35 +63,93 @@ export function PaletteView({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animationFrameRef = useRef<number | null>(null)
   const ballsRef = useRef<readonly PaletteMetaBall[]>([])
+  const baseBallsRef = useRef<readonly PaletteMetaBall[]>([]) // Базовые шары с фиксированными размерами
+  const moodHistoryHashRef = useRef<string>('') // Хеш истории для отслеживания изменений
   const timeRef = useRef(0)
   const [isInitialized, setIsInitialized] = useState(false)
 
   const { moodHistory } = useMoodTracking()
 
-  // Генерация шаров из истории настроений
-  const generateBalls = useCallback((): readonly PaletteMetaBall[] => {
+  // Фиксированные размеры для стабильной генерации
+  const FIXED_WIDTH = 650
+  const FIXED_HEIGHT = 650
+
+  // Генерация базовых шаров из истории настроений (только при изменении истории)
+  const generateBaseBalls = useCallback((): readonly PaletteMetaBall[] => {
     if (moodHistory.length === 0) {
       return []
     }
 
-    const options: PaletteGenerationOptions = {
-      width: canvasWidth,
-      height: canvasHeight,
-      period: 'month', // Используем месяц для более стабильной визуализации
-      maxBalls: 6, // Максимум 6 шаров (по одному на каждое настроение)
-      minRadius: Math.min(40, canvasWidth * 0.06), // Минимальный радиус (для 10 отметок)
-      maxRadius: Math.min(160, canvasWidth * 0.25), // Максимальный радиус (для 30+ отметок)
+    // Создаем более надежный хеш истории для отслеживания изменений
+    // Используем длину истории и даты первой/последней записи
+    const firstEntry = moodHistory[0]
+    const lastEntry = moodHistory[moodHistory.length - 1]
+    const historyHash = `${moodHistory.length}_${firstEntry?.date.getTime() ?? 0}_${lastEntry?.date.getTime() ?? 0}_${firstEntry?.mood ?? ''}_${lastEntry?.mood ?? ''}`
+
+    // Если история не изменилась, возвращаем существующие шары
+    if (
+      historyHash === moodHistoryHashRef.current &&
+      baseBallsRef.current.length > 0
+    ) {
+      return baseBallsRef.current
     }
 
-    return convertMoodHistoryToPalette(moodHistory, options)
-  }, [moodHistory, canvasWidth, canvasHeight])
+    const options: PaletteGenerationOptions = {
+      width: FIXED_WIDTH,
+      height: FIXED_HEIGHT,
+      period: 'month', // Используем месяц для более стабильной визуализации
+      maxBalls: 6, // Максимум 6 шаров (по одному на каждое настроение)
+      minRadius: 40, // Фиксированный минимальный радиус
+      maxRadius: 160, // Фиксированный максимальный радиус
+    }
 
-  // Инициализация шаров
+    const baseBalls = convertMoodHistoryToPalette(moodHistory, options)
+    moodHistoryHashRef.current = historyHash
+    baseBallsRef.current = baseBalls
+
+    return baseBalls
+  }, [moodHistory])
+
+  // Масштабирование базовых шаров под текущий размер canvas
+  const scaleBalls = useCallback(
+    (baseBalls: readonly PaletteMetaBall[]): readonly PaletteMetaBall[] => {
+      if (baseBalls.length === 0) {
+        return []
+      }
+
+      const scaleX = canvasWidth / FIXED_WIDTH
+      const scaleY = canvasHeight / FIXED_HEIGHT
+      const scale = Math.min(scaleX, scaleY) // Используем минимальный масштаб для сохранения пропорций
+
+      return baseBalls.map(ball => ({
+        ...ball,
+        x: ball.x * scaleX,
+        y: ball.y * scaleY,
+        radius: ball.radius * scale,
+        // Масштабируем скорости пропорционально для сохранения визуальной скорости
+        vx: ball.vx * scale,
+        vy: ball.vy * scale,
+      }))
+    },
+    [canvasWidth, canvasHeight]
+  )
+
+  // Инициализация базовых шаров (только при изменении истории настроений)
   useEffect(() => {
-    const balls = generateBalls()
-    ballsRef.current = balls
+    const baseBalls = generateBaseBalls()
+    baseBallsRef.current = baseBalls
+    const scaledBalls = scaleBalls(baseBalls)
+    ballsRef.current = scaledBalls
     setIsInitialized(true)
-  }, [generateBalls])
+  }, [generateBaseBalls, scaleBalls])
+
+  // Масштабирование шаров при изменении размера canvas (без перегенерации)
+  useEffect(() => {
+    if (baseBallsRef.current.length > 0 && isInitialized) {
+      const scaledBalls = scaleBalls(baseBallsRef.current)
+      ballsRef.current = scaledBalls
+    }
+  }, [canvasWidth, canvasHeight, scaleBalls, isInitialized])
 
   // Анимация
   useEffect(() => {
@@ -269,12 +327,6 @@ export function PaletteView({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvasWidth, canvasHeight, isInitialized])
-
-  // Перегенерация при изменении истории
-  useEffect(() => {
-    const balls = generateBalls()
-    ballsRef.current = balls
-  }, [generateBalls])
 
   if (!isInitialized) {
     return (
