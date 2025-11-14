@@ -47,30 +47,24 @@ export function PaletteView({
 
   useEffect(() => {
     const updateSize = () => {
-      // Используем реальную ширину и высоту контейнера
+      // Фиксированные размеры для стабильности
+      const fixedWidth = 650
+      const fixedHeight = 650
+
+      // Используем реальную ширину контейнера с фиксированным максимумом
       if (containerRef.current) {
         const containerRect = containerRef.current.getBoundingClientRect()
-        // Используем реальную ширину контейнера
-        const containerWidth = Math.min(containerRect.width, 650)
-        // Используем реальную высоту контейнера (почти весь доступный экран)
-        const containerHeight = Math.min(
-          containerRect.height > 0
-            ? containerRect.height
-            : window.innerHeight - 200,
-          650
-        )
+        const containerWidth = Math.min(containerRect.width, fixedWidth)
         setCanvasSize({
           width: width ?? containerWidth,
-          height: height ?? containerHeight,
+          height: height ?? fixedHeight, // Фиксированная высота
         })
       } else {
-        
-        const containerWidth = Math.min(window.innerWidth - 32, 650)
-        // Для палитры используем больше высоты
-        const containerHeight = Math.min(window.innerHeight - 200, 650)
+        // Используем фиксированную ширину и высоту
+        const containerWidth = Math.min(window.innerWidth - 32, fixedWidth)
         setCanvasSize({
           width: width ?? containerWidth,
-          height: height ?? containerHeight,
+          height: height ?? fixedHeight, // Фиксированная высота
         })
       }
     }
@@ -138,6 +132,15 @@ export function PaletteView({
       return baseBallsRef.current
     }
 
+    // Создаем seed на основе хеша истории для детерминированной генерации
+    // Используем простую хеш-функцию для преобразования строки в число
+    let seed = 0
+    for (let i = 0; i < historyHash.length; i++) {
+      const char = historyHash.charCodeAt(i)
+      seed = ((seed << 5) - seed + char) | 0 // Преобразуем в 32-битное число
+    }
+    seed = Math.abs(seed) || 1 // Минимум 1, чтобы избежать seed = 0
+
     const options: PaletteGenerationOptions = {
       width: FIXED_WIDTH,
       height: FIXED_HEIGHT,
@@ -145,6 +148,7 @@ export function PaletteView({
       maxBalls: 6, // Максимум 6 шаров (по одному на каждое настроение)
       minRadius: 40, // Фиксированный минимальный радиус
       maxRadius: 160, // Фиксированный максимальный радиус
+      seed, // Передаем seed для детерминированной генерации
     }
 
     const baseBalls = convertMoodHistoryToPalette(moodHistory, options)

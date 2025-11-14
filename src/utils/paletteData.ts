@@ -33,6 +33,7 @@ export interface PaletteGenerationOptions {
   readonly maxBalls: number // Максимальное количество шаров
   readonly minRadius: number
   readonly maxRadius: number
+  readonly seed?: number // Seed для детерминированной генерации
 }
 
 /**
@@ -99,6 +100,30 @@ function calculateMoodStats(
 }
 
 /**
+ * Простой детерминированный генератор случайных чисел (Linear Congruential Generator)
+ * Используется для стабильной генерации позиций шаров на основе seed
+ */
+class SeededRandom {
+  private seed: number
+
+  constructor(seed: number) {
+    this.seed = seed
+  }
+
+  // Генерирует следующее случайное число от 0 до 1
+  next(): number {
+    // LCG параметры: a = 1664525, c = 1013904223, m = 2^32
+    this.seed = (this.seed * 1664525 + 1013904223) % 4294967296
+    return this.seed / 4294967296
+  }
+
+  // Генерирует случайное число в диапазоне [min, max)
+  random(min: number, max: number): number {
+    return min + this.next() * (max - min)
+  }
+}
+
+/**
  * Конвертирует HEX в HSL
  */
 function hexToHsl(hex: string): { h: number; s: number; l: number } {
@@ -138,12 +163,16 @@ function hexToHsl(hex: string): { h: number; s: number; l: number } {
 /**
  * Генерирует мета-шары для палитры на основе истории настроений
  * Создает один шар на каждое настроение (максимум 6 шаров)
+ * Использует детерминированный генератор для стабильной генерации
  */
 export function generatePaletteBalls(
   moodHistory: readonly MoodEntry[],
   options: PaletteGenerationOptions
 ): readonly PaletteMetaBall[] {
-  const { width, height, period, minRadius, maxRadius } = options
+  const { width, height, period, minRadius, maxRadius, seed = 12345 } = options
+
+  // Создаем детерминированный генератор случайных чисел
+  const rng = new SeededRandom(seed)
 
   // Получаем статистику за период
   const stats = calculateMoodStats(moodHistory, period)
@@ -179,15 +208,15 @@ export function generatePaletteBalls(
     const moodConfig = MOOD_CONFIG[stat.mood]
     const colorHsl = hexToHsl(moodConfig.color)
 
-    // Генерируем уникальную позицию
+    // Генерируем уникальную позицию с использованием детерминированного генератора
     let x = 0
     let y = 0
     let attempts = 0
     let positionKey = ''
 
     do {
-      x = Math.random() * width
-      y = Math.random() * height
+      x = rng.random(0, width)
+      y = rng.random(0, height)
       positionKey = `${Math.floor(x / 50)}_${Math.floor(y / 50)}`
       attempts++
     } while (usedPositions.has(positionKey) && attempts < 100)
@@ -203,9 +232,9 @@ export function generatePaletteBalls(
             (maxRadius - minRadius)
         : (minRadius + maxRadius) / 2
 
-    // Скорость как в исходном HTML: (Math.random() - 0.5) * 0.5
-    const speedX = (Math.random() - 0.5) * 0.8
-    const speedY = (Math.random() - 0.5) * 0.8
+    // Скорость с использованием детерминированного генератора
+    const speedX = (rng.next() - 0.5) * 0.8
+    const speedY = (rng.next() - 0.5) * 0.8
 
     balls.push({
       x,
@@ -237,10 +266,14 @@ export function convertMoodHistoryToPalette(
   let processedHistory = moodHistory
 
   if (moodHistory.length > maxHistoryEntries) {
-    // Берем последние записи и случайную выборку из старых
+    // Берем последние записи и детерминированную выборку из старых
     const recent = moodHistory.slice(0, maxHistoryEntries * 0.7)
     const old = moodHistory.slice(maxHistoryEntries * 0.7)
-    const sampledOld = old.filter(() => Math.random() < 0.1) // 10% выборка
+
+    // Используем детерминированную выборку для стабильности
+    const seed = options.seed ?? 12345
+    const rng = new SeededRandom(seed)
+    const sampledOld = old.filter(() => rng.next() < 0.1) // 10% выборка
     processedHistory = [...recent, ...sampledOld]
   }
 
