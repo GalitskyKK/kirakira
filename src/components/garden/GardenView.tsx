@@ -2,12 +2,14 @@ import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { clsx } from 'clsx'
 import { useGardenState } from '@/hooks/index.v2'
+import { useGardenClientStore } from '@/stores/gardenStore'
 import { GardenRoomManager } from './GardenRoomManager'
 import { GardenStats } from './GardenStats'
 import { ElementDetails } from './ElementDetails'
+import { PaletteView } from './PaletteView'
 import { LoadingOverlay, Card } from '@/components/ui'
 import type { GardenElement as GardenElementType } from '@/types'
-import { ViewMode } from '@/types'
+import { ViewMode, GardenDisplayMode } from '@/types'
 
 interface GardenViewProps {
   className?: string
@@ -25,6 +27,8 @@ export function GardenView({ className }: GardenViewProps) {
     setCurrentRoomIndex,
     moveElementSafely,
   } = useGardenState()
+
+  const { displayMode } = useGardenClientStore()
 
   const [draggedElement] = useState<GardenElementType | null>(null)
   const [elementBeingMoved, setElementBeingMoved] =
@@ -242,20 +246,44 @@ export function GardenView({ className }: GardenViewProps) {
 
               {/* Mobile-first adaptive layout */}
               <div className="flex flex-col lg:flex-row">
-                {/* Garden Display - Room Manager with Multi-Room Support */}
+                {/* Garden Display - Switch between display modes */}
                 <div className="flex-1 p-2 sm:p-4 lg:p-6">
-                  <GardenRoomManager
-                    elements={garden.elements}
-                    selectedElement={selectedElement}
-                    draggedElement={draggedElement}
-                    elementBeingMoved={elementBeingMoved}
-                    viewMode={viewMode}
-                    currentRoomIndex={currentRoomIndex}
-                    onRoomChange={setCurrentRoomIndex}
-                    onElementClick={handleElementClick}
-                    onElementLongPress={handleElementLongPress}
-                    onSlotClick={handleSlotClick}
-                  />
+                  <AnimatePresence mode="wait">
+                    {displayMode === GardenDisplayMode.PALETTE ? (
+                      <motion.div
+                        key="palette"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.3 }}
+                        className="flex h-full items-center justify-center"
+                      >
+                        <PaletteView className="w-full max-w-2xl" />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="garden"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.3 }}
+                        className="h-full"
+                      >
+                        <GardenRoomManager
+                          elements={garden.elements}
+                          selectedElement={selectedElement}
+                          draggedElement={draggedElement}
+                          elementBeingMoved={elementBeingMoved}
+                          viewMode={viewMode}
+                          currentRoomIndex={currentRoomIndex}
+                          onRoomChange={setCurrentRoomIndex}
+                          onElementClick={handleElementClick}
+                          onElementLongPress={handleElementLongPress}
+                          onSlotClick={handleSlotClick}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Sidebar - Hidden on mobile, shown on desktop */}

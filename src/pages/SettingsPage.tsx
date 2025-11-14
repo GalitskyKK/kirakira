@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion'
-import { Settings, Palette, Sparkles, Lock } from 'lucide-react'
+import { Settings, Palette, Sparkles, Lock, Sprout } from 'lucide-react'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { ProfilePrivacySettings } from '@/components/profile/ProfilePrivacySettings'
 import { ThemeSettings } from '@/components/settings/ThemeSettings'
 import { CompanionSettings } from '@/components/settings/CompanionSettings'
+import { GardenDisplaySettings } from '@/components/settings/GardenDisplaySettings'
 import { SettingsSection } from '@/components/settings/SettingsSection'
 import { PageHeader } from '@/components/layout'
 
@@ -50,6 +51,16 @@ export function SettingsPage() {
           delay={0}
         >
           <ThemeSettings />
+        </SettingsSection>
+
+        {/* Режим отображения сада */}
+        <SettingsSection
+          title="Режим отображения"
+          description="Выберите способ визуализации вашего сада"
+          icon={<Sprout className="h-5 w-5" />}
+          delay={0.05}
+        >
+          <GardenDisplaySettings />
         </SettingsSection>
 
         {/* Игровые настройки */}

@@ -76,6 +76,16 @@ export enum ViewMode {
   ARRANGEMENT = 'arrangement',
 }
 
+/**
+ * Режимы отображения сада
+ */
+export enum GardenDisplayMode {
+  GARDEN = 'garden', // Классический сад с полками
+  PALETTE = 'palette', // Палитра настроений (Canvas)
+  BONSAI = 'bonsai', // Дерево бонсай (будущее)
+  BEDS = 'beds', // Грядки настроений (будущее)
+}
+
 export type MoodType =
   | 'joy'
   | 'calm'

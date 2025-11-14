@@ -17,6 +17,7 @@ export {
   RarityLevel,
   SeasonalVariant,
   ViewMode,
+  GardenDisplayMode,
   GARDEN_GRID_SIZE,
   MAX_ELEMENTS_PER_DAY,
   ELEMENT_SIZE,

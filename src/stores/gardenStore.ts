@@ -7,7 +7,7 @@
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import type { GardenElement } from '@/types'
-import { ViewMode } from '@/types'
+import { ViewMode, GardenDisplayMode } from '@/types'
 
 // ============================================
 // ТИПЫ СОСТОЯНИЯ
@@ -16,6 +16,7 @@ import { ViewMode } from '@/types'
 interface GardenClientState {
   // UI состояние
   readonly viewMode: ViewMode
+  readonly displayMode: GardenDisplayMode
   readonly selectedElement: GardenElement | null
   readonly currentRoomIndex: number
   readonly isLoading: boolean
@@ -23,6 +24,7 @@ interface GardenClientState {
 
   // Actions для UI состояния
   setViewMode: (mode: ViewMode) => void
+  setDisplayMode: (mode: GardenDisplayMode) => void
   selectElement: (element: GardenElement | null) => void
   setCurrentRoomIndex: (roomIndex: number) => void
   setLoading: (loading: boolean) => void
@@ -36,10 +38,36 @@ interface GardenClientState {
 // STORE
 // ============================================
 
+// Загрузка displayMode из localStorage
+const loadDisplayModeFromStorage = (): GardenDisplayMode => {
+  try {
+    const stored = localStorage.getItem('garden_display_mode')
+    if (stored) {
+      const mode = stored as GardenDisplayMode
+      if (Object.values(GardenDisplayMode).includes(mode)) {
+        return mode
+      }
+    }
+  } catch {
+    // Игнорируем ошибки
+  }
+  return GardenDisplayMode.GARDEN
+}
+
+// Сохранение displayMode в localStorage
+const saveDisplayModeToStorage = (mode: GardenDisplayMode): void => {
+  try {
+    localStorage.setItem('garden_display_mode', mode)
+  } catch {
+    // Игнорируем ошибки
+  }
+}
+
 export const useGardenClientStore = create<GardenClientState>()(
   subscribeWithSelector(set => ({
     // Начальное состояние
     viewMode: ViewMode.OVERVIEW,
+    displayMode: loadDisplayModeFromStorage(),
     selectedElement: null,
     currentRoomIndex: 0,
     isLoading: false,
@@ -48,6 +76,11 @@ export const useGardenClientStore = create<GardenClientState>()(
     // Actions
     setViewMode: (mode: ViewMode) => {
       set({ viewMode: mode })
+    },
+
+    setDisplayMode: (mode: GardenDisplayMode) => {
+      saveDisplayModeToStorage(mode)
+      set({ displayMode: mode })
     },
 
     selectElement: (element: GardenElement | null) => {
