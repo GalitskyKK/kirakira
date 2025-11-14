@@ -42,20 +42,56 @@ export function PaletteView({
 }: PaletteViewProps) {
   // Адаптивные размеры для мобильных устройств
   const [canvasSize, setCanvasSize] = useState({ width: 650, height: 650 })
+  const containerRef = useRef<HTMLDivElement>(null)
+  const resizeObserverRef = useRef<ResizeObserver | null>(null)
 
   useEffect(() => {
     const updateSize = () => {
-      const containerWidth = Math.min(window.innerWidth - 32, 650) // -32 для padding
-      const containerHeight = Math.min(window.innerHeight * 0.6, 650)
-      setCanvasSize({
-        width: width ?? containerWidth,
-        height: height ?? containerHeight,
-      })
+      // Используем реальную ширину контейнера вместо window.innerWidth
+      if (containerRef.current) {
+        const containerRect = containerRef.current.getBoundingClientRect()
+        const containerWidth = Math.min(containerRect.width, 650)
+        const containerHeight = Math.min(
+          containerRect.height || window.innerHeight * 0.6,
+          650
+        )
+        setCanvasSize({
+          width: width ?? containerWidth,
+          height: height ?? containerHeight,
+        })
+      } else {
+        // Fallback на window.innerWidth только если контейнер еще не отрендерен
+        const containerWidth = Math.min(window.innerWidth - 32, 650)
+        const containerHeight = Math.min(window.innerHeight * 0.6, 650)
+        setCanvasSize({
+          width: width ?? containerWidth,
+          height: height ?? containerHeight,
+        })
+      }
     }
 
     updateSize()
     window.addEventListener('resize', updateSize)
-    return () => window.removeEventListener('resize', updateSize)
+
+    // Используем ResizeObserver для более точного отслеживания размера контейнера
+    const setupResizeObserver = () => {
+      if (containerRef.current && typeof ResizeObserver !== 'undefined') {
+        resizeObserverRef.current = new ResizeObserver(updateSize)
+        resizeObserverRef.current.observe(containerRef.current)
+      }
+    }
+
+    // Небольшая задержка для того, чтобы контейнер успел отрендериться
+    const timeoutId = setTimeout(setupResizeObserver, 0)
+
+    return () => {
+      window.removeEventListener('resize', updateSize)
+      clearTimeout(timeoutId)
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect()
+        resizeObserverRef.current = null
+      }
+    }
   }, [width, height])
 
   const canvasWidth = width ?? canvasSize.width
@@ -341,6 +377,7 @@ export function PaletteView({
 
   return (
     <motion.div
+      ref={containerRef}
       className={`relative ${className}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -354,6 +391,9 @@ export function PaletteView({
         style={{
           background: 'transparent',
           display: 'block',
+          width: '100%',
+          height: 'auto',
+          maxWidth: '100%',
         }}
       />
       {moodHistory.length === 0 && (
