@@ -17,8 +17,10 @@ export interface PaletteMetaBall {
   readonly vy: number
   readonly radius: number
   readonly color: string
+  readonly colorHsl: { h: number; s: number; l: number }
   readonly moodType: MoodType
   readonly intensity: number
+  readonly count: number // Количество отметок этого настроения
 }
 
 /**
@@ -94,13 +96,51 @@ function calculateMoodStats(
 }
 
 /**
+ * Конвертирует HEX в HSL
+ */
+function hexToHsl(hex: string): { h: number; s: number; l: number } {
+  const r = parseInt(hex.slice(1, 3), 16) / 255
+  const g = parseInt(hex.slice(3, 5), 16) / 255
+  const b = parseInt(hex.slice(5, 7), 16) / 255
+
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  let h = 0
+  let s = 0
+  const l = (max + min) / 2
+
+  if (max !== min) {
+    const d = max - min
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+    switch (max) {
+      case r:
+        h = ((g - b) / d + (g < b ? 6 : 0)) / 6
+        break
+      case g:
+        h = ((b - r) / d + 2) / 6
+        break
+      case b:
+        h = ((r - g) / d + 4) / 6
+        break
+    }
+  }
+
+  return {
+    h: Math.round(h * 360),
+    s: Math.round(s * 100),
+    l: Math.round(l * 100),
+  }
+}
+
+/**
  * Генерирует мета-шары для палитры на основе истории настроений
+ * Создает один шар на каждое настроение (максимум 6 шаров)
  */
 export function generatePaletteBalls(
   moodHistory: readonly MoodEntry[],
   options: PaletteGenerationOptions
 ): readonly PaletteMetaBall[] {
-  const { width, height, period, maxBalls, minRadius, maxRadius } = options
+  const { width, height, period, minRadius, maxRadius } = options
 
   // Получаем статистику за период
   const stats = calculateMoodStats(moodHistory, period)
@@ -115,74 +155,71 @@ export function generatePaletteBalls(
         vy: 0,
         radius: (minRadius + maxRadius) / 2,
         color: '#94a3b8',
+        colorHsl: { h: 210, s: 20, l: 60 },
         moodType: 'calm',
         intensity: 1,
+        count: 0,
       },
     ]
   }
 
-  // Вычисляем общее количество настроений для нормализации
-  const totalCount = stats.reduce((sum, stat) => sum + stat.count, 0)
-  if (totalCount === 0) {
-    return []
-  }
+  // Находим минимальное и максимальное количество отметок для нормализации радиуса
+  const counts = stats.map(stat => stat.count)
+  const minCount = Math.min(...counts, 1) // Минимум 1, чтобы избежать деления на 0
+  const maxCount = Math.max(...counts, 1)
 
-  // Генерируем шары пропорционально количеству настроений
+  // Генерируем один шар на каждое настроение
   const balls: PaletteMetaBall[] = []
   const usedPositions = new Set<string>()
 
-  // Ограничиваем количество шаров по типам настроений
-  const ballsPerMood = Math.max(1, Math.floor(maxBalls / stats.length))
-
   for (const stat of stats) {
     const moodConfig = MOOD_CONFIG[stat.mood]
+    const colorHsl = hexToHsl(moodConfig.color)
 
-    // Количество шаров для этого настроения (пропорционально частоте)
-    const moodBallCount = Math.min(
-      ballsPerMood,
-      Math.max(1, Math.round((stat.count / totalCount) * maxBalls))
-    )
+    // Генерируем уникальную позицию
+    let x = 0
+    let y = 0
+    let attempts = 0
+    let positionKey = ''
 
-    for (let i = 0; i < moodBallCount; i++) {
-      // Генерируем уникальную позицию
-      let x = 0
-      let y = 0
-      let attempts = 0
-      let positionKey = ''
+    do {
+      x = Math.random() * width
+      y = Math.random() * height
+      positionKey = `${Math.floor(x / 50)}_${Math.floor(y / 50)}`
+      attempts++
+    } while (usedPositions.has(positionKey) && attempts < 100)
 
-      do {
-        x = Math.random() * width
-        y = Math.random() * height
-        positionKey = `${Math.floor(x / 50)}_${Math.floor(y / 50)}`
-        attempts++
-      } while (usedPositions.has(positionKey) && attempts < 100)
+    usedPositions.add(positionKey)
 
-      usedPositions.add(positionKey)
+    // Радиус зависит от количества отметок: от minRadius (minCount) до maxRadius (maxCount)
+    // Аналогично HTML: radius = minRadius + ((count - minCount) / (maxCount - minCount)) * (maxRadius - minRadius)
+    const radius =
+      maxCount > minCount
+        ? minRadius +
+          ((stat.count - minCount) / (maxCount - minCount)) *
+            (maxRadius - minRadius)
+        : (minRadius + maxRadius) / 2
 
-      // Радиус зависит от количества настроений и интенсивности
-      const countFactor = stat.count / totalCount
-      const intensityFactor = stat.averageIntensity / 3 // Нормализуем интенсивность (1-3)
-      const sizeFactor = countFactor * 0.7 + intensityFactor * 0.3
-      const radius = minRadius + (maxRadius - minRadius) * sizeFactor
+    // Скорость зависит от интенсивности
+    const intensityFactor = stat.averageIntensity / 3
+    const speed = 0.3 + intensityFactor * 0.2
+    const angle = Math.random() * Math.PI * 2
 
-      // Скорость зависит от интенсивности (более интенсивные - быстрее)
-      const speed = 0.3 + intensityFactor * 0.2
-      const angle = Math.random() * Math.PI * 2
-
-      balls.push({
-        x,
-        y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        radius,
-        color: moodConfig.color,
-        moodType: stat.mood,
-        intensity: stat.averageIntensity,
-      })
-    }
+    balls.push({
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      radius,
+      color: moodConfig.color,
+      colorHsl,
+      moodType: stat.mood,
+      intensity: stat.averageIntensity,
+      count: stat.count,
+    })
   }
 
-  return balls.slice(0, maxBalls)
+  return balls
 }
 
 /**

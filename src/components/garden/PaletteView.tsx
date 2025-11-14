@@ -11,7 +11,6 @@ import {
   type PaletteMetaBall,
   type PaletteGenerationOptions,
 } from '@/utils/paletteData'
-import { MOOD_CONFIG } from '@/types/mood'
 
 interface PaletteViewProps {
   readonly className?: string
@@ -20,13 +19,20 @@ interface PaletteViewProps {
 }
 
 /**
- * Конвертирует HEX в RGB
+ * Конвертирует HSL в RGB
  */
-function hexToRgb(hex: string): [number, number, number] {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  return [r, g, b]
+function hslToRgb(h: number, s: number, l: number): [number, number, number] {
+  s /= 100
+  l /= 100
+  const k = (n: number) => (n + h / 30) % 12
+  const a = s * Math.min(l, 1 - l)
+  const f = (n: number) =>
+    l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))
+  return [
+    Math.round(255 * f(0)),
+    Math.round(255 * f(8)),
+    Math.round(255 * f(4)),
+  ]
 }
 
 export function PaletteView({
@@ -72,9 +78,9 @@ export function PaletteView({
       width: canvasWidth,
       height: canvasHeight,
       period: 'month', // Используем месяц для более стабильной визуализации
-      maxBalls: 8, // Оптимальное количество для производительности
-      minRadius: Math.min(60, canvasWidth * 0.1),
-      maxRadius: Math.min(120, canvasWidth * 0.2),
+      maxBalls: 6, // Максимум 6 шаров (по одному на каждое настроение)
+      minRadius: Math.min(40, canvasWidth * 0.06), // Минимальный радиус (для 10 отметок)
+      maxRadius: Math.min(160, canvasWidth * 0.25), // Максимальный радиус (для 30+ отметок)
     }
 
     return convertMoodHistoryToPalette(moodHistory, options)
@@ -114,17 +120,35 @@ export function PaletteView({
       ctx.fillStyle = 'rgba(255, 255, 255, 0.05)'
       ctx.fillRect(0, 0, canvasWidth, canvasHeight)
 
-      // Рисуем мета-шары
+      // Рисуем мета-шары с смешиванием цветов
       for (let y = 0; y < canvasHeight; y += 2) {
         for (let x = 0; x < canvasWidth; x += 2) {
           let sum = 0
+          let totalR = 0
+          let totalG = 0
+          let totalB = 0
+          let weights = 0
 
-          // Вычисляем влияние всех шаров
+          // Вычисляем влияние всех шаров и смешиваем их цвета
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
           for (const ball of balls) {
             const dx = x - ball.x
             const dy = y - ball.y
             const dist = Math.sqrt(dx * dx + dy * dy)
-            sum += (ball.radius * ball.radius) / (dist * dist + 1)
+            const influence = (ball.radius * ball.radius) / (dist * dist + 1)
+            sum += influence
+
+            // Смешиваем цвета от всех влияющих шаров
+            if (influence > 0.1) {
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+              const colorHsl = ball.colorHsl
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+              const rgb = hslToRgb(colorHsl.h, colorHsl.s, colorHsl.l)
+              totalR += rgb[0] * influence
+              totalG += rgb[1] * influence
+              totalB += rgb[2] * influence
+              weights += influence
+            }
           }
 
           // Создаем плавный градиент
@@ -132,34 +156,16 @@ export function PaletteView({
           if (sum > threshold) {
             const intensity = Math.min(1, (sum - threshold) * 2)
 
-            // Определяем цвет на основе ближайшего шара
-            let nearestBall: PaletteMetaBall | null = null
-            let minDist = Infinity
+            // Усредненный цвет от всех влияющих шаров
+            const r = weights > 0 ? totalR / weights : 255
+            const g = weights > 0 ? totalG / weights : 255
+            const b = weights > 0 ? totalB / weights : 255
 
-            for (const ball of balls) {
-              const dx = x - ball.x
-              const dy = y - ball.y
-              const dist = Math.sqrt(dx * dx + dy * dy)
-              if (dist < minDist) {
-                minDist = dist
-                nearestBall = ball
-              }
-            }
-
-            // Если нет ближайшего шара, пропускаем пиксель
-            if (!nearestBall) {
-              continue
-            }
-
-            // Цветовая анимация на основе настроения
-            const moodConfig = MOOD_CONFIG[nearestBall.moodType]
-            const baseRgb = hexToRgb(moodConfig.color)
-            const [r, g, b] = baseRgb
-
-            // Применяем интенсивность
-            const finalR = Math.min(255, Math.round(r * intensity))
-            const finalG = Math.min(255, Math.round(g * intensity))
-            const finalB = Math.min(255, Math.round(b * intensity))
+            // Добавляем яркость на основе интенсивности
+            const boost = 1 + intensity * 0.3
+            const finalR = Math.min(255, Math.round(r * boost))
+            const finalG = Math.min(255, Math.round(g * boost))
+            const finalB = Math.min(255, Math.round(b * boost))
 
             const idx = (y * canvasWidth + x) * 4
             data[idx] = finalR
@@ -196,8 +202,8 @@ export function PaletteView({
 
       ctx.putImageData(imageData, 0, 0)
 
-      // Добавляем размытие для плавности
-      ctx.filter = 'blur(20px)'
+      // Добавляем больше размытия для плавности краёв (как в HTML)
+      ctx.filter = 'blur(40px)'
       ctx.drawImage(canvas, 0, 0)
       ctx.filter = 'none'
     }
