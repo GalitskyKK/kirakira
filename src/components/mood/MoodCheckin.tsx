@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Clock, Sparkles } from 'lucide-react'
+import { Clock, Sparkles, Palette } from 'lucide-react'
 import { MoodSelector } from './MoodSelector'
 import { PlantRenderer } from '@/components/garden/plants'
 import { Card, LoadingSpinner } from '@/components/ui'
@@ -9,6 +9,8 @@ import { useGardenState } from '@/hooks/index.v2'
 import { useQuestIntegration } from '@/hooks/useQuestIntegration'
 import { useDailyQuests } from '@/hooks/queries/useDailyQuestQueries'
 import { useTelegramId } from '@/hooks/useTelegramId'
+import { useGardenClientStore } from '@/stores/gardenStore'
+import { GardenDisplayMode } from '@/types'
 import type { MoodType, MoodIntensity, MoodEntry, GardenElement } from '@/types'
 
 interface MoodCheckinProps {
@@ -37,6 +39,9 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
     isLoading: gardenLoading,
     error: gardenError,
   } = useGardenState()
+
+  const { displayMode } = useGardenClientStore()
+  const isPaletteMode = displayMode === GardenDisplayMode.PALETTE
 
   const telegramId = useTelegramId()
   const { data: questsData } = useDailyQuests(telegramId ?? 0)
@@ -144,9 +149,10 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
             Ваше настроение записано
           </p>
 
-          {unlockedElement && (
+          {/* Показываем информацию о палитре в режиме палитры */}
+          {isPaletteMode ? (
             <motion.div
-              className="relative mt-6 overflow-hidden rounded-2xl border border-garden-200 bg-gradient-to-br from-garden-50 to-emerald-50 p-6 dark:border-garden-700 dark:from-garden-900/20 dark:to-emerald-900/20"
+              className="relative mt-6 overflow-hidden rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 p-6 dark:border-purple-700 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-orange-900/20"
               initial={{ opacity: 0, scale: 0.8, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{
@@ -158,14 +164,14 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
             >
               {/* Magical sparkle background */}
               <div className="pointer-events-none absolute inset-0">
-                {Array.from({ length: 8 }, (_, i) => (
+                {Array.from({ length: 12 }, (_, i) => (
                   <motion.div
                     key={i}
-                    className="absolute text-yellow-300"
+                    className="absolute"
                     style={{
-                      left: `${20 + Math.random() * 60}%`,
-                      top: `${20 + Math.random() * 60}%`,
-                      fontSize: '12px',
+                      left: `${Math.random() * 100}%`,
+                      top: `${Math.random() * 100}%`,
+                      fontSize: '16px',
                     }}
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{
@@ -174,17 +180,19 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
                       rotate: [0, 180, 360],
                     }}
                     transition={{
-                      duration: 2,
-                      delay: 0.7 + i * 0.1,
+                      duration: 3,
+                      delay: 0.7 + i * 0.15,
                       ease: 'easeOut',
+                      repeat: Infinity,
+                      repeatDelay: 4,
                     }}
                   >
-                    ✨
+                    🎨
                   </motion.div>
                 ))}
               </div>
 
-              {/* Header with animated sparkles */}
+              {/* Header with animated palette icon */}
               <motion.div
                 className="mb-4 flex items-center justify-center space-x-3"
                 initial={{ opacity: 0 }}
@@ -202,15 +210,18 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
                     repeatDelay: 2,
                   }}
                 >
-                  <Sparkles size={24} className="text-garden-600" />
+                  <Palette
+                    size={24}
+                    className="text-purple-600 dark:text-purple-400"
+                  />
                 </motion.div>
                 <motion.span
-                  className="text-lg font-bold text-garden-800 dark:text-garden-200"
+                  className="text-lg font-bold text-purple-800 dark:text-purple-200"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.9 }}
                 >
-                  Новое растение!
+                  Палитра обновлена!
                 </motion.span>
                 <motion.div
                   animate={{
@@ -224,18 +235,20 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
                     delay: 0.3,
                   }}
                 >
-                  <Sparkles size={24} className="text-garden-600" />
+                  <Palette
+                    size={24}
+                    className="text-purple-600 dark:text-purple-400"
+                  />
                 </motion.div>
               </motion.div>
 
-              {/* Beautiful Plant Renderer */}
+              {/* Beautiful gradient circle representing palette */}
               <motion.div
                 className="mb-3 flex justify-center"
-                initial={{ opacity: 0, scale: 0, rotate: -180 }}
+                initial={{ opacity: 0, scale: 0 }}
                 animate={{
                   opacity: 1,
                   scale: [0, 1.3, 1],
-                  rotate: 0,
                 }}
                 transition={{
                   delay: 1,
@@ -244,45 +257,49 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
                   damping: 15,
                 }}
               >
-                <PlantRenderer
-                  element={unlockedElement}
-                  size={80}
-                  isSelected={false}
-                  isHovered={false}
-                  showTooltip={false}
-                />
+                <div className="relative h-20 w-20">
+                  <motion.div
+                    className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-400 via-pink-400 to-orange-400"
+                    animate={{
+                      rotate: [0, 360],
+                      scale: [1, 1.1, 1],
+                    }}
+                    transition={{
+                      rotate: {
+                        duration: 8,
+                        repeat: Infinity,
+                        ease: 'linear',
+                      },
+                      scale: {
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                      },
+                    }}
+                  />
+                  <div className="absolute inset-1 rounded-full bg-gradient-to-tr from-blue-400 via-green-400 to-yellow-400" />
+                  <div className="absolute inset-2 rounded-full bg-gradient-to-bl from-red-400 via-purple-400 to-blue-400 opacity-80" />
+                </div>
               </motion.div>
 
-              {/* Plant info with staggered animation */}
+              {/* Palette info */}
               <motion.div
                 className="text-center"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2 }}
               >
-                <p className="mb-1 text-lg font-bold text-garden-800 dark:text-garden-200">
-                  {unlockedElement.name}
+                <p className="mb-1 text-lg font-bold text-purple-800 dark:text-purple-200">
+                  Цвета изменились
                 </p>
-                <p className="text-sm text-garden-600 dark:text-garden-300">
-                  {unlockedElement.description}
+                <p className="text-sm text-purple-600 dark:text-purple-300">
+                  Ваше настроение добавило новые оттенки в палитру вашего сада
                 </p>
-
-                {/* Rarity indicator */}
-                {unlockedElement.rarity !== 'common' && (
-                  <motion.div
-                    className="mt-3 inline-flex items-center rounded-full bg-gradient-to-r from-purple-100 to-pink-100 px-3 py-1 text-xs font-medium text-purple-700 dark:from-purple-900/50 dark:to-pink-900/50 dark:text-purple-300"
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 1.4 }}
-                  >
-                    ⭐ {unlockedElement.rarity}
-                  </motion.div>
-                )}
               </motion.div>
 
               {/* Magical glow effect */}
               <motion.div
-                className="absolute inset-0 rounded-2xl bg-gradient-to-r from-yellow-200/20 via-green-200/20 to-blue-200/20"
+                className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-200/20 via-pink-200/20 to-orange-200/20"
                 initial={{ opacity: 0 }}
                 animate={{
                   opacity: [0, 0.5, 0],
@@ -291,9 +308,164 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
                   duration: 2,
                   delay: 1,
                   ease: 'easeInOut',
+                  repeat: Infinity,
+                  repeatDelay: 3,
                 }}
               />
             </motion.div>
+          ) : (
+            /* Показываем информацию об элементе в обычном режиме */
+            unlockedElement && (
+              <motion.div
+                className="relative mt-6 overflow-hidden rounded-2xl border border-garden-200 bg-gradient-to-br from-garden-50 to-emerald-50 p-6 dark:border-garden-700 dark:from-garden-900/20 dark:to-emerald-900/20"
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{
+                  delay: 0.5,
+                  type: 'spring',
+                  stiffness: 200,
+                  damping: 20,
+                }}
+              >
+                {/* Magical sparkle background */}
+                <div className="pointer-events-none absolute inset-0">
+                  {Array.from({ length: 8 }, (_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute text-yellow-300"
+                      style={{
+                        left: `${20 + Math.random() * 60}%`,
+                        top: `${20 + Math.random() * 60}%`,
+                        fontSize: '12px',
+                      }}
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{
+                        opacity: [0, 1, 0],
+                        scale: [0, 1.5, 0],
+                        rotate: [0, 180, 360],
+                      }}
+                      transition={{
+                        duration: 2,
+                        delay: 0.7 + i * 0.1,
+                        ease: 'easeOut',
+                      }}
+                    >
+                      ✨
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Header with animated sparkles */}
+                <motion.div
+                  className="mb-4 flex items-center justify-center space-x-3"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8 }}
+                >
+                  <motion.div
+                    animate={{
+                      rotate: [0, 15, -15, 0],
+                      scale: [1, 1.2, 1],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      repeatDelay: 2,
+                    }}
+                  >
+                    <Sparkles size={24} className="text-garden-600" />
+                  </motion.div>
+                  <motion.span
+                    className="text-lg font-bold text-garden-800 dark:text-garden-200"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.9 }}
+                  >
+                    Новое растение!
+                  </motion.span>
+                  <motion.div
+                    animate={{
+                      rotate: [0, -15, 15, 0],
+                      scale: [1, 1.2, 1],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      repeatDelay: 2,
+                      delay: 0.3,
+                    }}
+                  >
+                    <Sparkles size={24} className="text-garden-600" />
+                  </motion.div>
+                </motion.div>
+
+                {/* Beautiful Plant Renderer */}
+                <motion.div
+                  className="mb-3 flex justify-center"
+                  initial={{ opacity: 0, scale: 0, rotate: -180 }}
+                  animate={{
+                    opacity: 1,
+                    scale: [0, 1.3, 1],
+                    rotate: 0,
+                  }}
+                  transition={{
+                    delay: 1,
+                    type: 'spring',
+                    stiffness: 200,
+                    damping: 15,
+                  }}
+                >
+                  <PlantRenderer
+                    element={unlockedElement}
+                    size={80}
+                    isSelected={false}
+                    isHovered={false}
+                    showTooltip={false}
+                  />
+                </motion.div>
+
+                {/* Plant info with staggered animation */}
+                <motion.div
+                  className="text-center"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.2 }}
+                >
+                  <p className="mb-1 text-lg font-bold text-garden-800 dark:text-garden-200">
+                    {unlockedElement.name}
+                  </p>
+                  <p className="text-sm text-garden-600 dark:text-garden-300">
+                    {unlockedElement.description}
+                  </p>
+
+                  {/* Rarity indicator */}
+                  {unlockedElement.rarity !== 'common' && (
+                    <motion.div
+                      className="mt-3 inline-flex items-center rounded-full bg-gradient-to-r from-purple-100 to-pink-100 px-3 py-1 text-xs font-medium text-purple-700 dark:from-purple-900/50 dark:to-pink-900/50 dark:text-purple-300"
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 1.4 }}
+                    >
+                      ⭐ {unlockedElement.rarity}
+                    </motion.div>
+                  )}
+                </motion.div>
+
+                {/* Magical glow effect */}
+                <motion.div
+                  className="absolute inset-0 rounded-2xl bg-gradient-to-r from-yellow-200/20 via-green-200/20 to-blue-200/20"
+                  initial={{ opacity: 0 }}
+                  animate={{
+                    opacity: [0, 0.5, 0],
+                  }}
+                  transition={{
+                    duration: 2,
+                    delay: 1,
+                    ease: 'easeInOut',
+                  }}
+                />
+              </motion.div>
+            )
           )}
         </Card>
       </motion.div>

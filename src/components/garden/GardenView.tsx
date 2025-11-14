@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { clsx } from 'clsx'
 import { useGardenState } from '@/hooks/index.v2'
+import { useMoodTracking } from '@/hooks/index.v2'
 import { useGardenClientStore } from '@/stores/gardenStore'
 import { GardenRoomManager } from './GardenRoomManager'
 import { GardenStats } from './GardenStats'
@@ -30,6 +31,7 @@ export function GardenView({ className }: GardenViewProps) {
   } = useGardenState()
 
   const { displayMode } = useGardenClientStore()
+  const { moodHistory } = useMoodTracking()
 
   const [draggedElement] = useState<GardenElementType | null>(null)
   const [elementBeingMoved, setElementBeingMoved] =
@@ -195,10 +197,14 @@ export function GardenView({ className }: GardenViewProps) {
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                      Мой Сад
+                      {displayMode === GardenDisplayMode.PALETTE
+                        ? 'Палитра Сада'
+                        : 'Мой Сад'}
                     </h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {garden.elements.length} растений
+                      {displayMode === GardenDisplayMode.PALETTE
+                        ? `${moodHistory.length} ${moodHistory.length === 1 ? 'отметка настроения' : moodHistory.length < 5 ? 'отметки настроения' : 'отметок настроения'}`
+                        : `${garden.elements.length} ${garden.elements.length === 1 ? 'растение' : garden.elements.length < 5 ? 'растения' : 'растений'}`}
                     </p>
                   </div>
 
@@ -251,7 +257,7 @@ export function GardenView({ className }: GardenViewProps) {
                 <div
                   className={clsx(
                     displayMode === GardenDisplayMode.PALETTE
-                      ? 'flex-1 flex items-center justify-center p-2 sm:p-4 lg:p-6 min-h-[70vh]'
+                      ? 'flex min-h-[70vh] flex-1 items-center justify-center p-2 sm:p-4 lg:p-6'
                       : 'flex-1 p-2 sm:p-4 lg:p-6'
                   )}
                 >
