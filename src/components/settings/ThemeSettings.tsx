@@ -84,7 +84,7 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
       })
 
       if (result.success) {
-        // 🔄 Оптимистичное обновление баланса для мгновенного отображения
+        // 🔄 Оптимистичное обновление баланса для мгновенного отображени
         if (result.balance_after !== undefined && currentUser.telegramId) {
           const storeState = useCurrencyClientStore.getState()
           const currentCurrency = storeState.userCurrency
