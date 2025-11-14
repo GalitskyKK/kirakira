@@ -120,9 +120,9 @@ export function PaletteView({
       ctx.fillStyle = 'rgba(255, 255, 255, 0.05)'
       ctx.fillRect(0, 0, canvasWidth, canvasHeight)
 
-      // Рисуем мета-шары с смешиванием цветов
-      for (let y = 0; y < canvasHeight; y += 2) {
-        for (let x = 0; x < canvasWidth; x += 2) {
+      // Рисуем мета-шары с смешиванием цветов (шаг 1px для максимального сглаживания)
+      for (let y = 0; y < canvasHeight; y++) {
+        for (let x = 0; x < canvasWidth; x++) {
           let sum = 0
           let totalR = 0
           let totalG = 0
@@ -139,7 +139,7 @@ export function PaletteView({
             sum += influence
 
             // Смешиваем цвета от всех влияющих шаров
-            if (influence > 0.1) {
+            if (influence > 0.05) {
               // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
               const colorHsl = ball.colorHsl
               // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
@@ -151,10 +151,11 @@ export function PaletteView({
             }
           }
 
-          // Создаем плавный градиент
+          // Создаем плавный градиент с мягким переходом
           const threshold = 1.0
           if (sum > threshold) {
-            const intensity = Math.min(1, (sum - threshold) * 2)
+            // Более плавная интерполяция интенсивности для сглаживания границ
+            const intensity = Math.min(1, (sum - threshold) * 1.5)
 
             // Усредненный цвет от всех влияющих шаров
             const r = weights > 0 ? totalR / weights : 255
@@ -167,35 +168,34 @@ export function PaletteView({
             const finalG = Math.min(255, Math.round(g * boost))
             const finalB = Math.min(255, Math.round(b * boost))
 
+            // Плавное затухание на границах через альфа-канал
+            const alpha = Math.min(255, Math.round(intensity * 255))
+
             const idx = (y * canvasWidth + x) * 4
             data[idx] = finalR
             data[idx + 1] = finalG
             data[idx + 2] = finalB
-            data[idx + 3] = 255
+            data[idx + 3] = alpha
+          } else if (sum > threshold * 0.7) {
+            // Плавный переход на границах (антиалиасинг)
+            const fadeIntensity = (sum - threshold * 0.7) / (threshold * 0.3)
+            const intensity = Math.min(1, fadeIntensity * 1.5)
 
-            // Заполняем соседние пиксели для сглаживания
-            if (x + 1 < canvasWidth) {
-              const idx2 = (y * canvasWidth + x + 1) * 4
-              data[idx2] = finalR
-              data[idx2 + 1] = finalG
-              data[idx2 + 2] = finalB
-              data[idx2 + 3] = 255
-            }
-            if (y + 1 < canvasHeight) {
-              const idx3 = ((y + 1) * canvasWidth + x) * 4
-              data[idx3] = finalR
-              data[idx3 + 1] = finalG
-              data[idx3 + 2] = finalB
-              data[idx3 + 3] = 255
+            const r = weights > 0 ? totalR / weights : 255
+            const g = weights > 0 ? totalG / weights : 255
+            const b = weights > 0 ? totalB / weights : 255
 
-              if (x + 1 < canvasWidth) {
-                const idx4 = ((y + 1) * canvasWidth + x + 1) * 4
-                data[idx4] = finalR
-                data[idx4 + 1] = finalG
-                data[idx4 + 2] = finalB
-                data[idx4 + 3] = 255
-              }
-            }
+            const boost = 1 + intensity * 0.3
+            const finalR = Math.min(255, Math.round(r * boost))
+            const finalG = Math.min(255, Math.round(g * boost))
+            const finalB = Math.min(255, Math.round(b * boost))
+            const alpha = Math.min(255, Math.round(intensity * 255 * 0.5))
+
+            const idx = (y * canvasWidth + x) * 4
+            data[idx] = finalR
+            data[idx + 1] = finalG
+            data[idx + 2] = finalB
+            data[idx + 3] = alpha
           }
         }
       }
