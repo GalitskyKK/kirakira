@@ -86,7 +86,6 @@ export function PaletteView({
       }
     }
 
-    // Небольшая задержка для того, чтобы контейнер успел отрендериться
     const timeoutId = setTimeout(setupResizeObserver, 0)
 
     return () => {
