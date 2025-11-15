@@ -68,7 +68,7 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
     rarityBonus: 0.1,
   },
   stress: {
-    color: '#ef4444',
+    color: '#f97316',
     emoji: '😵‍💫',
     imagePath: '/emotes/stress.png',
     label: 'Стресс',
@@ -81,7 +81,7 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
     rarityBonus: 0.0,
   },
   sadness: {
-    color: '#3b82f6',
+    color: '#64748b',
     emoji: '😔',
     imagePath: '/emotes/sad.png',
     label: 'Грусть',
@@ -94,7 +94,7 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
     rarityBonus: 0.05,
   },
   anger: {
-    color: '#dc2626',
+    color: '#b91c1c',
     emoji: '😠',
     imagePath: '/emotes/anger.png',
     label: 'Гнев',
@@ -107,7 +107,7 @@ export const MOOD_CONFIG: Record<MoodType, MoodConfig> = {
     rarityBonus: 0.0,
   },
   anxiety: {
-    color: '#8b5cf6',
+    color: '#ec4899',
     emoji: '😰',
     imagePath: '/emotes/anxiety.png',
     label: 'Тревога',
