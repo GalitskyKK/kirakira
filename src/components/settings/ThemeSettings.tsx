@@ -207,17 +207,33 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
   const cardWithGap = cardWidth + gap
 
   // Вычисляем offset для центрирования активной карточки
-  const [containerWidth, setContainerWidth] = useState(0)
+  // Используем начальную ширину из window, чтобы offset вычислялся сразу
+  const [containerWidth, setContainerWidth] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return Math.max(window.innerWidth - 64, 320) // Минимум 320px с учетом padding
+    }
+    return 320
+  })
 
   // Обновляем ширину контейнера при монтировании и изменении размера
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth)
+        const width = containerRef.current.offsetWidth
+        // Если ширина еще не установлена, используем window.innerWidth как fallback
+        if (width > 0) {
+          setContainerWidth(width)
+        } else {
+          // Используем ширину родительского элемента или window
+          const parentWidth =
+            containerRef.current.parentElement?.offsetWidth ?? window.innerWidth
+          setContainerWidth(Math.max(parentWidth - 32, 320)) // Минимум 320px с учетом padding
+        }
       }
     }
 
-    updateWidth()
+    // Небольшая задержка для того, чтобы контейнер успел отрендериться
+    const timeoutId = setTimeout(updateWidth, 50)
     window.addEventListener('resize', updateWidth)
 
     // Используем ResizeObserver для более точного отслеживания изменений размера
@@ -230,6 +246,7 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
     }
 
     return () => {
+      clearTimeout(timeoutId)
       window.removeEventListener('resize', updateWidth)
       resizeObserver.disconnect()
     }
@@ -237,17 +254,25 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
 
   // Вычисляем offset с центрированием активной карточки и учетом границ
   const offset = useMemo(() => {
-    if (containerWidth === 0 || themes.length === 0) return 0
+    if (themes.length === 0) return 0
+
+    // Используем containerWidth или fallback на начальную ширину
+    const width =
+      containerWidth > 0
+        ? containerWidth
+        : typeof window !== 'undefined'
+          ? Math.max(window.innerWidth - 64, 320)
+          : 320
 
     const totalWidth = themes.length * cardWithGap
-    const centerOffset = containerWidth / 2 - cardWidth / 2
+    const centerOffset = width / 2 - cardWidth / 2
     const idealOffset = -(currentIndex * cardWithGap) + centerOffset
 
     // Минимальный offset (когда первая карточка полностью видна слева)
     const minOffset = 0
 
     // Максимальный offset (когда последняя карточка полностью видна справа)
-    const maxOffset = -(totalWidth - cardWithGap) + (containerWidth - cardWidth)
+    const maxOffset = -(totalWidth - cardWithGap) + (width - cardWidth)
 
     // Ограничиваем offset границами
     return Math.max(maxOffset, Math.min(minOffset, idealOffset))
@@ -285,7 +310,7 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
           <div
             ref={containerRef}
             className="relative overflow-hidden"
-            style={{ touchAction: 'pan-x' }}
+            style={{ touchAction: 'pan-x', minHeight: '400px' }}
           >
             <motion.div
               ref={sliderRef}
