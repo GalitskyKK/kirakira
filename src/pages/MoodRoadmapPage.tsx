@@ -99,7 +99,7 @@ export function MoodRoadmapPage() {
                         </div>
                       </div>
 
-                      {/* Контент */}
+                      {/* Content */}
                       <div className="flex-1 space-y-2">
                         {/* Дата и настроение */}
                         <div className="flex items-center justify-between">
