@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
-import { motion } from 'framer-motion'
-import { ChevronDown } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { X } from 'lucide-react'
 import type { MoodEntry } from '@/types/mood'
 import { MOOD_CONFIG } from '@/types/mood'
 import { MoodImage } from './MoodImage'
@@ -22,10 +22,10 @@ function generateStickerStyle(entryId: string) {
   // Угол поворота (от -8 до 8 градусов)
   const rotation = (Math.abs(hash) % 17) - 8
 
-  // Позиция наклейки (0 = центр, 1 = влево, 2 = вправо, 3 = сверху)
+  // Позиция наклейки (0 = сверху слева, 1 = снизу слева, 2 = сверху справа, 3 = снизу справа)
   const position = Math.abs(hash) % 4
 
-  // Стиль подчеркивания (0 = волна, 1 = выделение вокруг, 2 = двойная волна)
+  // Стиль подчеркивания (0 = волна, 1 = пунктир, 2 = двойная волна)
   const underlineStyle = Math.abs(hash * 3) % 3
 
   return { rotation, position, underlineStyle }
@@ -33,7 +33,7 @@ function generateStickerStyle(entryId: string) {
 
 export function MoodSticker({ entry, index }: MoodStickerProps) {
   const moodConfig = MOOD_CONFIG[entry.mood]
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Компактный размер наклейки
   const iconSize = 24
@@ -41,124 +41,131 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
   // Генерируем стиль наклейки на основе ID записи
   const stickerStyle = useMemo(() => generateStickerStyle(entry.id), [entry.id])
 
-  // Разбиваем текст на строки
-  const textLines = useMemo(() => {
-    if (entry.note == null || entry.note.trim().length === 0) return []
-    const words = entry.note.split(/\s+/)
-    const lines: string[] = []
-    let currentLine = ''
+  // Определяем классы для позиционирования
+  const getPositionClasses = () => {
+    switch (stickerStyle.position) {
+      case 0: // Сверху слева - текст начинается с середины (после наклейки)
+        return {
+          container: 'flex-row items-start',
+          sticker: 'mr-2 flex-shrink-0',
+          text: 'flex-1 min-w-0',
+          textStart: 'ml-0',
+          textIndent: '',
+        }
+      case 1: // Снизу слева - текст начинается слева, но на следующих строках не накладывается
+        return {
+          container: 'flex-row items-start',
+          sticker: 'mr-2 flex-shrink-0 self-end',
+          text: 'flex-1 min-w-0',
+          textStart: 'ml-0',
+          textIndent: '',
+        }
+      case 2: // Сверху справа
+        return {
+          container: 'flex-row-reverse items-start',
+          sticker: 'ml-2 flex-shrink-0',
+          text: 'flex-1 min-w-0',
+          textStart: 'mr-0',
+          textIndent: '',
+        }
+      case 3: // Снизу справа
+        return {
+          container: 'flex-row-reverse items-start',
+          sticker: 'ml-2 flex-shrink-0 self-end',
+          text: 'flex-1 min-w-0',
+          textStart: 'mr-0',
+          textIndent: '',
+        }
+      default:
+        return {
+          container: 'flex-row items-start',
+          sticker: 'mr-2 flex-shrink-0',
+          text: 'flex-1 min-w-0',
+          textStart: 'ml-0',
+          textIndent: '',
+        }
+    }
+  }
 
-    words.forEach((word, i) => {
-      const testLine = currentLine + (currentLine ? ' ' : '') + word
-      // Примерно 10-12 символов на строку для компактности
-      if (testLine.length > 12 && currentLine.length > 0) {
-        lines.push(currentLine)
-        currentLine = word
-      } else {
-        currentLine = testLine
-      }
-      if (i === words.length - 1) {
-        lines.push(currentLine)
-      }
-    })
+  const positionClasses = getPositionClasses()
 
-    return lines
+  // Ограничиваем текст до 3 строк с многоточием
+  const truncatedText = useMemo(() => {
+    if (entry.note == null || entry.note.trim().length === 0) return ''
+    return entry.note
   }, [entry.note])
 
-  // Максимальное количество строк для свернутого состояния
-  const MAX_LINES = 2
-  const hasMoreLines = textLines.length > MAX_LINES
-  const visibleLines = isExpanded ? textLines : textLines.slice(0, MAX_LINES)
-
-  // Определяем выравнивание на основе позиции
-  const alignmentClass =
-    stickerStyle.position === 1
-      ? 'items-start'
-      : stickerStyle.position === 2
-        ? 'items-end'
-        : stickerStyle.position === 3
-          ? 'items-start self-start'
-          : 'items-center'
-
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{
-        delay: index * 0.05,
-        type: 'spring',
-        stiffness: 200,
-        damping: 15,
-      }}
-      className={`flex flex-col space-y-1 ${alignmentClass} self-start`}
-    >
-      {/* Наклейка настроения */}
+    <>
       <motion.div
-        className="relative flex h-12 w-12 items-center justify-center rounded-lg shadow-sm transition-all hover:scale-105 sm:h-14 sm:w-14"
-        style={{
-          background: `linear-gradient(135deg, ${moodConfig.color}15, ${moodConfig.color}25)`,
-          border: `2px solid ${moodConfig.color}40`,
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{
+          delay: index * 0.05,
+          type: 'spring',
+          stiffness: 200,
+          damping: 15,
         }}
-        animate={{ rotate: stickerStyle.rotation }}
-        transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+        className={`flex ${positionClasses.container} cursor-pointer self-start rounded-lg p-2 transition-all hover:bg-gray-50 dark:hover:bg-neutral-800/50`}
+        onClick={() => setIsModalOpen(true)}
       >
-        {/* Иконка настроения */}
-        <div className="relative z-10">
-          <MoodImage mood={entry.mood} size={iconSize} />
-        </div>
-
-        {/* Легкое свечение */}
-        <div
-          className="absolute inset-0 rounded-xl opacity-20 blur-sm"
-          style={{ backgroundColor: moodConfig.color }}
-        />
-      </motion.div>
-
-      {/* Дата (маленькая подпись) */}
-      <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400 sm:text-xs">
-        {formatDate(entry.date, 'dd MMM', 'ru')}
-      </p>
-
-      {/* Комментарий пользователя (подпись под наклейкой) */}
-      {entry.note != null && entry.note.trim().length > 0 && (
+        {/* Наклейка настроения */}
         <motion.div
-          initial={{ opacity: 0, y: -5 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.05 + 0.15 }}
-          className="relative w-full max-w-[100px] sm:max-w-[110px]"
+          className={`${positionClasses.sticker} relative flex h-12 w-12 items-center justify-center rounded-lg shadow-sm sm:h-14 sm:w-14`}
           style={{
-            textAlign:
-              stickerStyle.position === 1
-                ? 'left'
-                : stickerStyle.position === 2
-                  ? 'right'
-                  : 'center',
+            background: `linear-gradient(135deg, ${moodConfig.color}15, ${moodConfig.color}25)`,
+            border: `2px solid ${moodConfig.color}40`,
           }}
+          animate={{ rotate: stickerStyle.rotation }}
+          transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+          onClick={e => e.stopPropagation()}
         >
-          {/* Показываем видимые строки */}
-          {visibleLines.map((line, lineIndex) => (
-            <div
-              key={lineIndex}
-              className="relative mb-0.5 inline-block text-[10px] leading-tight text-gray-700 dark:text-gray-300 sm:text-xs sm:leading-relaxed"
-            >
-              <span className="font-medium">
-                {lineIndex === 0 ? '"' : ''}
-                {line}
-                {lineIndex === visibleLines.length - 1 && !hasMoreLines
-                  ? '"'
-                  : ''}
-              </span>
-              {/* Разные стили подчеркивания для каждой строки */}
+          {/* Иконка настроения */}
+          <div className="relative z-10">
+            <MoodImage mood={entry.mood} size={iconSize} />
+          </div>
+
+          {/* Легкое свечение */}
+          <div
+            className="absolute inset-0 rounded-lg opacity-20 blur-sm"
+            style={{ backgroundColor: moodConfig.color }}
+          />
+        </motion.div>
+
+        {/* Текст и дата */}
+        <div className={`${positionClasses.text} flex flex-col`}>
+          {/* Дата */}
+          <p className="mb-1 text-[10px] font-medium text-gray-500 dark:text-gray-400 sm:text-xs">
+            {formatDate(entry.date, 'dd MMM', 'ru')}
+          </p>
+
+          {/* Комментарий пользователя */}
+          {entry.note != null && entry.note.trim().length > 0 && (
+            <div className={`${positionClasses.textStart} relative w-full`}>
+              <p
+                className="text-[10px] leading-tight text-gray-700 dark:text-gray-300 sm:text-xs sm:leading-relaxed"
+                style={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  wordBreak: 'break-word',
+                }}
+              >
+                <span className="font-medium">"{truncatedText}"</span>
+              </p>
+              {/* Подчеркивание только для первой строки */}
               {stickerStyle.underlineStyle === 0 ? (
                 // Волна
                 <svg
-                  className="absolute -bottom-0.5 left-0 h-2 w-full"
-                  viewBox="0 0 120 8"
+                  className="absolute -bottom-0.5 left-0 h-2 w-20"
+                  viewBox="0 0 80 8"
                   preserveAspectRatio="none"
                   style={{ color: moodConfig.color }}
                 >
                   <path
-                    d="M 0,6 Q 8,4 15,5.5 T 30,5 Q 38,4.5 45,5.5 T 60,5 Q 68,4.5 75,5.5 T 90,5 Q 98,4.5 105,5.5 T 120,6"
+                    d="M 0,6 Q 6,4 12,5.5 T 24,5 Q 30,4.5 36,5.5 T 48,5 Q 54,4.5 60,5.5 T 72,5 Q 78,4.5 80,6"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="1.5"
@@ -168,19 +175,18 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
                   />
                 </svg>
               ) : stickerStyle.underlineStyle === 1 ? (
-                // Выделение вокруг (пунктирная рамка)
+                // Пунктир
                 <svg
-                  className="absolute -bottom-0.5 left-0 h-2.5 w-full"
-                  viewBox="0 0 120 10"
+                  className="absolute -bottom-0.5 left-0 h-2 w-20"
+                  viewBox="0 0 80 8"
                   preserveAspectRatio="none"
                   style={{ color: moodConfig.color }}
                 >
                   <path
-                    d="M 2,2 Q 5,1 8,2 T 14,2 Q 17,1 20,2 T 26,2 Q 29,1 32,2 T 38,2 Q 41,1 44,2 T 50,2 Q 53,1 56,2 T 62,2 Q 65,1 68,2 T 74,2 Q 77,1 80,2 T 86,2 Q 89,1 92,2 T 98,2 Q 101,1 104,2 T 110,2 Q 113,1 116,2"
+                    d="M 0,6 L 80,6"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="1.2"
-                    strokeLinecap="round"
                     strokeDasharray="2 2"
                     vectorEffect="non-scaling-stroke"
                     opacity="0.6"
@@ -189,13 +195,13 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
               ) : (
                 // Двойная волна
                 <svg
-                  className="absolute -bottom-0.5 left-0 h-2.5 w-full"
-                  viewBox="0 0 120 10"
+                  className="absolute -bottom-0.5 left-0 h-2.5 w-20"
+                  viewBox="0 0 80 10"
                   preserveAspectRatio="none"
                   style={{ color: moodConfig.color }}
                 >
                   <path
-                    d="M 0,5 Q 8,3 15,4.5 T 30,4 Q 38,3.5 45,4.5 T 60,4 Q 68,3.5 75,4.5 T 90,4 Q 98,3.5 105,4.5 T 120,5"
+                    d="M 0,5 Q 6,3 12,4.5 T 24,4 Q 30,3.5 36,4.5 T 48,4 Q 54,3.5 60,4.5 T 72,4 Q 78,3.5 80,5"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="1.2"
@@ -204,7 +210,7 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
                     opacity="0.7"
                   />
                   <path
-                    d="M 0,7 Q 8,5 15,6.5 T 30,6 Q 38,5.5 45,6.5 T 60,6 Q 68,5.5 75,6.5 T 90,6 Q 98,5.5 105,6.5 T 120,7"
+                    d="M 0,7 Q 6,5 12,6.5 T 24,6 Q 30,5.5 36,6.5 T 48,6 Q 54,5.5 60,6.5 T 72,6 Q 78,5.5 80,7"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="1.2"
@@ -215,112 +221,79 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
                 </svg>
               )}
             </div>
-          ))}
-
-          {/* Кнопка "развернуть" если есть еще строки */}
-          {hasMoreLines && (
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="mt-1 flex w-full items-center justify-center text-[9px] text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 sm:text-[10px]"
-              style={{ color: moodConfig.color }}
-            >
-              <ChevronDown
-                className={`h-3 w-3 transition-transform ${
-                  isExpanded ? 'rotate-180' : ''
-                }`}
-              />
-            </button>
           )}
+        </div>
+      </motion.div>
 
-          {/* Показываем скрытые строки при развернутом состоянии */}
-          {isExpanded && hasMoreLines && (
+      {/* Модалка для просмотра полного текста */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            {/* Overlay */}
             <motion.div
-              initial={{ opacity: 0, maxHeight: 0 }}
-              animate={{ opacity: 1, maxHeight: 500 }}
-              exit={{ opacity: 0, maxHeight: 0 }}
-              transition={{ duration: 0.2, ease: 'easeInOut' }}
-              className="overflow-hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => setIsModalOpen(false)}
+            />
+
+            {/* Modal */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="relative z-10 w-full max-w-md rounded-2xl bg-white shadow-2xl dark:bg-gray-800"
+              onClick={e => e.stopPropagation()}
             >
-              {textLines.slice(MAX_LINES).map((line, lineIndex) => (
-                <div
-                  key={lineIndex + MAX_LINES}
-                  className="relative mb-0.5 inline-block text-[10px] leading-tight text-gray-700 dark:text-gray-300 sm:text-xs sm:leading-relaxed"
-                >
-                  <span className="font-medium">
-                    {line}
-                    {lineIndex === textLines.slice(MAX_LINES).length - 1
-                      ? '"'
-                      : ''}
-                  </span>
-                  {/* Подчеркивание для дополнительных строк */}
-                  {stickerStyle.underlineStyle === 0 ? (
-                    <svg
-                      className="absolute -bottom-0.5 left-0 h-2 w-full"
-                      viewBox="0 0 120 8"
-                      preserveAspectRatio="none"
-                      style={{ color: moodConfig.color }}
-                    >
-                      <path
-                        d="M 0,6 Q 8,4 15,5.5 T 30,5 Q 38,4.5 45,5.5 T 60,5 Q 68,4.5 75,5.5 T 90,5 Q 98,4.5 105,5.5 T 120,6"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        vectorEffect="non-scaling-stroke"
-                      />
-                    </svg>
-                  ) : stickerStyle.underlineStyle === 1 ? (
-                    <svg
-                      className="absolute -bottom-0.5 left-0 h-2.5 w-full"
-                      viewBox="0 0 120 10"
-                      preserveAspectRatio="none"
-                      style={{ color: moodConfig.color }}
-                    >
-                      <path
-                        d="M 2,2 Q 5,1 8,2 T 14,2 Q 17,1 20,2 T 26,2 Q 29,1 32,2 T 38,2 Q 41,1 44,2 T 50,2 Q 53,1 56,2 T 62,2 Q 65,1 68,2 T 74,2 Q 77,1 80,2 T 86,2 Q 89,1 92,2 T 98,2 Q 101,1 104,2 T 110,2 Q 113,1 116,2"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.2"
-                        strokeLinecap="round"
-                        strokeDasharray="2 2"
-                        vectorEffect="non-scaling-stroke"
-                        opacity="0.6"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      className="absolute -bottom-0.5 left-0 h-2.5 w-full"
-                      viewBox="0 0 120 10"
-                      preserveAspectRatio="none"
-                      style={{ color: moodConfig.color }}
-                    >
-                      <path
-                        d="M 0,5 Q 8,3 15,4.5 T 30,4 Q 38,3.5 45,4.5 T 60,4 Q 68,3.5 75,4.5 T 90,4 Q 98,3.5 105,4.5 T 120,5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.2"
-                        strokeLinecap="round"
-                        vectorEffect="non-scaling-stroke"
-                        opacity="0.7"
-                      />
-                      <path
-                        d="M 0,7 Q 8,5 15,6.5 T 30,6 Q 38,5.5 45,6.5 T 60,6 Q 68,5.5 75,6.5 T 90,6 Q 98,5.5 105,6.5 T 120,7"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.2"
-                        strokeLinecap="round"
-                        vectorEffect="non-scaling-stroke"
-                        opacity="0.7"
-                      />
-                    </svg>
-                  )}
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
+                <div className="flex items-center space-x-3">
+                  {/* Наклейка в модалке */}
+                  <div
+                    className="flex h-12 w-12 items-center justify-center rounded-lg"
+                    style={{
+                      background: `linear-gradient(135deg, ${moodConfig.color}15, ${moodConfig.color}25)`,
+                      border: `2px solid ${moodConfig.color}40`,
+                    }}
+                  >
+                    <MoodImage mood={entry.mood} size={28} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      {moodConfig.label}
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {formatDate(entry.date, 'EEEE, dd MMMM yyyy', 'ru')}
+                    </p>
+                  </div>
                 </div>
-              ))}
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:text-gray-500 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+                  aria-label="Закрыть"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="max-h-[60vh] overflow-y-auto p-6">
+                {entry.note != null && entry.note.trim().length > 0 ? (
+                  <p className="text-base leading-relaxed text-gray-700 dark:text-gray-300">
+                    <span className="font-medium">"{entry.note}"</span>
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-400 dark:text-gray-500">
+                    Нет комментария
+                  </p>
+                )}
+              </div>
             </motion.div>
-          )}
-        </motion.div>
-      )}
-    </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
   )
 }
