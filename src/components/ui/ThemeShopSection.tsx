@@ -177,10 +177,6 @@ export function ThemeShopSection() {
 
   // Константы для слайдера
   const cardWidth = 320 // Ширина карточки темы
-  const cardPadding = 8 // padding слева и справа (px-2 = 0.5rem = 8px)
-  const gap = 16 // Отступ между карточками
-  // Реальное расстояние между центрами карточек: cardWidth + cardPadding * 2 + gap
-  const cardSpacing = cardWidth + cardPadding * 2 + gap
 
   // Вычисляем offset для центрирования активной карточки
   // Используем начальную ширину из window, чтобы offset вычислялся сразу
@@ -233,19 +229,19 @@ export function ThemeShopSection() {
 
     // Центрируем активную карточку
     const centerOffset = width / 2 - cardWidth / 2
-    // Смещаем на нужное количество карточек (используем реальное расстояние между центрами)
-    const idealOffset = -(currentIndex * cardSpacing) + centerOffset
+    // Смещаем на нужное количество карточек (просто умножаем на ширину карточки)
+    const idealOffset = -(currentIndex * cardWidth) + centerOffset
 
     // Минимальный offset (когда первая карточка полностью видна слева)
     const minOffset = 0
 
     // Максимальный offset (когда последняя карточка полностью видна справа)
-    const totalCardsWidth = themes.length * cardSpacing
-    const maxOffset = -(totalCardsWidth - cardSpacing) + (width - cardWidth)
+    const totalCardsWidth = themes.length * cardWidth
+    const maxOffset = -(totalCardsWidth - cardWidth) + (width - cardWidth)
 
     // Ограничиваем offset границами
     return Math.max(maxOffset, Math.min(minOffset, idealOffset))
-  }, [currentIndex, containerWidth, cardWidth, cardSpacing, themes.length])
+  }, [currentIndex, containerWidth, cardWidth, themes.length])
 
   // Функции навигации
   const goToPrevious = () => {
@@ -305,7 +301,7 @@ export function ThemeShopSection() {
           <div
             ref={containerRef}
             className="relative overflow-hidden"
-            style={{ touchAction: 'pan-x', minHeight: '300px' }}
+            style={{ touchAction: 'pan-x', minHeight: '270px' }}
           >
             <motion.div
               ref={sliderRef}
