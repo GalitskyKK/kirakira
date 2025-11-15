@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Palette, Snowflake, Sparkles, Leaf, Zap } from 'lucide-react'
+import { X, Palette, Snowflake, Sparkles, Leaf } from 'lucide-react'
 
 import { ThemeShopSection } from './ThemeShopSection'
 import { FreezeShopSection } from './FreezeShopSection'
@@ -123,7 +123,7 @@ export function Shop({ isOpen, onClose, initialTab = 'themes' }: ShopProps) {
                   </div>
 
                   <div className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 px-2.5 py-1.5 dark:from-blue-900/20 dark:to-cyan-900/20">
-                    <Zap className="h-4 w-4 text-blue-500" />
+                    <Sparkles className="h-4 w-4 text-blue-500" />
                     <span className="text-sm font-bold text-gray-900 dark:text-white">
                       {userCurrency?.gems || 0}
                     </span>

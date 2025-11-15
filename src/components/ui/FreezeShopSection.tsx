@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Snowflake, Check, Leaf, Zap } from 'lucide-react'
+import { Snowflake, Leaf, Zap } from 'lucide-react'
 import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { buyStreakFreeze } from '@/api/streakFreezeService'
@@ -162,7 +162,7 @@ export function FreezeShopSection() {
   return (
     <div className="p-4 sm:p-6">
       {/* Current Freezes Status - Компактная версия */}
-      {freezeData && (
+      {/* {freezeData && (
         <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -189,7 +189,7 @@ export function FreezeShopSection() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Info Alert - Компактная версия */}
       {/* <div className="mb-4 flex gap-2 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-xs text-gray-700 dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-gray-300">
@@ -223,7 +223,7 @@ export function FreezeShopSection() {
               </p>
 
               {/* Features */}
-              <ul className="mt-4 space-y-2">
+              {/* <ul className="mt-4 space-y-2">
                 <li className="flex items-start gap-2 text-sm">
                   <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" />
                   <span className="text-gray-700 dark:text-gray-300">
@@ -242,7 +242,7 @@ export function FreezeShopSection() {
                     Макс. накопление: {freezeData?.max || 3} шт
                   </span>
                 </li>
-              </ul>
+              </ul> */}
 
               {/* Price & Buy Button */}
               <div className="mt-4">
@@ -325,7 +325,7 @@ export function FreezeShopSection() {
               </p>
 
               {/* Features */}
-              <ul className="mt-4 space-y-2">
+              {/* <ul className="mt-4 space-y-2">
                 <li className="flex items-start gap-2 text-sm">
                   <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" />
                   <span className="text-gray-700 dark:text-gray-300">
@@ -344,7 +344,7 @@ export function FreezeShopSection() {
                     Без лимита накопления
                   </span>
                 </li>
-              </ul>
+              </ul> */}
 
               {/* Price & Buy Button */}
               <div className="mt-4">
