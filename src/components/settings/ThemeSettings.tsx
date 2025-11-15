@@ -235,12 +235,23 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
     }
   }, [])
 
-  // Вычисляем offset с центрированием активной карточки
+  // Вычисляем offset с центрированием активной карточки и учетом границ
   const offset = useMemo(() => {
-    if (containerWidth === 0) return 0
+    if (containerWidth === 0 || themes.length === 0) return 0
+
+    const totalWidth = themes.length * cardWithGap
     const centerOffset = containerWidth / 2 - cardWidth / 2
-    return -(currentIndex * cardWithGap) + centerOffset
-  }, [currentIndex, containerWidth, cardWidth, cardWithGap])
+    const idealOffset = -(currentIndex * cardWithGap) + centerOffset
+
+    // Минимальный offset (когда первая карточка полностью видна слева)
+    const minOffset = 0
+
+    // Максимальный offset (когда последняя карточка полностью видна справа)
+    const maxOffset = -(totalWidth - cardWithGap) + (containerWidth - cardWidth)
+
+    // Ограничиваем offset границами
+    return Math.max(maxOffset, Math.min(minOffset, idealOffset))
+  }, [currentIndex, containerWidth, cardWidth, cardWithGap, themes.length])
 
   return (
     <div className={`space-y-4 ${className || ''}`}>

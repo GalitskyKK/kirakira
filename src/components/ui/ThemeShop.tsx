@@ -3,9 +3,9 @@
  * Показывает доступные темы и позволяет их покупать
  */
 
-import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { X, Check, Lock, Leaf } from 'lucide-react'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { motion, AnimatePresence, PanInfo } from 'framer-motion'
+import { X, Check, Lock, Leaf, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
 import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { useSpendCurrency, currencyKeys } from '@/hooks/queries'
@@ -54,6 +54,11 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
 
   const [purchasingTheme, setPurchasingTheme] = useState<string | null>(null)
   const isProcessingRef = useRef(false) // Защита от двойных кликов
+  
+  // Состояние для слайдера
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const sliderRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // Блокируем скролл при открытии модалки
   useEffect(() => {
@@ -210,6 +215,92 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
     }
   }
 
+  // Константы для слайдера
+  const cardWidth = 320 // Ширина карточки темы
+  const gap = 16 // Отступ между карточками
+  const cardWithGap = cardWidth + gap
+  
+  // Вычисляем offset для центрирования активной карточки
+  const [containerWidth, setContainerWidth] = useState(0)
+  
+  // Обновляем ширину контейнера при монтировании и изменении размера
+  useEffect(() => {
+    if (!isOpen) return
+    
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth)
+      }
+    }
+    
+    // Небольшая задержка для того, чтобы модалка успела отрендериться
+    const timeoutId = setTimeout(updateWidth, 100)
+    window.addEventListener('resize', updateWidth)
+    
+    // Используем ResizeObserver для более точного отслеживания изменений размера
+    const resizeObserver = new ResizeObserver(() => {
+      updateWidth()
+    })
+    
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current)
+    }
+    
+    return () => {
+      clearTimeout(timeoutId)
+      window.removeEventListener('resize', updateWidth)
+      resizeObserver.disconnect()
+    }
+  }, [isOpen])
+  
+  // Вычисляем offset с центрированием активной карточки и учетом границ
+  const offset = useMemo(() => {
+    if (containerWidth === 0 || themes.length === 0) return 0
+    
+    const totalWidth = themes.length * cardWithGap
+    const centerOffset = containerWidth / 2 - cardWidth / 2
+    const idealOffset = -(currentIndex * cardWithGap) + centerOffset
+    
+    // Минимальный offset (когда первая карточка полностью видна слева)
+    const minOffset = 0
+    
+    // Максимальный offset (когда последняя карточка полностью видна справа)
+    const maxOffset = -(totalWidth - cardWithGap) + (containerWidth - cardWidth)
+    
+    // Ограничиваем offset границами
+    return Math.max(maxOffset, Math.min(minOffset, idealOffset))
+  }, [currentIndex, containerWidth, cardWidth, cardWithGap, themes.length])
+
+  // Функции навигации
+  const goToPrevious = () => {
+    setCurrentIndex(prev => (prev > 0 ? prev - 1 : themes.length - 1))
+  }
+
+  const goToNext = () => {
+    setCurrentIndex(prev => (prev < themes.length - 1 ? prev + 1 : 0))
+  }
+
+  const goToIndex = (index: number) => {
+    setCurrentIndex(index)
+  }
+
+  // Обработка свайпа
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const threshold = 50
+    if (info.offset.x > threshold && currentIndex > 0) {
+      goToPrevious()
+    } else if (info.offset.x < -threshold && currentIndex < themes.length - 1) {
+      goToNext()
+    }
+  }
+  
+  // Сбрасываем индекс при открытии модалки
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentIndex(0)
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
 
   return (
@@ -256,135 +347,202 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {themes.map(theme => {
-                  const isOwned =
-                    ownedThemeIds.includes(theme.id) || theme.isDefault
-                  const canBuy =
-                    isOwned ||
-                    (userCurrency?.sprouts || 0) >= theme.priceSprouts
-                  const isPurchasing = purchasingTheme === theme.id
-                  const isSelected = false // TODO: Add selected state
-
-                  return (
-                    <motion.div
-                      key={theme.id}
-                      className="relative"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+              <div className="relative">
+                {/* Кнопки навигации */}
+                {themes.length > 1 && (
+                  <>
+                    <button
+                      onClick={goToPrevious}
+                      className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg backdrop-blur-sm transition-all hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-800"
+                      aria-label="Предыдущая тема"
                     >
-                      <Card
-                        className={`cursor-pointer overflow-hidden transition-all ${
-                          isSelected
-                            ? 'ring-2 ring-blue-500'
-                            : 'hover:shadow-lg'
-                        } ${!canBuy ? 'opacity-60' : ''}`}
-                        onClick={() => handleSelectTheme(theme.id)}
-                      >
-                        {/* Theme Preview */}
-                        <div
-                          className="h-32 w-full"
-                          style={{ background: theme.containerBackground }}
+                      <ChevronLeft className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+                    </button>
+                    <button
+                      onClick={goToNext}
+                      className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg backdrop-blur-sm transition-all hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-800"
+                      aria-label="Следующая тема"
+                    >
+                      <ChevronRight className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+                    </button>
+                  </>
+                )}
+
+                {/* Контейнер слайдера */}
+                <div
+                  ref={containerRef}
+                  className="relative overflow-hidden"
+                  style={{ touchAction: 'pan-x' }}
+                >
+                  <motion.div
+                    ref={sliderRef}
+                    className="flex"
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    dragElastic={0.2}
+                    onDragEnd={handleDragEnd}
+                    animate={{
+                      x: offset,
+                    }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 300,
+                      damping: 30,
+                    }}
+                  >
+                    {themes.map((theme, index) => {
+                      const isOwned =
+                        ownedThemeIds.includes(theme.id) || theme.isDefault
+                      const canBuy =
+                        isOwned ||
+                        (userCurrency?.sprouts || 0) >= theme.priceSprouts
+                      const isPurchasing = purchasingTheme === theme.id
+                      const isActive = index === currentIndex
+
+                      return (
+                        <motion.div
+                          key={theme.id}
+                          className="flex-shrink-0 px-2"
+                          style={{ width: cardWidth }}
+                          animate={{
+                            scale: isActive ? 1 : 0.95,
+                            opacity: isActive ? 1 : 0.7,
+                          }}
+                          transition={{
+                            type: 'spring',
+                            stiffness: 300,
+                            damping: 30,
+                          }}
                         >
-                          {/* Shelf Preview */}
-                          <div className="flex h-full items-end justify-center pb-4">
+                          <Card
+                            className={`cursor-pointer overflow-hidden transition-all ${
+                              'hover:shadow-lg'
+                            } ${!canBuy ? 'opacity-60' : ''}`}
+                            onClick={() => handleSelectTheme(theme.id)}
+                          >
+                            {/* Theme Preview */}
                             <div
-                              className="h-8 w-24 rounded-lg shadow-lg"
-                              style={{
-                                background: theme.shelfSurface,
-                                borderRadius: theme.shelfRadius,
-                                boxShadow: theme.shelfShadow,
-                              }}
-                            />
-                          </div>
+                              className="h-32 w-full"
+                              style={{ background: theme.containerBackground }}
+                            >
+                              {/* Shelf Preview */}
+                              <div className="flex h-full items-end justify-center pb-3">
+                                <div
+                                  className="h-6 w-24 rounded shadow-md"
+                                  style={{
+                                    background: theme.shelfSurface,
+                                    borderRadius: theme.shelfRadius,
+                                    boxShadow: theme.shelfShadow,
+                                  }}
+                                />
+                              </div>
 
-                          {/* Particles */}
-                          {Array.from({ length: 3 }, (_, i) => (
-                            <div
-                              key={i}
-                              className="absolute h-1 w-1 rounded-full opacity-60"
-                              style={{
-                                left: `${20 + i * 30}%`,
-                                top: `${20 + i * 10}%`,
-                                background: `linear-gradient(90deg, ${theme.particleFrom}, ${theme.particleTo})`,
-                              }}
-                            />
-                          ))}
-                        </div>
-
-                        {/* Theme Info */}
-                        <div className="p-4">
-                          <div className="flex items-center justify-between">
-                            <h3 className="font-semibold text-gray-900 dark:text-white">
-                              {theme.name}
-                            </h3>
-                            {isOwned && (
-                              <Check className="h-5 w-5 text-green-500" />
-                            )}
-                          </div>
-
-                          <div className="mt-2 flex items-center justify-between">
-                            <div className="flex items-center gap-1">
-                              <Leaf className="h-4 w-4 text-green-500" />
-                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {theme.priceSprouts === 0
-                                  ? 'Бесплатно'
-                                  : theme.priceSprouts}
-                              </span>
+                              {/* Particles */}
+                              {Array.from({ length: 3 }, (_, i) => (
+                                <div
+                                  key={i}
+                                  className="absolute h-1 w-1 rounded-full opacity-60"
+                                  style={{
+                                    left: `${25 + i * 25}%`,
+                                    top: `${25 + i * 20}%`,
+                                    background: `linear-gradient(90deg, ${theme.particleFrom}, ${theme.particleTo})`,
+                                  }}
+                                />
+                              ))}
                             </div>
 
-                            {!canBuy && !isOwned && (
-                              <Lock className="h-4 w-4 text-gray-400" />
-                            )}
-                          </div>
-
-                          {/* Action Button */}
-                          <div className="mt-3">
-                            {isOwned ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full"
-                                onClick={e => {
-                                  e.stopPropagation()
-                                  handleSelectTheme(theme.id)
-                                }}
-                              >
-                                Выбрать
-                              </Button>
-                            ) : (userCurrency?.sprouts || 0) >=
-                              theme.priceSprouts ? (
-                              <Button
-                                size="sm"
-                                className="w-full"
-                                disabled={isPurchasing}
-                                onClick={e => {
-                                  e.stopPropagation()
-                                  handleBuyTheme(theme.id)
-                                }}
-                              >
-                                {isPurchasing ? (
-                                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                                ) : (
-                                  `Купить за ${theme.priceSprouts}`
+                            {/* Theme Info */}
+                            <div className="p-4">
+                              <div className="flex items-center justify-between">
+                                <h3 className="font-semibold text-gray-900 dark:text-white">
+                                  {theme.name}
+                                </h3>
+                                {isOwned && (
+                                  <Check className="h-5 w-5 text-green-500" />
                                 )}
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full"
-                                disabled
-                              >
-                                Недостаточно средств
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </Card>
-                    </motion.div>
-                  )
-                })}
+                                {!canBuy && !isOwned && (
+                                  <Lock className="h-5 w-5 text-gray-400" />
+                                )}
+                              </div>
+
+                              <div className="mt-2 flex items-center justify-between">
+                                <div className="flex items-center gap-1.5">
+                                  <Leaf className="h-4 w-4 text-green-500" />
+                                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    {theme.priceSprouts === 0
+                                      ? 'Бесплатно'
+                                      : `${theme.priceSprouts} ростков`}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Action Button */}
+                              <div className="mt-3">
+                                {isOwned ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full"
+                                    onClick={e => {
+                                      e.stopPropagation()
+                                      handleSelectTheme(theme.id)
+                                    }}
+                                  >
+                                    Выбрать
+                                  </Button>
+                                ) : (userCurrency?.sprouts || 0) >=
+                                  theme.priceSprouts ? (
+                                  <Button
+                                    size="sm"
+                                    className="w-full"
+                                    disabled={isPurchasing}
+                                    onClick={e => {
+                                      e.stopPropagation()
+                                      handleBuyTheme(theme.id)
+                                    }}
+                                  >
+                                    {isPurchasing ? (
+                                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                    ) : (
+                                      `Купить за ${theme.priceSprouts}`
+                                    )}
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full"
+                                    disabled
+                                  >
+                                    Недостаточно средств
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </Card>
+                        </motion.div>
+                      )
+                    })}
+                  </motion.div>
+                </div>
+
+                {/* Индикаторы (точки) */}
+                {themes.length > 1 && (
+                  <div className="mt-4 flex justify-center gap-2">
+                    {themes.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => goToIndex(index)}
+                        className={`h-2 rounded-full transition-all ${
+                          index === currentIndex
+                            ? 'w-8 bg-blue-500'
+                            : 'w-2 bg-gray-300 dark:bg-gray-600'
+                        }`}
+                        aria-label={`Перейти к теме ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
