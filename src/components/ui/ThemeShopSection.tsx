@@ -330,7 +330,7 @@ export function ThemeShopSection() {
                 return (
                   <motion.div
                     key={theme.id}
-                    className="flex-shrink-0 px-2"
+                    className="flex-shrink-0 p-4"
                     style={{ width: cardWidth }}
                     animate={{
                       scale: isActive ? 1 : 0.95,
@@ -461,8 +461,8 @@ export function ThemeShopSection() {
                   onClick={() => goToIndex(index)}
                   className={`h-2 rounded-full transition-all ${
                     index === currentIndex
-                      ? 'w-8 bg-blue-500'
-                      : 'w-2 bg-gray-300 dark:bg-gray-600'
+                      ? 'w-8 bg-kira-500'
+                      : 'w-2 bg-neutral-300 dark:bg-neutral-600'
                   }`}
                   aria-label={`Перейти к теме ${index + 1}`}
                 />

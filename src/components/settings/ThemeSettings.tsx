@@ -337,7 +337,7 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
                 return (
                   <motion.div
                     key={theme.id}
-                    className="flex-shrink-0 px-2"
+                    className="flex-shrink-0 p-4"
                     style={{ width: cardWidth }}
                     animate={{
                       scale: isActive ? 1 : 0.95,
