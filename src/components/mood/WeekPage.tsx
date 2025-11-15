@@ -50,9 +50,10 @@ export function WeekPage({
       {canGoPrevious && (
         <motion.button
           onClick={onPrevious}
-          className="absolute left-1 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition-all hover:scale-110 hover:bg-white dark:bg-neutral-800/95 dark:hover:bg-neutral-800 sm:left-2 sm:h-10 sm:w-10"
+          className="absolute left-1 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition-colors hover:bg-white dark:bg-neutral-800/95 dark:hover:bg-neutral-800 sm:left-2 sm:h-10 sm:w-10"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
+          style={{ transformOrigin: 'center' }}
           aria-label="Предыдущая страница"
         >
           <ChevronLeft className="h-4 w-4 text-gray-700 dark:text-gray-200 sm:h-5 sm:w-5" />
@@ -63,9 +64,10 @@ export function WeekPage({
       {canGoNext && (
         <motion.button
           onClick={onNext}
-          className="absolute right-1 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition-all hover:scale-110 hover:bg-white dark:bg-neutral-800/95 dark:hover:bg-neutral-800 sm:right-2 sm:h-10 sm:w-10"
+          className="absolute right-1 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition-colors hover:bg-white dark:bg-neutral-800/95 dark:hover:bg-neutral-800 sm:right-2 sm:h-10 sm:w-10"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
+          style={{ transformOrigin: 'center' }}
           aria-label="Следующая страница"
         >
           <ChevronRight className="h-4 w-4 text-gray-700 dark:text-gray-200 sm:h-5 sm:w-5" />
@@ -76,7 +78,7 @@ export function WeekPage({
       <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-gray-300/30 to-transparent dark:via-gray-600/30" />
 
       {/* Заголовок недели */}
-      <div className="mb-3 flex-shrink-0 px-4 text-center sm:mb-4 sm:px-6">
+      <div className="mb-3 flex-shrink-0 px-4 pt-4 text-center sm:mb-4 sm:px-6 sm:pt-6">
         <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200 sm:text-lg">
           {formatDate(weekStart, 'dd MMMM', 'ru')} —{' '}
           {formatDate(weekEnd, 'dd MMMM yyyy', 'ru')}
