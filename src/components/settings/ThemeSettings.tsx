@@ -3,9 +3,9 @@
  * Позволяет выбирать и покупать темы
  */
 
-import { motion } from 'framer-motion'
-import { useRef } from 'react'
-import { Check, Lock, Leaf } from 'lucide-react'
+import { motion, PanInfo } from 'framer-motion'
+import { useRef, useState, useEffect, useMemo } from 'react'
+import { Check, Lock, Leaf, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
 import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { useSpendCurrency, currencyKeys } from '@/hooks/queries'
@@ -162,6 +162,86 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
     }
   }
 
+  // Состояние для слайдера
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const sliderRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Находим индекс текущей выбранной темы
+  useEffect(() => {
+    const selectedIndex = themes.findIndex(t => t.id === currentTheme.id)
+    if (selectedIndex >= 0) {
+      setCurrentIndex(selectedIndex)
+    }
+  }, [currentTheme.id, themes])
+
+  // Функции навигации
+  const goToPrevious = () => {
+    setCurrentIndex(prev => (prev > 0 ? prev - 1 : themes.length - 1))
+  }
+
+  const goToNext = () => {
+    setCurrentIndex(prev => (prev < themes.length - 1 ? prev + 1 : 0))
+  }
+
+  const goToIndex = (index: number) => {
+    setCurrentIndex(index)
+  }
+
+  // Обработка свайпа
+  const handleDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
+    const threshold = 50
+    if (info.offset.x > threshold && currentIndex > 0) {
+      goToPrevious()
+    } else if (info.offset.x < -threshold && currentIndex < themes.length - 1) {
+      goToNext()
+    }
+  }
+
+  // Константы для слайдера
+  const cardWidth = 320 // Ширина карточки темы
+  const gap = 16 // Отступ между карточками
+  const cardWithGap = cardWidth + gap
+
+  // Вычисляем offset для центрирования активной карточки
+  const [containerWidth, setContainerWidth] = useState(0)
+
+  // Обновляем ширину контейнера при монтировании и изменении размера
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth)
+      }
+    }
+
+    updateWidth()
+    window.addEventListener('resize', updateWidth)
+
+    // Используем ResizeObserver для более точного отслеживания изменений размера
+    const resizeObserver = new ResizeObserver(() => {
+      updateWidth()
+    })
+
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current)
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateWidth)
+      resizeObserver.disconnect()
+    }
+  }, [])
+
+  // Вычисляем offset с центрированием активной карточки
+  const offset = useMemo(() => {
+    if (containerWidth === 0) return 0
+    const centerOffset = containerWidth / 2 - cardWidth / 2
+    return -(currentIndex * cardWithGap) + centerOffset
+  }, [currentIndex, containerWidth, cardWidth, cardWithGap])
+
   return (
     <div className={`space-y-4 ${className || ''}`}>
       {isLoadingThemes ? (
@@ -169,105 +249,177 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-300 border-t-kira-600 dark:border-neutral-700 dark:border-t-kira-400" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {themes.map(theme => {
-            const isOwned = ownedThemeIds.includes(theme.id)
-            const canBuy = canUseTheme(theme.id)
-            const isSelected = currentTheme.id === theme.id
-
-            return (
-              <motion.div
-                key={theme.id}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+        <div className="relative">
+          {/* Кнопки навигации */}
+          {themes.length > 1 && (
+            <>
+              <button
+                onClick={goToPrevious}
+                className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg backdrop-blur-sm transition-all hover:bg-white dark:bg-neutral-800/90 dark:hover:bg-neutral-800"
+                aria-label="Предыдущая тема"
               >
-                <Card
-                  className={`cursor-pointer overflow-hidden transition-all ${
-                    isSelected
-                      ? 'bg-kira-50 ring-2 ring-kira-500 dark:bg-kira-900/20'
-                      : 'hover:shadow-md'
-                  } ${!canBuy ? 'opacity-60' : ''}`}
-                  onClick={() => handleSelectTheme(theme.id)}
-                >
-                  {/* Theme Preview */}
-                  <div
-                    className="h-20 w-full"
-                    style={{ background: theme.containerBackground }}
+                <ChevronLeft className="h-5 w-5 text-neutral-700 dark:text-neutral-300" />
+              </button>
+              <button
+                onClick={goToNext}
+                className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg backdrop-blur-sm transition-all hover:bg-white dark:bg-neutral-800/90 dark:hover:bg-neutral-800"
+                aria-label="Следующая тема"
+              >
+                <ChevronRight className="h-5 w-5 text-neutral-700 dark:text-neutral-300" />
+              </button>
+            </>
+          )}
+
+          {/* Контейнер слайдера */}
+          <div
+            ref={containerRef}
+            className="relative overflow-hidden"
+            style={{ touchAction: 'pan-x' }}
+          >
+            <motion.div
+              ref={sliderRef}
+              className="flex"
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={handleDragEnd}
+              animate={{
+                x: offset,
+              }}
+              transition={{
+                type: 'spring',
+                stiffness: 300,
+                damping: 30,
+              }}
+            >
+              {themes.map((theme, index) => {
+                const isOwned = ownedThemeIds.includes(theme.id)
+                const canBuy = canUseTheme(theme.id)
+                const isSelected = currentTheme.id === theme.id
+                const isActive = index === currentIndex
+
+                return (
+                  <motion.div
+                    key={theme.id}
+                    className="flex-shrink-0 px-2"
+                    style={{ width: cardWidth }}
+                    animate={{
+                      scale: isActive ? 1 : 0.95,
+                      opacity: isActive ? 1 : 0.7,
+                    }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 300,
+                      damping: 30,
+                    }}
                   >
-                    {/* Shelf Preview */}
-                    <div className="flex h-full items-end justify-center pb-2">
+                    <Card
+                      className={`cursor-pointer overflow-hidden transition-all ${
+                        isSelected
+                          ? 'bg-kira-50 ring-2 ring-kira-500 dark:bg-kira-900/20'
+                          : 'hover:shadow-md'
+                      } ${!canBuy ? 'opacity-60' : ''}`}
+                      onClick={() => handleSelectTheme(theme.id)}
+                    >
+                      {/* Theme Preview */}
                       <div
-                        className="h-4 w-16 rounded shadow-md"
-                        style={{
-                          background: theme.shelfSurface,
-                          borderRadius: theme.shelfRadius,
-                          boxShadow: theme.shelfShadow,
-                        }}
-                      />
-                    </div>
+                        className="h-32 w-full"
+                        style={{ background: theme.containerBackground }}
+                      >
+                        {/* Shelf Preview */}
+                        <div className="flex h-full items-end justify-center pb-3">
+                          <div
+                            className="h-6 w-24 rounded shadow-md"
+                            style={{
+                              background: theme.shelfSurface,
+                              borderRadius: theme.shelfRadius,
+                              boxShadow: theme.shelfShadow,
+                            }}
+                          />
+                        </div>
 
-                    {/* Particles */}
-                    {Array.from({ length: 2 }, (_, i) => (
-                      <div
-                        key={i}
-                        className="absolute h-0.5 w-0.5 rounded-full opacity-60"
-                        style={{
-                          left: `${30 + i * 40}%`,
-                          top: `${30 + i * 20}%`,
-                          background: `linear-gradient(90deg, ${theme.particleFrom}, ${theme.particleTo})`,
-                        }}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Theme Info */}
-                  <div className="p-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-medium text-neutral-900 dark:text-neutral-100">
-                        {theme.name}
-                      </h3>
-                      <div className="flex items-center gap-1">
-                        {isSelected && (
-                          <Check className="h-4 w-4 text-kira-500" />
-                        )}
-                        {isOwned && !isSelected && (
-                          <Check className="h-4 w-4 text-green-500" />
-                        )}
-                        {!canBuy && !isOwned && (
-                          <Lock className="h-4 w-4 text-neutral-400" />
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="mt-1 flex items-center justify-between">
-                      <div className="flex items-center gap-1">
-                        <Leaf className="h-3 w-3 text-green-500" />
-                        <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                          {theme.priceSprouts === 0
-                            ? 'Бесплатно'
-                            : theme.priceSprouts}
-                        </span>
+                        {/* Particles */}
+                        {Array.from({ length: 3 }, (_, i) => (
+                          <div
+                            key={i}
+                            className="absolute h-1 w-1 rounded-full opacity-60"
+                            style={{
+                              left: `${25 + i * 25}%`,
+                              top: `${25 + i * 20}%`,
+                              background: `linear-gradient(90deg, ${theme.particleFrom}, ${theme.particleTo})`,
+                            }}
+                          />
+                        ))}
                       </div>
 
-                      {!isOwned && canBuy && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-6 px-2 text-xs"
-                          onClick={e => {
-                            e.stopPropagation()
-                            void handleBuyTheme(theme.id)
-                          }}
-                        >
-                          Купить
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-            )
-          })}
+                      {/* Theme Info */}
+                      <div className="p-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
+                            {theme.name}
+                          </h3>
+                          <div className="flex items-center gap-1">
+                            {isSelected && (
+                              <Check className="h-5 w-5 text-kira-500" />
+                            )}
+                            {isOwned && !isSelected && (
+                              <Check className="h-5 w-5 text-green-500" />
+                            )}
+                            {!canBuy && !isOwned && (
+                              <Lock className="h-5 w-5 text-neutral-400" />
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="mt-2 flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <Leaf className="h-4 w-4 text-green-500" />
+                            <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                              {theme.priceSprouts === 0
+                                ? 'Бесплатно'
+                                : `${theme.priceSprouts} ростков`}
+                            </span>
+                          </div>
+
+                          {!isOwned && canBuy && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 px-3 text-xs"
+                              onClick={e => {
+                                e.stopPropagation()
+                                void handleBuyTheme(theme.id)
+                              }}
+                            >
+                              Купить
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+                )
+              })}
+            </motion.div>
+          </div>
+
+          {/* Индикаторы (точки) */}
+          {themes.length > 1 && (
+            <div className="mt-4 flex justify-center gap-2">
+              {themes.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToIndex(index)}
+                  className={`h-2 rounded-full transition-all ${
+                    index === currentIndex
+                      ? 'w-8 bg-kira-500'
+                      : 'w-2 bg-neutral-300 dark:bg-neutral-600'
+                  }`}
+                  aria-label={`Перейти к теме ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 

@@ -190,22 +190,7 @@ export function ProfilePage() {
           isLoading: leaderboardPositionLoading,
         }}
       />
-
-      {/* Статистика */}
-      <ProfileStats
-        user={renderUser}
-        garden={null}
-        moodStats={moodStats}
-        totalElements={totalElements}
-      />
-
-      {/* Достижения */}
-      <ProfileAchievements
-        user={renderUser}
-        moodStats={moodStats}
-        totalElements={totalElements}
-      />
-
+      
       {/* Кнопка просмотра роадмапа */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -230,7 +215,24 @@ export function ProfilePage() {
             </div>
           </div>
         </motion.button>
-      </motion.div>
+      </motion.div>      
+
+      {/* Статистика */}
+      <ProfileStats
+        user={renderUser}
+        garden={null}
+        moodStats={moodStats}
+        totalElements={totalElements}
+      />
+
+      {/* Достижения */}
+      <ProfileAchievements
+        user={renderUser}
+        moodStats={moodStats}
+        totalElements={totalElements}
+      />
+
+
     </motion.div>
   )
 }
