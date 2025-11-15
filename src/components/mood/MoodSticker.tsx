@@ -12,24 +12,18 @@ interface MoodStickerProps {
 export function MoodSticker({ entry, index }: MoodStickerProps) {
   const moodConfig = MOOD_CONFIG[entry.mood]
 
-  // Размер наклейки зависит от интенсивности
-  const sizeMap = {
-    1: { size: 'w-20 h-20', iconSize: 32 }, // LOW
-    2: { size: 'w-24 h-24', iconSize: 40 }, // MEDIUM
-    3: { size: 'w-28 h-28', iconSize: 48 }, // HIGH
-  }
+  // Компактный размер наклейки
+  const iconSize = 28
 
-  const { size, iconSize } = sizeMap[entry.intensity]
-
-  // Случайный угол поворота для эффекта наклейки (от -8 до 8 градусов)
-  const rotation = (index * 7.5) % 16 - 8
+  // Небольшой угол поворота для эффекта наклейки (от -5 до 5 градусов)
+  const rotation = (index * 5) % 10 - 5
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.8, rotate: rotation - 10 }}
-      animate={{ opacity: 1, scale: 1, rotate: rotation }}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
       transition={{
-        delay: index * 0.1,
+        delay: index * 0.05,
         type: 'spring',
         stiffness: 200,
         damping: 15,
@@ -38,7 +32,7 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
     >
       {/* Наклейка настроения */}
       <motion.div
-        className={`${size} relative flex items-center justify-center rounded-2xl shadow-lg transition-all hover:scale-105`}
+        className="relative flex h-16 w-16 items-center justify-center rounded-xl shadow-md transition-all hover:scale-105"
         style={{
           background: `linear-gradient(135deg, ${moodConfig.color}15, ${moodConfig.color}25)`,
           border: `2px solid ${moodConfig.color}40`,
@@ -46,24 +40,6 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
         animate={{ rotate: rotation }}
         transition={{ type: 'spring', stiffness: 200, damping: 15 }}
       >
-        {/* Декоративные уголки как у наклейки */}
-        <div
-          className="absolute -left-1 -top-1 h-4 w-4 rounded-full"
-          style={{ backgroundColor: moodConfig.color }}
-        />
-        <div
-          className="absolute -right-1 -top-1 h-4 w-4 rounded-full"
-          style={{ backgroundColor: moodConfig.color }}
-        />
-        <div
-          className="absolute -bottom-1 -left-1 h-4 w-4 rounded-full"
-          style={{ backgroundColor: moodConfig.color }}
-        />
-        <div
-          className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full"
-          style={{ backgroundColor: moodConfig.color }}
-        />
-
         {/* Иконка настроения */}
         <div className="relative z-10">
           <MoodImage mood={entry.mood} size={iconSize} />
@@ -71,7 +47,7 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
 
         {/* Легкое свечение */}
         <div
-          className="absolute inset-0 rounded-2xl opacity-20 blur-sm"
+          className="absolute inset-0 rounded-xl opacity-20 blur-sm"
           style={{ backgroundColor: moodConfig.color }}
         />
       </motion.div>
@@ -86,14 +62,16 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
         <motion.div
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 + 0.2 }}
-          className="max-w-[140px] text-center"
+          transition={{ delay: index * 0.05 + 0.15 }}
+          className="max-w-[120px] text-center"
         >
-          <p
-            className="text-xs italic leading-relaxed"
-            style={{ color: moodConfig.color }}
-          >
-            "{entry.note}"
+          <p className="text-xs leading-relaxed text-gray-700 dark:text-gray-300">
+            <span
+              className="border-b-2 font-medium"
+              style={{ borderColor: moodConfig.color }}
+            >
+              "{entry.note}"
+            </span>
           </p>
         </motion.div>
       )}

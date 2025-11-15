@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BookOpen, ChevronLeft, ChevronRight } from 'lucide-react'
+import { BookOpen } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useMoodTracking } from '@/hooks/useMoodTracking'
 import { Card } from '@/components/ui'
@@ -82,10 +82,10 @@ export function MoodRoadmapPage() {
         onBack={() => navigate('/mobile/profile')}
       />
 
-      <div className="p-4 pb-24">
+      <div className="p-2 pb-24 sm:p-4">
         <div className="space-y-4">
           {/* Контейнер для страниц книги */}
-          <div className="relative">
+          <div className="relative w-full">
             <AnimatePresence mode="wait">
               {currentWeek && (
                 <WeekPage
@@ -93,54 +93,14 @@ export function MoodRoadmapPage() {
                   weekStart={currentWeek.weekStart}
                   entries={currentWeek.entries}
                   pageIndex={currentPage}
+                  totalPages={weekGroups.length}
+                  onPrevious={goToPreviousPage}
+                  onNext={goToNextPage}
+                  canGoPrevious={currentPage > 0}
+                  canGoNext={currentPage < weekGroups.length - 1}
                 />
               )}
             </AnimatePresence>
-
-            {/* Кнопки навигации */}
-            <div className="mt-6 flex items-center justify-between">
-              <motion.button
-                onClick={goToPreviousPage}
-                disabled={currentPage === 0}
-                className="flex items-center space-x-2 rounded-xl bg-white/80 px-4 py-2 text-sm font-medium text-gray-700 shadow-lg backdrop-blur-sm transition-all disabled:cursor-not-allowed disabled:opacity-40 dark:bg-neutral-800/80 dark:text-gray-200"
-                whileHover={currentPage > 0 ? { scale: 1.05 } : {}}
-                whileTap={currentPage > 0 ? { scale: 0.95 } : {}}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                <span>Предыдущая</span>
-              </motion.button>
-
-              {/* Индикатор страниц */}
-              <div className="flex items-center space-x-2">
-                {weekGroups.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentPage(index)}
-                    className={`h-2 rounded-full transition-all ${
-                      index === currentPage
-                        ? 'w-8 bg-kira-500'
-                        : 'w-2 bg-gray-300 dark:bg-gray-600'
-                    }`}
-                    aria-label={`Перейти на страницу ${index + 1}`}
-                  />
-                ))}
-              </div>
-
-              <motion.button
-                onClick={goToNextPage}
-                disabled={currentPage === weekGroups.length - 1}
-                className="flex items-center space-x-2 rounded-xl bg-white/80 px-4 py-2 text-sm font-medium text-gray-700 shadow-lg backdrop-blur-sm transition-all disabled:cursor-not-allowed disabled:opacity-40 dark:bg-neutral-800/80 dark:text-gray-200"
-                whileHover={
-                  currentPage < weekGroups.length - 1 ? { scale: 1.05 } : {}
-                }
-                whileTap={
-                  currentPage < weekGroups.length - 1 ? { scale: 0.95 } : {}
-                }
-              >
-                <span>Следующая</span>
-                <ChevronRight className="h-4 w-4" />
-              </motion.button>
-            </div>
           </div>
 
           {/* Статистика */}
