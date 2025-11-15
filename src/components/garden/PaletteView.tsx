@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useMoodTracking } from '@/hooks/useMoodTracking'
+import { useTelegramTheme } from '@/hooks/useTelegram'
 import {
   convertMoodHistoryToPalette,
   type PaletteMetaBall,
@@ -162,6 +163,7 @@ export function PaletteView({
   const [isInitialized, setIsInitialized] = useState(false)
 
   const { moodHistory } = useMoodTracking()
+  const { isDark } = useTelegramTheme()
 
   // Фиксированные размеры для стабильной генерации
   const FIXED_WIDTH = 650
@@ -265,7 +267,8 @@ export function PaletteView({
       return
     }
 
-    const ctx = canvas.getContext('2d', { alpha: false })
+    // Используем alpha: true для поддержки прозрачности и плавных градиентов
+    const ctx = canvas.getContext('2d', { alpha: true })
     if (ctx === null) {
       return
     }
@@ -281,9 +284,20 @@ export function PaletteView({
       const data = imageData.data
       const balls = ballsRef.current
 
-      // Очищаем canvas с легким затуханием
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.05)'
-      ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+      // Определяем цвет очистки в зависимости от темы
+      // На темной теме используем темный фон с легкой светлой подложкой для плавности
+      if (isDark) {
+        // Темная тема: темный фон с очень легкой светлой подложкой (не слепит, но сглаживает градиенты)
+        ctx.fillStyle = 'rgba(17, 24, 39, 1)' // Темный фон (neutral-900)
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+        // Добавляем очень легкую светлую подложку для плавности градиентов
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.03)'
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+      } else {
+        // Светлая тема: белый фон с легким затуханием
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.05)'
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+      }
 
       // Рисуем мета-шары с смешиванием цветов (шаг 1px для максимального сглаживания)
       for (let y = 0; y < canvasHeight; y++) {
@@ -432,8 +446,8 @@ export function PaletteView({
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvasWidth, canvasHeight, isInitialized])
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvasWidth, canvasHeight, isInitialized, isDark])
 
   if (!isInitialized) {
     return (
