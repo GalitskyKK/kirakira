@@ -91,7 +91,7 @@ export function WeekPage({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 lg:gap-6">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:gap-4 lg:grid-cols-4 lg:gap-5">
           {sortedEntries.map((entry, index) => (
             <MoodSticker key={entry.id} entry={entry} index={index} />
           ))}
