@@ -63,15 +63,30 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.05 + 0.15 }}
-          className="max-w-[120px] text-center"
+          className="relative max-w-[120px] text-center"
         >
-          <p className="text-xs leading-relaxed text-gray-700 dark:text-gray-300">
-            <span
-              className="border-b-2 font-medium"
-              style={{ borderColor: moodConfig.color }}
+          <p className="relative inline-block text-xs leading-relaxed text-gray-700 dark:text-gray-300">
+            <span className="font-medium">"{entry.note}"</span>
+            {/* Рукописное подчеркивание - волнистая линия */}
+            <svg
+              className="absolute -bottom-1 left-0 h-2.5 w-full"
+              viewBox="0 0 120 10"
+              preserveAspectRatio="none"
+              style={{ color: moodConfig.color }}
             >
-              "{entry.note}"
-            </span>
+              <path
+                d="M 0,7 Q 8,5 15,6.5 T 30,6 Q 38,5.5 45,6.5 T 60,6 Q 68,5.5 75,6.5 T 90,6 Q 98,5.5 105,6.5 T 120,7"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                vectorEffect="non-scaling-stroke"
+                style={{
+                  filter: 'drop-shadow(0 0.5px 0.5px rgba(0,0,0,0.1))',
+                }}
+              />
+            </svg>
           </p>
         </motion.div>
       )}
