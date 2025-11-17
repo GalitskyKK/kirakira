@@ -7,7 +7,6 @@ import { formatDate } from '@/utils/dateHelpers'
 import { endOfWeek, getDay } from 'date-fns'
 import { MOOD_CONFIG } from '@/types/mood'
 import { MoodSticker } from './MoodSticker'
-import { MoodImage } from './MoodImage'
 
 interface WeekPageProps {
   readonly weekStart: Date
@@ -67,42 +66,105 @@ function WeekSummaryCell({
         style={{
           writingMode: 'vertical-rl',
           textOrientation: 'upright',
-          transform: 'rotate(180deg)',
         }}
       >
         Вс
       </p>
 
-      {/* Визуализация обобщения */}
+      {/* Рисунок обобщения недельного настроения */}
       <div
-        className="relative flex h-16 w-16 items-center justify-center rounded-lg shadow-sm sm:h-20 sm:w-20"
+        className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg shadow-sm sm:h-20 sm:w-20"
         style={{
           background: moodConfig
-            ? `linear-gradient(135deg, ${moodConfig.color}20, ${moodConfig.color}30)`
-            : 'linear-gradient(135deg, #e5e7eb20, #e5e7eb30)',
+            ? `linear-gradient(135deg, ${moodConfig.color}15, ${moodConfig.color}25)`
+            : 'linear-gradient(135deg, #e5e7eb15, #e5e7eb25)',
           border: moodConfig
             ? `2px solid ${moodConfig.color}30`
             : '2px solid #e5e7eb40',
         }}
       >
-        {moodConfig ? (
+        {moodConfig && dominantMood ? (
           <>
-            {/* Подложка */}
-            <div
-              className="absolute inset-0 rounded-lg opacity-20"
-              style={{ backgroundColor: moodConfig.color }}
-            />
-            {/* Иконка настроения */}
-            {dominantMood && (
-              <div className="relative z-10">
-                <MoodImage mood={dominantMood} size={32} />
-              </div>
-            )}
             {/* Легкое свечение */}
             <div
-              className="absolute inset-0 rounded-lg opacity-15 blur-sm"
+              className="absolute inset-0 opacity-20 blur-sm"
               style={{ backgroundColor: moodConfig.color }}
             />
+
+            {/* Абстрактный рисунок из кругов */}
+            <svg
+              className="relative z-10 h-full w-full"
+              viewBox="0 0 64 64"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              {/* Большой круг в центре */}
+              <circle
+                cx="32"
+                cy="32"
+                r="12"
+                fill={moodConfig.color}
+                opacity="0.4"
+              />
+              {/* Малые круги вокруг */}
+              <circle
+                cx="20"
+                cy="20"
+                r="6"
+                fill={moodConfig.color}
+                opacity="0.3"
+              />
+              <circle
+                cx="44"
+                cy="20"
+                r="6"
+                fill={moodConfig.color}
+                opacity="0.3"
+              />
+              <circle
+                cx="20"
+                cy="44"
+                r="6"
+                fill={moodConfig.color}
+                opacity="0.3"
+              />
+              <circle
+                cx="44"
+                cy="44"
+                r="6"
+                fill={moodConfig.color}
+                opacity="0.3"
+              />
+              {/* Дополнительные маленькие точки */}
+              <circle
+                cx="32"
+                cy="12"
+                r="3"
+                fill={moodConfig.color}
+                opacity="0.25"
+              />
+              <circle
+                cx="52"
+                cy="32"
+                r="3"
+                fill={moodConfig.color}
+                opacity="0.25"
+              />
+              <circle
+                cx="32"
+                cy="52"
+                r="3"
+                fill={moodConfig.color}
+                opacity="0.25"
+              />
+              <circle
+                cx="12"
+                cy="32"
+                r="3"
+                fill={moodConfig.color}
+                opacity="0.25"
+              />
+            </svg>
           </>
         ) : (
           <div className="text-2xl text-gray-300 dark:text-gray-600">📊</div>

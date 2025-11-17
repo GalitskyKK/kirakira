@@ -76,22 +76,16 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
           animate={{ rotate: stickerStyle.rotation }}
           transition={{ type: 'spring', stiffness: 200, damping: 15 }}
         >
-          {/* Подложка под иконку */}
-          <div
-            className="absolute inset-0 rounded-lg opacity-30"
-            style={{ backgroundColor: moodConfig.color }}
-          />
-
-          {/* Иконка настроения */}
-          <div className="relative z-10">
-            <MoodImage mood={entry.mood} size={iconSize} />
-          </div>
-
           {/* Легкое свечение */}
           <div
             className="absolute inset-0 rounded-lg opacity-20 blur-sm"
             style={{ backgroundColor: moodConfig.color }}
           />
+
+          {/* Белый фон вокруг иконки */}
+          <div className="relative z-10 rounded-full bg-white/90 p-2 shadow-md backdrop-blur-sm dark:bg-neutral-600/90 dark:shadow-lg">
+            <MoodImage mood={entry.mood} size={iconSize} />
+          </div>
         </motion.div>
       </motion.div>
 
