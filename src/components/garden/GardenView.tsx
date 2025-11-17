@@ -78,7 +78,7 @@ export function GardenView({ className }: GardenViewProps) {
 
   const handleElementLongPress = useCallback(
     (element: GardenElementType) => {
-      // Долгое нажатие активирует режим перемещения в любом режиме (кроме детального просмотра)
+      // Долгое нажатие активирует режим перемещения в любом режиме
       if (viewMode !== ViewMode.DETAIL) {
         setElementBeingMoved(element)
         selectElement(element)
