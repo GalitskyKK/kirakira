@@ -65,7 +65,7 @@ function WeekSummaryCell({
     for (let i = 0; i < dominantMood.length; i++) {
       hash = dominantMood.charCodeAt(i) + ((hash << 5) - hash)
     }
-    return Math.abs(hash) % 3 // 0, 1, 2 - разные стили рисунка
+    return Math.abs(hash) % 4 // 0, 1, 2, 3 - разные стили рисунка
   }, [dominantMood])
 
   return (
@@ -76,159 +76,225 @@ function WeekSummaryCell({
           viewBox="0 0 80 80"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          style={{
-            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))',
-          }}
         >
-          {/* Ручкописный стиль - stroke-linecap: round, stroke-linejoin: round */}
           <g
             stroke={moodConfig.color}
-            strokeWidth="2"
-            fill="none"
+            fill={moodConfig.color}
             strokeLinecap="round"
             strokeLinejoin="round"
             style={{
-              opacity: 0.6,
+              opacity: 0.7,
             }}
           >
             {drawingStyle === 0 ? (
-              // Стиль 0: Смайлик с каракулями
+              // Стиль 0: Ручкописный смайлик (радость)
               <>
-                {/* Лицо смайлика */}
-                <circle cx="40" cy="40" r="18" strokeWidth="2.5" />
-                {/* Глаза */}
-                <circle cx="33" cy="35" r="3" fill={moodConfig.color} />
-                <circle cx="47" cy="35" r="3" fill={moodConfig.color} />
-                {/* Улыбка */}
-                <path d="M 30 48 Q 40 55 50 48" strokeWidth="2" fill="none" />
+                {/* Неровное лицо - не идеальный круг */}
+                <path
+                  d="M 25 40 Q 22 25 40 22 Q 58 25 55 40 Q 58 55 40 58 Q 22 55 25 40"
+                  strokeWidth="2.5"
+                  fill="none"
+                />
+                {/* Глаза - неровные овалы */}
+                <path
+                  d="M 30 32 Q 32 30 34 32 Q 32 34 30 32"
+                  strokeWidth="2"
+                  fill={moodConfig.color}
+                />
+                <path
+                  d="M 46 32 Q 48 30 50 32 Q 48 34 46 32"
+                  strokeWidth="2"
+                  fill={moodConfig.color}
+                />
+                {/* Улыбка - неровная кривая */}
+                <path
+                  d="M 28 48 Q 35 52 40 51 Q 45 52 52 48"
+                  strokeWidth="2.5"
+                  fill="none"
+                />
                 {/* Каракули вокруг */}
                 <path
-                  d="M 15 20 Q 25 15 30 25 T 40 20"
+                  d="M 12 18 Q 18 14 22 20 Q 20 24 18 22"
                   strokeWidth="1.5"
                   opacity="0.4"
+                  fill="none"
                 />
                 <path
-                  d="M 50 20 Q 55 15 60 25 T 65 20"
+                  d="M 58 18 Q 62 14 66 20 Q 64 24 62 22"
                   strokeWidth="1.5"
                   opacity="0.4"
+                  fill="none"
                 />
                 <path
-                  d="M 20 60 Q 25 65 30 60 T 35 65"
+                  d="M 15 58 Q 20 62 18 66 Q 16 64 15 60"
                   strokeWidth="1.5"
                   opacity="0.4"
+                  fill="none"
                 />
                 <path
-                  d="M 45 60 Q 50 65 55 60 T 60 65"
+                  d="M 65 58 Q 60 62 62 66 Q 64 64 65 60"
                   strokeWidth="1.5"
                   opacity="0.4"
+                  fill="none"
                 />
               </>
             ) : drawingStyle === 1 ? (
-              // Стиль 1: Волнистые линии и спирали
+              // Стиль 1: Нейтральный смайлик (спокойствие)
               <>
-                {/* Спираль в центре */}
+                {/* Простое лицо */}
                 <path
-                  d="M 40 40 Q 45 35 50 40 T 55 40 Q 50 45 45 40 T 40 40"
+                  d="M 25 40 Q 22 28 40 25 Q 58 28 55 40 Q 58 52 40 55 Q 22 52 25 40"
                   strokeWidth="2"
+                  fill="none"
                 />
-                {/* Волнистые линии */}
+                {/* Глаза - простые линии/петли */}
+                <path d="M 30 32 Q 32 30 34 32" strokeWidth="2" fill="none" />
+                <path d="M 46 32 Q 48 30 50 32" strokeWidth="2" fill="none" />
+                {/* Нейтральный рот */}
+                <path d="M 32 48 Q 40 50 48 48" strokeWidth="2" fill="none" />
+                {/* Волнистые каракули */}
                 <path
-                  d="M 20 30 Q 25 25 30 30 T 40 30 Q 45 25 50 30"
-                  strokeWidth="1.5"
-                  opacity="0.5"
-                />
-                <path
-                  d="M 30 50 Q 35 55 40 50 T 50 50 Q 55 45 60 50"
-                  strokeWidth="1.5"
-                  opacity="0.5"
-                />
-                {/* Каракули */}
-                <path
-                  d="M 15 15 Q 20 20 15 25"
+                  d="M 18 25 Q 20 20 25 22 Q 22 24 20 26"
                   strokeWidth="1.5"
                   opacity="0.4"
+                  fill="none"
                 />
                 <path
-                  d="M 65 15 Q 70 20 65 25"
+                  d="M 62 25 Q 60 20 55 22 Q 58 24 60 26"
                   strokeWidth="1.5"
                   opacity="0.4"
+                  fill="none"
                 />
                 <path
-                  d="M 15 65 Q 20 60 15 55"
+                  d="M 20 55 Q 22 58 18 60 Q 20 58 22 56"
                   strokeWidth="1.5"
                   opacity="0.4"
+                  fill="none"
                 />
                 <path
-                  d="M 65 65 Q 70 60 65 55"
+                  d="M 60 55 Q 58 58 62 60 Q 60 58 58 56"
                   strokeWidth="1.5"
                   opacity="0.4"
+                  fill="none"
+                />
+              </>
+            ) : drawingStyle === 2 ? (
+              // Стиль 2: Грустный смайлик (грусть/стресс)
+              <>
+                {/* Лицо с неровностями */}
+                <path
+                  d="M 25 40 Q 22 25 40 22 Q 58 25 55 40 Q 58 55 40 58 Q 22 55 25 40"
+                  strokeWidth="2.5"
+                  fill="none"
+                />
+                {/* Глаза - каракули/звездочки */}
+                <path
+                  d="M 30 32 Q 28 30 30 28 Q 32 30 30 32 Q 28 34 30 36 Q 32 34 30 32"
+                  strokeWidth="2"
+                  fill="none"
+                />
+                <path
+                  d="M 50 32 Q 48 30 50 28 Q 52 30 50 32 Q 48 34 50 36 Q 52 34 50 32"
+                  strokeWidth="2"
+                  fill="none"
+                />
+                {/* Грустный рот - перевернутая кривая */}
+                <path
+                  d="M 28 52 Q 35 48 40 49 Q 45 48 52 52"
+                  strokeWidth="2.5"
+                  fill="none"
+                />
+                {/* Больше каракулей */}
+                <path
+                  d="M 10 20 Q 15 15 20 18 Q 18 22 16 20"
+                  strokeWidth="1.5"
+                  opacity="0.4"
+                  fill="none"
+                />
+                <path
+                  d="M 70 20 Q 65 15 60 18 Q 62 22 64 20"
+                  strokeWidth="1.5"
+                  opacity="0.4"
+                  fill="none"
+                />
+                <path
+                  d="M 12 60 Q 18 65 15 68 Q 13 66 14 62"
+                  strokeWidth="1.5"
+                  opacity="0.4"
+                  fill="none"
+                />
+                <path
+                  d="M 68 60 Q 62 65 65 68 Q 67 66 66 62"
+                  strokeWidth="1.5"
+                  opacity="0.4"
+                  fill="none"
                 />
               </>
             ) : (
-              // Стиль 2: Звездочки и каракули
+              // Стиль 3: Абстрактные каракули и волнистые линии
               <>
-                {/* Звездочка */}
+                {/* Центральная спираль/каракули */}
                 <path
-                  d="M 40 25 L 42 32 L 49 32 L 43 37 L 45 44 L 40 39 L 35 44 L 37 37 L 31 32 L 38 32 Z"
-                  fill={moodConfig.color}
-                  opacity="0.5"
+                  d="M 40 35 Q 45 30 50 35 Q 48 40 45 38 Q 42 36 40 35 Q 38 33 35 35 Q 37 37 40 35"
+                  strokeWidth="2"
+                  fill="none"
                 />
-                {/* Волнистые каракули */}
+                {/* Волнистые линии */}
                 <path
-                  d="M 20 40 Q 25 35 30 40 T 40 40 Q 45 35 50 40"
+                  d="M 18 30 Q 25 25 30 30 Q 28 35 25 33 Q 22 31 20 30"
+                  strokeWidth="1.8"
+                  opacity="0.6"
+                  fill="none"
+                />
+                <path
+                  d="M 50 30 Q 55 25 62 30 Q 60 35 57 33 Q 54 31 52 30"
+                  strokeWidth="1.8"
+                  opacity="0.6"
+                  fill="none"
+                />
+                <path
+                  d="M 25 50 Q 30 55 35 50 Q 33 45 30 47 Q 27 49 25 50"
+                  strokeWidth="1.8"
+                  opacity="0.6"
+                  fill="none"
+                />
+                <path
+                  d="M 45 50 Q 50 55 55 50 Q 53 45 50 47 Q 47 49 45 50"
+                  strokeWidth="1.8"
+                  opacity="0.6"
+                  fill="none"
+                />
+                {/* Маленькие каракули */}
+                <path
+                  d="M 15 15 Q 18 18 15 21"
                   strokeWidth="1.5"
                   opacity="0.4"
+                  fill="none"
                 />
                 <path
-                  d="M 30 20 Q 35 25 30 30"
+                  d="M 65 15 Q 62 18 65 21"
                   strokeWidth="1.5"
                   opacity="0.4"
+                  fill="none"
                 />
                 <path
-                  d="M 50 20 Q 55 25 50 30"
+                  d="M 15 65 Q 18 62 15 59"
                   strokeWidth="1.5"
                   opacity="0.4"
+                  fill="none"
                 />
                 <path
-                  d="M 25 55 Q 30 60 35 55 T 45 55 Q 50 60 55 55"
+                  d="M 65 65 Q 62 62 65 59"
                   strokeWidth="1.5"
                   opacity="0.4"
-                />
-                {/* Маленькие точки */}
-                <circle
-                  cx="15"
-                  cy="30"
-                  r="2"
-                  fill={moodConfig.color}
-                  opacity="0.3"
-                />
-                <circle
-                  cx="65"
-                  cy="30"
-                  r="2"
-                  fill={moodConfig.color}
-                  opacity="0.3"
-                />
-                <circle
-                  cx="15"
-                  cy="50"
-                  r="2"
-                  fill={moodConfig.color}
-                  opacity="0.3"
-                />
-                <circle
-                  cx="65"
-                  cy="50"
-                  r="2"
-                  fill={moodConfig.color}
-                  opacity="0.3"
+                  fill="none"
                 />
               </>
             )}
           </g>
         </svg>
       ) : (
-        // Если нет настроения - простые каракули
+        // Если нет настроения - простые серые каракули
         <svg
           className="h-full w-full"
           viewBox="0 0 80 80"
@@ -243,8 +309,8 @@ function WeekSummaryCell({
             strokeLinejoin="round"
             opacity="0.3"
           >
-            <path d="M 20 30 Q 30 20 40 30 T 60 30" />
-            <path d="M 20 50 Q 30 40 40 50 T 60 50" />
+            <path d="M 20 30 Q 30 20 40 30 Q 50 40 60 30" />
+            <path d="M 20 50 Q 30 40 40 50 Q 50 60 60 50" />
             <path d="M 30 20 Q 40 30 30 40" />
             <path d="M 50 20 Q 60 30 50 40" />
           </g>
