@@ -60,7 +60,6 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
           style={{
             writingMode: 'vertical-rl',
             textOrientation: 'upright',
-            transform: 'rotate(180deg)',
           }}
         >
           {dayOfWeek}
@@ -83,7 +82,7 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
           />
 
           {/* Белый фон вокруг иконки */}
-          <div className="relative z-10 rounded-full bg-white/90 p-2 shadow-md backdrop-blur-sm dark:bg-neutral-600/90 dark:shadow-lg">
+          <div className="relative z-10 rounded-full bg-white/90 p-2 dark:bg-neutral-600/90">
             <MoodImage mood={entry.mood} size={iconSize} />
           </div>
         </motion.div>

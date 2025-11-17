@@ -49,7 +49,7 @@ function getDominantMood(entries: readonly MoodEntry[]): MoodType | null {
   return dominantMood
 }
 
-// Компонент для пустой зоны с визуализацией обобщения недельного настроения
+// Компонент для пустой зоны с рукописным рисунком обобщения недельного настроения
 function WeekSummaryCell({
   entries,
 }: {
@@ -58,118 +58,198 @@ function WeekSummaryCell({
   const dominantMood = useMemo(() => getDominantMood(entries), [entries])
   const moodConfig = dominantMood ? MOOD_CONFIG[dominantMood] : null
 
+  // Генерируем детерминированный стиль рисунка на основе доминирующего настроения
+  const drawingStyle = useMemo(() => {
+    if (!dominantMood) return null
+    let hash = 0
+    for (let i = 0; i < dominantMood.length; i++) {
+      hash = dominantMood.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    return Math.abs(hash) % 3 // 0, 1, 2 - разные стили рисунка
+  }, [dominantMood])
+
   return (
-    <div className="flex cursor-pointer flex-row items-center justify-start rounded-lg p-2 transition-all hover:bg-gray-50 dark:hover:bg-neutral-800/50">
-      {/* День недели слева (Вс) */}
-      <p
-        className="mr-3 flex items-center justify-center text-[10px] font-medium text-gray-500 dark:text-gray-400 sm:text-xs"
-        style={{
-          writingMode: 'vertical-rl',
-          textOrientation: 'upright',
-        }}
-      >
-        Вс
-      </p>
-
-      {/* Рисунок обобщения недельного настроения */}
-      <div
-        className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg shadow-sm sm:h-20 sm:w-20"
-        style={{
-          background: moodConfig
-            ? `linear-gradient(135deg, ${moodConfig.color}15, ${moodConfig.color}25)`
-            : 'linear-gradient(135deg, #e5e7eb15, #e5e7eb25)',
-          border: moodConfig
-            ? `2px solid ${moodConfig.color}30`
-            : '2px solid #e5e7eb40',
-        }}
-      >
-        {moodConfig && dominantMood ? (
-          <>
-            {/* Легкое свечение */}
-            <div
-              className="absolute inset-0 opacity-20 blur-sm"
-              style={{ backgroundColor: moodConfig.color }}
-            />
-
-            {/* Абстрактный рисунок из кругов */}
-            <svg
-              className="relative z-10 h-full w-full"
-              viewBox="0 0 64 64"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* Большой круг в центре */}
-              <circle
-                cx="32"
-                cy="32"
-                r="12"
-                fill={moodConfig.color}
-                opacity="0.4"
-              />
-              {/* Малые круги вокруг */}
-              <circle
-                cx="20"
-                cy="20"
-                r="6"
-                fill={moodConfig.color}
-                opacity="0.3"
-              />
-              <circle
-                cx="44"
-                cy="20"
-                r="6"
-                fill={moodConfig.color}
-                opacity="0.3"
-              />
-              <circle
-                cx="20"
-                cy="44"
-                r="6"
-                fill={moodConfig.color}
-                opacity="0.3"
-              />
-              <circle
-                cx="44"
-                cy="44"
-                r="6"
-                fill={moodConfig.color}
-                opacity="0.3"
-              />
-              {/* Дополнительные маленькие точки */}
-              <circle
-                cx="32"
-                cy="12"
-                r="3"
-                fill={moodConfig.color}
-                opacity="0.25"
-              />
-              <circle
-                cx="52"
-                cy="32"
-                r="3"
-                fill={moodConfig.color}
-                opacity="0.25"
-              />
-              <circle
-                cx="32"
-                cy="52"
-                r="3"
-                fill={moodConfig.color}
-                opacity="0.25"
-              />
-              <circle
-                cx="12"
-                cy="32"
-                r="3"
-                fill={moodConfig.color}
-                opacity="0.25"
-              />
-            </svg>
-          </>
-        ) : (
-          <div className="text-2xl text-gray-300 dark:text-gray-600">📊</div>
-        )}
-      </div>
+    <div className="flex h-20 w-20 items-center justify-center sm:h-24 sm:w-24">
+      {moodConfig && dominantMood && drawingStyle !== null ? (
+        <svg
+          className="h-full w-full"
+          viewBox="0 0 80 80"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{
+            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))',
+          }}
+        >
+          {/* Ручкописный стиль - stroke-linecap: round, stroke-linejoin: round */}
+          <g
+            stroke={moodConfig.color}
+            strokeWidth="2"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{
+              opacity: 0.6,
+            }}
+          >
+            {drawingStyle === 0 ? (
+              // Стиль 0: Смайлик с каракулями
+              <>
+                {/* Лицо смайлика */}
+                <circle cx="40" cy="40" r="18" strokeWidth="2.5" />
+                {/* Глаза */}
+                <circle cx="33" cy="35" r="3" fill={moodConfig.color} />
+                <circle cx="47" cy="35" r="3" fill={moodConfig.color} />
+                {/* Улыбка */}
+                <path d="M 30 48 Q 40 55 50 48" strokeWidth="2" fill="none" />
+                {/* Каракули вокруг */}
+                <path
+                  d="M 15 20 Q 25 15 30 25 T 40 20"
+                  strokeWidth="1.5"
+                  opacity="0.4"
+                />
+                <path
+                  d="M 50 20 Q 55 15 60 25 T 65 20"
+                  strokeWidth="1.5"
+                  opacity="0.4"
+                />
+                <path
+                  d="M 20 60 Q 25 65 30 60 T 35 65"
+                  strokeWidth="1.5"
+                  opacity="0.4"
+                />
+                <path
+                  d="M 45 60 Q 50 65 55 60 T 60 65"
+                  strokeWidth="1.5"
+                  opacity="0.4"
+                />
+              </>
+            ) : drawingStyle === 1 ? (
+              // Стиль 1: Волнистые линии и спирали
+              <>
+                {/* Спираль в центре */}
+                <path
+                  d="M 40 40 Q 45 35 50 40 T 55 40 Q 50 45 45 40 T 40 40"
+                  strokeWidth="2"
+                />
+                {/* Волнистые линии */}
+                <path
+                  d="M 20 30 Q 25 25 30 30 T 40 30 Q 45 25 50 30"
+                  strokeWidth="1.5"
+                  opacity="0.5"
+                />
+                <path
+                  d="M 30 50 Q 35 55 40 50 T 50 50 Q 55 45 60 50"
+                  strokeWidth="1.5"
+                  opacity="0.5"
+                />
+                {/* Каракули */}
+                <path
+                  d="M 15 15 Q 20 20 15 25"
+                  strokeWidth="1.5"
+                  opacity="0.4"
+                />
+                <path
+                  d="M 65 15 Q 70 20 65 25"
+                  strokeWidth="1.5"
+                  opacity="0.4"
+                />
+                <path
+                  d="M 15 65 Q 20 60 15 55"
+                  strokeWidth="1.5"
+                  opacity="0.4"
+                />
+                <path
+                  d="M 65 65 Q 70 60 65 55"
+                  strokeWidth="1.5"
+                  opacity="0.4"
+                />
+              </>
+            ) : (
+              // Стиль 2: Звездочки и каракули
+              <>
+                {/* Звездочка */}
+                <path
+                  d="M 40 25 L 42 32 L 49 32 L 43 37 L 45 44 L 40 39 L 35 44 L 37 37 L 31 32 L 38 32 Z"
+                  fill={moodConfig.color}
+                  opacity="0.5"
+                />
+                {/* Волнистые каракули */}
+                <path
+                  d="M 20 40 Q 25 35 30 40 T 40 40 Q 45 35 50 40"
+                  strokeWidth="1.5"
+                  opacity="0.4"
+                />
+                <path
+                  d="M 30 20 Q 35 25 30 30"
+                  strokeWidth="1.5"
+                  opacity="0.4"
+                />
+                <path
+                  d="M 50 20 Q 55 25 50 30"
+                  strokeWidth="1.5"
+                  opacity="0.4"
+                />
+                <path
+                  d="M 25 55 Q 30 60 35 55 T 45 55 Q 50 60 55 55"
+                  strokeWidth="1.5"
+                  opacity="0.4"
+                />
+                {/* Маленькие точки */}
+                <circle
+                  cx="15"
+                  cy="30"
+                  r="2"
+                  fill={moodConfig.color}
+                  opacity="0.3"
+                />
+                <circle
+                  cx="65"
+                  cy="30"
+                  r="2"
+                  fill={moodConfig.color}
+                  opacity="0.3"
+                />
+                <circle
+                  cx="15"
+                  cy="50"
+                  r="2"
+                  fill={moodConfig.color}
+                  opacity="0.3"
+                />
+                <circle
+                  cx="65"
+                  cy="50"
+                  r="2"
+                  fill={moodConfig.color}
+                  opacity="0.3"
+                />
+              </>
+            )}
+          </g>
+        </svg>
+      ) : (
+        // Если нет настроения - простые каракули
+        <svg
+          className="h-full w-full"
+          viewBox="0 0 80 80"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <g
+            stroke="#9ca3af"
+            strokeWidth="1.5"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity="0.3"
+          >
+            <path d="M 20 30 Q 30 20 40 30 T 60 30" />
+            <path d="M 20 50 Q 30 40 40 50 T 60 50" />
+            <path d="M 30 20 Q 40 30 30 40" />
+            <path d="M 50 20 Q 60 30 50 40" />
+          </g>
+        </svg>
+      )}
     </div>
   )
 }
