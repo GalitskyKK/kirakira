@@ -1,9 +1,13 @@
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { MoodEntry } from '@/types/mood'
+import type { MoodType } from '@/types'
 import { formatDate } from '@/utils/dateHelpers'
-import { endOfWeek } from 'date-fns'
+import { endOfWeek, getDay } from 'date-fns'
+import { MOOD_CONFIG } from '@/types/mood'
 import { MoodSticker } from './MoodSticker'
+import { MoodImage } from './MoodImage'
 
 interface WeekPageProps {
   readonly weekStart: Date
@@ -14,6 +18,98 @@ interface WeekPageProps {
   readonly onNext: () => void
   readonly canGoPrevious: boolean
   readonly canGoNext: boolean
+}
+
+// Вычисляет доминирующее настроение за неделю
+function getDominantMood(entries: readonly MoodEntry[]): MoodType | null {
+  if (entries.length === 0) return null
+
+  const moodCounts: Record<MoodType, number> = {
+    joy: 0,
+    calm: 0,
+    stress: 0,
+    sadness: 0,
+    anger: 0,
+    anxiety: 0,
+  }
+
+  entries.forEach(entry => {
+    moodCounts[entry.mood]++
+  })
+
+  let dominantMood: MoodType | null = null
+  let maxCount = 0
+
+  Object.entries(moodCounts).forEach(([mood, count]) => {
+    if (count > maxCount) {
+      maxCount = count
+      dominantMood = mood as MoodType
+    }
+  })
+
+  return dominantMood
+}
+
+// Компонент для пустой зоны с визуализацией обобщения недельного настроения
+function WeekSummaryCell({
+  entries,
+}: {
+  readonly entries: readonly MoodEntry[]
+}) {
+  const dominantMood = useMemo(() => getDominantMood(entries), [entries])
+  const moodConfig = dominantMood ? MOOD_CONFIG[dominantMood] : null
+
+  return (
+    <div className="flex cursor-pointer flex-row items-center justify-start rounded-lg p-2 transition-all hover:bg-gray-50 dark:hover:bg-neutral-800/50">
+      {/* День недели слева (Вс) */}
+      <p
+        className="mr-3 flex items-center justify-center text-[10px] font-medium text-gray-500 dark:text-gray-400 sm:text-xs"
+        style={{
+          writingMode: 'vertical-rl',
+          textOrientation: 'upright',
+          transform: 'rotate(180deg)',
+        }}
+      >
+        Вс
+      </p>
+
+      {/* Визуализация обобщения */}
+      <div
+        className="relative flex h-16 w-16 items-center justify-center rounded-lg shadow-sm sm:h-20 sm:w-20"
+        style={{
+          background: moodConfig
+            ? `linear-gradient(135deg, ${moodConfig.color}20, ${moodConfig.color}30)`
+            : 'linear-gradient(135deg, #e5e7eb20, #e5e7eb30)',
+          border: moodConfig
+            ? `2px solid ${moodConfig.color}30`
+            : '2px solid #e5e7eb40',
+        }}
+      >
+        {moodConfig ? (
+          <>
+            {/* Подложка */}
+            <div
+              className="absolute inset-0 rounded-lg opacity-20"
+              style={{ backgroundColor: moodConfig.color }}
+            />
+            {/* Иконка настроения */}
+            {dominantMood && (
+              <div className="relative z-10">
+                <MoodImage mood={dominantMood} size={32} />
+              </div>
+            )}
+            {/* Легкое свечение */}
+            <div
+              className="absolute inset-0 rounded-lg opacity-15 blur-sm"
+              style={{ backgroundColor: moodConfig.color }}
+            />
+          </>
+        ) : (
+          <div className="text-2xl text-gray-300 dark:text-gray-600">📊</div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export function WeekPage({
@@ -28,10 +124,29 @@ export function WeekPage({
 }: WeekPageProps) {
   const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 })
 
-  // Сортируем записи по дате (от старых к новым для недели)
-  const sortedEntries = [...entries].sort(
-    (a, b) => a.date.getTime() - b.date.getTime()
-  )
+  // Группируем записи по дням недели (1 = понедельник, 7 = воскресенье)
+  const entriesByDay = useMemo(() => {
+    const grouped: Record<number, MoodEntry> = {}
+    entries.forEach(entry => {
+      // getDay возвращает 0-6 (0 = воскресенье), но нам нужно 1-7 (1 = понедельник)
+      let dayOfWeek: number = getDay(entry.date)
+      if (dayOfWeek === 0) {
+        dayOfWeek = 7 // Воскресенье = 7
+      }
+      grouped[dayOfWeek] = entry
+    })
+    return grouped
+  }, [entries])
+
+  // Создаем массив для отображения: [пн-чт, вт-пт, ср-сб, пустая-вс]
+  const weekLayout = useMemo(() => {
+    return [
+      { left: entriesByDay[1], right: entriesByDay[4] }, // Пн - Чт
+      { left: entriesByDay[2], right: entriesByDay[5] }, // Вт - Пт
+      { left: entriesByDay[3], right: entriesByDay[6] }, // Ср - Сб
+      { left: null, right: entriesByDay[7] }, // Пустая - Вс
+    ]
+  }, [entriesByDay])
 
   return (
     <motion.div
@@ -89,17 +204,44 @@ export function WeekPage({
 
       {/* Контент с прокруткой */}
       <div className="flex-1 overflow-y-auto px-4 pb-12 sm:px-6 sm:pb-14">
-        {/* Сетка наклеек настроений */}
-        {sortedEntries.length === 0 ? (
+        {/* Сетка наклеек настроений в две колонки */}
+        {entries.length === 0 ? (
           <div className="flex min-h-[300px] items-center justify-center">
             <p className="text-sm text-gray-400 dark:text-gray-500">
               Нет записей за эту неделю
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 items-start gap-2 sm:grid-cols-3 sm:gap-3 md:gap-4 lg:grid-cols-4 lg:gap-5">
-            {sortedEntries.map((entry, index) => (
-              <MoodSticker key={entry.id} entry={entry} index={index} />
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            {weekLayout.map((row, rowIndex) => (
+              <div key={rowIndex} className="contents">
+                {/* Левая колонка */}
+                <div className="flex justify-center">
+                  {row.left ? (
+                    <MoodSticker
+                      key={row.left.id}
+                      entry={row.left}
+                      index={rowIndex * 2}
+                    />
+                  ) : rowIndex === 3 ? (
+                    <WeekSummaryCell entries={entries} />
+                  ) : (
+                    <div className="h-20 w-20" /> // Пустое место
+                  )}
+                </div>
+                {/* Правая колонка */}
+                <div className="flex justify-center">
+                  {row.right ? (
+                    <MoodSticker
+                      key={row.right.id}
+                      entry={row.right}
+                      index={rowIndex * 2 + 1}
+                    />
+                  ) : (
+                    <div className="h-20 w-20" /> // Пустое место
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         )}
@@ -112,4 +254,3 @@ export function WeekPage({
     </motion.div>
   )
 }
-

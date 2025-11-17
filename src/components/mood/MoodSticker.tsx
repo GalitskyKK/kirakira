@@ -51,9 +51,21 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
           stiffness: 200,
           damping: 15,
         }}
-        className="flex cursor-pointer flex-col items-center justify-center rounded-lg p-2 transition-all hover:bg-gray-50 dark:hover:bg-neutral-800/50"
+        className="flex cursor-pointer flex-row items-center justify-start rounded-lg p-2 transition-all hover:bg-gray-50 dark:hover:bg-neutral-800/50"
         onClick={() => setIsModalOpen(true)}
       >
+        {/* День недели слева, повернутый на 90 градусов (снизу вверх) */}
+        <p
+          className="mr-3 flex items-center justify-center text-[10px] font-medium text-gray-500 dark:text-gray-400 sm:text-xs"
+          style={{
+            writingMode: 'vertical-rl',
+            textOrientation: 'upright',
+            transform: 'rotate(180deg)',
+          }}
+        >
+          {dayOfWeek}
+        </p>
+
         {/* Наклейка настроения */}
         <motion.div
           className="relative flex h-16 w-16 items-center justify-center rounded-lg shadow-sm sm:h-20 sm:w-20"
@@ -63,8 +75,13 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
           }}
           animate={{ rotate: stickerStyle.rotation }}
           transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-          onClick={e => e.stopPropagation()}
         >
+          {/* Подложка под иконку */}
+          <div
+            className="absolute inset-0 rounded-lg opacity-30"
+            style={{ backgroundColor: moodConfig.color }}
+          />
+
           {/* Иконка настроения */}
           <div className="relative z-10">
             <MoodImage mood={entry.mood} size={iconSize} />
@@ -76,11 +93,6 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
             style={{ backgroundColor: moodConfig.color }}
           />
         </motion.div>
-
-        {/* Дата - день недели */}
-        <p className="mt-2 text-[10px] font-medium text-gray-500 dark:text-gray-400 sm:text-xs">
-          {dayOfWeek}
-        </p>
       </motion.div>
 
       {/* Модалка для просмотра полного текста */}
@@ -140,24 +152,24 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
               <div className="max-h-[60vh] overflow-y-auto p-6">
                 <div className="space-y-4">
                   {/* Дата */}
-                  <div>
+                  {/* <div>
                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       Дата
                     </p>
                     <p className="mt-1 text-base text-gray-900 dark:text-gray-100">
                       {formatDate(entry.date, 'EEEE, dd MMMM yyyy', 'ru')}
                     </p>
-                  </div>
+                  </div> */}
 
                   {/* Настроение */}
-                  <div>
+                  {/* <div>
                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       Настроение
                     </p>
                     <p className="mt-1 text-base text-gray-900 dark:text-gray-100">
                       {moodConfig.label}
                     </p>
-                  </div>
+                  </div> */}
 
                   {/* Комментарий */}
                   <div>
