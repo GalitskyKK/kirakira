@@ -46,31 +46,33 @@ export function WeekPage({
           '0 20px 60px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
       }}
     >
-      {/* Кнопка "Предыдущая" слева */}
+      {/* Кнопка "Предыдущая" слева - на всю высоту */}
       {canGoPrevious && (
         <motion.button
           onClick={onPrevious}
-          className="absolute left-1 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition-colors hover:bg-white dark:bg-neutral-800/95 dark:hover:bg-neutral-800 sm:left-2 sm:h-10 sm:w-10"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          style={{ transformOrigin: 'center' }}
+          className="absolute left-0 top-0 z-10 flex h-full w-12 items-center justify-center transition-colors hover:bg-black/5 dark:hover:bg-white/5 sm:w-16"
+          whileHover={{ scale: 1 }}
+          whileTap={{ scale: 0.98 }}
           aria-label="Предыдущая страница"
         >
-          <ChevronLeft className="h-4 w-4 text-gray-700 dark:text-gray-200 sm:h-5 sm:w-5" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm dark:bg-neutral-800/95 sm:h-10 sm:w-10">
+            <ChevronLeft className="h-4 w-4 text-gray-700 dark:text-gray-200 sm:h-5 sm:w-5" />
+          </div>
         </motion.button>
       )}
 
-      {/* Кнопка "Следующая" справа */}
+      {/* Кнопка "Следующая" справа - на всю высоту */}
       {canGoNext && (
         <motion.button
           onClick={onNext}
-          className="absolute right-1 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition-colors hover:bg-white dark:bg-neutral-800/95 dark:hover:bg-neutral-800 sm:right-2 sm:h-10 sm:w-10"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          style={{ transformOrigin: 'center' }}
+          className="absolute right-0 top-0 z-10 flex h-full w-12 items-center justify-center transition-colors hover:bg-black/5 dark:hover:bg-white/5 sm:w-16"
+          whileHover={{ scale: 1 }}
+          whileTap={{ scale: 0.98 }}
           aria-label="Следующая страница"
         >
-          <ChevronRight className="h-4 w-4 text-gray-700 dark:text-gray-200 sm:h-5 sm:w-5" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm dark:bg-neutral-800/95 sm:h-10 sm:w-10">
+            <ChevronRight className="h-4 w-4 text-gray-700 dark:text-gray-200 sm:h-5 sm:w-5" />
+          </div>
         </motion.button>
       )}
 

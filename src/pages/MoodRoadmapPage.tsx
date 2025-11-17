@@ -13,19 +13,21 @@ export function MoodRoadmapPage() {
   const navigate = useNavigate()
   const { moodHistory, isLoading } = useMoodTracking()
 
-  // Группируем записи по неделям
+  // Группируем записи по неделям (уже в обратном порядке - от новых к старым)
   const weekGroups = groupMoodEntriesByWeek(moodHistory)
 
-  // Текущая страница (неделя)
+  // Текущая страница (неделя) - начинаем с последней (текущей недели, индекс 0)
   const [currentPage, setCurrentPage] = useState(0)
 
   // Навигация по страницам
+  // "Назад" = идем в прошлое (увеличиваем индекс, т.к. недели отсортированы от новых к старым)
   const goToPreviousPage = () => {
-    setCurrentPage(prev => Math.max(0, prev - 1))
+    setCurrentPage(prev => Math.min(weekGroups.length - 1, prev + 1))
   }
 
+  // "Вперед" = идем к более новым неделям (уменьшаем индекс)
   const goToNextPage = () => {
-    setCurrentPage(prev => Math.min(weekGroups.length - 1, prev + 1))
+    setCurrentPage(prev => Math.max(0, prev - 1))
   }
 
   if (isLoading) {
@@ -96,8 +98,8 @@ export function MoodRoadmapPage() {
                   totalPages={weekGroups.length}
                   onPrevious={goToPreviousPage}
                   onNext={goToNextPage}
-                  canGoPrevious={currentPage > 0}
-                  canGoNext={currentPage < weekGroups.length - 1}
+                  canGoPrevious={currentPage < weekGroups.length - 1}
+                  canGoNext={currentPage > 0}
                 />
               )}
             </AnimatePresence>
