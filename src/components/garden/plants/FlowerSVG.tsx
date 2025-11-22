@@ -38,7 +38,7 @@ export function FlowerSVG({
     }
   }
 
-  // Сезонные цвета для разных типов цветов
+  // Сезонные цвета для разных типов цвето
   const getSeasonalColors = () => {
     const baseColor = color
     const flowerType = name?.toLowerCase() || 'flower'
