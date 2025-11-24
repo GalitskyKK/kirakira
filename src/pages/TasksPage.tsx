@@ -4,6 +4,7 @@ import { Trophy, Calendar } from 'lucide-react'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { DailyQuestList } from '@/components/quests'
 import { ChallengeList } from '@/components/challenges/ChallengeList'
+import { StreakGemQuests } from '@/components/ui'
 import { useGardenState } from '@/hooks/index.v2'
 
 export function TasksPage() {
@@ -64,6 +65,9 @@ export function TasksPage() {
             className="space-y-4"
           >
             <DailyQuestList telegramId={telegramId} />
+            
+            {/* Стрик-квесты за гемы */}
+            <StreakGemQuests />
           </motion.div>
         )}
 

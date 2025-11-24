@@ -275,8 +275,8 @@ export const GEM_REWARDS: Record<
   { readonly amount: number; readonly description: string }
 > = {
   // Достижения
-  weekly_streak: { amount: 1, description: 'Стрик 7 дней' },
-  monthly_streak: { amount: 5, description: 'Стрик 30 дней' },
+  weekly_streak: { amount: 1, description: 'Стрик 7 дней' }, // 💎 РАБОТАЕТ!
+  monthly_streak: { amount: 5, description: 'Стрик 30 дней' }, // 💎 РАБОТАЕТ!
   level_up_milestone_5: { amount: 3, description: 'Каждые 5 уровней' },
   level_up_milestone_10: { amount: 10, description: 'Каждые 10 уровней' },
   rare_achievement: { amount: 3, description: 'Редкое достижение' },

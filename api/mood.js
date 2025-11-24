@@ -247,6 +247,99 @@ async function handleRecord(req, res) {
         console.warn('Failed to update streak:', streakError)
       } else {
         console.log(`✅ Streak updated to ${newStreak}`)
+
+        // 🎁 НАЧИСЛЯЕМ НАГРАДЫ ЗА СТРИК-ВЕХИ
+        // Проверяем, это новый стрик (увеличился) или обновление того же дня
+        const streakIncreased = diffDays === 1
+        if (streakIncreased) {
+          try {
+            // 🌿 Награды ростками за вехи стрика (3, 7, 14, 30, 100, 365 дней)
+            const sproutMilestones = [3, 7, 14, 30, 100, 365]
+            if (sproutMilestones.includes(newStreak)) {
+              const sproutReasonMap = {
+                3: 'streak_3_days',
+                7: 'streak_7_days',
+                14: 'streak_14_days',
+                30: 'streak_30_days',
+                100: 'streak_100_days',
+                365: 'streak_365_days',
+              }
+
+              const sproutAmountMap = {
+                3: 25,
+                7: 75,
+                14: 200,
+                30: 500,
+                100: 2000,
+                365: 10000,
+              }
+
+              const reason = sproutReasonMap[newStreak]
+              const amount = sproutAmountMap[newStreak]
+
+              const { data: sproutData, error: sproutError } =
+                await supabase.rpc('earn_currency', {
+                  p_telegram_id: telegramUserId,
+                  p_currency_type: 'sprouts',
+                  p_amount: amount,
+                  p_reason: reason,
+                  p_description: `Стрик ${newStreak} дней! 🔥`,
+                  p_metadata: { streakDays: newStreak },
+                })
+
+              if (!sproutError) {
+                console.log(
+                  `🌿 Awarded ${amount} sprouts for ${newStreak}-day streak!`
+                )
+              } else {
+                console.error('❌ Failed to award streak sprouts:', sproutError)
+              }
+            }
+
+            // 💎 Награды гемами за особые вехи (7 и 30 дней)
+            const gemMilestones = [7, 30]
+            if (gemMilestones.includes(newStreak)) {
+              const gemReasonMap = {
+                7: 'weekly_streak',
+                30: 'monthly_streak',
+              }
+
+              const gemAmountMap = {
+                7: 1,
+                30: 5,
+              }
+
+              const gemReason = gemReasonMap[newStreak]
+              const gemAmount = gemAmountMap[newStreak]
+
+              const { data: gemData, error: gemError } = await supabase.rpc(
+                'earn_currency',
+                {
+                  p_telegram_id: telegramUserId,
+                  p_currency_type: 'gems',
+                  p_amount: gemAmount,
+                  p_reason: gemReason,
+                  p_description: `Стрик ${newStreak} дней - особая награда! 💎`,
+                  p_metadata: { streakDays: newStreak },
+                }
+              )
+
+              if (!gemError) {
+                console.log(
+                  `💎 Awarded ${gemAmount} gems for ${newStreak}-day streak!`
+                )
+              } else {
+                console.error('❌ Failed to award streak gems:', gemError)
+              }
+            }
+          } catch (streakRewardError) {
+            console.error(
+              '❌ Error awarding streak rewards:',
+              streakRewardError
+            )
+            // Не прерываем выполнение, настроение уже сохранено
+          }
+        }
       }
     }
 

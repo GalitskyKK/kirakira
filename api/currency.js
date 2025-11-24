@@ -527,14 +527,31 @@ async function handleListThemes(req, res) {
       { id: 'night', name: 'Ночное небо', priceSprouts: 600, isDefault: false },
       { id: 'forest', name: 'Лесная', priceSprouts: 700, isDefault: false },
       { id: 'aqua', name: 'Морская', priceSprouts: 800, isDefault: false },
+      // 🎨 ПРЕМИУМ ТЕМЫ - можно купить за ростки ИЛИ за гемы
+      {
+        id: 'magic',
+        name: 'Магия',
+        priceSprouts: 1600,
+        priceGems: 16,
+        isDefault: false,
+        isPremium: true,
+      },
+      {
+        id: 'space',
+        name: 'Космос',
+        priceSprouts: 1800,
+        priceGems: 18,
+        isDefault: false,
+        isPremium: true,
+      },
       {
         id: 'cyberpunk',
         name: 'Киберпанк',
-        priceSprouts: 1000,
+        priceSprouts: 2000,
+        priceGems: 20,
         isDefault: false,
+        isPremium: true,
       },
-      { id: 'space', name: 'Космос', priceSprouts: 1200, isDefault: false },
-      { id: 'magic', name: 'Магия', priceSprouts: 900, isDefault: false },
     ]
 
     console.log(`✅ Themes fetched for user ${telegramId}:`, {
@@ -567,12 +584,19 @@ async function handleBuyTheme(req, res) {
   }
 
   try {
-    const { telegramId, themeId } = req.body
+    const { telegramId, themeId, currencyType = 'sprouts' } = req.body
 
     if (!telegramId || !themeId) {
       return res.status(400).json({
         success: false,
         error: 'Missing required fields: telegramId, themeId',
+      })
+    }
+
+    if (!['sprouts', 'gems'].includes(currencyType)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid currency type. Must be sprouts or gems',
       })
     }
 
@@ -589,14 +613,31 @@ async function handleBuyTheme(req, res) {
       { id: 'night', name: 'Ночное небо', priceSprouts: 600, isDefault: false },
       { id: 'forest', name: 'Лесная', priceSprouts: 700, isDefault: false },
       { id: 'aqua', name: 'Морская', priceSprouts: 800, isDefault: false },
+      // 🎨 ПРЕМИУМ ТЕМЫ - можно купить за ростки ИЛИ за гемы
+      {
+        id: 'magic',
+        name: 'Магия',
+        priceSprouts: 1600,
+        priceGems: 16,
+        isDefault: false,
+        isPremium: true,
+      },
+      {
+        id: 'space',
+        name: 'Космос',
+        priceSprouts: 1800,
+        priceGems: 18,
+        isDefault: false,
+        isPremium: true,
+      },
       {
         id: 'cyberpunk',
         name: 'Киберпанк',
-        priceSprouts: 1000,
+        priceSprouts: 2000,
+        priceGems: 20,
         isDefault: false,
+        isPremium: true,
       },
-      { id: 'space', name: 'Космос', priceSprouts: 1200, isDefault: false },
-      { id: 'magic', name: 'Магия', priceSprouts: 900, isDefault: false },
     ]
 
     const theme = themes.find(t => t.id === themeId)
@@ -664,16 +705,46 @@ async function handleBuyTheme(req, res) {
       })
     }
 
-    // Для платных тем списываем валюту
+    // Для платных тем списываем валюту (ростки ИЛИ гемы)
+    // 🎨 Для премиум тем пользователь выбирает валюту
+    let amount = 0
+    let actualCurrencyType = currencyType
+
+    if (currencyType === 'sprouts') {
+      amount = theme.priceSprouts
+      if (!amount || amount === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'This theme cannot be purchased with sprouts',
+        })
+      }
+    } else if (currencyType === 'gems') {
+      amount = theme.priceGems
+      if (!amount || amount === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'This theme cannot be purchased with gems',
+        })
+      }
+    }
+
+    console.log(
+      `💰 Purchasing theme "${theme.name}" for ${amount} ${actualCurrencyType}`
+    )
+
     const { data: spendResult, error: spendError } = await supabase.rpc(
       'spend_currency',
       {
         p_telegram_id: telegramId,
-        p_currency_type: 'sprouts',
-        p_amount: theme.priceSprouts,
+        p_currency_type: actualCurrencyType,
+        p_amount: amount,
         p_reason: 'buy_theme',
         p_description: `Покупка темы "${theme.name}"`,
-        p_metadata: { themeId, themeName: theme.name },
+        p_metadata: {
+          themeId,
+          themeName: theme.name,
+          currencyType: actualCurrencyType,
+        },
       }
     )
 
@@ -705,8 +776,8 @@ async function handleBuyTheme(req, res) {
         telegram_id: telegramId,
         item_id: themeId,
         item_type: 'garden_theme',
-        cost_sprouts: theme.priceSprouts,
-        cost_gems: 0,
+        cost_sprouts: actualCurrencyType === 'sprouts' ? amount : 0,
+        cost_gems: actualCurrencyType === 'gems' ? amount : 0,
       })
       .select()
       .single()

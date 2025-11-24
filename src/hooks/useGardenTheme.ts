@@ -36,9 +36,11 @@ export interface GardenTheme {
   readonly particleAnimation?: string // CSS animation для частиц
   readonly glowAnimation?: string // CSS animation для свечения
   readonly animationDuration?: string // Длительность анимации
-  // Commerce
+  // Commerce (можно купить за ростки ИЛИ за гемы)
   readonly priceSprouts: number
+  readonly priceGems?: number // 💎 Новое поле для премиум тем
   readonly isDefault: boolean
+  readonly isPremium?: boolean // 🎨 Премиум темы
 }
 
 const THEMES: readonly GardenTheme[] = [
@@ -169,31 +171,32 @@ const THEMES: readonly GardenTheme[] = [
     isDefault: false,
   },
   {
-    id: 'cyberpunk',
-    name: 'Киберпанк',
+    id: 'magic',
+    name: 'Магия',
     isDark: true,
     containerBackground:
-      'linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)',
+      'linear-gradient(135deg, #1a0033 0%, #330066 50%, #1a0033 100%)',
     wallBackground:
-      'linear-gradient(180deg, #00f5ff 0%, #ff0080 50%, #ffd700 100%)',
-    particleFrom: '#00f5ff',
-    particleTo: '#ff0080',
-    shelfSurface: 'linear-gradient(to bottom, #ff0080, #00f5ff)',
-    shelfEdge: 'linear-gradient(to bottom, #ffd700, #ff0080)',
-    shelfSupport: 'linear-gradient(to bottom, #00f5ff, #ff0080)',
-    shelfRadius: '0.25rem',
+      'linear-gradient(180deg, #9d4edd 0%, #c77dff 50%, #e0aaff 100%)',
+    particleFrom: '#c77dff',
+    particleTo: '#e0aaff',
+    shelfSurface: 'linear-gradient(to bottom, #7b2cbf, #9d4edd)',
+    shelfEdge: 'linear-gradient(to bottom, #c77dff, #7b2cbf)',
+    shelfSupport: 'linear-gradient(to bottom, #9d4edd, #5a189a)',
+    shelfRadius: '0.5rem',
     shelfShadow:
-      '0 4px 6px -1px rgba(255, 0, 128, 0.4), 0 2px 4px -1px rgba(0, 245, 255, 0.3), 0 0 20px rgba(255, 0, 128, 0.2), 0 0 40px rgba(0, 245, 255, 0.1)',
-    wallRadius: '0.25rem',
-    particleDensity: 35,
+      '0 4px 6px -1px rgba(157, 78, 221, 0.5), 0 2px 4px -1px rgba(199, 125, 255, 0.3), 0 0 30px rgba(157, 78, 221, 0.3)',
+    wallRadius: '0.5rem',
+    particleDensity: 40,
     hasAnimations: true,
-    shelfAnimation: 'cyberpunk-shelf-pulse 4s ease-in-out infinite',
-    particleAnimation:
-      'cyberpunk-particle-glow 3s ease-in-out infinite alternate',
-    glowAnimation: 'cyberpunk-glow-pulse 5s ease-in-out infinite',
-    animationDuration: '4s',
-    priceSprouts: 1000,
+    shelfAnimation: 'magic-pulse 6s ease-in-out infinite',
+    particleAnimation: 'magic-sparkle 4s ease-in-out infinite alternate',
+    glowAnimation: 'magic-glow 8s ease-in-out infinite',
+    animationDuration: '6s',
+    priceSprouts: 1600,
+    priceGems: 16,
     isDefault: false,
+    isPremium: true,
   },
   {
     id: 'space',
@@ -219,8 +222,39 @@ const THEMES: readonly GardenTheme[] = [
       'space-particle-twinkle 4s ease-in-out infinite alternate',
     glowAnimation: 'space-glow-aurora 6s ease-in-out infinite',
     animationDuration: '5s',
-    priceSprouts: 1200,
+    priceSprouts: 1800,
+    priceGems: 18,
     isDefault: false,
+    isPremium: true,
+  },
+  {
+    id: 'cyberpunk',
+    name: 'Киберпанк',
+    isDark: true,
+    containerBackground:
+      'linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)',
+    wallBackground:
+      'linear-gradient(180deg, #00f5ff 0%, #ff0080 50%, #ffd700 100%)',
+    particleFrom: '#00f5ff',
+    particleTo: '#ff0080',
+    shelfSurface: 'linear-gradient(to bottom, #ff0080, #00f5ff)',
+    shelfEdge: 'linear-gradient(to bottom, #ffd700, #ff0080)',
+    shelfSupport: 'linear-gradient(to bottom, #00f5ff, #ff0080)',
+    shelfRadius: '0.25rem',
+    shelfShadow:
+      '0 4px 6px -1px rgba(255, 0, 128, 0.4), 0 2px 4px -1px rgba(0, 245, 255, 0.3), 0 0 20px rgba(255, 0, 128, 0.2), 0 0 40px rgba(0, 245, 255, 0.1)',
+    wallRadius: '0.25rem',
+    particleDensity: 35,
+    hasAnimations: true,
+    shelfAnimation: 'cyberpunk-shelf-pulse 4s ease-in-out infinite',
+    particleAnimation:
+      'cyberpunk-particle-glow 3s ease-in-out infinite alternate',
+    glowAnimation: 'cyberpunk-glow-pulse 5s ease-in-out infinite',
+    animationDuration: '4s',
+    priceSprouts: 2000,
+    priceGems: 20,
+    isDefault: false,
+    isPremium: true,
   },
   {
     id: 'magic',
@@ -245,8 +279,10 @@ const THEMES: readonly GardenTheme[] = [
     particleAnimation: 'magic-particle-float 3s ease-in-out infinite alternate',
     glowAnimation: 'magic-glow-aura 5s ease-in-out infinite',
     animationDuration: '4s',
-    priceSprouts: 900,
+    priceSprouts: 1600,
+    priceGems: 16,
     isDefault: false,
+    isPremium: true,
   },
 ]
 
