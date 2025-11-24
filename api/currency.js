@@ -234,23 +234,30 @@ async function handleSpend(req, res) {
     // Если это покупка темы, добавляем запись в shop_purchases
     if (reason === 'buy_theme' && metadata?.themeId) {
       try {
+        // Правильно сохраняем цену в зависимости от валюты
+        const purchaseData = {
+          telegram_id: telegramId,
+          item_type: 'garden_theme',
+          item_id: metadata.themeId,
+          price_sprouts: currencyType === 'sprouts' ? amount : 0,
+          price_gems: currencyType === 'gems' ? amount : 0,
+          purchased_at: new Date().toISOString(),
+          metadata: metadata,
+        }
+
+        console.log('📝 Recording theme purchase:', purchaseData)
+
         const { error: purchaseError } = await supabase
           .from('shop_purchases')
-          .insert({
-            telegram_id: telegramId,
-            item_type: 'garden_theme',
-            item_id: metadata.themeId,
-            price_sprouts: amount,
-            price_gems: 0,
-            purchased_at: new Date().toISOString(),
-            metadata: metadata,
-          })
+          .insert(purchaseData)
 
         if (purchaseError) {
           console.error('❌ Failed to record theme purchase:', purchaseError)
           // Не возвращаем ошибку, так как валюта уже списана
         } else {
-          console.log(`✅ Theme purchase recorded: ${metadata.themeId}`)
+          console.log(
+            `✅ Theme purchase recorded: ${metadata.themeId} (${currencyType}: ${amount})`
+          )
         }
       } catch (purchaseErr) {
         console.error('❌ Error recording theme purchase:', purchaseErr)

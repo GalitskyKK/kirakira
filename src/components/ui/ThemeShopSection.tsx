@@ -5,7 +5,7 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { motion, PanInfo } from 'framer-motion'
-import { Check, Lock, Leaf, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Check, Lock, Leaf, Gem, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
 import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { useSpendCurrency, currencyKeys } from '@/hooks/queries'
@@ -53,7 +53,7 @@ export function ThemeShopSection() {
   const sliderRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const handleBuyTheme = async (themeId: string) => {
+  const handleBuyTheme = async (themeId: string, currencyType: 'sprouts' | 'gems' = 'sprouts') => {
     // Защита от двойных кликов
     if (isProcessingRef.current || purchasingTheme !== null) {
       console.warn('⚠️ Purchase already in progress, ignoring duplicate click')
@@ -81,13 +81,20 @@ export function ThemeShopSection() {
         return
       }
 
+      // Определяем цену в зависимости от валюты
+      const amount = currencyType === 'gems' && theme.priceGems 
+        ? theme.priceGems 
+        : theme.priceSprouts
+
+      console.log(`💰 Buying theme "${theme.name}" for ${amount} ${currencyType}`)
+
       const result = await spendCurrencyMutation.mutateAsync({
         telegramId,
-        currencyType: 'sprouts',
-        amount: theme.priceSprouts,
+        currencyType,
+        amount,
         reason: 'buy_theme',
         description: `Покупка темы "${theme.name}"`,
-        metadata: { themeId, themeName: theme.name },
+        metadata: { themeId, themeName: theme.name, currencyType },
       })
 
       if (result.success) {
@@ -98,7 +105,7 @@ export function ThemeShopSection() {
           if (currentCurrency && storeState.updateCurrencyFromQuery) {
             storeState.updateCurrencyFromQuery({
               ...currentCurrency,
-              sprouts: result.balance_after,
+              [currencyType]: result.balance_after,
               lastUpdated: new Date(),
             })
           }
@@ -391,19 +398,44 @@ export function ThemeShopSection() {
                           )}
                         </div>
 
-                        <div className="mt-2 flex items-center justify-between">
-                          <div className="flex items-center gap-1.5">
-                            <Leaf className="h-4 w-4 text-green-500" />
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                              {theme.priceSprouts === 0
-                                ? 'Бесплатно'
-                                : `${theme.priceSprouts} ростков`}
-                            </span>
-                          </div>
+                        {/* Price Display */}
+                        <div className="mt-2 space-y-1.5">
+                          {theme.priceSprouts === 0 ? (
+                            <div className="flex items-center gap-1.5">
+                              <Leaf className="h-4 w-4 text-green-500" />
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Бесплатно
+                              </span>
+                            </div>
+                          ) : theme.isPremium && theme.priceGems ? (
+                            // Премиум тема - показываем обе цены
+                            <>
+                              <div className="flex items-center gap-1.5">
+                                <Leaf className="h-4 w-4 text-green-500" />
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                  {theme.priceSprouts} ростков
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <Gem className="h-4 w-4 text-purple-500" />
+                                <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
+                                  {theme.priceGems} гемов
+                                </span>
+                              </div>
+                            </>
+                          ) : (
+                            // Обычная тема - только ростки
+                            <div className="flex items-center gap-1.5">
+                              <Leaf className="h-4 w-4 text-green-500" />
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                {theme.priceSprouts} ростков
+                              </span>
+                            </div>
+                          )}
                         </div>
 
-                        {/* Action Button */}
-                        <div className="mt-3">
+                        {/* Action Buttons */}
+                        <div className="mt-3 space-y-2">
                           {isOwned ? (
                             <Button
                               variant="outline"
@@ -416,21 +448,70 @@ export function ThemeShopSection() {
                             >
                               Выбрать
                             </Button>
-                          ) : (userCurrency?.sprouts || 0) >=
-                            theme.priceSprouts ? (
+                          ) : theme.isPremium && theme.priceGems ? (
+                            // Премиум тема - две кнопки выбора валюты
+                            <div className="space-y-2">
+                              <Button
+                                size="sm"
+                                className="w-full bg-gradient-to-r from-green-500 to-emerald-600"
+                                disabled={
+                                  isPurchasing ||
+                                  (userCurrency?.sprouts || 0) < theme.priceSprouts
+                                }
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  handleBuyTheme(theme.id, 'sprouts')
+                                }}
+                              >
+                                {isPurchasing ? (
+                                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                ) : (
+                                  <>
+                                    <Leaf className="mr-1.5 h-4 w-4" />
+                                    {theme.priceSprouts}
+                                  </>
+                                )}
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="w-full bg-gradient-to-r from-purple-500 to-pink-600"
+                                disabled={
+                                  isPurchasing ||
+                                  (userCurrency?.gems || 0) < theme.priceGems
+                                }
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  handleBuyTheme(theme.id, 'gems')
+                                }}
+                              >
+                                {isPurchasing ? (
+                                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                ) : (
+                                  <>
+                                    <Gem className="mr-1.5 h-4 w-4" />
+                                    {theme.priceGems}
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          ) : (userCurrency?.sprouts || 0) >= theme.priceSprouts ? (
+                            // Обычная тема - одна кнопка
                             <Button
                               size="sm"
                               className="w-full"
                               disabled={isPurchasing}
                               onClick={e => {
                                 e.stopPropagation()
-                                handleBuyTheme(theme.id)
+                                handleBuyTheme(theme.id, 'sprouts')
                               }}
                             >
                               {isPurchasing ? (
                                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                               ) : (
-                                `Купить за ${theme.priceSprouts}`
+                                <>
+                                  <Leaf className="mr-1.5 h-4 w-4" />
+                                  {theme.priceSprouts}
+                                </>
                               )}
                             </Button>
                           ) : (

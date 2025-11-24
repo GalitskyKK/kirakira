@@ -256,34 +256,6 @@ const THEMES: readonly GardenTheme[] = [
     isDefault: false,
     isPremium: true,
   },
-  {
-    id: 'magic',
-    name: 'Магия',
-    isDark: false,
-    containerBackground:
-      'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 25%, #e9d5ff 50%, #ddd6fe 75%, #c4b5fd 100%)',
-    wallBackground:
-      'linear-gradient(180deg, #a855f7 0%, #9333ea 30%, #7c3aed 60%, #6d28d9 100%)',
-    particleFrom: '#fbbf24',
-    particleTo: '#ec4899',
-    shelfSurface: 'linear-gradient(to bottom, #a855f7, #9333ea, #7c3aed)',
-    shelfEdge: 'linear-gradient(to bottom, #7c3aed, #6d28d9, #5b21b6)',
-    shelfSupport: 'linear-gradient(to bottom, #9333ea, #7c3aed)',
-    shelfRadius: '1.5rem',
-    shelfShadow:
-      '0 4px 6px -1px rgba(168, 85, 247, 0.4), 0 2px 4px -1px rgba(168, 85, 247, 0.3), 0 0 30px rgba(251, 191, 36, 0.2), 0 0 50px rgba(236, 72, 153, 0.15)',
-    wallRadius: '1.5rem',
-    particleDensity: 25,
-    hasAnimations: true,
-    shelfAnimation: 'magic-shelf-sparkle 4s ease-in-out infinite',
-    particleAnimation: 'magic-particle-float 3s ease-in-out infinite alternate',
-    glowAnimation: 'magic-glow-aura 5s ease-in-out infinite',
-    animationDuration: '4s',
-    priceSprouts: 1600,
-    priceGems: 16,
-    isDefault: false,
-    isPremium: true,
-  },
 ]
 
 const STORAGE_KEY = 'gardenThemeId'
