@@ -37,11 +37,12 @@ export class VibeController {
   constructor(canvas: HTMLCanvasElement, config: VibeConfig = {}) {
     this.canvas = canvas;
     const gl = canvas.getContext('webgl', { 
-      alpha: true, // Transparent background
+      alpha: true, 
       antialias: false,
       depth: false,
       stencil: false,
-      preserveDrawingBuffer: false 
+      preserveDrawingBuffer: false,
+      premultipliedAlpha: true // Default is true, important for transparency
     });
 
     if (!gl) throw new Error('WebGL not supported');
@@ -62,10 +63,13 @@ export class VibeController {
     
     this.init();
     this.updateConfig(config);
+    
+    // Initial resize to ensure state is correct
+    this.resize(canvas.width / this.dpr, canvas.height / this.dpr);
   }
 
   private init() {
-    const fragmentShaderSrc = getFragmentShader(6, true); // Enable transparent mode
+    const fragmentShaderSrc = getFragmentShader(6, true); 
     const program = this.createProgram(vertexShader, fragmentShaderSrc);
     if (!program) return;
     this.program = program;
@@ -138,11 +142,12 @@ export class VibeController {
     const displayWidth = Math.floor(width * this.dpr);
     const displayHeight = Math.floor(height * this.dpr);
 
+    // Force resize if needed, or just update viewport
     if (this.canvas.width !== displayWidth || this.canvas.height !== displayHeight) {
         this.canvas.width = displayWidth;
         this.canvas.height = displayHeight;
-        this.gl.viewport(0, 0, displayWidth, displayHeight);
     }
+    this.gl.viewport(0, 0, displayWidth, displayHeight);
   }
 
   start() {
@@ -181,7 +186,7 @@ export class VibeController {
     
     this.time += (this.energy.value * dt) / 1000;
     
-    // Clear buffer before drawing to prevent trails/artifacts if transparency is used or resize happens
+    // Clear buffer to fully transparent
     this.gl.clearColor(0, 0, 0, 0);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 
@@ -193,14 +198,11 @@ export class VibeController {
   private render() {
     const { vScreenSize, vTime, vScale, vColor, vColorBackground, vRotation, vAudio, vReact, vInteractionPoint, vInteraction } = this.uniforms;
     
-    // Pass PHYSICAL dimensions to shader (displayWidth/displayHeight) via canvas.width/height
     if (vScreenSize) this.gl.uniform2f(vScreenSize, this.canvas.width, this.canvas.height);
     if (vTime) this.gl.uniform1f(vTime, this.time);
     
-    // Adaptive Scale Logic
-    // Mobile (< 500px) uses 0.4, Desktop uses 0.35. 
-    // Base scale is multiplied by this factor.
-    const isMobile = this.width < 500;
+    // Adaptive Scale Logic matching reference
+    const isMobile = this.width < 500; // Use logical width for breakpoint
     const scaleFactor = isMobile ? 0.4 : 0.35;
     if (vScale) this.gl.uniform1f(vScale, this.baseScale * scaleFactor);
     
@@ -208,7 +210,7 @@ export class VibeController {
       const colors = this.palette.value.flat();
       this.gl.uniform3fv(vColor, new Float32Array(colors));
     }
-    // Transparent background (alpha 0)
+    // Transparent background
     if (vColorBackground) this.gl.uniform4f(vColorBackground, 0, 0, 0, 0);
 
     if (vRotation && this.rotation[0] && this.rotation[1] && this.rotation[2]) {
