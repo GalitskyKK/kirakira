@@ -173,193 +173,213 @@ export function GardenView({ className }: GardenViewProps) {
   }
 
   return (
-    <LoadingOverlay isLoading={isLoading}>
-      <Card className={clsx('min-h-[500px]', className)} padding="none">
-        <AnimatePresence mode="wait">
-          {viewMode === ViewMode.DETAIL && selectedElement ? (
-            <motion.div
-              key="detail"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ElementDetails
-                element={selectedElement}
-                onBack={handleBackToOverview}
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="overview"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3 }}
-              className="h-full"
-            >
-              {/* Header */}
-              <div className="border-b border-gray-200 p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                      {displayMode === GardenDisplayMode.PALETTE
-                        ? 'Палитра Сада'
-                        : 'Мой Сад'}
-                    </h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {displayMode === GardenDisplayMode.PALETTE
-                        ? `${moodHistory.length} ${moodHistory.length === 1 ? 'отметка настроения' : moodHistory.length < 5 ? 'отметки настроения' : 'отметок настроения'}`
-                        : `${garden.elements.length} ${garden.elements.length === 1 ? 'растение' : garden.elements.length < 5 ? 'растения' : 'растений'}`}
-                    </p>
-                  </div>
+    <>
+      {/* Fullscreen Palette Overlay - Outside all containers */}
+      <AnimatePresence>
+        {isFullscreen && displayMode === GardenDisplayMode.PALETTE && (
+          <motion.div
+            key="fullscreen-palette"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[9999] flex flex-col bg-white dark:bg-gray-900"
+          >
+            {/* Fullscreen Header */}
+            <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Палитра Сада
+              </h2>
+              <button
+                onClick={toggleFullscreen}
+                className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700"
+                title="Выйти из полноэкранного режима"
+              >
+                <Minimize2 className="h-5 w-5" />
+              </button>
+            </div>
 
-                  <div className="flex space-x-2">
-                    {/* Режим перемещения элемента */}
-                    {elementBeingMoved ? (
-                      <>
-                        <div className="flex items-center space-x-2 rounded-lg bg-blue-50 px-3 py-1.5 dark:bg-blue-900/30">
-                          <span className="text-sm text-blue-700 dark:text-blue-300">
-                            Перемещение: {elementBeingMoved.name}
-                          </span>
-                        </div>
-                        <button
-                          onClick={handleConfirmMovement}
-                          className="rounded-lg bg-green-100 px-3 py-1.5 text-sm text-green-700 transition-colors hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50"
-                          title="Подтвердить перемещение"
-                        >
-                          ✓
-                        </button>
-                        <button
-                          onClick={handleCancelMovement}
-                          className="rounded-lg bg-red-100 px-3 py-1.5 text-sm text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
-                          title="Отменить перемещение"
-                        >
-                          ✕
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        {displayMode === GardenDisplayMode.PALETTE && (
+            {/* Fullscreen Palette Content */}
+            <div className="flex flex-1 items-center justify-center overflow-auto p-4 sm:p-6 lg:p-8">
+              <PaletteView className="h-full w-full max-w-4xl" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <LoadingOverlay isLoading={isLoading}>
+        <Card className={clsx('min-h-[500px]', className)} padding="none">
+          <AnimatePresence mode="wait">
+            {viewMode === ViewMode.DETAIL && selectedElement ? (
+              <motion.div
+                key="detail"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ElementDetails
+                  element={selectedElement}
+                  onBack={handleBackToOverview}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="overview"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+                className="h-full"
+              >
+                {/* Header */}
+                <div className="border-b border-gray-200 p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        {displayMode === GardenDisplayMode.PALETTE
+                          ? 'Палитра Сада'
+                          : 'Мой Сад'}
+                      </h2>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {displayMode === GardenDisplayMode.PALETTE
+                          ? `${moodHistory.length} ${moodHistory.length === 1 ? 'отметка настроения' : moodHistory.length < 5 ? 'отметки настроения' : 'отметок настроения'}`
+                          : `${garden.elements.length} ${garden.elements.length === 1 ? 'растение' : garden.elements.length < 5 ? 'растения' : 'растений'}`}
+                      </p>
+                    </div>
+
+                    <div className="flex space-x-2">
+                      {/* Режим перемещения элемента */}
+                      {elementBeingMoved ? (
+                        <>
+                          <div className="flex items-center space-x-2 rounded-lg bg-blue-50 px-3 py-1.5 dark:bg-blue-900/30">
+                            <span className="text-sm text-blue-700 dark:text-blue-300">
+                              Перемещение: {elementBeingMoved.name}
+                            </span>
+                          </div>
                           <button
-                            onClick={toggleFullscreen}
-                            className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700"
-                            title={
-                              isFullscreen
-                                ? 'Выйти из полноэкранного режима'
-                                : 'Полноэкранный режим'
-                            }
+                            onClick={handleConfirmMovement}
+                            className="rounded-lg bg-green-100 px-3 py-1.5 text-sm text-green-700 transition-colors hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50"
+                            title="Подтвердить перемещение"
                           >
-                            {isFullscreen ? (
-                              <Minimize2 className="h-5 w-5" />
-                            ) : (
-                              <Maximize2 className="h-5 w-5" />
-                            )}
+                            ✓
                           </button>
-                        )}
-                        <button
-                          onClick={() => setViewMode(ViewMode.OVERVIEW)}
-                          className={clsx(
-                            'rounded-lg px-3 py-1.5 text-sm transition-colors',
-                            viewMode === ViewMode.OVERVIEW
-                              ? 'bg-garden-100 text-garden-700 dark:bg-garden-700 dark:text-garden-100'
-                              : 'text-gray-600 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700'
+                          <button
+                            onClick={handleCancelMovement}
+                            className="rounded-lg bg-red-100 px-3 py-1.5 text-sm text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
+                            title="Отменить перемещение"
+                          >
+                            ✕
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          {displayMode === GardenDisplayMode.PALETTE && (
+                            <button
+                              onClick={toggleFullscreen}
+                              className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700"
+                              title={
+                                isFullscreen
+                                  ? 'Выйти из полноэкранного режима'
+                                  : 'Полноэкранный режим'
+                              }
+                            >
+                              {isFullscreen ? (
+                                <Minimize2 className="h-5 w-5" />
+                              ) : (
+                                <Maximize2 className="h-5 w-5" />
+                              )}
+                            </button>
                           )}
+                          <button
+                            onClick={() => setViewMode(ViewMode.OVERVIEW)}
+                            className={clsx(
+                              'rounded-lg px-3 py-1.5 text-sm transition-colors',
+                              viewMode === ViewMode.OVERVIEW
+                                ? 'bg-garden-100 text-garden-700 dark:bg-garden-700 dark:text-garden-100'
+                                : 'text-gray-600 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700'
+                            )}
+                          >
+                            Обзор
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mobile-first adaptive layout */}
+                <div className="flex flex-col lg:flex-row">
+                  {/* Garden Display - Switch between display modes */}
+                  <div
+                    className={clsx(
+                      displayMode === GardenDisplayMode.PALETTE
+                        ? 'flex min-h-[70vh] flex-1 items-center justify-center p-2 sm:p-4 lg:p-6'
+                        : 'flex-1 p-2 sm:p-4 lg:p-6'
+                    )}
+                  >
+                    <AnimatePresence mode="wait">
+                      {displayMode === GardenDisplayMode.PALETTE ? (
+                        <motion.div
+                          key="palette"
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.3 }}
+                          className="flex h-full w-full items-center justify-center"
                         >
-                          Обзор
-                        </button>
-                      </>
-                    )}
+                          <PaletteView className="h-full w-full max-w-2xl" />
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="garden"
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.3 }}
+                          className="h-full"
+                        >
+                          <GardenRoomManager
+                            elements={garden.elements}
+                            selectedElement={selectedElement}
+                            draggedElement={draggedElement}
+                            elementBeingMoved={elementBeingMoved}
+                            viewMode={viewMode}
+                            currentRoomIndex={currentRoomIndex}
+                            onRoomChange={setCurrentRoomIndex}
+                            onElementClick={handleElementClick}
+                            onElementLongPress={handleElementLongPress}
+                            onSlotClick={handleSlotClick}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                </div>
-              </div>
 
-              {/* Fullscreen Palette Overlay */}
-              {isFullscreen && displayMode === GardenDisplayMode.PALETTE && (
-                <motion.div
-                  key="fullscreen-palette"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="fixed inset-0 z-[9999] flex flex-col bg-white dark:bg-gray-900"
-                >
-                  {/* Fullscreen Header */}
-                  <div className="flex items-center justify-between border-b border-gray-200 p-4">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                      Палитра Сада
-                    </h2>
-                    <button
-                      onClick={toggleFullscreen}
-                      className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700"
-                      title="Выйти из полноэкранного режима"
+                  {/* Sidebar - Hidden on mobile, shown on desktop */}
+                  {viewMode === ViewMode.OVERVIEW && (
+                    <motion.div
+                      className="hidden border-t border-gray-200 p-4 lg:block lg:w-80 lg:border-l lg:border-t-0"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 }}
                     >
-                      <Minimize2 className="h-5 w-5" />
-                    </button>
-                  </div>
-
-                  {/* Fullscreen Palette Content */}
-                  <div className="flex flex-1 items-center justify-center overflow-auto p-4 sm:p-6 lg:p-8">
-                    <PaletteView className="h-full w-full max-w-4xl" />
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Mobile-first adaptive layout */}
-              <div className="flex flex-col lg:flex-row">
-                {/* Garden Display - Switch between display modes */}
-                <div
-                  className={clsx(
-                    displayMode === GardenDisplayMode.PALETTE
-                      ? 'flex min-h-[70vh] flex-1 items-center justify-center p-2 sm:p-4 lg:p-6'
-                      : 'flex-1 p-2 sm:p-4 lg:p-6'
+                      {displayMode === GardenDisplayMode.PALETTE ? (
+                        <PaletteMoodStats />
+                      ) : (
+                        <GardenStats garden={garden} />
+                      )}
+                    </motion.div>
                   )}
-                >
-                  <AnimatePresence mode="wait">
-                    {displayMode === GardenDisplayMode.PALETTE ? (
-                      <motion.div
-                        key="palette"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.3 }}
-                        className="flex h-full w-full items-center justify-center"
-                      >
-                        <PaletteView className="h-full w-full max-w-2xl" />
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="garden"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.3 }}
-                        className="h-full"
-                      >
-                        <GardenRoomManager
-                          elements={garden.elements}
-                          selectedElement={selectedElement}
-                          draggedElement={draggedElement}
-                          elementBeingMoved={elementBeingMoved}
-                          viewMode={viewMode}
-                          currentRoomIndex={currentRoomIndex}
-                          onRoomChange={setCurrentRoomIndex}
-                          onElementClick={handleElementClick}
-                          onElementLongPress={handleElementLongPress}
-                          onSlotClick={handleSlotClick}
-                        />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                 </div>
 
-                {/* Sidebar - Hidden on mobile, shown on desktop */}
+                {/* Mobile Stats Panel - Only visible on mobile for overview mode */}
                 {viewMode === ViewMode.OVERVIEW && (
                   <motion.div
-                    className="hidden border-t border-gray-200 p-4 lg:block lg:w-80 lg:border-l lg:border-t-0"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 }}
+                    className="border-t border-gray-200 p-4 lg:hidden"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
                   >
                     {displayMode === GardenDisplayMode.PALETTE ? (
                       <PaletteMoodStats />
@@ -368,27 +388,11 @@ export function GardenView({ className }: GardenViewProps) {
                     )}
                   </motion.div>
                 )}
-              </div>
-
-              {/* Mobile Stats Panel - Only visible on mobile for overview mode */}
-              {viewMode === ViewMode.OVERVIEW && (
-                <motion.div
-                  className="border-t border-gray-200 p-4 lg:hidden"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  {displayMode === GardenDisplayMode.PALETTE ? (
-                    <PaletteMoodStats />
-                  ) : (
-                    <GardenStats garden={garden} />
-                  )}
-                </motion.div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Card>
-    </LoadingOverlay>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </Card>
+      </LoadingOverlay>
+    </>
   )
 }
