@@ -173,7 +173,7 @@ const THEMES: readonly GardenTheme[] = [
   {
     id: 'magic',
     name: 'Магия',
-    isDark: true,
+    isDark: false,
     containerBackground:
       'linear-gradient(135deg, #1a0033 0%, #330066 50%, #1a0033 100%)',
     wallBackground:
