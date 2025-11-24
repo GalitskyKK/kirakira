@@ -12,11 +12,13 @@ export const getFragmentShader = (blobCount: number, transparent: boolean) => {
 
   // Increase base width and step to make blobs more substantial
   // Generate loop body with hardcoded indices for each iteration
-  const generateLoopIteration = (index: number) => {
+  const generateLoopIteration = (index: number, totalCount: number) => {
     const colorIndex2 = index + 3 < 6 ? index + 3 : index - 3
+    // Invert the index so last items (most frequent moods) get larger radius
+    const invertedIndex = totalCount - 1 - index
     return `
     if (i == ${index}) {
-      floatIndex = float(${index});
+      floatIndex = float(${invertedIndex});
       radius = CIRCLE_RADIUS_BASE - CIRCLE_RADIUS_STEP * floatIndex;
       width = max(0.2, CIRCLE_WIDTH_BASE - CIRCLE_WIDTH_STEP * floatIndex);
       
@@ -41,7 +43,7 @@ export const getFragmentShader = (blobCount: number, transparent: boolean) => {
   }
 
   const loopBody = Array.from({ length: blobCount }, (_, i) =>
-    generateLoopIteration(i)
+    generateLoopIteration(i, blobCount)
   ).join('\n')
 
   const finalColor = transparent
