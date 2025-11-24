@@ -530,7 +530,7 @@ export function ShelfView({
           })}
         </div>
 
-        {/* Empty state - скрываем при перемещении элемента */}
+        {/* Empty state - скрываем при перемещении элемент */}
         {elements.length === 0 && !isElementMoving && (
           <motion.div
             className="absolute inset-0 flex items-center justify-center"
