@@ -222,8 +222,8 @@ export class VibeController {
       this.gl.uniform3fv(vRotation, new Float32Array(rotations));
     }
 
-    if (vAudio) this.gl.uniform3f(vAudio, 0, 0, 0);
-    if (vReact) this.gl.uniform3f(vReact, 0, 0, 0);
+    if (vAudio) this.gl.uniform1fv(vAudio, new Float32Array([0, 0, 0]));
+    if (vReact) this.gl.uniform1fv(vReact, new Float32Array([0, 0, 0]));
     if (vInteractionPoint) this.gl.uniform2f(vInteractionPoint, 0, 0);
     if (vInteraction) this.gl.uniform1f(vInteraction, 0);
 
