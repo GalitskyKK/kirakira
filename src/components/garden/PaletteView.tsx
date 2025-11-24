@@ -57,7 +57,7 @@ export function PaletteView({
       const minHeight = 400
 
       // Адаптивная ширина и высота с максимумом (для прямоугольной формы на мобильных)
-      // Используем доступную высоту окна для стабильности (не зависеть от размера контейнера)
+      // Используем доступную высоту окна для стабильности
       const availableHeight = window.innerHeight - 200
       const availableWidth = window.innerWidth - 32
 
