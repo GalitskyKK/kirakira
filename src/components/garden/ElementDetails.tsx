@@ -117,9 +117,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
             size="sm"
             onClick={onBack}
             leftIcon={<ArrowLeft size={16} />}
-          >
-            Назад
-          </Button>
+          ></Button>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Детали растения
           </h2>
@@ -168,6 +166,20 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
             </span>
           </div>
         </Card>
+
+        {/* Upgrade Button */}
+        <div className="flex justify-center">
+          <ElementUpgradeManager
+            element={currentElement}
+            onUpgradeSuccess={(newRarity: RarityLevel, xpReward: number) => {
+              // 🎉 Показываем оверлей успешного улучшения
+              setSuccessData({ newRarity, xpReward })
+              setShowSuccessOverlay(true)
+              // Скроллим наверх после успешного улучшения
+              scrollToTop()
+            }}
+          />
+        </div>
 
         {/* Element Info */}
         <div className="grid grid-cols-1 gap-4">
@@ -317,20 +329,6 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
             )}
           </div>
         </Card>
-
-        {/* Upgrade Button */}
-        <div className="flex justify-center">
-          <ElementUpgradeManager
-            element={currentElement}
-            onUpgradeSuccess={(newRarity: RarityLevel, xpReward: number) => {
-              // 🎉 Показываем оверлей успешного улучшения
-              setSuccessData({ newRarity, xpReward })
-              setShowSuccessOverlay(true)
-              // Скроллим наверх после успешного улучшения
-              scrollToTop()
-            }}
-          />
-        </div>
 
         {/* Care Tips */}
         <Card padding="sm" variant="glass">
