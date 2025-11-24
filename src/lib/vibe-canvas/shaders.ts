@@ -11,33 +11,38 @@ export const getFragmentShader = (blobCount: number, transparent: boolean) => {
   const colorType = transparent ? 'vec4' : 'vec3'
 
   // Increase base width and step to make blobs more substantial
-  const loopBody = `
-    floatIndex = float(i);
-    radius = CIRCLE_RADIUS_BASE - CIRCLE_RADIUS_STEP * floatIndex;
-    width = max(0.2, CIRCLE_WIDTH_BASE - CIRCLE_WIDTH_STEP * floatIndex);
-    
-    // Use modulo to ensure we stay within bounds of vColor array (6 elements, 2 colors per blob)
-    int colorIndex1 = i;
-    int colorIndex2 = (i + 3) < 6 ? (i + 3) : (i - 3);
-    
-    blobColor = makeBlob(uv,
-                         mix(radius, radius + 0.3, n0),
-                         vColor[colorIndex1],
-                         vColor[colorIndex2],
-                         width,
-                         (SPARK_STRENGTH_BASE - SPARK_STRENGTH_STEP * floatIndex) * spark,
-                         vReact[i],
-                         vAudio[i],
-                         CIRCLE_OFFSET_BASE + CIRCLE_OFFSET_STEP * floatIndex,
-                         rotate(vRotation[i].xy, vTime * vRotation[i].z));
+  // Generate loop body with hardcoded indices for each iteration
+  const generateLoopIteration = (index: number) => {
+    const colorIndex2 = index + 3 < 6 ? index + 3 : index - 3
+    return `
+    if (i == ${index}) {
+      floatIndex = float(${index});
+      radius = CIRCLE_RADIUS_BASE - CIRCLE_RADIUS_STEP * floatIndex;
+      width = max(0.2, CIRCLE_WIDTH_BASE - CIRCLE_WIDTH_STEP * floatIndex);
+      
+      blobColor = makeBlob(uv,
+                           mix(radius, radius + 0.3, n0),
+                           vColor[${index}],
+                           vColor[${colorIndex2}],
+                           width,
+                           (SPARK_STRENGTH_BASE - SPARK_STRENGTH_STEP * floatIndex) * spark,
+                           vReact[${index}],
+                           vAudio[${index}],
+                           CIRCLE_OFFSET_BASE + CIRCLE_OFFSET_STEP * floatIndex,
+                           rotate(vRotation[${index}].xy, vTime * vRotation[${index}].z));
 
-    // Additive/Alpha mixing
-    ${
-      transparent
-        ? 'color.rgb = mix(color.rgb, blobColor.rgb, blobColor.a); color.a = max(blobColor.a, color.a);'
-        : 'color = mix(color, blobColor.rgb, blobColor.a);'
-    }
-  `
+      // Additive/Alpha mixing
+      ${
+        transparent
+          ? 'color.rgb = mix(color.rgb, blobColor.rgb, blobColor.a); color.a = max(blobColor.a, color.a);'
+          : 'color = mix(color, blobColor.rgb, blobColor.a);'
+      }
+    }`
+  }
+
+  const loopBody = Array.from({ length: blobCount }, (_, i) =>
+    generateLoopIteration(i)
+  ).join('\n')
 
   const finalColor = transparent
     ? 'gl_FragColor = color;'
