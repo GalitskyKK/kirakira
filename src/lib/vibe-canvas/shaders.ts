@@ -1,4 +1,3 @@
-
 export const vertexShader = `
 precision highp float;
 attribute vec4 position;
@@ -6,11 +5,11 @@ attribute vec4 position;
 void main() {
     gl_Position = position;
 }
-`;
+`
 
 export const getFragmentShader = (blobCount: number, transparent: boolean) => {
-  const colorType = transparent ? 'vec4' : 'vec3';
-  
+  const colorType = transparent ? 'vec4' : 'vec3'
+
   // Increase base width and step to make blobs more substantial
   const loopBody = `
     floatIndex = float(i);
@@ -29,12 +28,16 @@ export const getFragmentShader = (blobCount: number, transparent: boolean) => {
                          rotate(vRotation[i].xy, vTime * vRotation[i].z));
 
     // Additive/Alpha mixing
-    ${transparent 
-      ? 'color.rgb = mix(color.rgb, blobColor.rgb, blobColor.a); color.a = max(blobColor.a, color.a);' 
-      : 'color = mix(color, blobColor.rgb, blobColor.a);'}
-  `;
+    ${
+      transparent
+        ? 'color.rgb = mix(color.rgb, blobColor.rgb, blobColor.a); color.a = max(blobColor.a, color.a);'
+        : 'color = mix(color, blobColor.rgb, blobColor.a);'
+    }
+  `
 
-  const finalColor = transparent ? 'gl_FragColor = color;' : 'gl_FragColor = vec4(color, 1.0);';
+  const finalColor = transparent
+    ? 'gl_FragColor = color;'
+    : 'gl_FragColor = vec4(color, 1.0);'
 
   return `
 precision highp float;
@@ -46,10 +49,10 @@ uniform float vScale;
 uniform ${colorType} vColorBackground;
 
 uniform vec3 vColor[6];
-uniform vec3 vRotation[3];
+uniform vec3 vRotation[6];
 
-uniform float vAudio[3];
-uniform float vReact[3];
+uniform float vAudio[6];
+uniform float vReact[6];
 
 uniform vec2 vInteractionPoint;
 uniform float vInteraction;
@@ -253,5 +256,5 @@ void main() {
 
   ${finalColor}
 }
-`;
-};
+`
+}

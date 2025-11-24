@@ -58,7 +58,10 @@ export class VibeController {
     this.rotation = [
       new Vector3(-0.3, 0.3, 0.2),
       new Vector3(-0.3, -0.3, -0.2),
-      new Vector3(-0.3, -0.3, 0.2)
+      new Vector3(-0.3, -0.3, 0.2),
+      new Vector3(0.3, 0.3, -0.2),
+      new Vector3(0.3, -0.3, 0.2),
+      new Vector3(0.0, 0.3, 0.2)
     ];
     
     this.init();
@@ -213,17 +216,20 @@ export class VibeController {
     // Transparent background
     if (vColorBackground) this.gl.uniform4f(vColorBackground, 0, 0, 0, 0);
 
-    if (vRotation && this.rotation[0] && this.rotation[1] && this.rotation[2]) {
-      const rotations = [
-          ...this.rotation[0],
-          ...this.rotation[1],
-          ...this.rotation[2]
-      ];
+    if (vRotation && this.rotation[0]) {
+      const rotations: number[] = [];
+      for (let i = 0; i < 6; i++) {
+          if (this.rotation[i]) {
+              rotations.push(this.rotation[i]!.x, this.rotation[i]!.y, this.rotation[i]!.z);
+          } else {
+              rotations.push(0, 0, 0);
+          }
+      }
       this.gl.uniform3fv(vRotation, new Float32Array(rotations));
     }
 
-    if (vAudio) this.gl.uniform1fv(vAudio, new Float32Array([0, 0, 0]));
-    if (vReact) this.gl.uniform1fv(vReact, new Float32Array([0, 0, 0]));
+    if (vAudio) this.gl.uniform1fv(vAudio, new Float32Array([0, 0, 0, 0, 0, 0]));
+    if (vReact) this.gl.uniform1fv(vReact, new Float32Array([0, 0, 0, 0, 0, 0]));
     if (vInteractionPoint) this.gl.uniform2f(vInteractionPoint, 0, 0);
     if (vInteraction) this.gl.uniform1f(vInteraction, 0);
 
