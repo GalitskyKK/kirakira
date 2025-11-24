@@ -50,9 +50,9 @@ export function useMoodSync(
       return syncMoodHistory(telegramId, userId)
     },
     enabled: enabled && !!telegramId && !!userId,
-    staleTime: 1000 * 60 * 5, // 5 минут - увеличено для снижения нагрузки
-    gcTime: 1000 * 60 * 10, // 10 минут в кеше
-    refetchOnWindowFocus: false, // ❌ ОТКЛЮЧЕНО: используем глобальные настройки
+    staleTime: 1000 * 30, // 30 секунд
+    gcTime: 1000 * 60 * 5, // 5 минут в кеше
+    refetchOnWindowFocus: true,
     refetchOnReconnect: true,
   })
 }
@@ -74,8 +74,8 @@ export function useMoodHistory(
       return getMoodHistory(telegramId, userId)
     },
     enabled: enabled && !!telegramId && !!userId,
-    staleTime: 1000 * 60 * 5, // 5 минут - увеличено для снижения нагрузки
-    gcTime: 1000 * 60 * 15, // 15 минут в кеше
+    staleTime: 1000 * 60, // 1 минута
+    gcTime: 1000 * 60 * 10, // 10 минут в кеше
   })
 }
 
@@ -96,8 +96,8 @@ export function useTodaysMood(
       return getTodaysMood(telegramId, userId)
     },
     enabled: enabled && !!telegramId && !!userId,
-    staleTime: 1000 * 60 * 3, // 3 минуты - увеличено для снижения нагрузки
-    gcTime: 1000 * 60 * 10, // 10 минут в кеше
+    staleTime: 1000 * 10, // 10 секунд - очень свежие данные
+    gcTime: 1000 * 60 * 5, // 5 минут в кеше
   })
 }
 
