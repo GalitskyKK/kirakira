@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { clsx } from 'clsx'
+import { Maximize2, Minimize2 } from 'lucide-react'
 import { useGardenState } from '@/hooks/index.v2'
 import { useMoodTracking } from '@/hooks/index.v2'
 import { useGardenClientStore } from '@/stores/gardenStore'
@@ -36,6 +37,7 @@ export function GardenView({ className }: GardenViewProps) {
   const [draggedElement] = useState<GardenElementType | null>(null)
   const [elementBeingMoved, setElementBeingMoved] =
     useState<GardenElementType | null>(null) // Элемент для перемещения
+  const [isFullscreen, setIsFullscreen] = useState(false) // Полноэкранный режим палетки
 
   const handleElementClick = useCallback(
     (element: GardenElementType) => {
@@ -84,7 +86,7 @@ export function GardenView({ className }: GardenViewProps) {
         selectElement(element)
       }
     },
-    [viewMode, selectElement, elementBeingMoved]
+    [viewMode, selectElement]
   )
 
   const handleSlotClick = useCallback(
@@ -148,6 +150,10 @@ export function GardenView({ className }: GardenViewProps) {
     setViewMode(ViewMode.OVERVIEW)
   }, [selectElement, setViewMode])
 
+  const toggleFullscreen = useCallback(() => {
+    setIsFullscreen(prev => !prev)
+  }, [])
+
   if (!garden) {
     return (
       <Card className={clsx('min-h-[400px]', className)}>
@@ -170,7 +176,7 @@ export function GardenView({ className }: GardenViewProps) {
     <LoadingOverlay isLoading={isLoading}>
       <Card className={clsx('min-h-[500px]', className)} padding="none">
         <AnimatePresence mode="wait">
-          {viewMode === 'detail' && selectedElement ? (
+          {viewMode === ViewMode.DETAIL && selectedElement ? (
             <motion.div
               key="detail"
               initial={{ opacity: 0, x: 20 }}
@@ -234,11 +240,28 @@ export function GardenView({ className }: GardenViewProps) {
                       </>
                     ) : (
                       <>
+                        {displayMode === GardenDisplayMode.PALETTE && (
+                          <button
+                            onClick={toggleFullscreen}
+                            className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700"
+                            title={
+                              isFullscreen
+                                ? 'Выйти из полноэкранного режима'
+                                : 'Полноэкранный режим'
+                            }
+                          >
+                            {isFullscreen ? (
+                              <Minimize2 className="h-5 w-5" />
+                            ) : (
+                              <Maximize2 className="h-5 w-5" />
+                            )}
+                          </button>
+                        )}
                         <button
                           onClick={() => setViewMode(ViewMode.OVERVIEW)}
                           className={clsx(
                             'rounded-lg px-3 py-1.5 text-sm transition-colors',
-                            viewMode === 'overview'
+                            viewMode === ViewMode.OVERVIEW
                               ? 'bg-garden-100 text-garden-700 dark:bg-garden-700 dark:text-garden-100'
                               : 'text-gray-600 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700'
                           )}
@@ -250,6 +273,37 @@ export function GardenView({ className }: GardenViewProps) {
                   </div>
                 </div>
               </div>
+
+              {/* Fullscreen Palette Overlay */}
+              {isFullscreen && displayMode === GardenDisplayMode.PALETTE && (
+                <motion.div
+                  key="fullscreen-palette"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="fixed inset-0 z-[9999] flex flex-col bg-white dark:bg-gray-900"
+                >
+                  {/* Fullscreen Header */}
+                  <div className="flex items-center justify-between border-b border-gray-200 p-4">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      Палитра Сада
+                    </h2>
+                    <button
+                      onClick={toggleFullscreen}
+                      className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700"
+                      title="Выйти из полноэкранного режима"
+                    >
+                      <Minimize2 className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  {/* Fullscreen Palette Content */}
+                  <div className="flex flex-1 items-center justify-center overflow-auto p-4 sm:p-6 lg:p-8">
+                    <PaletteView className="h-full w-full max-w-4xl" />
+                  </div>
+                </motion.div>
+              )}
 
               {/* Mobile-first adaptive layout */}
               <div className="flex flex-col lg:flex-row">
@@ -300,7 +354,7 @@ export function GardenView({ className }: GardenViewProps) {
                 </div>
 
                 {/* Sidebar - Hidden on mobile, shown on desktop */}
-                {viewMode === 'overview' && (
+                {viewMode === ViewMode.OVERVIEW && (
                   <motion.div
                     className="hidden border-t border-gray-200 p-4 lg:block lg:w-80 lg:border-l lg:border-t-0"
                     initial={{ opacity: 0, x: 20 }}
@@ -317,7 +371,7 @@ export function GardenView({ className }: GardenViewProps) {
               </div>
 
               {/* Mobile Stats Panel - Only visible on mobile for overview mode */}
-              {viewMode === 'overview' && (
+              {viewMode === ViewMode.OVERVIEW && (
                 <motion.div
                   className="border-t border-gray-200 p-4 lg:hidden"
                   initial={{ opacity: 0, y: 20 }}
