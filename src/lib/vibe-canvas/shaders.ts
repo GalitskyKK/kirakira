@@ -69,8 +69,8 @@ uniform float vInteraction;
 #define CIRCLE_WIDTH_BASE 0.8
 #define CIRCLE_WIDTH_STEP 0.15
 
-#define SPARK_STRENGTH_BASE 0.15
-#define SPARK_STRENGTH_STEP 0.05
+#define SPARK_STRENGTH_BASE 1.0
+#define SPARK_STRENGTH_STEP 0.3
 
 #define CIRCLE_RADIUS_BASE 0.95
 #define CIRCLE_RADIUS_STEP 0.15
@@ -178,9 +178,9 @@ vec4 makeNoiseBlob2(vec2 uv, vec3 color1, vec3 color2, float strength, float off
   r0 = mix(0.0, 1.0, n0);
   d0 = distance(uv, r0 / len * uv);
   
-  // SIGNIFICANT CHANGE: Increased offset from 0.1 to 0.6 to make the noise mask much softer and prevent sharp black holes.
-  // This creates a much wider transition area for the alpha.
-  v0 = smoothstep(r0 + 0.6 + (sin(vTime + offset) + 1.0) * 0.5, r0, len);
+  // Very wide transition area (0.8) to prevent any sharp edges
+  // Reduced time modulation for more stable appearance
+  v0 = smoothstep(r0 + 0.8 + (sin(vTime + offset) + 1.0) * 0.3, r0, len);
 
   v1 = light(0.15 * (1.0 + 1.5 * (-sin(vTime * 2. + offset * 0.5) * 0.5)) + 0.3 * strength, 10.0 , d0);
 
@@ -209,8 +209,9 @@ vec4 makeBlob(vec2 uv,
 
   vec4 noise = makeNoiseBlob2(uv * (1.0 - likeReaction * 0.5) + noiseOffset, color1, color2, strength, offset);
   
-  // Apply outer soft mask
-  noise.a = mix(0.0, noise.a, smoothstep(outerRadius, 0.5, len));
+  // Apply outer soft mask with wider transition for smoother edges
+  // Increased transition range: outerRadius -> outerRadius * 0.6 for much softer falloff
+  noise.a = mix(0.0, noise.a, smoothstep(outerRadius, outerRadius * 0.6, len));
   
   // Add inner glow/highlight
   noise.rgb += 0.6 * likeReaction * (1.0 - smoothstep(0.2, outerRadius * 0.8, len));
@@ -245,13 +246,11 @@ void main() {
   float idx1 = (pa1/3.1415) / 2.0;
   float idx21 = (pa1/3.1415 + 1.0) / 2.0 * 3.1415;
 
-  // Rays calculation - heavily softened for smooth appearance
+  // Rays calculation (original from reference)
   float spark = triNoise3D(vec3(idx, 0.0, 0.0), 0.1);
   spark = mix(spark, triNoise3D(vec3(idx1, 0.0, idx1), 0.1), smoothstep(0.9, 1.0, sin(idx21)));
-  // Much softer contrast: pow(spark, 2.) instead of 4 or 10
-  spark = spark * 0.08 + pow(spark, 2.);
-  // High threshold (0.7) to make rays very subtle
-  spark = smoothstep(0.0, spark, 0.7) * spark * 0.5;
+  spark = spark * 0.2 + pow(spark, 10.);
+  spark = smoothstep(0.0, spark, 0.3) * spark;
 
   ${colorType} color = vColorBackground;
   vec4 blobColor;
