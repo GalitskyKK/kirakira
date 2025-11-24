@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, memo, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { clsx } from 'clsx'
 import { useMoodTracking } from '@/hooks/index.v2'
 import { Button, Card } from '@/components/ui'
 import { MOOD_CONFIG } from '@/types/mood'
 import { MoodImage } from './MoodImage'
+import { useAnimationConfig } from '@/hooks'
 import type { MoodType, MoodIntensity } from '@/types'
 
 interface MoodSelectorProps {
@@ -18,13 +19,16 @@ interface MoodSelectorProps {
   className?: string
 }
 
-export function MoodSelector({
+// Мемоизированный компонент для лучшей производительности
+export const MoodSelector = memo(function MoodSelector({
   onMoodSelected,
   initialMood,
   isLoading,
   className,
 }: MoodSelectorProps) {
   const { canCheckinToday, todaysMood } = useMoodTracking()
+  const { transition } = useAnimationConfig()
+  
   const [selectedMood, setSelectedMood] = useState<MoodType | null>(
     initialMood ?? todaysMood?.mood ?? null
   )
@@ -34,28 +38,28 @@ export function MoodSelector({
   const [note, setNote] = useState(todaysMood?.note ?? '')
   const [step, setStep] = useState<'mood' | 'intensity' | 'note'>('mood')
 
-  const handleMoodSelect = (mood: MoodType) => {
+  const handleMoodSelect = useCallback((mood: MoodType) => {
     setSelectedMood(mood)
     setStep('intensity')
-  }
+  }, [])
 
-  const handleIntensitySelect = (intensity: MoodIntensity) => {
+  const handleIntensitySelect = useCallback((intensity: MoodIntensity) => {
     setSelectedIntensity(intensity)
     setStep('note')
-  }
+  }, [])
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (selectedMood) {
       onMoodSelected?.(selectedMood, selectedIntensity, note || undefined)
     }
-  }
+  }, [selectedMood, selectedIntensity, note, onMoodSelected])
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     if (step === 'note') setStep('intensity')
     else if (step === 'intensity') setStep('mood')
-  }
+  }, [step])
 
-  const isAlreadyCheckedIn = !canCheckinToday()
+  const isAlreadyCheckedIn = useMemo(() => !canCheckinToday(), [canCheckinToday])
 
   // Если уже отметили настроение, показываем информацию о нём
   if (
@@ -142,7 +146,7 @@ export function MoodSelector({
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.2 }}
+            transition={transition}
           >
             <h3 className="mb-4 text-center text-lg font-semibold text-gray-900 dark:text-gray-100">
               Как дела?
@@ -160,12 +164,11 @@ export function MoodSelector({
                     key={mood}
                     onClick={() => handleMoodSelect(mood)}
                     className={clsx(
-                      'relative flex flex-col items-center justify-center overflow-hidden rounded-xl border-2 p-4 transition-all duration-300 hover:scale-105',
+                      'relative flex flex-col items-center justify-center overflow-hidden rounded-xl border-2 p-4 transition-all duration-300',
                       selectedMood === mood
                         ? 'border-kira-500 bg-white/90 shadow-lg backdrop-blur-sm dark:bg-neutral-800/90'
-                        : 'border-neutral-200 bg-white hover:border-neutral-300 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-800 dark:hover:border-neutral-600'
+                        : 'border-neutral-200 bg-white active:scale-95 dark:border-neutral-700 dark:bg-neutral-800'
                     )}
-                    whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     style={{
                       boxShadow:
@@ -216,7 +219,7 @@ export function MoodSelector({
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.2 }}
+            transition={transition}
           >
             <h3 className="mb-4 text-center text-lg font-semibold text-gray-900 dark:text-gray-100">
               Насколько сильно?
@@ -229,12 +232,11 @@ export function MoodSelector({
                     key={intensity}
                     onClick={() => handleIntensitySelect(intensity)}
                     className={clsx(
-                      'w-full rounded-xl border-2 p-4 text-left transition-all hover:scale-[1.02]',
+                      'w-full rounded-xl border-2 p-4 text-left transition-all',
                       selectedIntensity === intensity
                         ? 'border-kira-500 bg-kira-50/50 shadow-md dark:bg-kira-900/30'
-                        : 'border-neutral-200 bg-white hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800'
+                        : 'border-neutral-200 bg-white active:scale-95 dark:border-neutral-700 dark:bg-neutral-800'
                     )}
-                    whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <div className="flex items-center justify-between">
@@ -288,7 +290,7 @@ export function MoodSelector({
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.2 }}
+            transition={transition}
           >
             <h3 className="mb-4 text-center text-lg font-semibold text-neutral-900 dark:text-neutral-100">
               Добавить заметку? (необязательно)
@@ -357,9 +359,10 @@ export function MoodSelector({
         )}
     </Card>
   )
-}
+})
 
-export function MoodIcon({
+// Мемоизированный компонент MoodIcon для производительности
+export const MoodIcon = memo(function MoodIcon({
   mood,
   size = 24,
 }: {
@@ -381,4 +384,4 @@ export function MoodIcon({
       <MoodImage mood={mood} size={size * 0.6} />
     </div>
   )
-}
+})

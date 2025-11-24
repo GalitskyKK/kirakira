@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import {
   BrowserRouter as Router,
   Routes,
@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { useUserClientStore, useUserSync } from '@/hooks/index.v2'
 import { UserProvider } from '@/contexts/UserContext'
+import { useReducedMotion } from '@/hooks'
 import { HomePage } from '@/pages/HomePage'
 import { OnboardingPage } from '@/pages/OnboardingPage'
 import { AuthPage } from '@/pages/AuthPage'
@@ -60,6 +61,7 @@ interface AppInitState {
 
 function App() {
   const isDevelopment = import.meta.env.DEV
+  const shouldReduceMotion = useReducedMotion()
 
   // 🚨 ПРОВЕРКА ДИАГНОСТИЧЕСКОГО РЕЖИМА
   const urlParams = new URLSearchParams(window.location.search)
@@ -119,6 +121,15 @@ function App() {
     enableTelegram: isTelegramEnv,
     isDevelopment,
   }) as AppInitState
+
+  // Оптимизированные параметры анимации для роутов
+  const routeTransition = useMemo(
+    () =>
+      shouldReduceMotion
+        ? { duration: 0.15, ease: 'easeOut' }
+        : { duration: 0.3, ease: 'easeInOut' },
+    [shouldReduceMotion]
+  )
 
   // Применяем тему Telegram к корневому элементу
   useEffect(() => {
@@ -429,23 +440,10 @@ function App() {
     <UserProvider>
       <div className="App">
         <Router>
-          <AnimatePresence mode="wait">
+          {/* AnimatePresence только если не включен режим уменьшения анимаций */}
+          {shouldReduceMotion ? (
             <Routes>
-              <Route
-                path="/"
-                element={
-                  <motion.div
-                    key="home"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <HomePage />
-                  </motion.div>
-                }
-              />
-              {/* Mobile routes wrapped in MobileLayout */}
+              <Route path="/" element={<HomePage />} />
               <Route path="/mobile" element={<MobileLayout />}>
                 <Route index element={<MoodPage />} />
                 <Route path="garden" element={<GardenPage />} />
@@ -453,173 +451,254 @@ function App() {
                 <Route path="community" element={<CommunityPage />} />
                 <Route path="profile" element={<ProfilePage />} />
               </Route>
-              {/* Settings, Stats и MoodRoadmap без navbar (как Friend и Leaderboard) */}
-              <Route
-                path="/mobile/settings"
-                element={
-                  <motion.div
-                    key="settings"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <SettingsPage />
-                  </motion.div>
-                }
-              />
-              <Route
-                path="/mobile/stats"
-                element={
-                  <motion.div
-                    key="stats"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <StatsPage />
-                  </motion.div>
-                }
-              />
-              <Route
-                path="/mobile/mood-roadmap"
-                element={
-                  <motion.div
-                    key="mood-roadmap"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <MoodRoadmapPage />
-                  </motion.div>
-                }
-              />
-              {/* Dev роуты доступны только в DEV режиме */}
+              <Route path="/mobile/settings" element={<SettingsPage />} />
+              <Route path="/mobile/stats" element={<StatsPage />} />
+              <Route path="/mobile/mood-roadmap" element={<MoodRoadmapPage />} />
               {import.meta.env.DEV && ShowcasePage && (
                 <Route
                   path="/showcase"
                   element={
-                    <motion.div
-                      key="showcase"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <Suspense fallback={<LoadingSpinner />}>
-                        <ShowcasePage />
-                      </Suspense>
-                    </motion.div>
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <ShowcasePage />
+                    </Suspense>
                   }
                 />
               )}
-
               {import.meta.env.DEV && TelegramTestPage && (
                 <Route
                   path="/telegram-test"
                   element={
-                    <motion.div
-                      key="telegram-test"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <Suspense fallback={<LoadingSpinner />}>
-                        <TelegramTestPage />
-                      </Suspense>
-                    </motion.div>
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <TelegramTestPage />
+                    </Suspense>
                   }
                 />
               )}
-
               {import.meta.env.DEV && StreakDebugPage && (
                 <Route
                   path="/streak-debug"
                   element={
-                    <motion.div
-                      key="streak-debug"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <Suspense fallback={<LoadingSpinner />}>
-                        <StreakDebugPage />
-                      </Suspense>
-                    </motion.div>
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <StreakDebugPage />
+                    </Suspense>
                   }
                 />
               )}
-
               <Route
                 path="/auth"
                 element={
-                  <motion.div
-                    key="auth"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <AuthPage
-                      onSuccess={() => window.location.replace('/')}
-                      onError={error => console.error('Auth error:', error)}
-                    />
-                  </motion.div>
+                  <AuthPage
+                    onSuccess={() => window.location.replace('/')}
+                    onError={error => console.error('Auth error:', error)}
+                  />
                 }
               />
-              <Route
-                path="/profile"
-                element={
-                  <motion.div
-                    key="profile"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <ProfilePage />
-                  </motion.div>
-                }
-              />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route
                 path="/friend/:friendTelegramId"
                 element={
-                  <motion.div
-                    key="friend-profile"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <FriendProfilePage />
-                    </Suspense>
-                  </motion.div>
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <FriendProfilePage />
+                  </Suspense>
                 }
               />
               <Route
                 path="/leaderboard"
                 element={
-                  <motion.div
-                    key="leaderboard"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <Suspense fallback={<LoadingSpinner />}>
-                      <LeaderboardPage />
-                    </Suspense>
-                  </motion.div>
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <LeaderboardPage />
+                  </Suspense>
                 }
               />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-          </AnimatePresence>
+          ) : (
+            <AnimatePresence mode="wait">
+              <Routes>
+                <Route
+                  path="/"
+                  element={
+                    <motion.div
+                      key="home"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={routeTransition}
+                    >
+                      <HomePage />
+                    </motion.div>
+                  }
+                />
+                <Route path="/mobile" element={<MobileLayout />}>
+                  <Route index element={<MoodPage />} />
+                  <Route path="garden" element={<GardenPage />} />
+                  <Route path="tasks" element={<TasksPage />} />
+                  <Route path="community" element={<CommunityPage />} />
+                  <Route path="profile" element={<ProfilePage />} />
+                </Route>
+                <Route
+                  path="/mobile/settings"
+                  element={
+                    <motion.div
+                      key="settings"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={routeTransition}
+                    >
+                      <SettingsPage />
+                    </motion.div>
+                  }
+                />
+                <Route
+                  path="/mobile/stats"
+                  element={
+                    <motion.div
+                      key="stats"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={routeTransition}
+                    >
+                      <StatsPage />
+                    </motion.div>
+                  }
+                />
+                <Route
+                  path="/mobile/mood-roadmap"
+                  element={
+                    <motion.div
+                      key="mood-roadmap"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={routeTransition}
+                    >
+                      <MoodRoadmapPage />
+                    </motion.div>
+                  }
+                />
+                {import.meta.env.DEV && ShowcasePage && (
+                  <Route
+                    path="/showcase"
+                    element={
+                      <motion.div
+                        key="showcase"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={routeTransition}
+                      >
+                        <Suspense fallback={<LoadingSpinner />}>
+                          <ShowcasePage />
+                        </Suspense>
+                      </motion.div>
+                    }
+                  />
+                )}
+                {import.meta.env.DEV && TelegramTestPage && (
+                  <Route
+                    path="/telegram-test"
+                    element={
+                      <motion.div
+                        key="telegram-test"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={routeTransition}
+                      >
+                        <Suspense fallback={<LoadingSpinner />}>
+                          <TelegramTestPage />
+                        </Suspense>
+                      </motion.div>
+                    }
+                  />
+                )}
+                {import.meta.env.DEV && StreakDebugPage && (
+                  <Route
+                    path="/streak-debug"
+                    element={
+                      <motion.div
+                        key="streak-debug"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={routeTransition}
+                      >
+                        <Suspense fallback={<LoadingSpinner />}>
+                          <StreakDebugPage />
+                        </Suspense>
+                      </motion.div>
+                    }
+                  />
+                )}
+                <Route
+                  path="/auth"
+                  element={
+                    <motion.div
+                      key="auth"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={routeTransition}
+                    >
+                      <AuthPage
+                        onSuccess={() => window.location.replace('/')}
+                        onError={error => console.error('Auth error:', error)}
+                      />
+                    </motion.div>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <motion.div
+                      key="profile"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={routeTransition}
+                    >
+                      <ProfilePage />
+                    </motion.div>
+                  }
+                />
+                <Route
+                  path="/friend/:friendTelegramId"
+                  element={
+                    <motion.div
+                      key="friend-profile"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={routeTransition}
+                    >
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <FriendProfilePage />
+                      </Suspense>
+                    </motion.div>
+                  }
+                />
+                <Route
+                  path="/leaderboard"
+                  element={
+                    <motion.div
+                      key="leaderboard"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={routeTransition}
+                    >
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <LeaderboardPage />
+                      </Suspense>
+                    </motion.div>
+                  }
+                />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </AnimatePresence>
+          )}
         </Router>
 
         <CompanionOverlay />

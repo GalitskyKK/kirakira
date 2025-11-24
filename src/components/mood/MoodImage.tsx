@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { MOOD_CONFIG } from '@/types/mood'
 import type { MoodType } from '@/types'
 
@@ -8,7 +9,7 @@ interface MoodImageProps {
   fallbackToEmoji?: boolean
 }
 
-export function MoodImage({
+export const MoodImage = memo(function MoodImage({
   mood,
   size = 48,
   className = '',
@@ -40,4 +41,4 @@ export function MoodImage({
       />
     </div>
   )
-}
+})

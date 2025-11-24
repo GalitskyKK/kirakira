@@ -5,7 +5,7 @@ import { GardenView } from '@/components/garden'
 import { MoodCheckin, MoodStats } from '@/components/mood'
 import { MobileLayout } from '@/components/layout/MobileLayout'
 import { Card, TextTyping } from '@/components/ui'
-import { useGardenState, useMoodTracking, useElementGeneration } from '@/hooks'
+import { useGardenState, useMoodTracking, useElementGeneration, useAnimationConfig } from '@/hooks'
 import { formatDate } from '@/utils/dateHelpers'
 import { useNavigate } from 'react-router-dom'
 
@@ -13,6 +13,7 @@ export function HomePage() {
   const { garden: _garden, gardenStats } = useGardenState()
   const { todaysMood, streakCount } = useMoodTracking()
   const { canUnlock, getMilestoneInfo } = useElementGeneration()
+  const { transition } = useAnimationConfig()
   const [isMobile, setIsMobile] = useState(false)
   const navigate = useNavigate()
 
@@ -45,18 +46,18 @@ export function HomePage() {
   return (
     <div className="from-kira-50 min-h-screen bg-gradient-to-br via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
       <div className="container mx-auto max-w-7xl px-4 py-6">
-        {/* Header */}
+        {/* Header - оптимизировано */}
         <motion.div
           className="mb-8 text-center"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={transition}
         >
           <motion.div
             className="mb-2 text-5xl font-bold"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={transition}
           >
             <TextTyping className="" />
           </motion.div>
@@ -68,14 +69,14 @@ export function HomePage() {
           </p>
         </motion.div>
 
-        {/* Main Grid */}
+        {/* Main Grid - оптимизировано */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Mood Check-in */}
           <motion.div
             className="lg:col-span-1"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
+            transition={transition}
           >
             <MoodCheckin className="mb-6" />
 
@@ -126,7 +127,7 @@ export function HomePage() {
                       className="from-kira-500 via-kira-400 h-2 rounded-full bg-gradient-to-r to-garden-500"
                       initial={{ width: 0 }}
                       animate={{ width: `${milestoneInfo.progress}%` }}
-                      transition={{ duration: 1, delay: 0.5 }}
+                      transition={transition}
                     />
                   </div>
                   <div className="text-xs text-neutral-500 dark:text-neutral-400">
@@ -164,18 +165,18 @@ export function HomePage() {
             className="lg:col-span-2"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={transition}
           >
             <GardenView />
           </motion.div>
         </div>
 
-        {/* Stats Section */}
+        {/* Stats Section - оптимизировано */}
         <motion.div
           className="mt-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
+          transition={transition}
         >
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Mood Statistics */}

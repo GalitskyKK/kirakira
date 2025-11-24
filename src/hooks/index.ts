@@ -17,6 +17,7 @@ export {
 export { useTelegramStorage } from './useTelegramStorage'
 export { useAppInitialization } from './useAppInitialization'
 export { useTelegramSync } from './useTelegramSync'
+export { useReducedMotion, useAnimationConfig } from './useReducedMotion'
 export { useStoresSync } from './useStoresSync'
 export { useDeepLink } from './useDeepLink'
 export { useUserPhotos } from './useUserPhotos'

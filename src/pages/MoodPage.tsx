@@ -10,6 +10,7 @@ import {
   TextTyping,
 } from '@/components/ui'
 import { useGardenState, useMoodTracking } from '@/hooks/index.v2'
+import { useAnimationConfig } from '@/hooks'
 import { useStreakFreeze } from '@/hooks/useStreakFreeze'
 import { useCurrencySync } from '@/hooks/useCurrencySync'
 import { useCurrencyClientStore } from '@/stores/currencyStore'
@@ -20,6 +21,8 @@ export function MoodPage() {
   const navigate = useNavigate()
   const { garden, gardenStats } = useGardenState()
   const { canCheckinToday } = useMoodTracking()
+  const { transition } = useAnimationConfig()
+  
   // Получаем данные пользователя через React Query
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
@@ -115,13 +118,13 @@ export function MoodPage() {
         {/* Mood Check-in */}
         <MoodCheckin />
 
-        {/* Quick Stats Cards - soft pastels */}
+        {/* Quick Stats Cards - soft pastels - оптимизировано */}
         <div className="grid grid-cols-2 gap-3">
           <motion.div
             className="glass-card rounded-3xl bg-gradient-to-br from-garden-100/50 to-garden-200/30 p-5 dark:from-garden-900/40 dark:to-garden-800/40"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={transition}
           >
             <div className="text-3xl font-bold text-garden-600 dark:text-garden-400">
               {gardenStats.totalElements}
@@ -135,7 +138,7 @@ export function MoodPage() {
             className="glass-card rounded-3xl bg-gradient-to-br from-kira-100/50 to-kira-200/30 p-5 dark:from-kira-900/40 dark:to-kira-800/40"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            transition={transition}
           >
             <div className="text-3xl font-bold text-kira-600 dark:text-kira-400">
               {garden?.streak ?? 0}
@@ -146,13 +149,11 @@ export function MoodPage() {
           </motion.div>
         </div>
 
-        {/* Quick Actions - glass cards */}
+        {/* Quick Actions - glass cards - оптимизировано без hover анимаций */}
         <div className="space-y-3">
-          <motion.button
+          <button
             onClick={() => navigate('/mobile/garden')}
-            className="glass-card w-full rounded-3xl p-4 text-left transition-all hover:bg-white/90 dark:hover:bg-neutral-900/90"
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
+            className="glass-card w-full rounded-3xl p-4 text-left transition-all active:scale-95"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -167,13 +168,11 @@ export function MoodPage() {
               </div>
               <div className="text-3xl">🌱</div>
             </div>
-          </motion.button>
+          </button>
 
-          <motion.button
+          <button
             onClick={() => navigate('/mobile/tasks')}
-            className="glass-card w-full rounded-3xl p-4 text-left transition-all hover:bg-white/90 dark:hover:bg-neutral-900/90"
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
+            className="glass-card w-full rounded-3xl p-4 text-left transition-all active:scale-95"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -186,13 +185,11 @@ export function MoodPage() {
               </div>
               <div className="text-3xl">🏆</div>
             </div>
-          </motion.button>
+          </button>
 
-          <motion.button
+          <button
             onClick={() => navigate('/mobile/community')}
-            className="glass-card w-full rounded-3xl p-4 text-left transition-all hover:bg-white/90 dark:hover:bg-neutral-900/90"
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
+            className="glass-card w-full rounded-3xl p-4 text-left transition-all active:scale-95"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -205,13 +202,11 @@ export function MoodPage() {
               </div>
               <div className="text-3xl">👥</div>
             </div>
-          </motion.button>
+          </button>
 
-          <motion.button
+          <button
             onClick={() => navigate('/mobile/stats')}
-            className="glass-card w-full rounded-3xl p-4 text-left transition-all hover:bg-white/90 dark:hover:bg-neutral-900/90"
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
+            className="glass-card w-full rounded-3xl p-4 text-left transition-all active:scale-95"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -224,7 +219,7 @@ export function MoodPage() {
               </div>
               <div className="text-3xl">📊</div>
             </div>
-          </motion.button>
+          </button>
         </div>
 
         {/* 🧊 Модалка заморозки стрика */}
