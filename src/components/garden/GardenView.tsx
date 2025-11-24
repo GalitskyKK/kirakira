@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { clsx } from 'clsx'
 import { Maximize2, Minimize2 } from 'lucide-react'
@@ -174,38 +175,41 @@ export function GardenView({ className }: GardenViewProps) {
 
   return (
     <>
-      {/* Fullscreen Palette Overlay - Outside all containers */}
-      <AnimatePresence>
-        {isFullscreen && displayMode === GardenDisplayMode.PALETTE && (
-          <motion.div
-            key="fullscreen-palette"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[9999] flex flex-col bg-white dark:bg-gray-900"
-          >
-            {/* Fullscreen Header */}
-            <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Палитра Сада
-              </h2>
-              <button
-                onClick={toggleFullscreen}
-                className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700"
-                title="Выйти из полноэкранного режима"
-              >
-                <Minimize2 className="h-5 w-5" />
-              </button>
-            </div>
+      {/* Fullscreen Palette Overlay - Rendered via Portal to document.body */}
+      {createPortal(
+        <AnimatePresence>
+          {isFullscreen && displayMode === GardenDisplayMode.PALETTE && (
+            <motion.div
+              key="fullscreen-palette"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 z-[9999] flex flex-col bg-white dark:bg-gray-900"
+            >
+              {/* Fullscreen Header */}
+              <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Палитра Сада
+                </h2>
+                <button
+                  onClick={toggleFullscreen}
+                  className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700"
+                  title="Выйти из полноэкранного режима"
+                >
+                  <Minimize2 className="h-5 w-5" />
+                </button>
+              </div>
 
-            {/* Fullscreen Palette Content */}
-            <div className="flex flex-1 items-center justify-center overflow-auto p-4 sm:p-6 lg:p-8">
-              <PaletteView className="h-full w-full max-w-4xl" />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              {/* Fullscreen Palette Content */}
+              <div className="flex flex-1 items-center justify-center overflow-auto p-4 sm:p-6 lg:p-8">
+                <PaletteView className="h-full w-full max-w-4xl" />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       <LoadingOverlay isLoading={isLoading}>
         <Card className={clsx('min-h-[500px]', className)} padding="none">
