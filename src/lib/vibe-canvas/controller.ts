@@ -220,7 +220,7 @@ export class VibeController {
     // Adaptive Scale Logic matching reference
     // Increased scale factors to make blobs larger (was 0.4/0.35, now 0.55/0.5)
     const isMobile = this.width < 500; // Use logical width for breakpoint
-    const scaleFactor = isMobile ? 0.55 : 0.5;
+    const scaleFactor = isMobile ? 0.75 : 0.7;
     if (vScale) this.gl.uniform1f(vScale, this.baseScale * scaleFactor);
     
     if (vColor) {
