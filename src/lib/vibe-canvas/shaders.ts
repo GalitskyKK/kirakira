@@ -14,11 +14,14 @@ export const getFragmentShader = (blobCount: number, transparent: boolean) => {
   const loopBody = `
     floatIndex = float(i);
     radius = CIRCLE_RADIUS_BASE - CIRCLE_RADIUS_STEP * floatIndex;
+    // Clamp width to avoid negative values which cause artifacts
+    width = max(0.1, CIRCLE_WIDTH_BASE - CIRCLE_WIDTH_STEP * floatIndex);
+    
     blobColor = makeBlob(uv,
                          mix(radius, radius + 0.3, n0),
                          vColor[i],
                          vColor[i+3],
-                         CIRCLE_WIDTH_BASE - CIRCLE_WIDTH_STEP * floatIndex,
+                         width,
                          (SPARK_STRENGTH_BASE - SPARK_STRENGTH_STEP * floatIndex) * spark,
                          vReact[i],
                          vAudio[i],
@@ -52,7 +55,7 @@ uniform vec2 vInteractionPoint;
 uniform float vInteraction;
 
 #define CIRCLE_WIDTH_BASE 0.8
-#define CIRCLE_WIDTH_STEP 0.2
+#define CIRCLE_WIDTH_STEP 0.15
 
 #define SPARK_STRENGTH_BASE 1.0
 #define SPARK_STRENGTH_STEP 0.3
@@ -144,12 +147,12 @@ float triNoise3D(in vec3 p, in float spd)
   vec3 bp = p;
   for (float i=0.; i<=4.; i++ )
   {\
-    vec3 dg = tri3(bp*0.01); // Increase the scale factor to make noise less frequent
+    vec3 dg = tri3(bp*0.01); 
     p += (dg+vTime*.1*spd);
 
-    bp *= 4.; // Increase the scale factor
+    bp *= 4.; 
     z *= 0.9;
-    p *= 1.6; // Increase the scale factor
+    p *= 1.6; 
 
     rz+= (tri(p.z+tri(0.6*p.x+0.1*tri(p.y))))/z;
   }
@@ -175,7 +178,8 @@ vec4 makeNoiseBlob2(vec2 uv, vec3 color1, vec3 color2, float strength, float off
   n0 = snoise3( vec3(uv * 1.2 + offset, vTime * 0.5 + offset) ) * 0.5 + 0.5;
   r0 = mix(0.0, 1.0, n0);
   d0 = distance(uv, r0 / len * uv);
-  v0 = smoothstep(r0 + 0.1 + (sin(vTime + offset) + 1.0), r0, len);
+  // Increased offset from 0.1 to 0.3 to make holes smoother and less sharp
+  v0 = smoothstep(r0 + 0.3 + (sin(vTime + offset) + 1.0), r0, len);
 
   v1 = light(0.15 * (1.0 + 1.5 * (-sin(vTime * 2. + offset * 0.5) * 0.5)) + 0.3 * strength, 10.0 , d0);
 
@@ -212,6 +216,7 @@ void main() {
   vec2 uv = gl_FragCoord.xy / vScreenSize.xy;
 
   uv = uv * 2.0 - 1.0;
+  // Correct aspect ratio handling
   uv.y *= vScreenSize.y / min(vScreenSize.x, vScreenSize.y) / vScale;
   uv.x *= vScreenSize.x / min(vScreenSize.x, vScreenSize.y) / vScale;
 
@@ -235,6 +240,7 @@ void main() {
   vec4 blobColor;
   float floatIndex;
   float radius;
+  float width;
 
   float n0 = snoise3(vec3(uv * 1.2, vTime * 0.5));
 
@@ -246,4 +252,3 @@ void main() {
 }
 `;
 };
-

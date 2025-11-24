@@ -181,6 +181,10 @@ export class VibeController {
     
     this.time += (this.energy.value * dt) / 1000;
     
+    // Clear buffer before drawing to prevent trails/artifacts if transparency is used or resize happens
+    this.gl.clearColor(0, 0, 0, 0);
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+
     this.render();
 
     this.animationFrameId = requestAnimationFrame(this.animate);
