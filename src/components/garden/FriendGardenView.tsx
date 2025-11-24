@@ -250,8 +250,10 @@ export function FriendGardenView({
           animate={{ opacity: 1, scale: 1 }}
           className="text-center"
         >
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
-          <p className="text-gray-600">Загружаем сад друга...</p>
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent dark:border-blue-400"></div>
+          <p className="text-gray-600 dark:text-gray-400">
+            Загружаем сад друга...
+          </p>
         </motion.div>
       </div>
     )
@@ -323,8 +325,12 @@ export function FriendGardenView({
           Назад
         </Button>
         <div className="text-center">
-          <h2 className="text-lg font-semibold">Сад пользователя</h2>
-          <p className="text-sm text-gray-600">Только для просмотра</p>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Сад пользователя
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Только для просмотра
+          </p>
         </div>
         <div className="w-20"></div> {/* Spacer для центровки заголовка */}
       </div>
@@ -341,14 +347,14 @@ export function FriendGardenView({
 
           <div className="flex-1">
             <div className="flex items-center space-x-2">
-              <h3 className="font-semibold">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">
                 {friendGarden.friendInfo.username
                   ? `@${friendGarden.friendInfo.username}`
                   : `${friendGarden.friendInfo.firstName} ${friendGarden.friendInfo.lastName || ''}`.trim()}
               </h3>
             </div>
 
-            <div className="mt-2 flex items-center space-x-4 text-sm text-gray-600">
+            <div className="mt-2 flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
               <span className="flex items-center space-x-1">
                 <span>🌱</span>
                 <span>{friendGarden.friendInfo.totalElements}</span>
@@ -376,14 +382,14 @@ export function FriendGardenView({
       <Card className="p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               Сад {friendGarden.friendInfo.firstName}
             </h2>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               {friendGarden.total} растений • Сад друга
             </p>
           </div>
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
             <Flame className="h-4 w-4" />
             <span>{friendGarden.friendInfo.currentStreak} дней</span>
           </div>
@@ -441,14 +447,16 @@ export function FriendGardenView({
                 <div className="flex items-center space-x-3">
                   <div className="text-2xl">{selectedElement.emoji}</div>
                   <div>
-                    <h4 className="font-semibold">{selectedElement.name}</h4>
-                    <p className="text-sm text-gray-600">
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                      {selectedElement.name}
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       {selectedElement.description}
                     </p>
                   </div>
                 </div>
 
-                <div className="text-right text-sm text-gray-500">
+                <div className="text-right text-sm text-gray-500 dark:text-gray-400">
                   <div className="flex items-center space-x-1">
                     <MapPin className="h-3 w-3" />
                     <span>
@@ -463,8 +471,8 @@ export function FriendGardenView({
               </div>
 
               <div className="mt-3 flex items-center space-x-2 text-sm">
-                <Info className="h-4 w-4 text-blue-500" />
-                <span className="text-gray-600">
+                <Info className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+                <span className="text-gray-600 dark:text-gray-400">
                   Настроение:{' '}
                   <span className="capitalize">
                     {selectedElement.moodInfluence}
