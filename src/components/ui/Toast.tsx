@@ -59,7 +59,7 @@ export function Toast({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-          className="fixed bottom-20 left-4 right-4 z-50 mx-auto max-w-md sm:bottom-6"
+          className="fixed bottom-20 left-4 right-4 z-[1600] mx-auto max-w-md sm:bottom-6"
         >
           <div
             className={`flex items-center gap-3 rounded-lg px-4 py-3 shadow-xl ${toastStyles[type]}`}
