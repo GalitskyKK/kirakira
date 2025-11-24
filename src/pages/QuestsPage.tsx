@@ -8,7 +8,6 @@ import { useTelegramId } from '@/hooks/useTelegramId'
 import { DailyQuestList } from '@/components/quests'
 // import { MobileLayout } from '@/components/layout'
 import { ErrorMessage } from '@/components/ui/ErrorMessage'
-import { StreakGemQuests } from '@/components/ui'
 
 export function QuestsPage() {
   const telegramId = useTelegramId()
@@ -54,18 +53,8 @@ export function QuestsPage() {
       </div>
 
       {/* Основной контент */}
-      <div className="space-y-6 p-4">
-        {/* Ежедневные задания */}
+      <div className="p-4">
         <DailyQuestList telegramId={telegramId} />
-
-        {/* Стрик-квесты за гемы */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.3 }}
-        >
-          <StreakGemQuests />
-        </motion.div>
       </div>
     </motion.div>
   )
