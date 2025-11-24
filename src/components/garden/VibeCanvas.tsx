@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { VibeController, VibeConfig } from '@/lib/vibe-canvas/controller';
 
 interface VibeCanvasProps {
@@ -17,28 +17,32 @@ export const VibeCanvas: React.FC<VibeCanvasProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controllerRef = useRef<VibeController | null>(null);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || !config) return;
 
-    // Initialize controller
+    // Wait for config to be available before initializing
+    // This prevents flash of default colors
     try {
         controllerRef.current = new VibeController(canvasRef.current, config);
         controllerRef.current.start();
+        setIsReady(true);
     } catch (e) {
         console.error("Failed to init VibeCanvas", e);
     }
 
     return () => {
       controllerRef.current?.stop();
+      setIsReady(false);
     };
-  }, []); // Init once
+  }, [config?.colors?.length, config?.hue]); // Reinit when colors change
 
   useEffect(() => {
-    if (controllerRef.current && config) {
+    if (controllerRef.current && config && isReady) {
       controllerRef.current.updateConfig(config);
     }
-  }, [config]);
+  }, [config, isReady]);
 
   useEffect(() => {
     if (controllerRef.current && width !== undefined && height !== undefined) {
@@ -53,7 +57,9 @@ export const VibeCanvas: React.FC<VibeCanvasProps> = ({
       style={{
         width: width ? `${width}px` : '100%',
         height: height ? `${height}px` : '100%',
-        display: 'block'
+        display: 'block',
+        opacity: isReady ? 1 : 0,
+        transition: 'opacity 0.3s ease-in-out'
       }}
     />
   );
