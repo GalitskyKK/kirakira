@@ -20,7 +20,11 @@ export const VibeCanvas: React.FC<VibeCanvasProps> = ({
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    if (!canvasRef.current || !config) return;
+    if (!canvasRef.current) return;
+    
+    // Only initialize when we have real config data (colors or hue)
+    const hasValidConfig = config && (config.colors?.length || config.hue !== undefined);
+    if (!hasValidConfig) return;
 
     // Wait for config to be available before initializing
     // This prevents flash of default colors
@@ -35,6 +39,7 @@ export const VibeCanvas: React.FC<VibeCanvasProps> = ({
     return () => {
       controllerRef.current?.stop();
       setIsReady(false);
+      controllerRef.current = null;
     };
   }, [config?.colors?.length, config?.hue]); // Reinit when colors change
 

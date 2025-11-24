@@ -192,9 +192,11 @@ export function PaletteView({
     moodHistoryHashRef.current = historyHash
     baseBallsRef.current = baseBalls
 
-    return baseBalls.map(ball =>
+    // Reverse the order so most frequent moods render on top (last in loop)
+    const colors = baseBalls.map(ball =>
       hslToRgbNormalized(ball.colorHsl.h, ball.colorHsl.s, ball.colorHsl.l)
     )
+    return colors.reverse()
   }, [moodHistory])
 
   const colors = useMemo(() => generateColors(), [generateColors])

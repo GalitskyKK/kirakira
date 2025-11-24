@@ -69,8 +69,8 @@ uniform float vInteraction;
 #define CIRCLE_WIDTH_BASE 0.8
 #define CIRCLE_WIDTH_STEP 0.15
 
-#define SPARK_STRENGTH_BASE 0.3
-#define SPARK_STRENGTH_STEP 0.1
+#define SPARK_STRENGTH_BASE 0.15
+#define SPARK_STRENGTH_STEP 0.05
 
 #define CIRCLE_RADIUS_BASE 0.95
 #define CIRCLE_RADIUS_STEP 0.15
@@ -245,13 +245,13 @@ void main() {
   float idx1 = (pa1/3.1415) / 2.0;
   float idx21 = (pa1/3.1415 + 1.0) / 2.0 * 3.1415;
 
-  // Rays calculation - softened for smoother appearance
+  // Rays calculation - heavily softened for smooth appearance
   float spark = triNoise3D(vec3(idx, 0.0, 0.0), 0.1);
   spark = mix(spark, triNoise3D(vec3(idx1, 0.0, idx1), 0.1), smoothstep(0.9, 1.0, sin(idx21)));
-  // Reduced contrast: pow(spark, 10.) -> pow(spark, 4.) for softer rays
-  spark = spark * 0.15 + pow(spark, 4.);
-  // Increased threshold from 0.3 to 0.5 to make rays less visible
-  spark = smoothstep(0.0, spark, 0.5) * spark;
+  // Much softer contrast: pow(spark, 2.) instead of 4 or 10
+  spark = spark * 0.08 + pow(spark, 2.);
+  // High threshold (0.7) to make rays very subtle
+  spark = smoothstep(0.0, spark, 0.7) * spark * 0.5;
 
   ${colorType} color = vColorBackground;
   vec4 blobColor;
