@@ -7,6 +7,7 @@ export interface VibeConfig {
   energy?: number;
   baseScale?: number;
   colors?: [number, number, number][];
+  blobCount?: number; // Dynamic blob count based on actual mood types
 }
 
 export class VibeController {
@@ -26,6 +27,7 @@ export class VibeController {
   baseScale: number = 1;
   rotation: Vector3[];
   time: number = 0; // Internal time for shader
+  blobCount: number = 3; // Default blob count
   
   // Uniform locations
   uniforms: Record<string, WebGLUniformLocation | null> = {};
@@ -54,6 +56,7 @@ export class VibeController {
     this.palette = new PaletteManager(config.hue ?? 10);
     this.energy = new Tween(config.energy ?? 0.2, config.energy ?? 0.2, 1000);
     this.baseScale = config.baseScale ?? 1;
+    this.blobCount = config.blobCount ?? (config.colors?.length ?? 3);
     
     this.rotation = [
       new Vector3(-0.3, 0.3, 0.2),
@@ -72,7 +75,9 @@ export class VibeController {
   }
 
   private init() {
-    const fragmentShaderSrc = getFragmentShader(6, true); 
+    // Use dynamic blob count, clamped to 1-6 range
+    const clampedBlobCount = Math.max(1, Math.min(6, this.blobCount));
+    const fragmentShaderSrc = getFragmentShader(clampedBlobCount, true); 
     const program = this.createProgram(vertexShader, fragmentShaderSrc);
     if (!program) return;
     this.program = program;
@@ -168,6 +173,14 @@ export class VibeController {
   }
 
   updateConfig(config: VibeConfig) {
+    // Check if blob count changed - requires shader recompilation
+    const newBlobCount = config.blobCount ?? (config.colors?.length ?? this.blobCount);
+    if (newBlobCount !== this.blobCount) {
+      this.blobCount = newBlobCount;
+      // Reinitialize shader with new blob count
+      this.init();
+    }
+    
     if (config.colors) {
          this.palette.update(0, undefined, config.colors);
     } else if (config.hue !== undefined) {
@@ -218,7 +231,8 @@ export class VibeController {
 
     if (vRotation && this.rotation[0]) {
       const rotations: number[] = [];
-      for (let i = 0; i < 6; i++) {
+      const maxRotations = Math.min(6, this.blobCount);
+      for (let i = 0; i < maxRotations; i++) {
           if (this.rotation[i]) {
               rotations.push(this.rotation[i]!.x, this.rotation[i]!.y, this.rotation[i]!.z);
           } else {
@@ -228,8 +242,14 @@ export class VibeController {
       this.gl.uniform3fv(vRotation, new Float32Array(rotations));
     }
 
-    if (vAudio) this.gl.uniform1fv(vAudio, new Float32Array([0, 0, 0, 0, 0, 0]));
-    if (vReact) this.gl.uniform1fv(vReact, new Float32Array([0, 0, 0, 0, 0, 0]));
+    if (vAudio) {
+      const audioData = new Array(Math.min(6, this.blobCount)).fill(0);
+      this.gl.uniform1fv(vAudio, new Float32Array(audioData));
+    }
+    if (vReact) {
+      const reactData = new Array(Math.min(6, this.blobCount)).fill(0);
+      this.gl.uniform1fv(vReact, new Float32Array(reactData));
+    }
     if (vInteractionPoint) this.gl.uniform2f(vInteractionPoint, 0, 0);
     if (vInteraction) this.gl.uniform1f(vInteraction, 0);
 
