@@ -49,9 +49,9 @@ export function useGardenSync(telegramId: number | undefined, enabled = true) {
       return syncGarden(telegramId)
     },
     enabled: enabled && !!telegramId,
-    staleTime: 1000 * 30, // 30 секунд - относительно свежие данные
-    gcTime: 1000 * 60 * 5, // 5 минут в кеше
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 5, // 5 минут - увеличено для снижения нагрузки (было 30 секунд)
+    gcTime: 1000 * 60 * 10, // 10 минут в кеше
+    refetchOnWindowFocus: false, // ❌ ОТКЛЮЧЕНО: слишком частые обновления
     refetchOnReconnect: true,
   })
 }

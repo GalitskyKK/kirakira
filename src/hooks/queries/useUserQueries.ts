@@ -43,9 +43,9 @@ export function useUserSync(telegramId: number | undefined, enabled = true) {
       return syncUserFromSupabase(telegramId)
     },
     enabled: enabled && !!telegramId,
-    staleTime: 1000 * 60 * 5, // 5 минут
+    staleTime: 1000 * 60 * 10, // 10 минут - увеличено для снижения нагрузки
     gcTime: 1000 * 60 * 30, // 30 минут в кеше
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false, // ❌ ОТКЛЮЧЕНО: используем глобальные настройки
     refetchOnReconnect: true,
   })
 }

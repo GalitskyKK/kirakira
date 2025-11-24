@@ -19,8 +19,6 @@ import type {
   ClaimChallengeRewardResult,
 } from '@/api/challengeService'
 import { useChallengeRewardStore } from '@/stores/challengeRewardStore'
-import { currencyKeys } from './useCurrencyQueries'
-import { userKeys } from './useUserQueries'
 
 // ============================================
 // QUERY KEYS - Константы для React Query
@@ -56,9 +54,9 @@ export function useChallengeList(
       return loadChallenges({ telegramId })
     },
     enabled: enabled && !!telegramId,
-    staleTime: 1000 * 60, // 1 минута
-    gcTime: 1000 * 60 * 10, // 10 минут в кеше
-    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60 * 3, // 3 минуты - увеличено для снижения нагрузки
+    gcTime: 1000 * 60 * 15, // 15 минут в кеше
+    refetchOnWindowFocus: false, // ❌ ОТКЛЮЧЕНО: снижаем нагрузку на сервер
   })
 }
 
@@ -79,10 +77,11 @@ export function useChallengeDetails(
       return loadChallengeDetails({ challengeId, telegramId })
     },
     enabled: enabled && !!challengeId && !!telegramId,
-    staleTime: 1000 * 30, // 30 секунд
-    gcTime: 1000 * 60 * 5, // 5 минут в кеше
-    refetchOnWindowFocus: true,
-    refetchInterval: 1000 * 60, // Автоматическое обновление каждую минуту
+    staleTime: 1000 * 60 * 3, // 3 минуты - увеличено для снижения нагрузки
+    gcTime: 1000 * 60 * 10, // 10 минут в кеше
+    refetchOnWindowFocus: false, // ❌ ОТКЛЮЧЕНО: слишком частые запросы
+    // ❌ УДАЛЕНО refetchInterval: Автоматическое обновление вызывало quota exceeded
+    // Вместо этого используем ручное обновление через кнопку или события
   })
 }
 
@@ -221,50 +220,43 @@ export function useClaimChallengeReward() {
     mutationFn: (request: ClaimChallengeRewardRequest) =>
       claimChallengeReward(request),
     onSuccess: (data: ClaimChallengeRewardResult, variables) => {
-      // Инвалидируем кеш челленджей
-      queryClient.invalidateQueries({
-        queryKey: challengeKeys.list(variables.telegramId),
-      })
-
-      queryClient.invalidateQueries({
-        queryKey: challengeKeys.details(
-          variables.challengeId,
-          variables.telegramId
-        ),
-      })
-
-      // Инвалидируем кеш валюты (используем правильные ключи)
-      queryClient.invalidateQueries({
-        queryKey: currencyKeys.balance(variables.telegramId),
-      })
-      queryClient.invalidateQueries({
-        queryKey: currencyKeys.transactions(variables.telegramId),
-      })
-      // Также инвалидируем все запросы валюты для этого пользователя
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          return (
-            Array.isArray(query.queryKey) &&
-            query.queryKey[0] === 'currency' &&
-            query.queryKey.includes(variables.telegramId)
-          )
-        },
-      })
-
-      // Инвалидируем кеш профиля (используем правильные ключи)
-      queryClient.invalidateQueries({
-        queryKey: userKeys.sync(variables.telegramId),
-      })
-      // Также инвалидируем все запросы пользователя для этого пользователя
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          return (
-            Array.isArray(query.queryKey) &&
-            (query.queryKey[0] === 'user' || query.queryKey[0] === 'profile') &&
-            query.queryKey.includes(variables.telegramId)
-          )
-        },
-      })
+      // ✅ ОПТИМИЗАЦИЯ: Батчим все invalidate queries для снижения нагрузки
+      // Инвалидируем только критичные queries одновременно
+      void Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: challengeKeys.list(variables.telegramId),
+          refetchType: 'active', // Только активные queries
+        }),
+        queryClient.invalidateQueries({
+          queryKey: challengeKeys.details(
+            variables.challengeId,
+            variables.telegramId
+          ),
+          refetchType: 'active',
+        }),
+        // ✅ Инвалидируем валюту одним запросом вместо нескольких
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            return (
+              Array.isArray(query.queryKey) &&
+              query.queryKey[0] === 'currency' &&
+              query.queryKey.includes(variables.telegramId)
+            )
+          },
+          refetchType: 'active',
+        }),
+        // ✅ Инвалидируем профиль одним запросом
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            return (
+              Array.isArray(query.queryKey) &&
+              (query.queryKey[0] === 'user' || query.queryKey[0] === 'profile') &&
+              query.queryKey.includes(variables.telegramId)
+            )
+          },
+          refetchType: 'active',
+        }),
+      ])
 
       // Показываем модалку награды
       if (showReward) {

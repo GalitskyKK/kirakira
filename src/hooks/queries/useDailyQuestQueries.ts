@@ -40,11 +40,11 @@ export function useDailyQuests(telegramId: number, enabled: boolean = true) {
     queryKey: dailyQuestKeys.quests(telegramId),
     queryFn: () => getDailyQuests(telegramId),
     enabled: enabled && !!telegramId,
-    staleTime: 5 * 60 * 1000, // 5 минут
-    gcTime: 10 * 60 * 1000, // 10 минут
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    retry: 3,
+    staleTime: 10 * 60 * 1000, // 10 минут - увеличено для снижения нагрузки
+    gcTime: 20 * 60 * 1000, // 20 минут
+    refetchOnWindowFocus: false, // ❌ ОТКЛЮЧЕНО: используем глобальные настройки
+    refetchOnMount: false, // ❌ ОТКЛЮЧЕНО: достаточно загрузки при первом рендере
+    retry: 2, // Снижено с 3 до 2
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   })
 }
