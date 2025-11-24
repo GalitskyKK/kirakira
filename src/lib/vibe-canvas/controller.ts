@@ -37,7 +37,7 @@ export class VibeController {
   constructor(canvas: HTMLCanvasElement, config: VibeConfig = {}) {
     this.canvas = canvas;
     const gl = canvas.getContext('webgl', { 
-      alpha: false,
+      alpha: true, // Transparent background
       antialias: false,
       depth: false,
       stencil: false,
@@ -65,7 +65,7 @@ export class VibeController {
   }
 
   private init() {
-    const fragmentShaderSrc = getFragmentShader(6, false);
+    const fragmentShaderSrc = getFragmentShader(6, true); // Enable transparent mode
     const program = this.createProgram(vertexShader, fragmentShaderSrc);
     if (!program) return;
     this.program = program;
@@ -187,19 +187,25 @@ export class VibeController {
   };
 
   private render() {
-    // Check if uniforms are initialized
     const { vScreenSize, vTime, vScale, vColor, vColorBackground, vRotation, vAudio, vReact, vInteractionPoint, vInteraction } = this.uniforms;
     
-    // Use fallback if not found (though init guarantees they are set to null or location)
-    if (vScreenSize) this.gl.uniform2f(vScreenSize, this.width, this.height);
+    // Pass PHYSICAL dimensions to shader (displayWidth/displayHeight) via canvas.width/height
+    if (vScreenSize) this.gl.uniform2f(vScreenSize, this.canvas.width, this.canvas.height);
     if (vTime) this.gl.uniform1f(vTime, this.time);
-    if (vScale) this.gl.uniform1f(vScale, this.baseScale * 0.35);
+    
+    // Adaptive Scale Logic
+    // Mobile (< 500px) uses 0.4, Desktop uses 0.35. 
+    // Base scale is multiplied by this factor.
+    const isMobile = this.width < 500;
+    const scaleFactor = isMobile ? 0.4 : 0.35;
+    if (vScale) this.gl.uniform1f(vScale, this.baseScale * scaleFactor);
     
     if (vColor) {
       const colors = this.palette.value.flat();
       this.gl.uniform3fv(vColor, new Float32Array(colors));
     }
-    if (vColorBackground) this.gl.uniform3f(vColorBackground, 0, 0, 0);
+    // Transparent background (alpha 0)
+    if (vColorBackground) this.gl.uniform4f(vColorBackground, 0, 0, 0, 0);
 
     if (vRotation && this.rotation[0] && this.rotation[1] && this.rotation[2]) {
       const rotations = [
