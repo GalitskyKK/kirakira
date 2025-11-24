@@ -184,6 +184,7 @@ async function handleRecord(req, res) {
       todayDate.setUTCHours(0, 0, 0, 0)
 
       let newStreak = userData.current_streak || 0
+      let diffDays = null // Объявляем вне блока для использования ниже
 
       console.log(`🔍 [STREAK DEBUG] Before calculation:`, {
         lastCheckin: lastCheckin?.toISOString(),
@@ -194,9 +195,7 @@ async function handleRecord(req, res) {
 
       if (lastCheckin) {
         lastCheckin.setUTCHours(0, 0, 0, 0)
-        const diffDays = Math.floor(
-          (todayDate - lastCheckin) / (1000 * 60 * 60 * 24)
-        )
+        diffDays = Math.floor((todayDate - lastCheckin) / (1000 * 60 * 60 * 24))
 
         console.log(`🔍 [STREAK DEBUG] Days difference: ${diffDays}`)
 
@@ -250,7 +249,7 @@ async function handleRecord(req, res) {
 
         // 🎁 НАЧИСЛЯЕМ НАГРАДЫ ЗА СТРИК-ВЕХИ
         // Проверяем, это новый стрик (увеличился) или обновление того же дня
-        const streakIncreased = diffDays === 1
+        const streakIncreased = diffDays !== null && diffDays === 1
         if (streakIncreased) {
           try {
             // 🌿 Награды ростками за вехи стрика (3, 7, 14, 30, 100, 365 дней)
