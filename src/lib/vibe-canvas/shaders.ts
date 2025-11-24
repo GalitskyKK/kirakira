@@ -16,10 +16,14 @@ export const getFragmentShader = (blobCount: number, transparent: boolean) => {
     radius = CIRCLE_RADIUS_BASE - CIRCLE_RADIUS_STEP * floatIndex;
     width = max(0.2, CIRCLE_WIDTH_BASE - CIRCLE_WIDTH_STEP * floatIndex);
     
+    // Use modulo to ensure we stay within bounds of vColor array (6 elements, 2 colors per blob)
+    int colorIndex1 = i;
+    int colorIndex2 = (i + 3) < 6 ? (i + 3) : (i - 3);
+    
     blobColor = makeBlob(uv,
                          mix(radius, radius + 0.3, n0),
-                         vColor[i],
-                         vColor[i+3],
+                         vColor[colorIndex1],
+                         vColor[colorIndex2],
                          width,
                          (SPARK_STRENGTH_BASE - SPARK_STRENGTH_STEP * floatIndex) * spark,
                          vReact[i],
