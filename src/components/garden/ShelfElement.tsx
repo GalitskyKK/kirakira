@@ -205,6 +205,8 @@ export const ShelfElement = memo(function ShelfElement({
         height: objectSize + 20, // Extra space for 3D effect
         transformStyle: 'preserve-3d',
         touchAction: 'none', // Отключаем стандартные жесты браузера
+        contain: 'layout style paint', // CSS containment для изоляции
+        willChange: 'transform, opacity', // GPU ускорение
         // ТОЧНОЕ позиционирование: либо абсолютное, либо старое с marginLeft
         ...(absoluteX !== undefined
           ? {
@@ -259,11 +261,12 @@ export const ShelfElement = memo(function ShelfElement({
           width: objectSize,
           height: objectSize,
           transformStyle: 'preserve-3d',
+          willChange: 'transform',
         }}
         animate={{
           y: isHovered ? -1 : 0,
         }}
-        transition={{ duration: 0.2 }}
+        transition={{ duration: 0.15, ease: 'easeOut' }}
       >
         {/* PlantRenderer for the actual object */}
         <PlantRenderer
@@ -309,13 +312,14 @@ export const ShelfElement = memo(function ShelfElement({
             'radial-gradient(ellipse, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 40%, transparent 70%)',
           borderRadius: '50%',
           marginTop: -objectSize * 0.15, // Overlap with object from below
+          willChange: 'transform, opacity',
         }}
         initial={{ scaleX: 0, opacity: 0 }}
         animate={{
           scaleX: 1,
-          opacity: isHovered ? 0.5 : 0.3,
+          opacity: isHovered ? 0.4 : 0.3,
         }}
-        transition={{ duration: 0.2, delay: position * 0.05 }}
+        transition={{ duration: 0.15, delay: position * 0.03 }}
       />
 
       {/* Enhanced selection aura */}

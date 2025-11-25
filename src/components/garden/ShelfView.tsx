@@ -1,8 +1,9 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { clsx } from 'clsx'
 import { ShelfElement } from './ShelfElement.tsx'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
+import { ParticleCanvas } from './ParticleCanvas'
 import type { GardenElement as GardenElementType, ViewMode } from '@/types'
 import { RarityLevel } from '@/types/garden'
 import type { GardenTheme } from '@/hooks/useGardenTheme'
@@ -75,7 +76,7 @@ export function ShelfView({
   const effectiveParticleDensity = isLowPerf
     ? Math.max(5, Math.floor(theme.particleDensity / 3))
     : theme.particleDensity
-  const shouldUseAnimations = theme.hasAnimations && !isLowPerf
+  const shouldUseAnimations = Boolean(theme.hasAnimations && !isLowPerf)
 
   useEffect(() => {
     const checkMobile = () => {
@@ -83,8 +84,17 @@ export function ShelfView({
     }
 
     checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
+    // Debounce resize для производительности
+    let timeoutId: NodeJS.Timeout
+    const handleResize = () => {
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(checkMobile, 150)
+    }
+    window.addEventListener('resize', handleResize, { passive: true })
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      clearTimeout(timeoutId)
+    }
   }, [])
 
   // Responsive constants
@@ -171,8 +181,17 @@ export function ShelfView({
 
   const isElementMoving = elementBeingMoved !== null
 
+  const containerRef = useRef<HTMLDivElement>(null)
+
   return (
-    <div className="shelf-container relative min-h-[650px] w-full overflow-visible sm:min-h-[700px] lg:min-h-[750px]">
+    <div 
+      ref={containerRef}
+      className="shelf-container relative min-h-[650px] w-full overflow-visible sm:min-h-[700px] lg:min-h-[750px]"
+      style={{
+        contain: 'layout style paint',
+        willChange: 'contents',
+      }}
+    >
       {/* Background with wooden texture and magical atmosphere */}
       <div className="absolute left-0 right-0 top-0 h-full min-h-[650px] sm:min-h-[700px] lg:min-h-[750px]">
         <div
@@ -199,71 +218,28 @@ export function ShelfView({
           }}
         />
 
-        {/* Magical floating particles - оптимизировано */}
-        {useMemo(() => {
-          // Мемоизируем позиции частиц для стабильности
-          const particles = Array.from({ length: effectiveParticleDensity }, (_, i) => {
-            const pseudoRandom = (seed: number): number => {
-              const x = Math.sin(seed) * 10000
-              return x - Math.floor(x)
-            }
-            return {
-              key: i,
-              left: 10 + pseudoRandom(i * 137.5) * 80,
-              top: 10 + pseudoRandom(i * 97.3) * 80,
-              delay: pseudoRandom(i * 42.7) * 5,
-              duration: 3 + pseudoRandom(i * 73.1) * 2,
-              xOffset: (pseudoRandom(i * 19.3) - 0.5) * 20,
-            }
-          })
-          return particles.map(p => (
-            <motion.div
-              key={p.key}
-              className="absolute h-1 w-1 rounded-full opacity-60"
-              style={{
-                left: `${p.left}%`,
-                top: `${p.top}%`,
-                background: `linear-gradient(90deg, ${theme.particleFrom}, ${theme.particleTo})`,
-                animation: shouldUseAnimations
-                  ? theme.particleAnimation
-                  : undefined,
-                willChange: shouldUseAnimations ? 'transform, opacity' : 'auto',
-              }}
-              animate={
-                isLowPerf
-                  ? {}
-                  : {
-                      y: [0, -30, 0],
-                      x: [0, p.xOffset, 0],
-                      opacity: [0.3, 0.8, 0.3],
-                      scale: [0.5, 1.2, 0.5],
-                    }
-              }
-              transition={
-                isLowPerf
-                  ? {}
-                  : {
-                      duration: p.duration,
-                      repeat: Infinity,
-                      delay: p.delay,
-                      ease: 'easeInOut',
-                    }
-              }
-            />
-          ))
-        }, [effectiveParticleDensity, theme.particleFrom, theme.particleTo, shouldUseAnimations, isLowPerf, theme.particleAnimation])}
+        {/* Magical floating particles - Canvas оптимизация */}
+        <ParticleCanvas
+          theme={theme}
+          isLowPerf={isLowPerf}
+          shouldUseAnimations={shouldUseAnimations}
+          particleDensity={effectiveParticleDensity}
+          containerRef={containerRef}
+        />
       </div>
 
-      {/* Main shelf container with perspective */}
+      {/* Main shelf container - оптимизировано */}
       <motion.div
         className="relative w-full"
         style={{
           perspective: '1200px',
           perspectiveOrigin: 'center center',
+          contain: 'layout style',
+          willChange: 'transform, opacity',
         }}
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
       >
         {/* Shelves */}
         <div
@@ -282,12 +258,14 @@ export function ShelfView({
                 style={{
                   height: SHELF_HEIGHT,
                   transformStyle: 'preserve-3d',
+                  willChange: 'opacity',
+                  contain: 'layout style paint',
                 }}
-                initial={{ opacity: 0, rotateX: -15 }}
-                animate={{ opacity: 1, rotateX: 0 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 transition={{
-                  delay: shelfIndex * 0.2,
-                  duration: 0.6,
+                  delay: shelfIndex * 0.1,
+                  duration: 0.3,
                   ease: 'easeOut',
                 }}
               >
