@@ -204,17 +204,11 @@ export function ShelfView({
       </div>
 
       {/* Main shelf container - оптимизировано */}
-      <motion.div
+      <div
         className="relative w-full"
         style={{
-          perspective: '1200px',
-          perspectiveOrigin: 'center center',
           contain: 'layout style',
-          willChange: 'transform, opacity',
         }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
       >
         {/* Shelves */}
         <div
@@ -235,13 +229,7 @@ export function ShelfView({
                   transformStyle: 'preserve-3d',
                   willChange: 'opacity',
                   contain: 'layout style paint',
-                }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{
-                  delay: shelfIndex * 0.1,
-                  duration: 0.3,
-                  ease: 'easeOut',
+                  opacity: 1,
                 }}
               >
                 {/* Enhanced wooden shelf base */}
@@ -389,18 +377,13 @@ export function ShelfView({
                               height: SHELF_HEIGHT - 40,
                               minWidth: ELEMENT_WIDTH,
                               marginLeft: position === 0 ? 0 : ELEMENT_SPACING,
+                              opacity: 1,
                             }}
                             whileHover={{
                               scale: 1.03,
                               backgroundColor: isElementMoving
                                 ? 'rgba(59, 130, 246, 0.15)'
                                 : 'rgba(245, 158, 11, 0.1)',
-                            }}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                              delay: position * 0.1,
-                              duration: 0.3,
                             }}
                             onClick={e => {
                               e.preventDefault()
@@ -499,10 +482,8 @@ export function ShelfView({
                   style={{
                     borderRadius: theme.shelfRadius,
                     overflow: 'hidden',
+                    opacity: 0.7,
                   }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.7 }}
-                  transition={{ delay: shelfIndex * 0.3 + 0.5 }}
                 >
                   {/* Ambient light from above for 3D objects */}
                   <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-yellow-200/50 via-yellow-100/30 to-transparent" />
@@ -523,14 +504,7 @@ export function ShelfView({
                       style={{
                         background:
                           'radial-gradient(ellipse 60% 40% at center 20%, rgba(255, 215, 0, 0.1) 0%, transparent 70%)',
-                      }}
-                      animate={{
-                        opacity: [0.1, 0.3, 0.1],
-                      }}
-                      transition={{
-                        duration: 4,
-                        repeat: Infinity,
-                        ease: 'easeInOut',
+                        opacity: 0.2,
                       }}
                     />
                   )}
@@ -542,11 +516,8 @@ export function ShelfView({
 
         {/* Empty state - скрываем при перемещении элемент */}
         {elements.length === 0 && !isElementMoving && (
-          <motion.div
+          <div
             className="absolute inset-0 flex items-center justify-center"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
           >
             <div className="text-center">
               <motion.div
@@ -571,16 +542,13 @@ export function ShelfView({
                 коллекцию!
               </p>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Подсказка при перемещении в пустую комнату */}
         {elements.length === 0 && isElementMoving && (
-          <motion.div
+          <div
             className="pointer-events-none absolute inset-0 flex items-center justify-center"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
           >
             <div className="rounded-2xl bg-blue-50/90 px-8 py-6 text-center shadow-xl backdrop-blur-sm">
               <div className="mb-3 text-6xl">📦</div>
@@ -591,40 +559,10 @@ export function ShelfView({
                 Нажмите на любой пустой слот на полках
               </p>
             </div>
-          </motion.div>
+          </div>
         )}
 
-        {/* Global magical effects */}
-        <motion.div
-          className="magical-effects pointer-events-none absolute inset-0"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.8 }}
-          transition={{ delay: 1.5 }}
-        >
-          {/* Floating dust particles */}
-          {Array.from({ length: 8 }, (_, i) => (
-            <motion.div
-              key={`dust-${i}`}
-              className="absolute h-0.5 w-0.5 rounded-full bg-amber-300"
-              style={{
-                left: `${20 + Math.random() * 60}%`,
-                top: `${20 + Math.random() * 60}%`,
-              }}
-              animate={{
-                y: [0, -100],
-                opacity: [0, 0.8, 0],
-                scale: [0.5, 1, 0.5],
-              }}
-              transition={{
-                duration: 8 + Math.random() * 4,
-                repeat: Infinity,
-                delay: Math.random() * 10,
-                ease: 'linear',
-              }}
-            />
-          ))}
-        </motion.div>
-      </motion.div>
+      </div>
     </div>
   )
 }

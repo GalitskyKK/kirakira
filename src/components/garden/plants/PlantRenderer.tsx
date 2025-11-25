@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion'
-import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useMemo } from 'react'
 import { FlowerSVG } from './FlowerSVG'
 import { TreeSVG } from './TreeSVG'
 import { CrystalSVG } from './CrystalSVG'
@@ -36,30 +36,9 @@ function PlantRendererComponent({
   // Применяем масштаб элемента для разнообразия
   const actualSize = Math.round(size * (element.scale ?? 1.0))
 
-  // Упрощенная проверка видимости - только для оптимизации анимаций
-  const rootRef = useRef<HTMLDivElement | null>(null)
-  const [isVisible, setIsVisible] = useState<boolean>(true)
-
-  // Используем один общий IntersectionObserver через контекст или упрощаем
-  useEffect(() => {
-    if (!rootRef.current) return
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          setIsVisible(entry.isIntersecting)
-        }
-      },
-      { root: null, rootMargin: '200px', threshold: 0 } // Увеличен rootMargin для предзагрузки
-    )
-    observer.observe(rootRef.current)
-    return () => observer.disconnect()
-  }, [])
-
-  const prefersReducedMotion = useReducedMotion()
-
-  // Убрали FPS probe - он слишком тяжелый для каждого растения
-  // Вместо этого используем только prefersReducedMotion и видимость
-  const isAnimVisible = isVisible && !prefersReducedMotion
+  // Убрали IntersectionObserver - он создавался для каждого элемента и нагружал систему
+  // Используем только prefersReducedMotion для оптимизации
+  const prefersReducedMotion = useReducedMotion() ?? false
 
   const commonProps = useMemo(
     () => ({
@@ -70,8 +49,8 @@ function PlantRendererComponent({
       isSelected,
       isHovered,
       name: element.name,
-      isVisible: isAnimVisible,
-      staticMode: prefersReducedMotion || !isVisible,
+      isVisible: !prefersReducedMotion,
+      staticMode: prefersReducedMotion,
     }), [
       actualSize,
       element.color,
@@ -80,9 +59,7 @@ function PlantRendererComponent({
       element.name,
       isSelected,
       isHovered,
-      isAnimVisible,
       prefersReducedMotion,
-      isVisible,
     ]
   )
 
@@ -135,13 +112,13 @@ function PlantRendererComponent({
   }
 
   return (
-    <div ref={rootRef} className="relative">
+    <div className="relative">
       <motion.div
         className="cursor-pointer"
         onClick={onClick}
         whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
         whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
-        style={{ willChange: 'transform, opacity' }}
+        style={{ willChange: 'transform' }}
       >
         {renderPlant()}
       </motion.div>

@@ -115,42 +115,24 @@ export function MobileTabNavigation({ className }: MobileTabNavigationProps) {
                   : 'hover:text-kira-400 dark:hover:text-kira-300 text-neutral-500 dark:text-neutral-400'
               )}
               onClick={() => navigate(tab.path)}
-              whileTap={{ scale: 0.9 }}
-              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              {/* Active indicator - iridescent accent */}
+              {/* Active indicator - упрощенный без анимации */}
               {isActive && (
-                <motion.div
-                  className="absolute inset-x-0 top-0 flex justify-center"
-                  layoutId="activeTab"
-                  initial={false}
-                  transition={{
-                    type: 'spring',
-                    stiffness: 400,
-                    damping: 30,
-                  }}
-                >
-                  <div className="iridescent-gradient h-1.5 w-16 rounded-b-full shadow-lg" />
-                </motion.div>
+                <div className="absolute inset-x-0 top-0 flex justify-center">
+                  <div 
+                    className="h-1.5 w-16 rounded-b-full shadow-lg"
+                    style={{
+                      background: 'linear-gradient(135deg, #d946ef 0%, #8b5cf6 50%, #d946ef 100%)',
+                    }}
+                  />
+                </div>
               )}
 
-              {/* Icon - без пульсирующей точки (активный индикатор уже есть полоса) */}
-              <motion.div
-                className="relative mb-1"
-                animate={
-                  isActive
-                    ? {
-                        scale: [1, 1.1, 1],
-                      }
-                    : {}
-                }
-                transition={{
-                  duration: 0.3,
-                  ease: 'easeInOut',
-                }}
-              >
+              {/* Icon - без постоянной анимации */}
+              <div className="relative mb-1">
                 {tab.icon}
-              </motion.div>
+              </div>
 
               {/* No labels - icons only */}
 
