@@ -22,7 +22,7 @@ interface ShelfElementProps {
 
 export const ShelfElement = memo(function ShelfElement({
   element,
-  shelfIndex,
+  shelfIndex: _shelfIndex,
   position,
   absoluteX, // НОВЫЙ параметр для точного позиционирования
   isSelected = false,
@@ -231,42 +231,25 @@ export const ShelfElement = memo(function ShelfElement({
       onMouseLeave={handleMouseLeave}
       initial={{
         opacity: 0,
-        y: 30,
-        scale: 0.5,
-        rotateX: 45,
+        scale: 0.9,
       }}
       animate={{
         opacity: 1,
-        y: 0,
         scale: 1,
-        rotateX: 0,
-        // Don't set transform in animate as it conflicts with drag
         filter: isSelected
           ? `brightness(1.2) drop-shadow(0 8px 25px ${moodConfig.color}40)`
           : 'brightness(1) drop-shadow(0 4px 12px rgba(0,0,0,0.15))',
       }}
       whileHover={{
-        scale: 1.05,
-        y: -4,
-        filter: `brightness(1.1) drop-shadow(0 8px 20px ${moodConfig.color}25)`,
+        scale: 1.03,
+        y: -2,
       }}
-      whileTap={{ scale: 0.95 }}
-      whileDrag={{
-        scale: 1.2,
-        y: -15,
-        zIndex: 30,
-        rotateZ: [0, 5, -5, 0],
-        filter: `brightness(1.3) drop-shadow(0 20px 40px ${moodConfig.color}50)`,
-        transition: {
-          duration: 0.1,
-          rotateZ: { repeat: Infinity, duration: 0.5 },
-        },
-      }}
+      whileTap={{ scale: 0.97 }}
       transition={{
         type: 'spring',
-        stiffness: 400,
-        damping: 25,
-        delay: position * 0.08 + shelfIndex * 0.15, // Stagger animation
+        stiffness: 300,
+        damping: 20,
+        delay: position * 0.05, // Упрощенная задержка
       }}
     >
       {/* Main object container - centered in flex container */}
@@ -278,9 +261,9 @@ export const ShelfElement = memo(function ShelfElement({
           transformStyle: 'preserve-3d',
         }}
         animate={{
-          y: isHovered ? -2 : 0,
+          y: isHovered ? -1 : 0,
         }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.2 }}
       >
         {/* PlantRenderer for the actual object */}
         <PlantRenderer
@@ -312,7 +295,7 @@ export const ShelfElement = memo(function ShelfElement({
           }}
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ duration: 0.5, delay: position * 0.1 + 0.3 }}
+          transition={{ duration: 0.3, delay: position * 0.05 }}
         />
       </motion.div>
 
@@ -330,9 +313,9 @@ export const ShelfElement = memo(function ShelfElement({
         initial={{ scaleX: 0, opacity: 0 }}
         animate={{
           scaleX: 1,
-          opacity: isHovered ? 0.6 : 0.4, // Более выраженная тень
+          opacity: isHovered ? 0.5 : 0.3,
         }}
-        transition={{ duration: 0.4, delay: position * 0.1 }}
+        transition={{ duration: 0.2, delay: position * 0.05 }}
       />
 
       {/* Enhanced selection aura */}
@@ -348,16 +331,14 @@ export const ShelfElement = memo(function ShelfElement({
             left: '50%',
             marginLeft: -(objectSize + 30) / 2, // Center the aura
           }}
-          initial={{ opacity: 0, scale: 0.8 }}
+          initial={{ opacity: 0, scale: 0.9 }}
           animate={{
-            opacity: [0.4, 0.8, 0.4],
-            scale: [1, 1.15, 1],
-            rotate: [0, 360],
+            opacity: [0.3, 0.6, 0.3],
+            scale: [1, 1.1, 1],
           }}
           transition={{
-            opacity: { repeat: Infinity, duration: 2, ease: 'easeInOut' },
-            scale: { repeat: Infinity, duration: 2, ease: 'easeInOut' },
-            rotate: { repeat: Infinity, duration: 4, ease: 'linear' },
+            opacity: { repeat: Infinity, duration: 3, ease: 'easeInOut' },
+            scale: { repeat: Infinity, duration: 3, ease: 'easeInOut' },
           }}
         />
       )}
@@ -387,23 +368,13 @@ export const ShelfElement = memo(function ShelfElement({
                     height: '4px',
                   }}
                   animate={{
-                    x: [
-                      Math.cos((angle * Math.PI) / 180) * radius,
-                      Math.cos(((angle + 120) * Math.PI) / 180) * radius,
-                      Math.cos(((angle + 240) * Math.PI) / 180) * radius,
-                      Math.cos((angle * Math.PI) / 180) * radius,
-                    ],
-                    y: [
-                      Math.sin((angle * Math.PI) / 180) * radius * 0.5,
-                      Math.sin(((angle + 120) * Math.PI) / 180) * radius * 0.5,
-                      Math.sin(((angle + 240) * Math.PI) / 180) * radius * 0.5,
-                      Math.sin((angle * Math.PI) / 180) * radius * 0.5,
-                    ],
+                    x: Math.cos((angle * Math.PI) / 180) * radius,
+                    y: Math.sin((angle * Math.PI) / 180) * radius * 0.5,
                     scale: [0.5, 1, 0.5],
-                    opacity: [0.3, 1, 0.3],
+                    opacity: [0.3, 0.8, 0.3],
                   }}
                   transition={{
-                    duration: 4 + i * 0.5,
+                    duration: 3 + i * 0.3,
                     repeat: Infinity,
                     ease: 'easeInOut',
                   }}

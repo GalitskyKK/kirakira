@@ -36,10 +36,11 @@ function PlantRendererComponent({
   // Применяем масштаб элемента для разнообразия
   const actualSize = Math.round(size * (element.scale ?? 1.0))
 
-  // Ленивая активация анимаций по видимости
+  // Упрощенная проверка видимости - только для оптимизации анимаций
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [isVisible, setIsVisible] = useState<boolean>(true)
 
+  // Используем один общий IntersectionObserver через контекст или упрощаем
   useEffect(() => {
     if (!rootRef.current) return
     const observer = new IntersectionObserver(
@@ -48,7 +49,7 @@ function PlantRendererComponent({
           setIsVisible(entry.isIntersecting)
         }
       },
-      { root: null, rootMargin: '0px', threshold: 0.05 }
+      { root: null, rootMargin: '200px', threshold: 0 } // Увеличен rootMargin для предзагрузки
     )
     observer.observe(rootRef.current)
     return () => observer.disconnect()
@@ -56,31 +57,9 @@ function PlantRendererComponent({
 
   const prefersReducedMotion = useReducedMotion()
 
-  // Runtime FPS probe: включаем staticMode, если средний FPS за 1с < 50
-  const [isLowPerf, setIsLowPerf] = useState<boolean>(false)
-  useEffect(() => {
-    let mounted = true
-    let frames = 0
-    let start = performance.now()
-    let rafId = 0
-    const loop = () => {
-      frames++
-      const now = performance.now()
-      if (now - start >= 1000) {
-        const fps = (frames * 1000) / (now - start)
-        if (mounted) setIsLowPerf(fps < 50)
-        return
-      }
-      rafId = requestAnimationFrame(loop)
-    }
-    rafId = requestAnimationFrame(loop)
-    return () => {
-      mounted = false
-      if (rafId) cancelAnimationFrame(rafId)
-    }
-  }, [])
-
-  const isAnimVisible = isVisible && !prefersReducedMotion && !isLowPerf
+  // Убрали FPS probe - он слишком тяжелый для каждого растения
+  // Вместо этого используем только prefersReducedMotion и видимость
+  const isAnimVisible = isVisible && !prefersReducedMotion
 
   const commonProps = useMemo(
     () => ({
@@ -92,7 +71,7 @@ function PlantRendererComponent({
       isHovered,
       name: element.name,
       isVisible: isAnimVisible,
-      staticMode: prefersReducedMotion || isLowPerf || !isVisible,
+      staticMode: prefersReducedMotion || !isVisible,
     }), [
       actualSize,
       element.color,
@@ -103,7 +82,6 @@ function PlantRendererComponent({
       isHovered,
       isAnimVisible,
       prefersReducedMotion,
-      isLowPerf,
       isVisible,
     ]
   )
