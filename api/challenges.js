@@ -1240,11 +1240,20 @@ async function handleDailyQuests(req, res) {
       }
     )
 
-    // Получаем текущие квесты
+    // 💎 Получаем квест "7 дней стрика" (он не истекает)
+    const { data: streakGemQuest } = await supabase
+      .from('daily_quests')
+      .select('*')
+      .eq('telegram_id', parseInt(telegramId))
+      .eq('quest_type', 'streak_gem_quest')
+      .maybeSingle()
+
+    // Получаем текущие квесты (кроме streak_gem_quest, который обрабатывается отдельно)
     const { data: quests, error: questsError } = await supabase
       .from('daily_quests')
       .select('*')
       .eq('telegram_id', parseInt(telegramId))
+      .neq('quest_type', 'streak_gem_quest') // Исключаем повторяемый квест
       .gte('generated_at', new Date().toISOString().split('T')[0]) // Сегодняшние квесты
       .order('generated_at', { ascending: true })
 
@@ -1368,8 +1377,8 @@ async function handleDailyQuests(req, res) {
       })
     }
 
-    // Форматируем существующие квесты
-    const formattedQuests = quests.map(quest => ({
+    // Форматируем существующие квесты и добавляем streak gem quest
+    const formattedQuests = (quests || []).map(quest => ({
       id: quest.id,
       telegramId: quest.telegram_id,
       questType: quest.quest_type,
@@ -1389,15 +1398,38 @@ async function handleDailyQuests(req, res) {
       metadata: quest.metadata,
     }))
 
+    // Добавляем квест "7 дней стрика" если он есть
+    if (streakGemQuest) {
+      formattedQuests.unshift({
+        id: streakGemQuest.id,
+        telegramId: streakGemQuest.telegram_id,
+        questType: streakGemQuest.quest_type,
+        questCategory: streakGemQuest.quest_category,
+        targetValue: streakGemQuest.target_value,
+        currentProgress: streakGemQuest.current_progress,
+        status: streakGemQuest.status,
+        rewards: streakGemQuest.rewards,
+        generatedAt: new Date(streakGemQuest.generated_at).toISOString(),
+        expiresAt: new Date(streakGemQuest.expires_at).toISOString(),
+        completedAt: streakGemQuest.completed_at
+          ? new Date(streakGemQuest.completed_at).toISOString()
+          : undefined,
+        claimedAt: streakGemQuest.claimed_at
+          ? new Date(streakGemQuest.claimed_at).toISOString()
+          : undefined,
+        metadata: streakGemQuest.metadata,
+      })
+    }
+
     // Получаем статистику
     const { data: stats } = await supabase.rpc('get_daily_quests_stats', {
       p_telegram_id: parseInt(telegramId),
     })
 
-    const completedToday = quests.filter(
+    const completedToday = formattedQuests.filter(
       q => q.status === 'completed' || q.status === 'claimed'
     ).length
-    const totalToday = quests.length
+    const totalToday = formattedQuests.length
 
     return res.status(200).json({
       success: true,
@@ -1458,6 +1490,14 @@ async function handleClaimDailyQuest(req, res) {
 
     const supabase = await getSupabaseClient(req.auth?.jwt)
 
+    // Получаем информацию о квесте перед клеймом
+    const { data: questInfo } = await supabase
+      .from('daily_quests')
+      .select('quest_type, metadata')
+      .eq('id', questId)
+      .eq('telegram_id', parseInt(telegramId))
+      .single()
+
     // Вызываем созданную в БД функцию для получения награды
     const { data, error: claimError } = await supabase.rpc(
       'claim_daily_quest_reward',
@@ -1516,6 +1556,32 @@ async function handleClaimDailyQuest(req, res) {
       newBalance: balance,
     })
 
+    // 💎 Если это квест "7 дней стрика", обнуляем его после получения награды
+    if (questInfo?.quest_type === 'streak_gem_quest') {
+      const timesCompleted = (questInfo.metadata?.times_completed || 0) + 1
+      const expiresAt = new Date()
+      expiresAt.setDate(expiresAt.getDate() + 365) // Не истекает год
+
+      await supabase
+        .from('daily_quests')
+        .update({
+          current_progress: 0,
+          status: 'active',
+          updated_at: new Date().toISOString(),
+          metadata: {
+            ...(questInfo.metadata || {}),
+            times_completed: timesCompleted,
+            last_progress_date: null,
+          },
+          expires_at: expiresAt.toISOString(),
+        })
+        .eq('id', questId)
+
+      console.log(
+        `💎 Streak gem quest reset after claim: 0/7 (completed ${timesCompleted} times)`
+      )
+    }
+
     // Форматируем квест для ответа
     const formattedQuest = {
       id: questRow.id,
@@ -1523,8 +1589,12 @@ async function handleClaimDailyQuest(req, res) {
       questType: questRow.quest_type,
       questCategory: questRow.quest_category,
       targetValue: questRow.target_value,
-      currentProgress: questRow.current_progress,
-      status: questRow.status,
+      currentProgress:
+        questRow.quest_type === 'streak_gem_quest'
+          ? 0
+          : questRow.current_progress,
+      status:
+        questRow.quest_type === 'streak_gem_quest' ? 'active' : questRow.status,
       rewards: questRow.rewards,
       generatedAt: new Date(questRow.generated_at).toISOString(),
       expiresAt: new Date(questRow.expires_at).toISOString(),
@@ -1534,7 +1604,13 @@ async function handleClaimDailyQuest(req, res) {
       claimedAt: questRow.claimed_at
         ? new Date(questRow.claimed_at).toISOString()
         : undefined,
-      metadata: questRow.metadata,
+      metadata: {
+        ...(questRow.metadata || {}),
+        times_completed:
+          questRow.quest_type === 'streak_gem_quest'
+            ? (questInfo?.metadata?.times_completed || 0) + 1
+            : questRow.metadata?.times_completed,
+      },
     }
 
     return res.status(200).json({

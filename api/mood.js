@@ -249,7 +249,7 @@ async function handleRecord(req, res) {
 
         // 🎁 НАЧИСЛЯЕМ НАГРАДЫ ЗА СТРИК-ВЕХИ
         // Проверяем, это новый стрик (увеличился) или обновление того же дня
-        const streakIncreased = diffDays !== null && diffDays === 1
+        const streakIncreased = diffDays === 1
         if (streakIncreased) {
           try {
             // 🌿 Награды ростками за вехи стрика (3, 7, 14, 30, 100, 365 дней)
@@ -337,6 +337,29 @@ async function handleRecord(req, res) {
               streakRewardError
             )
             // Не прерываем выполнение, настроение уже сохранено
+          }
+        }
+
+        // 💎 Обновляем квест "7 дней стрика за гем"
+        if (diffDays === 1 || diffDays === null) {
+          // Продолжаем стрик или первая отметка
+          try {
+            await updateStreakGemQuest(
+              supabase,
+              telegramUserId,
+              formattedDate,
+              diffDays === 1
+            )
+          } catch (questError) {
+            console.error('❌ Failed to update streak gem quest:', questError)
+            // Не прерываем выполнение
+          }
+        } else if (diffDays > 1) {
+          // Стрик прерван - сбрасываем прогресс квеста
+          try {
+            await resetStreakGemQuest(supabase, telegramUserId)
+          } catch (questError) {
+            console.error('❌ Failed to reset streak gem quest:', questError)
           }
         }
       }
@@ -703,6 +726,125 @@ async function protectedHandler(req, res) {
       success: false,
       error: 'Internal server error',
     })
+  }
+}
+
+// ===============================================
+// 💎 ФУНКЦИИ ДЛЯ КВЕСТА "7 ДНЕЙ СТРИКА ЗА ГЕМ"
+// ===============================================
+
+/**
+ * Обновляет или создает квест "7 дней стрика за гем"
+ */
+async function updateStreakGemQuest(
+  supabase,
+  telegramId,
+  todayDate,
+  isStreakContinued
+) {
+  // Ищем существующий активный или завершенный квест
+  const { data: existingQuest } = await supabase
+    .from('daily_quests')
+    .select('*')
+    .eq('telegram_id', telegramId)
+    .eq('quest_type', 'streak_gem_quest')
+    .in('status', ['active', 'completed'])
+    .maybeSingle()
+
+  if (existingQuest) {
+    // Обновляем существующий квест
+    let newProgress = existingQuest.current_progress || 0
+
+    // Проверяем, был ли прогресс вчера (для продолжения стрика)
+    const yesterday = new Date(todayDate)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayStr = yesterday.toISOString().split('T')[0]
+    const lastProgressDate = existingQuest.metadata?.last_progress_date
+
+    if (isStreakContinued && lastProgressDate === yesterdayStr) {
+      // Продолжаем стрик - увеличиваем прогресс
+      newProgress = Math.min(newProgress + 1, 7)
+    } else if (!isStreakContinued || !lastProgressDate) {
+      // Первая отметка или новый стрик - начинаем с 1
+      newProgress = 1
+    }
+    // Иначе прогресс остается прежним (повторная отметка в тот же день)
+
+    const newStatus = newProgress >= 7 ? 'completed' : 'active'
+
+    await supabase
+      .from('daily_quests')
+      .update({
+        current_progress: newProgress,
+        status: newStatus,
+        updated_at: new Date().toISOString(),
+        metadata: {
+          ...(existingQuest.metadata || {}),
+          last_progress_date: todayDate,
+        },
+      })
+      .eq('id', existingQuest.id)
+
+    console.log(`💎 Streak gem quest updated: ${newProgress}/7`)
+  } else {
+    // Создаем новый квест
+    const expiresAt = new Date()
+    expiresAt.setDate(expiresAt.getDate() + 365) // Не истекает год
+
+    await supabase.from('daily_quests').insert({
+      telegram_id: telegramId,
+      quest_type: 'streak_gem_quest',
+      quest_category: 'streak',
+      target_value: 7,
+      current_progress: 1,
+      status: 'active',
+      rewards: {
+        sprouts: 0,
+        gems: 1,
+        experience: 50,
+        description: '+1 💎 за 7 дней стрика',
+      },
+      generated_at: new Date().toISOString(),
+      expires_at: expiresAt.toISOString(),
+      metadata: {
+        name: '7 дней стрика',
+        emoji: '🔥',
+        description: 'Отмечай настроение 7 дней подряд',
+        last_progress_date: todayDate,
+        times_completed: 0,
+      },
+    })
+
+    console.log(`💎 Streak gem quest created: 1/7`)
+  }
+}
+
+/**
+ * Сбрасывает прогресс квеста при прерывании стрика
+ */
+async function resetStreakGemQuest(supabase, telegramId) {
+  const { data: quest } = await supabase
+    .from('daily_quests')
+    .select('id')
+    .eq('telegram_id', telegramId)
+    .eq('quest_type', 'streak_gem_quest')
+    .in('status', ['active', 'completed'])
+    .maybeSingle()
+
+  if (quest) {
+    await supabase
+      .from('daily_quests')
+      .update({
+        current_progress: 0,
+        status: 'active',
+        updated_at: new Date().toISOString(),
+        metadata: {
+          last_progress_date: null,
+        },
+      })
+      .eq('id', quest.id)
+
+    console.log(`💎 Streak gem quest reset: 0/7`)
   }
 }
 
