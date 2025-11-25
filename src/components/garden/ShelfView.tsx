@@ -48,6 +48,35 @@ export function ShelfView({
   // Используем тему друга если она передана, иначе используем тему текущего пользователя
   const theme = friendTheme ?? defaultTheme
 
+  // Оптимизация: уменьшаем количество частиц и отключаем анимации при низкой производительности
+  const [isLowPerf, setIsLowPerf] = useState(false)
+  useEffect(() => {
+    // Простая проверка производительности - если FPS низкий, отключаем эффекты
+    let frames = 0
+    let start = performance.now()
+    let rafId = 0
+    const checkPerf = () => {
+      frames++
+      const now = performance.now()
+      if (now - start >= 1000) {
+        const fps = (frames * 1000) / (now - start)
+        setIsLowPerf(fps < 45)
+        return
+      }
+      rafId = requestAnimationFrame(checkPerf)
+    }
+    rafId = requestAnimationFrame(checkPerf)
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId)
+    }
+  }, [])
+
+  // Уменьшаем плотность частиц при низкой производительности
+  const effectiveParticleDensity = isLowPerf
+    ? Math.max(5, Math.floor(theme.particleDensity / 3))
+    : theme.particleDensity
+  const shouldUseAnimations = theme.hasAnimations && !isLowPerf
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024) // lg breakpoint
@@ -150,7 +179,8 @@ export function ShelfView({
           className="absolute inset-0"
           style={{
             background: theme.containerBackground,
-            animation: theme.hasAnimations ? theme.glowAnimation : undefined,
+            animation: shouldUseAnimations ? theme.glowAnimation : undefined,
+            willChange: shouldUseAnimations ? 'background, opacity' : 'auto',
           }}
         />
 
@@ -169,33 +199,59 @@ export function ShelfView({
           }}
         />
 
-        {/* Magical floating particles */}
-        {Array.from({ length: theme.particleDensity }, (_, i) => (
-          <motion.div
-            key={`particle-${i}`}
-            className="absolute h-1 w-1 rounded-full opacity-60"
-            style={{
-              left: `${10 + Math.random() * 80}%`,
-              top: `${10 + Math.random() * 80}%`,
-              background: `linear-gradient(90deg, ${theme.particleFrom}, ${theme.particleTo})`,
-              animation: theme.hasAnimations
-                ? theme.particleAnimation
-                : undefined,
-            }}
-            animate={{
-              y: [0, -30, 0],
-              x: [0, Math.random() * 20 - 10, 0],
-              opacity: [0.3, 0.8, 0.3],
-              scale: [0.5, 1.2, 0.5],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 5,
-              ease: 'easeInOut',
-            }}
-          />
-        ))}
+        {/* Magical floating particles - оптимизировано */}
+        {useMemo(() => {
+          // Мемоизируем позиции частиц для стабильности
+          const particles = Array.from({ length: effectiveParticleDensity }, (_, i) => {
+            const pseudoRandom = (seed: number): number => {
+              const x = Math.sin(seed) * 10000
+              return x - Math.floor(x)
+            }
+            return {
+              key: i,
+              left: 10 + pseudoRandom(i * 137.5) * 80,
+              top: 10 + pseudoRandom(i * 97.3) * 80,
+              delay: pseudoRandom(i * 42.7) * 5,
+              duration: 3 + pseudoRandom(i * 73.1) * 2,
+              xOffset: (pseudoRandom(i * 19.3) - 0.5) * 20,
+            }
+          })
+          return particles.map(p => (
+            <motion.div
+              key={p.key}
+              className="absolute h-1 w-1 rounded-full opacity-60"
+              style={{
+                left: `${p.left}%`,
+                top: `${p.top}%`,
+                background: `linear-gradient(90deg, ${theme.particleFrom}, ${theme.particleTo})`,
+                animation: shouldUseAnimations
+                  ? theme.particleAnimation
+                  : undefined,
+                willChange: shouldUseAnimations ? 'transform, opacity' : 'auto',
+              }}
+              animate={
+                isLowPerf
+                  ? {}
+                  : {
+                      y: [0, -30, 0],
+                      x: [0, p.xOffset, 0],
+                      opacity: [0.3, 0.8, 0.3],
+                      scale: [0.5, 1.2, 0.5],
+                    }
+              }
+              transition={
+                isLowPerf
+                  ? {}
+                  : {
+                      duration: p.duration,
+                      repeat: Infinity,
+                      delay: p.delay,
+                      ease: 'easeInOut',
+                    }
+              }
+            />
+          ))
+        }, [effectiveParticleDensity, theme.particleFrom, theme.particleTo, shouldUseAnimations, isLowPerf, theme.particleAnimation])}
       </div>
 
       {/* Main shelf container with perspective */}
@@ -252,9 +308,10 @@ export function ShelfView({
                       background: theme.shelfSurface,
                       borderRadius: theme.shelfRadius,
                       boxShadow: theme.shelfShadow,
-                      animation: theme.hasAnimations
+                      animation: shouldUseAnimations
                         ? theme.shelfAnimation
                         : undefined,
+                      willChange: shouldUseAnimations ? 'transform, opacity' : 'auto',
                     }}
                   >
                     {/* Wood grain details */}
