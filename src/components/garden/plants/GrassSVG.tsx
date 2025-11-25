@@ -1,6 +1,7 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { memo, useMemo } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
+import { createPathFromRects } from './utils'
 
 interface GrassSVGProps {
   size?: number
@@ -88,6 +89,16 @@ function GrassSVGComponent({
     return 0.05 + base // 0.05..0.349s
   }, [name])
 
+  // Объединенные path для травы/мха
+  const grassPaths = useMemo(() => {
+    const mossBasePath = createPathFromRects([
+      { x: 8, y: 26, w: 16, h: 4 },
+      { x: 10, y: 24, w: 12, h: 2 },
+      { x: 12, y: 22, w: 8, h: 2 },
+    ])
+    return { mossBasePath }
+  }, [])
+
   // Определяем тип элемента по имени
   const isMoss = name === 'Мох'
 
@@ -143,112 +154,38 @@ function GrassSVGComponent({
             animate={{ scale: 1 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            {/* Moss base - низкий и округлый */}
-            <rect
-              x="8"
-              y="26"
-              width="16"
-              height="4"
+            {/* Moss base - объединен в path */}
+            <path
+              d={grassPaths.mossBasePath}
               fill={seasonalColors.primary}
             />
-            <rect
-              x="10"
-              y="24"
-              width="12"
-              height="2"
-              fill={seasonalColors.primary}
-            />
-            <rect
-              x="12"
-              y="22"
-              width="8"
-              height="2"
+            <path
+              d="M12,22h8v2h-8z"
               fill={seasonalColors.secondary}
             />
-
-            {/* Moss texture - мягкие детали */}
-            <rect
-              x="8"
-              y="26"
-              width="6"
-              height="2"
+            <path
+              d="M8,26h6v2h-6z M18,27h6v3h-6z"
               fill="#ffffff"
               opacity="0.3"
             />
-            <rect
-              x="18"
-              y="27"
-              width="6"
-              height="3"
+            <path
+              d="M18,27h6v3h-6z"
               fill="#000000"
               opacity="0.15"
             />
-
-            {/* Small moss bumps */}
-            <rect
-              x="11"
-              y="23"
-              width="2"
-              height="1"
+            <path
+              d="M11,23h2v1h-2z M19,24h2v1h-2z M15,22h2v1h-2z"
               fill={seasonalColors.accent}
             />
-            <rect
-              x="19"
-              y="24"
-              width="2"
-              height="1"
-              fill={seasonalColors.accent}
-            />
-            <rect
-              x="15"
-              y="22"
-              width="2"
-              height="1"
-              fill={seasonalColors.accent}
-            />
-
-            {/* Moss highlights */}
-            <rect
-              x="12"
-              y="22"
-              width="3"
-              height="1"
+            <path
+              d="M12,22h3v1h-3z M10,24h4v1h-4z"
               fill="#ffffff"
               opacity="0.6"
             />
-            <rect
-              x="10"
-              y="24"
-              width="4"
-              height="1"
-              fill="#ffffff"
-              opacity="0.4"
-            />
-
-            {/* Moss details */}
-            <rect
-              x="9"
-              y="26"
-              width="1"
-              height="1"
+            <path
+              d="M9,26h1v1h-1z M22,27h1v1h-1z M14,23h1v1h-1z"
               fill={seasonalColors.accent}
               opacity="0.8"
-            />
-            <rect
-              x="22"
-              y="27"
-              width="1"
-              height="1"
-              fill={seasonalColors.accent}
-              opacity="0.8"
-            />
-            <rect
-              x="14"
-              y="23"
-              width="1"
-              height="1"
-              fill={seasonalColors.accent}
-              opacity="0.9"
             />
           </motion.g>
         ) : (
@@ -260,175 +197,38 @@ function GrassSVGComponent({
           >
             {/* Grass blades - пиксельные травинки */}
 
-            {/* Tall center blade */}
-            <rect
-              x="15"
-              y="10"
-              width="2"
-              height="18"
+            {/* Tall center blade - объединен */}
+            <path
+              d="M15,10h2v18h-2z M15,10h1v18h-1z M16,12h1v16h-1z M15,8h2v2h-2z M16,6h1v2h-1z"
               fill={seasonalColors.primary}
             />
-            <rect
-              x="15"
-              y="10"
-              width="1"
-              height="18"
+            <path
+              d="M15,10h1v18h-1z M15,8h2v2h-2z M16,6h1v2h-1z"
               fill={seasonalColors.accent}
             />
-            <rect
-              x="16"
-              y="12"
-              width="1"
-              height="16"
+            <path
+              d="M16,12h1v16h-1z"
               fill={seasonalColors.secondary}
             />
-            <rect
-              x="15"
-              y="8"
-              width="2"
-              height="2"
-              fill={seasonalColors.accent}
-            />
-            <rect
-              x="16"
-              y="6"
-              width="1"
-              height="2"
-              fill={seasonalColors.accent}
-            />
-
             {/* Left tall blade */}
-            <rect
-              x="11"
-              y="14"
-              width="2"
-              height="14"
+            <path
+              d="M11,14h2v14h-2z M11,14h1v14h-1z M11,12h2v2h-2z M12,10h1v2h-1z"
               fill={seasonalColors.secondary}
             />
-            <rect
-              x="11"
-              y="14"
-              width="1"
-              height="14"
-              fill={seasonalColors.accent}
-            />
-            <rect
-              x="11"
-              y="12"
-              width="2"
-              height="2"
-              fill={seasonalColors.accent}
-            />
-            <rect
-              x="12"
-              y="10"
-              width="1"
-              height="2"
-              fill={seasonalColors.accent}
-            />
-
             {/* Right tall blade */}
-            <rect
-              x="19"
-              y="12"
-              width="2"
-              height="16"
+            <path
+              d="M19,12h2v16h-2z M19,12h1v16h-1z M19,10h2v2h-2z M20,8h1v2h-1z"
               fill={seasonalColors.secondary}
             />
-            <rect
-              x="19"
-              y="12"
-              width="1"
-              height="16"
-              fill={seasonalColors.accent}
-            />
-            <rect
-              x="19"
-              y="10"
-              width="2"
-              height="2"
-              fill={seasonalColors.accent}
-            />
-            <rect
-              x="20"
-              y="8"
-              width="1"
-              height="2"
-              fill={seasonalColors.accent}
-            />
-
-            {/* Medium blades */}
-            <rect
-              x="8"
-              y="18"
-              width="1"
-              height="10"
+            {/* Medium blades - объединены */}
+            <path
+              d="M8,18h1v10h-1z M13,16h1v12h-1z M18,15h1v13h-1z M23,20h1v8h-1z"
               fill={seasonalColors.primary}
             />
-            <rect
-              x="13"
-              y="16"
-              width="1"
-              height="12"
+            {/* Short blades - объединены */}
+            <path
+              d="M7,22h1v6h-1z M9,21h1v7h-1z M22,19h1v9h-1z M24,23h1v5h-1z M6,24h1v4h-1z M25,25h1v3h-1z"
               fill={seasonalColors.secondary}
-            />
-            <rect
-              x="18"
-              y="15"
-              width="1"
-              height="13"
-              fill={seasonalColors.primary}
-            />
-            <rect
-              x="23"
-              y="20"
-              width="1"
-              height="8"
-              fill={seasonalColors.secondary}
-            />
-
-            {/* Short blades */}
-            <rect
-              x="7"
-              y="22"
-              width="1"
-              height="6"
-              fill={seasonalColors.secondary}
-            />
-            <rect
-              x="9"
-              y="21"
-              width="1"
-              height="7"
-              fill={seasonalColors.primary}
-            />
-            <rect
-              x="22"
-              y="19"
-              width="1"
-              height="9"
-              fill={seasonalColors.secondary}
-            />
-            <rect
-              x="24"
-              y="23"
-              width="1"
-              height="5"
-              fill={seasonalColors.primary}
-            />
-            <rect
-              x="6"
-              y="24"
-              width="1"
-              height="4"
-              fill={seasonalColors.accent}
-            />
-            <rect
-              x="25"
-              y="25"
-              width="1"
-              height="3"
-              fill={seasonalColors.accent}
             />
 
             {/* Grass highlights */}

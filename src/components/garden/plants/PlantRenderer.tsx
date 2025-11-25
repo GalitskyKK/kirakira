@@ -92,7 +92,7 @@ function PlantRendererComponent({
       isHovered,
       name: element.name,
       isVisible: isAnimVisible,
-      staticMode: prefersReducedMotion || isLowPerf,
+      staticMode: prefersReducedMotion || isLowPerf || !isVisible,
     }), [
       actualSize,
       element.color,
@@ -104,6 +104,7 @@ function PlantRendererComponent({
       isAnimVisible,
       prefersReducedMotion,
       isLowPerf,
+      isVisible,
     ]
   )
 

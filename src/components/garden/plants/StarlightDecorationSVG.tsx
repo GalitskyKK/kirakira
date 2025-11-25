@@ -47,13 +47,18 @@ function StarlightDecorationSVGComponent({
     return x - Math.floor(x)
   }
   const starlightParticles = useMemo(() => {
-    const count = 16
+    if (staticMode) return []
+    const count = 8 // Уменьшено с 16 до 8
     const items = [] as Array<{
       key: number
       left: string
       top: string
       dx: number
     }>
+    const pseudoRandom = (seed: number): number => {
+      const x = Math.sin(seed) * 10000
+      return x - Math.floor(x)
+    }
     for (let i = 0; i < count; i++) {
       const left = 20 + pseudoRandom(2000 + i) * 60
       const top = 10 + pseudoRandom(2100 + i) * 80
@@ -61,7 +66,7 @@ function StarlightDecorationSVGComponent({
       items.push({ key: i, left: `${left}%`, top: `${top}%`, dx })
     }
     return items
-  }, [])
+  }, [staticMode])
 
   const twinkleTimings = useMemo(() => {
     const count = 10

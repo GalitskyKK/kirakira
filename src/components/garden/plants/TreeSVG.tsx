@@ -1,6 +1,7 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { memo, useMemo } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
+import { createPathFromRects } from './utils'
 
 interface TreeSVGProps {
   size?: number
@@ -91,12 +92,19 @@ function TreeSVGComponent({
 
   const seasonalColors = getSeasonalColors
 
-  // Деторминатор для стабильных псевдослучайных значений (чтобы не пересоздавать layout)
-  const pseudoRandom = (seed: number): number => {
-    const x = Math.sin(seed) * 10000
-    return x - Math.floor(x)
-  }
-  
+  // Объединенные path для дерева
+  const treePaths = useMemo(() => {
+    const trunkPath = createPathFromRects([
+      { x: 13, y: 16, w: 6, h: 14 },
+    ])
+    const crownPath = createPathFromRects([
+      { x: 6, y: 8, w: 20, h: 12 },
+      { x: 8, y: 6, w: 16, h: 2 },
+      { x: 10, y: 4, w: 12, h: 2 },
+      { x: 12, y: 2, w: 8, h: 2 },
+    ])
+    return { trunkPath, crownPath }
+  }, [])
 
   // Пиксельное дерево в зависимости от типа
   if (isSprout) {
@@ -618,12 +626,16 @@ function TreeSVGComponent({
         damping: 20,
       }}
     >
-      {/* Wind particles for legendary trees */}
-      {(rarity === RarityLevel.LEGENDARY || rarity === RarityLevel.EPIC) && (
+      {/* Wind particles for legendary trees - оптимизировано */}
+      {!staticMode && (rarity === RarityLevel.LEGENDARY || rarity === RarityLevel.EPIC) && (
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           {useMemo(() => {
-            const count = 8
+            const count = 5 // Уменьшено с 8 до 5
             const items = [] as Array<{ key: number; left: string; top: string }>
+            const pseudoRandom = (seed: number): number => {
+              const x = Math.sin(seed) * 10000
+              return x - Math.floor(x)
+            }
             for (let i = 0; i < count; i++) {
               const left = 10 + pseudoRandom(100 + i) * 80
               const top = 10 + pseudoRandom(200 + i) * 30
@@ -635,19 +647,19 @@ function TreeSVGComponent({
               <motion.div
                 key={p.key}
                 className="absolute h-1 w-1 rounded-full bg-green-300"
-                style={{ left: p.left, top: p.top }}
+                style={{ left: p.left, top: p.top, willChange: 'transform, opacity' }}
                 animate={{
                   x: [0, 50, -20, 0],
                   y: [0, -20, 10, 0],
                   opacity: [0, 1, 0.5, 0],
                   scale: [0.5, 1, 0.8, 0.5],
                 }}
-              transition={{
-                duration: 4,
-                repeat: repeatInf,
-                delay: i * 0.5,
-                ease: 'easeInOut',
-              }}
+                transition={{
+                  duration: 4,
+                  repeat: repeatInf,
+                  delay: i * 0.5,
+                  ease: 'easeInOut',
+                }}
               />
             ))}
         </div>
@@ -676,146 +688,39 @@ function TreeSVGComponent({
           transition={{ duration: 0.8, delay: 0.2 }}
         />
 
-        {/* Tree trunk */}
+        {/* Tree trunk - объединен в path */}
         <motion.g
           initial={{ scaleY: 0 }}
           animate={{ scaleY: 1 }}
           transition={{ duration: 1, delay: 0.4 }}
         >
-          {/* Main trunk */}
-          <rect
-            x="13"
-            y="16"
-            width="6"
-            height="14"
-            fill={seasonalColors.trunk}
-          />
-
-          {/* Trunk highlights */}
-          <rect x="13" y="16" width="3" height="14" fill="#a0785a" />
-
-          {/* Trunk shadows */}
-          <rect x="16" y="16" width="3" height="14" fill="#6b4423" />
-
-          {/* Trunk texture */}
-          <rect
-            x="14"
-            y="20"
-            width="4"
-            height="1"
+          <path d={treePaths.trunkPath} fill={seasonalColors.trunk} />
+          <path d="M13,16h3v14h-3z" fill="#a0785a" />
+          <path d="M16,16h3v14h-3z" fill="#6b4423" />
+          <path
+            d="M14,20h4v1h-4z M14,24h4v1h-4z M14,28h4v1h-4z"
             fill="#654321"
             opacity="0.6"
           />
-          <rect
-            x="14"
-            y="24"
-            width="4"
-            height="1"
-            fill="#654321"
-            opacity="0.6"
-          />
-          <rect
-            x="14"
-            y="28"
-            width="4"
-            height="1"
-            fill="#654321"
-            opacity="0.6"
-          />
-
-          {/* Trunk highlights */}
-          <rect
-            x="13"
-            y="18"
-            width="1"
-            height="8"
-            fill="#b8946f"
-            opacity="0.8"
-          />
+          <path d="M13,18h1v8h-1z" fill="#b8946f" opacity="0.8" />
         </motion.g>
 
-        {/* Tree crown - детализированная крона */}
+        {/* Tree crown - объединена в path */}
         <motion.g
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.8, delay: 0.8 }}
         >
-          {/* Main crown body */}
-          <rect
-            x="6"
-            y="8"
-            width="20"
-            height="12"
-            fill={seasonalColors.leaves}
-          />
-
-          {/* Crown rounded top */}
-          <rect
-            x="8"
-            y="6"
-            width="16"
-            height="2"
-            fill={seasonalColors.leaves}
-          />
-          <rect
-            x="10"
-            y="4"
-            width="12"
-            height="2"
-            fill={seasonalColors.leaves}
-          />
-          <rect
-            x="12"
-            y="2"
-            width="8"
-            height="2"
-            fill={seasonalColors.accent}
-          />
-
-          {/* Crown left highlight */}
-          <rect x="6" y="8" width="8" height="6" fill="#ffffff" opacity="0.3" />
-          <rect x="8" y="6" width="6" height="2" fill="#ffffff" opacity="0.4" />
-          <rect
-            x="10"
-            y="4"
-            width="4"
-            height="2"
+          <path d={treePaths.crownPath} fill={seasonalColors.leaves} />
+          <path
+            d="M6,8h8v6h-8z M8,6h6v2h-6z M10,4h4v2h-4z M12,2h3v2h-3z"
             fill="#ffffff"
-            opacity="0.5"
+            opacity="0.3"
           />
-          <rect
-            x="12"
-            y="2"
-            width="3"
-            height="2"
-            fill="#ffffff"
-            opacity="0.6"
-          />
-
-          {/* Crown right shadow */}
-          <rect
-            x="18"
-            y="8"
-            width="8"
-            height="12"
+          <path
+            d="M18,8h8v12h-8z M18,6h6v2h-6z M17,4h5v2h-5z"
             fill="#000000"
             opacity="0.2"
-          />
-          <rect
-            x="18"
-            y="6"
-            width="6"
-            height="2"
-            fill="#000000"
-            opacity="0.15"
-          />
-          <rect
-            x="17"
-            y="4"
-            width="5"
-            height="2"
-            fill="#000000"
-            opacity="0.1"
           />
 
           {/* Crown details and texture */}
@@ -1280,12 +1185,13 @@ function TreeSVGComponent({
         )}
       </motion.svg>
 
-      {/* Magical aura */}
-      {rarity !== RarityLevel.COMMON && (
+      {/* Magical aura - оптимизировано */}
+      {rarity !== RarityLevel.COMMON && !staticMode && (
         <motion.div
-          className="absolute inset-0 rounded-full"
+          className="absolute inset-0 rounded-full pointer-events-none"
           style={{
             background: `radial-gradient(circle, ${getRarityGlow}15 0%, transparent 70%)`,
+            willChange: 'transform, opacity',
           }}
           animate={{
             scale: [1, 1.15, 1],
@@ -1293,7 +1199,7 @@ function TreeSVGComponent({
           }}
           transition={{
             duration: 3,
-            repeat: Infinity,
+            repeat: repeatInf,
             ease: 'easeInOut',
           }}
         />

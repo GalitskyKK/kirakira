@@ -58,13 +58,14 @@ function GlowingCrystalSVGComponent({
     }
   }, [rarity, color])
 
-  const pseudoRandom = (seed: number): number => {
-    const x = Math.sin(seed) * 10000
-    return x - Math.floor(x)
-  }
   const energyParticles = useMemo(() => {
-    const count = 15
+    if (staticMode) return []
+    const count = 8 // Уменьшено с 15 до 8
     const items = [] as Array<{ key: number; left: string; top: string; dx: number }>
+    const pseudoRandom = (seed: number): number => {
+      const x = Math.sin(seed) * 10000
+      return x - Math.floor(x)
+    }
     for (let i = 0; i < count; i++) {
       const left = 25 + pseudoRandom(1300 + i) * 50
       const top = 15 + pseudoRandom(1400 + i) * 70
@@ -72,7 +73,7 @@ function GlowingCrystalSVGComponent({
       items.push({ key: i, left: `${left}%`, top: `${top}%`, dx })
     }
     return items
-  }, [])
+  }, [staticMode])
 
   return (
     <motion.div

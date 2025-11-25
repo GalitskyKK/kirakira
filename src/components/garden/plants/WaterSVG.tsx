@@ -1,6 +1,7 @@
-import { motion } from 'framer-motion'
-import { useMemo } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { memo, useMemo } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
+import { createPathFromRects } from './utils'
 
 interface WaterSVGProps {
   size?: number
@@ -11,9 +12,10 @@ interface WaterSVGProps {
   isHovered?: boolean
   name?: string
   isVisible?: boolean
+  staticMode?: boolean
 }
 
-export function WaterSVG({
+function WaterSVGComponent({
   size = 64,
   color = '#06b6d4',
   rarity = RarityLevel.COMMON,
@@ -22,8 +24,12 @@ export function WaterSVG({
   isHovered: _isHovered = false,
   name = 'Water',
   isVisible = true,
+  staticMode = false,
 }: WaterSVGProps) {
-  const getRarityGlow = () => {
+  const prefersReducedMotion = useReducedMotion()
+  const repeatInf = isVisible && !prefersReducedMotion && !staticMode ? Infinity : 0
+
+  const getRarityGlow = useMemo(() => {
     switch (rarity) {
       case RarityLevel.UNCOMMON:
         return '#22c55e'
@@ -36,9 +42,9 @@ export function WaterSVG({
       default:
         return color
     }
-  }
+  }, [rarity, color])
 
-  const getSeasonalColors = () => {
+  const seasonalColors = useMemo(() => {
     switch (season) {
       case SeasonalVariant.SPRING:
         return {
@@ -71,12 +77,9 @@ export function WaterSVG({
           accent: '#67e8f9',
         }
     }
-  }
+  }, [season, color])
 
-  const seasonalColors = getSeasonalColors()
-  const repeatInf = isVisible ? Infinity : 0
-  // Предварительно мемоизированные позиции для повторяющихся элементов,
-  // чтобы не пересоздавать массивы и объекты на каждом рендере rt
+  // Предварительно мемоизированные позиции для повторяющихся элементов
   const pondReflectionPositions = useMemo(
     () => [
       { x: 12, y: 20 },
@@ -103,7 +106,24 @@ export function WaterSVG({
     []
   )
 
-  const springDropsIndices = useMemo(() => Array.from({ length: 6 }, (_, i) => i), [])
+  const springDropsIndices = useMemo(() => Array.from({ length: 4 }, (_, i) => i), []) // Уменьшено с 6 до 4
+
+  // Объединенные path для пруда
+  const pondPaths = useMemo(() => {
+    const waterSurfacePath = createPathFromRects([
+      { x: 6, y: 18, w: 20, h: 10 },
+      { x: 8, y: 16, w: 16, h: 2 },
+      { x: 10, y: 14, w: 12, h: 2 },
+      { x: 12, y: 12, w: 8, h: 2 },
+    ])
+    const banksPath = createPathFromRects([
+      { x: 6, y: 17, w: 20, h: 1 },
+      { x: 6, y: 28, w: 20, h: 1 },
+      { x: 8, y: 15, w: 16, h: 1 },
+      { x: 10, y: 13, w: 12, h: 1 },
+    ])
+    return { waterSurfacePath, banksPath }
+  }, [])
 
   // Определяем тип воды по названию
   const isPuddle = name === 'Лужа'
@@ -117,19 +137,19 @@ export function WaterSVG({
 
   if (isDrop) {
     // Капля - маленькая вода
-    return (
-      <motion.div
-        className="pixel-container relative flex items-center justify-center"
-        style={{ width: size, height: size }}
-        initial={{ scale: 0, y: -20 }}
-        animate={{
-          scale: 1,
-          y: 0,
-          filter: isSelected
-            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
-            : 'none',
-        }}
-        whileHover={{ scale: 1.1, y: -2 }}
+  return (
+    <motion.div
+      className="pixel-container relative flex items-center justify-center"
+      style={{ width: size, height: size, willChange: 'transform, opacity' }}
+      initial={{ scale: 0, y: -20 }}
+      animate={{
+        scale: 1,
+        y: 0,
+        filter: isSelected
+          ? `drop-shadow(0 0 20px ${getRarityGlow})`
+          : 'none',
+      }}
+      whileHover={prefersReducedMotion ? {} : { scale: 1.1, y: -2 }}
         transition={{
           type: 'spring',
           stiffness: 400,
@@ -303,7 +323,7 @@ export function WaterSVG({
         animate={{
           scale: 1,
           filter: isSelected
-            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            ? `drop-shadow(0 0 20px ${getRarityGlow})`
             : 'none',
         }}
         whileHover={{ scale: 1.1 }}
@@ -496,7 +516,7 @@ export function WaterSVG({
                     y={pos.y}
                     width="1"
                     height="1"
-                    fill={getRarityGlow()}
+                    fill={getRarityGlow}
                     animate={{
                       opacity: [0, 1, 0],
                       scale: [0.5, 1.5, 0.5],
@@ -525,7 +545,7 @@ export function WaterSVG({
         animate={{
           scale: 1,
           filter: isSelected
-            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            ? `drop-shadow(0 0 20px ${getRarityGlow})`
             : 'none',
         }}
         whileHover={{
@@ -678,7 +698,7 @@ export function WaterSVG({
         animate={{
           scale: 1,
           filter: isSelected
-            ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+            ? `drop-shadow(0 0 20px ${getRarityGlow})`
             : 'none',
         }}
         whileHover={{
@@ -839,7 +859,7 @@ export function WaterSVG({
       animate={{
         scale: 1,
         filter: isSelected
-          ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+          ? `drop-shadow(0 0 20px ${getRarityGlow})`
           : 'none',
       }}
       whileHover={{
@@ -862,90 +882,23 @@ export function WaterSVG({
           shapeRendering: 'crispEdges',
         }}
       >
-        {/* Pond main body */}
+        {/* Pond main body - объединен в path */}
         <motion.g
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          {/* Water surface */}
-          <rect
-            x="6"
-            y="18"
-            width="20"
-            height="10"
-            fill={seasonalColors.primary}
-          />
-          <rect
-            x="8"
-            y="16"
-            width="16"
-            height="2"
-            fill={seasonalColors.primary}
-          />
-          <rect
-            x="10"
-            y="14"
-            width="12"
-            height="2"
-            fill={seasonalColors.secondary}
-          />
-          <rect
-            x="12"
-            y="12"
-            width="8"
-            height="2"
-            fill={seasonalColors.secondary}
-          />
-
-          {/* Pond banks */}
-          <rect x="6" y="17" width="20" height="1" fill="#8b7355" />
-          <rect x="6" y="28" width="20" height="1" fill="#8b7355" />
-          <rect x="8" y="15" width="16" height="1" fill="#8b7355" />
-          <rect x="10" y="13" width="12" height="1" fill="#8b7355" />
-
-          {/* Water depth gradient */}
-          <rect
-            x="6"
-            y="18"
-            width="8"
-            height="6"
+          <path d={pondPaths.waterSurfacePath} fill={seasonalColors.primary} />
+          <path d={pondPaths.banksPath} fill="#8b7355" />
+          <path
+            d="M6,18h8v6h-8z M8,16h6v2h-6z M10,14h4v2h-4z"
             fill="#ffffff"
             opacity="0.3"
           />
-          <rect
-            x="8"
-            y="16"
-            width="6"
-            height="2"
-            fill="#ffffff"
-            opacity="0.4"
-          />
-          <rect
-            x="10"
-            y="14"
-            width="4"
-            height="2"
-            fill="#ffffff"
-            opacity="0.5"
-          />
-
-          {/* Water shadows */}
-          <rect
-            x="18"
-            y="22"
-            width="8"
-            height="6"
+          <path
+            d="M18,22h8v6h-8z M16,20h10v4h-10z"
             fill="#000000"
             opacity="0.2"
-          />
-          <rect
-            x="16"
-            y="20"
-            width="10"
-            height="4"
-            fill="#000000"
-            opacity="0.15"
           />
         </motion.g>
 
@@ -961,30 +914,11 @@ export function WaterSVG({
               delay: 1,
             }}
         >
-          {/* Concentric ripples */}
-          <rect
-            x="14"
-            y="20"
-            width="4"
-            height="1"
+          {/* Concentric ripples - объединены */}
+          <path
+            d="M14,20h4v1h-4z M12,22h8v1h-8z M10,24h12v1h-12z"
             fill={seasonalColors.accent}
             opacity="0.7"
-          />
-          <rect
-            x="12"
-            y="22"
-            width="8"
-            height="1"
-            fill={seasonalColors.accent}
-            opacity="0.6"
-          />
-          <rect
-            x="10"
-            y="24"
-            width="12"
-            height="1"
-            fill={seasonalColors.accent}
-            opacity="0.5"
           />
         </motion.g>
 
@@ -1108,7 +1042,7 @@ export function WaterSVG({
               y="18"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
             <rect
@@ -1116,7 +1050,7 @@ export function WaterSVG({
               y="22"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
             <rect
@@ -1124,7 +1058,7 @@ export function WaterSVG({
               y="14"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.9"
             />
             <rect
@@ -1132,7 +1066,7 @@ export function WaterSVG({
               y="26"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
             <rect
@@ -1140,7 +1074,7 @@ export function WaterSVG({
               y="16"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
           </motion.g>
@@ -1193,12 +1127,13 @@ export function WaterSVG({
         )}
       </motion.svg>
 
-      {/* Magical aura */}
-      {rarity !== RarityLevel.COMMON && (
+      {/* Magical aura - оптимизировано */}
+      {rarity !== RarityLevel.COMMON && !staticMode && (
         <motion.div
-          className="absolute inset-0 rounded-full"
+          className="absolute inset-0 rounded-full pointer-events-none"
           style={{
-            background: `radial-gradient(circle, ${getRarityGlow()}15 0%, transparent 70%)`,
+            background: `radial-gradient(circle, ${getRarityGlow}15 0%, transparent 70%)`,
+            willChange: 'transform, opacity',
           }}
           animate={{
             scale: [1, 1.1, 1],
@@ -1206,7 +1141,7 @@ export function WaterSVG({
           }}
           transition={{
             duration: 3,
-            repeat: Infinity,
+            repeat: repeatInf,
             ease: 'easeInOut',
           }}
         />
@@ -1214,3 +1149,19 @@ export function WaterSVG({
     </motion.div>
   )
 }
+
+function areEqual(prev: Readonly<WaterSVGProps>, next: Readonly<WaterSVGProps>) {
+  return (
+    prev.size === next.size &&
+    prev.color === next.color &&
+    prev.rarity === next.rarity &&
+    prev.season === next.season &&
+    prev.isSelected === next.isSelected &&
+    prev.isHovered === next.isHovered &&
+    prev.name === next.name &&
+    prev.isVisible === next.isVisible &&
+    prev.staticMode === next.staticMode
+  )
+}
+
+export const WaterSVG = memo(WaterSVGComponent, areEqual)

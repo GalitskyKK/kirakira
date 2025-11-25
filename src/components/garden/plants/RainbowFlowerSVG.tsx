@@ -55,21 +55,21 @@ function RainbowFlowerSVGComponent({
     '#ec4899', // pink
   ]
 
-  
-  const pseudoRandom = (seed: number): number => {
-    const x = Math.sin(seed) * 10000
-    return x - Math.floor(x)
-  }
   const rainbowParticles = useMemo(() => {
-    const count = 12
+    if (staticMode) return []
+    const count = 8 // Уменьшено с 12 до 8
     const items = [] as Array<{ key: number; left: string; top: string }>
+    const pseudoRandom = (seed: number): number => {
+      const x = Math.sin(seed) * 10000
+      return x - Math.floor(x)
+    }
     for (let i = 0; i < count; i++) {
       const left = 20 + pseudoRandom(1100 + i) * 60
       const top = 20 + pseudoRandom(1200 + i) * 60
       items.push({ key: i, left: `${left}%`, top: `${top}%` })
     }
     return items
-  }, [])
+  }, [staticMode])
 
   return (
     <motion.div
@@ -142,13 +142,10 @@ function RainbowFlowerSVGComponent({
           animate={{ scaleY: 1 }}
           transition={{ duration: 0.8, delay: 0.3 }}
         >
-          {/* Main stem with rainbow gradient effect */}
-          <rect x="15" y="20" width="2" height="8" fill="#22c55e" />
-          <motion.rect
-            x="15"
-            y="20"
-            width="1"
-            height="8"
+          {/* Main stem - объединен */}
+          <path d="M15,20h2v8h-2z" fill="#22c55e" />
+          <motion.path
+            d="M15,20h1v8h-1z"
             fill="#4ade80"
             animate={{
               fill: ['#4ade80', '#fbbf24', '#f59e0b', '#ef4444', '#4ade80'],
@@ -161,20 +158,15 @@ function RainbowFlowerSVGComponent({
           />
         </motion.g>
 
-        {/* Rainbow leaves */}
+        {/* Rainbow leaves - объединены */}
         <motion.g
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.6, delay: 0.7 }}
         >
-          {/* Left leaf */}
-          <rect x="12" y="24" width="3" height="2" fill="#22c55e" />
-          <rect x="11" y="25" width="2" height="1" fill="#16a34a" />
-          <motion.rect
-            x="12"
-            y="24"
-            width="1"
-            height="2"
+          <path d="M12,24h3v2h-3z M11,25h2v1h-2z" fill="#22c55e" />
+          <motion.path
+            d="M12,24h1v2h-1z"
             fill="#4ade80"
             animate={{
               fill: ['#4ade80', '#06b6d4', '#3b82f6', '#4ade80'],
@@ -185,15 +177,9 @@ function RainbowFlowerSVGComponent({
               delay: 2.5,
             }}
           />
-
-          {/* Right leaf */}
-          <rect x="17" y="26" width="3" height="2" fill="#22c55e" />
-          <rect x="19" y="27" width="2" height="1" fill="#16a34a" />
-          <motion.rect
-            x="19"
-            y="26"
-            width="1"
-            height="2"
+          <path d="M17,26h3v2h-3z M19,27h2v1h-2z" fill="#22c55e" />
+          <motion.path
+            d="M19,26h1v2h-1z"
             fill="#4ade80"
             animate={{
               fill: ['#4ade80', '#8b5cf6', '#ec4899', '#4ade80'],
@@ -206,35 +192,22 @@ function RainbowFlowerSVGComponent({
           />
         </motion.g>
 
-        {/* Rainbow flower petals */}
+        {/* Rainbow flower petals - объединены */}
         <motion.g
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.8, delay: 0.9 }}
         >
-          {/* Bottom petal - red */}
-          <rect x="14" y="14" width="4" height="3" fill="#ef4444" />
-          <rect x="15" y="17" width="2" height="1" fill="#ef4444" />
-          <rect
-            x="14"
-            y="14"
-            width="1"
-            height="3"
-            fill="#ffffff"
-            opacity="0.6"
+          <path
+            d="M14,14h4v3h-4z M15,17h2v1h-2z"
+            fill="#ef4444"
           />
-
-          {/* Top petal - purple */}
-          <rect x="14" y="8" width="4" height="3" fill="#8b5cf6" />
-          <rect x="15" y="7" width="2" height="1" fill="#8b5cf6" />
-          <rect
-            x="17"
-            y="8"
-            width="1"
-            height="3"
-            fill="#000000"
-            opacity="0.2"
+          <path d="M14,14h1v3h-1z" fill="#ffffff" opacity="0.6" />
+          <path
+            d="M14,8h4v3h-4z M15,7h2v1h-2z"
+            fill="#8b5cf6"
           />
+          <path d="M17,8h1v3h-1z" fill="#000000" opacity="0.2" />
 
           {/* Left petal - green */}
           <rect x="10" y="10" width="3" height="4" fill="#22c55e" />

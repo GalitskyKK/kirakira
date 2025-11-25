@@ -1,6 +1,7 @@
-import { motion } from 'framer-motion'
-import { useMemo } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { memo, useMemo } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
+import { createPathFromRects } from './utils'
 
 interface MushroomSVGProps {
   size?: number
@@ -11,9 +12,10 @@ interface MushroomSVGProps {
   isHovered?: boolean
   name?: string
   isVisible?: boolean
+  staticMode?: boolean
 }
 
-export function MushroomSVG({
+function MushroomSVGComponent({
   size = 64,
   color = '#ef4444',
   rarity = RarityLevel.COMMON,
@@ -22,8 +24,12 @@ export function MushroomSVG({
   isHovered: _isHovered = false,
   name: _name = 'Mushroom',
   isVisible = true,
+  staticMode = false,
 }: MushroomSVGProps) {
-  const getRarityGlow = () => {
+  const prefersReducedMotion = useReducedMotion()
+  const repeatInf = isVisible && !prefersReducedMotion && !staticMode ? Infinity : 0
+
+  const getRarityGlow = useMemo(() => {
     switch (rarity) {
       case RarityLevel.UNCOMMON:
         return '#22c55e'
@@ -36,10 +42,10 @@ export function MushroomSVG({
       default:
         return color
     }
-  }
+  }, [rarity, color])
 
-  // Сезонные цвета для грибов
-  const getSeasonalColors = () => {
+  // Сезонные цвета для грибов - мемоизировано
+  const seasonalColors = useMemo(() => {
     const baseColor = color
     switch (season) {
       case SeasonalVariant.SPRING:
@@ -83,17 +89,16 @@ export function MushroomSVG({
           decoration: baseColor,
         }
     }
-  }
+  }, [season, color])
 
-  const seasonalColors = getSeasonalColors()
-  const repeatInf = isVisible ? Infinity : 0
-  const pseudoRandom = (seed: number): number => {
-    const x = Math.sin(seed) * 10000
-    return x - Math.floor(x)
-  }
   const spores = useMemo(() => {
-    const count = 10
+    if (rarity !== RarityLevel.EPIC && rarity !== RarityLevel.LEGENDARY) return []
+    const count = 6 // Уменьшено с 10 до 6
     const items = [] as Array<{ key: number; left: string; top: string; dx: number }>
+    const pseudoRandom = (seed: number): number => {
+      const x = Math.sin(seed) * 10000
+      return x - Math.floor(x)
+    }
     for (let i = 0; i < count; i++) {
       const left = 20 + pseudoRandom(500 + i) * 60
       const top = 30 + pseudoRandom(600 + i) * 40
@@ -101,21 +106,40 @@ export function MushroomSVG({
       items.push({ key: i, left: `${left}%`, top: `${top}%`, dx })
     }
     return items
+  }, [rarity])
+
+  // Объединенные path для гриба
+  const mushroomPaths = useMemo(() => {
+    const stemPath = createPathFromRects([
+      { x: 14, y: 18, w: 4, h: 10 },
+    ])
+    const capPath = createPathFromRects([
+      { x: 8, y: 12, w: 16, h: 6 },
+      { x: 10, y: 10, w: 12, h: 2 },
+      { x: 12, y: 8, w: 8, h: 2 },
+    ])
+    const spotsPath = createPathFromRects([
+      { x: 12, y: 10, w: 2, h: 2 },
+      { x: 18, y: 12, w: 2, h: 2 },
+      { x: 10, y: 14, w: 2, h: 2 },
+      { x: 20, y: 16, w: 2, h: 2 },
+    ])
+    return { stemPath, capPath, spotsPath }
   }, [])
 
   return (
     <motion.div
       className="pixel-container relative flex items-center justify-center"
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, willChange: 'transform, opacity' }}
       initial={{ scale: 0, y: 10 }}
       animate={{
         scale: 1,
         y: 0,
         filter: isSelected
-          ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+          ? `drop-shadow(0 0 20px ${getRarityGlow})`
           : 'none',
       }}
-      whileHover={{
+      whileHover={prefersReducedMotion ? {} : {
         scale: 1.1,
         y: -2,
       }}
@@ -125,14 +149,14 @@ export function MushroomSVG({
         damping: 20,
       }}
     >
-      {/* Spores for magical mushrooms */}
-      {(rarity === RarityLevel.EPIC || rarity === RarityLevel.LEGENDARY) && (
+      {/* Spores for magical mushrooms - оптимизировано */}
+      {!staticMode && spores.length > 0 && (
         <div className="pointer-events-none absolute inset-0">
           {spores.map((s, i) => (
             <motion.div
               key={s.key}
               className="absolute h-0.5 w-0.5 rounded-full bg-purple-300"
-              style={{ left: s.left, top: s.top }}
+              style={{ left: s.left, top: s.top, willChange: 'transform, opacity' }}
               animate={{ y: [0, -40, 0], x: [0, s.dx, 0], opacity: [0, 1, 0], scale: [0, 1, 0] }}
               transition={{ duration: 4, repeat: repeatInf, delay: i * 0.3, ease: 'easeOut' }}
             />
@@ -195,199 +219,61 @@ export function MushroomSVG({
           />
         </motion.g>
 
-        {/* Stem - pixelated style */}
+        {/* Stem - объединен в path */}
         <motion.g
           initial={{ scaleY: 0 }}
           animate={{ scaleY: 1 }}
           transition={{ duration: 0.8, delay: 0.5 }}
         >
-          {/* Main stem body */}
-          <rect
-            x="14"
-            y="18"
-            width="4"
-            height="10"
-            fill={seasonalColors.stem}
-          />
-
-          {/* Stem highlight */}
-          <rect x="14" y="18" width="2" height="10" fill="#ffffff" />
-
-          {/* Stem shadow */}
-          <rect x="16" y="18" width="2" height="10" fill="#e5e7eb" />
-
-          {/* Stem texture lines */}
-          <rect
-            x="14"
-            y="22"
-            width="4"
-            height="1"
-            fill="#d1d5db"
-            opacity="0.5"
-          />
-          <rect
-            x="14"
-            y="25"
-            width="4"
-            height="1"
-            fill="#d1d5db"
-            opacity="0.3"
-          />
+          <path d={mushroomPaths.stemPath} fill={seasonalColors.stem} />
+          <path d="M14,18h2v10h-2z" fill="#ffffff" />
+          <path d="M16,18h2v10h-2z" fill="#e5e7eb" />
+          <path d="M14,22h4v1h-4z M14,25h4v1h-4z" fill="#d1d5db" opacity="0.5" />
         </motion.g>
 
-        {/* Cap base/underside */}
+        {/* Cap base/underside - объединен */}
         <motion.g
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.6, delay: 0.8 }}
         >
-          {/* Cap underside */}
           <ellipse cx="16" cy="18" rx="8" ry="2" fill="#8b5cf6" opacity="0.7" />
-
-          {/* Gills (pixel art style) */}
-          {Array.from({ length: 7 }, (_, i) => (
-            <rect
-              key={i}
-              x={10 + i * 2}
-              y="18"
-              width="1"
-              height="1"
-              fill="#8b5cf6"
-              opacity="0.4"
-            />
-          ))}
+          <path
+            d={Array.from({ length: 7 }, (_, i) => `M${10 + i * 2},18h1v1h-1z`).join(' ')}
+            fill="#8b5cf6"
+            opacity="0.4"
+          />
         </motion.g>
 
-        {/* Main cap - pixel art mushroom */}
+        {/* Main cap - объединен в path */}
         <motion.g
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.8, delay: 1.0 }}
         >
-          {/* Cap main body */}
-          <rect x="8" y="12" width="16" height="6" fill={seasonalColors.cap} />
-
-          {/* Cap rounded edges */}
-          <rect x="10" y="10" width="12" height="2" fill={seasonalColors.cap} />
-          <rect x="12" y="8" width="8" height="2" fill={seasonalColors.cap} />
-
-          {/* Cap highlight (top left) */}
-          <rect
-            x="8"
-            y="12"
-            width="6"
-            height="3"
+          <path d={mushroomPaths.capPath} fill={seasonalColors.cap} />
+          <path
+            d="M8,12h6v3h-6z M10,10h4v2h-4z M12,8h3v2h-3z"
             fill="#ffffff"
             opacity="0.4"
           />
-          <rect
-            x="10"
-            y="10"
-            width="4"
-            height="2"
-            fill="#ffffff"
-            opacity="0.3"
-          />
-          <rect
-            x="12"
-            y="8"
-            width="3"
-            height="2"
-            fill="#ffffff"
-            opacity="0.5"
-          />
-
-          {/* Cap shadow (bottom right) */}
-          <rect
-            x="18"
-            y="15"
-            width="6"
-            height="3"
+          <path
+            d="M18,15h6v3h-6z M16,13h8v2h-8z"
             fill="#000000"
             opacity="0.2"
           />
-          <rect
-            x="16"
-            y="13"
-            width="8"
-            height="2"
-            fill="#000000"
-            opacity="0.15"
-          />
         </motion.g>
 
-        {/* Mushroom spots - classic white spots */}
+        {/* Mushroom spots - объединены в path */}
         <motion.g
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.6, delay: 1.2 }}
         >
-          {/* Large spots */}
-          <rect
-            x="12"
-            y="10"
-            width="2"
-            height="2"
+          <path
+            d={mushroomPaths.spotsPath + ' M15,9h1v1h-1z M22,14h1v1h-1z M9,16h1v1h-1z M16,15h1v1h-1z'}
             fill="#ffffff"
             opacity="0.9"
-          />
-          <rect
-            x="18"
-            y="12"
-            width="2"
-            height="2"
-            fill="#ffffff"
-            opacity="0.9"
-          />
-          <rect
-            x="10"
-            y="14"
-            width="2"
-            height="2"
-            fill="#ffffff"
-            opacity="0.9"
-          />
-          <rect
-            x="20"
-            y="16"
-            width="2"
-            height="2"
-            fill="#ffffff"
-            opacity="0.9"
-          />
-
-          {/* Small spots */}
-          <rect
-            x="15"
-            y="9"
-            width="1"
-            height="1"
-            fill="#ffffff"
-            opacity="0.8"
-          />
-          <rect
-            x="22"
-            y="14"
-            width="1"
-            height="1"
-            fill="#ffffff"
-            opacity="0.8"
-          />
-          <rect
-            x="9"
-            y="16"
-            width="1"
-            height="1"
-            fill="#ffffff"
-            opacity="0.8"
-          />
-          <rect
-            x="16"
-            y="15"
-            width="1"
-            height="1"
-            fill="#ffffff"
-            opacity="0.8"
           />
         </motion.g>
 
@@ -436,7 +322,7 @@ export function MushroomSVG({
               y="9"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
             <rect
@@ -444,7 +330,7 @@ export function MushroomSVG({
               y="11"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
             <rect
@@ -452,7 +338,7 @@ export function MushroomSVG({
               y="16"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
             <rect
@@ -460,7 +346,7 @@ export function MushroomSVG({
               y="15"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
           </motion.g>
@@ -522,12 +408,13 @@ export function MushroomSVG({
         )}
       </motion.svg>
 
-      {/* Magical aura */}
-      {rarity !== RarityLevel.COMMON && (
+      {/* Magical aura - оптимизировано */}
+      {rarity !== RarityLevel.COMMON && !staticMode && (
         <motion.div
-          className="absolute inset-0 rounded-full"
+          className="absolute inset-0 rounded-full pointer-events-none"
           style={{
-            background: `radial-gradient(circle, ${getRarityGlow()}15 0%, transparent 70%)`,
+            background: `radial-gradient(circle, ${getRarityGlow}15 0%, transparent 70%)`,
+            willChange: 'transform, opacity',
           }}
           animate={{
             scale: [1, 1.15, 1],
@@ -535,7 +422,7 @@ export function MushroomSVG({
           }}
           transition={{
             duration: 3,
-            repeat: Infinity,
+            repeat: repeatInf,
             ease: 'easeInOut',
           }}
         />
@@ -543,3 +430,19 @@ export function MushroomSVG({
     </motion.div>
   )
 }
+
+function areEqual(prev: Readonly<MushroomSVGProps>, next: Readonly<MushroomSVGProps>) {
+  return (
+    prev.size === next.size &&
+    prev.color === next.color &&
+    prev.rarity === next.rarity &&
+    prev.season === next.season &&
+    prev.isSelected === next.isSelected &&
+    prev.isHovered === next.isHovered &&
+    prev.name === next.name &&
+    prev.isVisible === next.isVisible &&
+    prev.staticMode === next.staticMode
+  )
+}
+
+export const MushroomSVG = memo(MushroomSVGComponent, areEqual)

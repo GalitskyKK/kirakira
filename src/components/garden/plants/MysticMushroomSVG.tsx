@@ -41,13 +41,14 @@ function MysticMushroomSVGComponent({
     }
   }, [rarity, color])
 
-  const pseudoRandom = (seed: number): number => {
-    const x = Math.sin(seed) * 10000
-    return x - Math.floor(x)
-  }
   const spores = useMemo(() => {
-    const count = 12
+    if (staticMode) return []
+    const count = 6 // Уменьшено с 12 до 6
     const items = [] as Array<{ key: number; left: string; top: string; dx: number }>
+    const pseudoRandom = (seed: number): number => {
+      const x = Math.sin(seed) * 10000
+      return x - Math.floor(x)
+    }
     for (let i = 0; i < count; i++) {
       const left = 15 + pseudoRandom(1600 + i) * 70
       const top = 20 + pseudoRandom(1700 + i) * 60
@@ -55,7 +56,7 @@ function MysticMushroomSVGComponent({
       items.push({ key: i, left: `${left}%`, top: `${top}%`, dx })
     }
     return items
-  }, [])
+  }, [staticMode])
 
   return (
     <motion.div

@@ -1,6 +1,7 @@
-import { motion } from 'framer-motion'
-import { useMemo } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { memo, useMemo } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
+import { createPathFromRects } from './utils'
 
 interface CrystalSVGProps {
   size?: number
@@ -11,9 +12,10 @@ interface CrystalSVGProps {
   isHovered?: boolean
   name?: string
   isVisible?: boolean
+  staticMode?: boolean
 }
 
-export function CrystalSVG({
+function CrystalSVGComponent({
   size = 64,
   color = '#3b82f6',
   rarity = RarityLevel.COMMON,
@@ -22,8 +24,12 @@ export function CrystalSVG({
   isHovered: _isHovered = false,
   name: _name = 'Crystal',
   isVisible = true,
+  staticMode = false,
 }: CrystalSVGProps) {
-  const getRarityGlow = () => {
+  const prefersReducedMotion = useReducedMotion()
+  const repeatInf = isVisible && !prefersReducedMotion && !staticMode ? Infinity : 0
+
+  const getRarityGlow = useMemo(() => {
     switch (rarity) {
       case RarityLevel.UNCOMMON:
         return '#22c55e'
@@ -36,10 +42,10 @@ export function CrystalSVG({
       default:
         return color
     }
-  }
+  }, [rarity, color])
 
-  // Сезонные цвета для кристаллов 
-  const getSeasonalColors = () => {
+  // Сезонные цвета для кристаллов - мемоизировано
+  const seasonalColors = useMemo(() => {
     const baseColor = color
     switch (season) {
       case SeasonalVariant.SPRING:
@@ -83,17 +89,15 @@ export function CrystalSVG({
           decoration: baseColor,
         }
     }
-  }
+  }, [season, color])
 
-  const seasonalColors = getSeasonalColors()
-  const repeatInf = isVisible ? Infinity : 0
-  const pseudoRandom = (seed: number): number => {
-    const x = Math.sin(seed) * 10000
-    return x - Math.floor(x)
-  }
   const energyParticles = useMemo(() => {
-    const count = 8
+    const count = 5 // Уменьшено с 8 до 5
     const items = [] as Array<{ key: number; left: string; top: string; dx: number }>
+    const pseudoRandom = (seed: number): number => {
+      const x = Math.sin(seed) * 10000
+      return x - Math.floor(x)
+    }
     for (let i = 0; i < count; i++) {
       const left = 30 + pseudoRandom(800 + i) * 40
       const top = 20 + pseudoRandom(900 + i) * 60
@@ -103,20 +107,33 @@ export function CrystalSVG({
     return items
   }, [])
 
+  // Объединенные path для кристалла
+  const crystalPaths = useMemo(() => {
+    const mainBodyPath = createPathFromRects([
+      { x: 12, y: 12, w: 8, h: 12 },
+      { x: 14, y: 8, w: 4, h: 4 },
+      { x: 15, y: 6, w: 2, h: 2 },
+      { x: 15, y: 4, w: 2, h: 2 },
+      { x: 14, y: 24, w: 4, h: 2 },
+      { x: 15, y: 26, w: 2, h: 2 },
+    ])
+    return { mainBodyPath }
+  }, [])
+
   return (
     <motion.div
       className="pixel-container relative flex items-center justify-center"
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, willChange: 'transform, opacity' }}
       initial={{ scale: 0, rotate: -180, opacity: 0 }}
       animate={{
         scale: 1,
         rotate: 0,
         opacity: 1,
         filter: isSelected
-          ? `drop-shadow(0 0 25px ${getRarityGlow()})`
+          ? `drop-shadow(0 0 25px ${getRarityGlow})`
           : 'none',
       }}
-      whileHover={{
+      whileHover={prefersReducedMotion ? {} : {
         scale: 1.15,
         y: -5,
         filter: `drop-shadow(0 10px 30px ${color}60) brightness(1.2)`,
@@ -127,18 +144,20 @@ export function CrystalSVG({
         damping: 15,
       }}
     >
-      {/* Energy particles */}
-      <div className="pointer-events-none absolute inset-0">
-        {energyParticles.map((p, i) => (
-          <motion.div
-            key={p.key}
-            className="absolute h-1 w-1 rounded-full"
-            style={{ background: color, left: p.left, top: p.top }}
-            animate={{ y: [0, -30, 0], x: [0, p.dx, 0], opacity: [0, 1, 0], scale: [0.5, 1.5, 0.5] }}
-            transition={{ duration: 3, repeat: repeatInf, delay: i * 0.4, ease: 'easeInOut' }}
-          />
-        ))}
-      </div>
+      {/* Energy particles - оптимизировано */}
+      {!staticMode && (
+        <div className="pointer-events-none absolute inset-0">
+          {energyParticles.map((p, i) => (
+            <motion.div
+              key={p.key}
+              className="absolute h-1 w-1 rounded-full"
+              style={{ background: color, left: p.left, top: p.top, willChange: 'transform, opacity' }}
+              animate={{ y: [0, -30, 0], x: [0, p.dx, 0], opacity: [0, 1, 0], scale: [0.5, 1.5, 0.5] }}
+              transition={{ duration: 3, repeat: repeatInf, delay: i * 0.4, ease: 'easeInOut' }}
+            />
+          ))}
+        </div>
+      )}
 
       <motion.svg
         width={size}
@@ -163,122 +182,32 @@ export function CrystalSVG({
           transition={{ duration: 0.8, delay: 0.5 }}
         />
 
-        {/* Main crystal body - pixelated gem shape */}
+        {/* Main crystal body - объединен в path */}
         <motion.g
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ duration: 1.2, delay: 0.2 }}
         >
-          {/* Crystal main body (diamond shape) */}
-          <rect
-            x="12"
-            y="12"
-            width="8"
-            height="12"
-            fill={seasonalColors.main}
-          />
-
-          {/* Crystal top point */}
-          <rect x="14" y="8" width="4" height="4" fill={seasonalColors.main} />
-          <rect x="15" y="6" width="2" height="2" fill={seasonalColors.main} />
-          <rect x="15" y="4" width="2" height="2" fill={seasonalColors.main} />
-
-          {/* Crystal bottom point */}
-          <rect x="14" y="24" width="4" height="2" fill={seasonalColors.main} />
-          <rect x="15" y="26" width="2" height="2" fill={seasonalColors.main} />
-
-          {/* Left facet highlight */}
-          <rect
-            x="12"
-            y="12"
-            width="4"
-            height="12"
+          <path d={crystalPaths.mainBodyPath} fill={seasonalColors.main} />
+          <path
+            d="M12,12h4v12h-4z M14,8h2v4h-2z M15,6h1v2h-1z M15,4h1v2h-1z"
             fill="#ffffff"
             opacity="0.5"
           />
-          <rect
-            x="14"
-            y="8"
-            width="2"
-            height="4"
-            fill="#ffffff"
-            opacity="0.6"
-          />
-          <rect
-            x="15"
-            y="6"
-            width="1"
-            height="2"
-            fill="#ffffff"
-            opacity="0.8"
-          />
-          <rect
-            x="15"
-            y="4"
-            width="1"
-            height="2"
-            fill="#ffffff"
-            opacity="0.9"
-          />
-
-          {/* Right facet shadow */}
-          <rect
-            x="16"
-            y="12"
-            width="4"
-            height="12"
+          <path
+            d="M16,12h4v12h-4z M16,8h2v4h-2z M16,6h1v2h-1z"
             fill="#000000"
             opacity="0.3"
           />
-          <rect
-            x="16"
-            y="8"
-            width="2"
-            height="4"
-            fill="#000000"
-            opacity="0.2"
-          />
-          <rect
-            x="16"
-            y="6"
-            width="1"
-            height="2"
-            fill="#000000"
-            opacity="0.15"
-          />
-
-          {/* Bottom facet */}
-          <rect
-            x="14"
-            y="24"
-            width="2"
-            height="2"
+          <path
+            d="M14,24h2v2h-2z M15,26h1v2h-1z"
             fill="#ffffff"
             opacity="0.4"
           />
-          <rect
-            x="16"
-            y="24"
-            width="2"
-            height="2"
+          <path
+            d="M16,24h2v2h-2z M16,26h1v2h-1z"
             fill="#000000"
             opacity="0.25"
-          />
-          <rect
-            x="15"
-            y="26"
-            width="1"
-            height="2"
-            fill="#ffffff"
-            opacity="0.3"
-          />
-          <rect
-            x="16"
-            y="26"
-            width="1"
-            height="2"
-            fill="#000000"
-            opacity="0.2"
           />
         </motion.g>
 
@@ -419,7 +348,7 @@ export function CrystalSVG({
               y="9"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.9"
             />
             <rect
@@ -427,7 +356,7 @@ export function CrystalSVG({
               y="11"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.9"
             />
             <rect
@@ -435,7 +364,7 @@ export function CrystalSVG({
               y="17"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.9"
             />
             <rect
@@ -443,7 +372,7 @@ export function CrystalSVG({
               y="19"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.9"
             />
             <rect
@@ -451,7 +380,7 @@ export function CrystalSVG({
               y="23"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.9"
             />
           </motion.g>
@@ -504,7 +433,7 @@ export function CrystalSVG({
               width="16"
               height="16"
               fill="none"
-              stroke={getRarityGlow()}
+              stroke={getRarityGlow}
               strokeWidth="1"
               opacity="0.4"
               strokeDasharray="1,1"
@@ -609,23 +538,42 @@ export function CrystalSVG({
         </motion.g>
       </motion.svg>
 
-      {/* Magical aura */}
-      <motion.div
-        className="absolute inset-0 rounded-full"
-        style={{
-          background: `conic-gradient(from 0deg, ${getRarityGlow()}20, transparent, ${getRarityGlow()}20)`,
-        }}
-        animate={{
-          rotate: [0, 360],
-          scale: [1, 1.2, 1],
-          opacity: [0.2, 0.5, 0.2],
-        }}
+      {/* Magical aura - оптимизировано */}
+      {!staticMode && (
+        <motion.div
+          className="absolute inset-0 rounded-full pointer-events-none"
+          style={{
+            background: `conic-gradient(from 0deg, ${getRarityGlow}20, transparent, ${getRarityGlow}20)`,
+            willChange: 'transform, opacity',
+          }}
+          animate={{
+            rotate: [0, 360],
+            scale: [1, 1.2, 1],
+            opacity: [0.2, 0.5, 0.2],
+          }}
           transition={{
             rotate: { duration: 8, repeat: repeatInf, ease: 'linear' },
             scale: { duration: 3, repeat: repeatInf, ease: 'easeInOut' },
             opacity: { duration: 3, repeat: repeatInf, ease: 'easeInOut' },
           }}
-      />
+        />
+      )}
     </motion.div>
   )
 }
+
+function areEqual(prev: Readonly<CrystalSVGProps>, next: Readonly<CrystalSVGProps>) {
+  return (
+    prev.size === next.size &&
+    prev.color === next.color &&
+    prev.rarity === next.rarity &&
+    prev.season === next.season &&
+    prev.isSelected === next.isSelected &&
+    prev.isHovered === next.isHovered &&
+    prev.name === next.name &&
+    prev.isVisible === next.isVisible &&
+    prev.staticMode === next.staticMode
+  )
+}
+
+export const CrystalSVG = memo(CrystalSVGComponent, areEqual)

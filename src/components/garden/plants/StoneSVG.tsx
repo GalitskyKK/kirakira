@@ -1,6 +1,7 @@
 import { motion, useReducedMotion } from 'framer-motion'
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import { RarityLevel, SeasonalVariant } from '@/types'
+import { createPathFromRects } from './utils'
 
 interface StoneSVGProps {
   size?: number
@@ -25,7 +26,7 @@ function StoneSVGComponent({
   isVisible = true,
   staticMode = false,
 }: StoneSVGProps) {
-  const getRarityGlow = () => {
+  const getRarityGlow = useMemo(() => {
     switch (rarity) {
       case RarityLevel.UNCOMMON:
         return '#22c55e'
@@ -38,7 +39,7 @@ function StoneSVGComponent({
       default:
         return color
     }
-  }
+  }, [rarity, color])
 
   // Сезонные цвета для камней
   const getSeasonalColors = () => {
@@ -91,6 +92,26 @@ function StoneSVGComponent({
   const prefersReducedMotion = useReducedMotion()
   const repeatInf = isVisible && !prefersReducedMotion && !staticMode ? Infinity : 0
 
+  // Объединенные path для камней
+  const stonePaths = useMemo(() => {
+    const regularStonePath = createPathFromRects([
+      { x: 6, y: 15, w: 20, h: 12 },
+      { x: 8, y: 12, w: 16, h: 3 },
+      { x: 10, y: 9, w: 12, h: 3 },
+    ])
+    const gravelPath = createPathFromRects([
+      { x: 10, y: 18, w: 12, h: 8 },
+      { x: 12, y: 16, w: 8, h: 2 },
+      { x: 14, y: 23, w: 4, h: 2 },
+    ])
+    const boulderPath = createPathFromRects([
+      { x: 4, y: 12, w: 24, h: 14 },
+      { x: 6, y: 8, w: 20, h: 4 },
+      { x: 8, y: 6, w: 16, h: 2 },
+    ])
+    return { regularStonePath, gravelPath, boulderPath }
+  }, [])
+
   // Определяем тип камня по имени
   const isGravel =
     name?.toLowerCase().includes('галька') ||
@@ -108,7 +129,7 @@ function StoneSVGComponent({
         scale: 1,
         y: 0,
         filter: isSelected
-          ? `drop-shadow(0 0 20px ${getRarityGlow()})`
+          ? `drop-shadow(0 0 20px ${getRarityGlow})`
           : 'none',
       }}
       whileHover={{
@@ -156,199 +177,45 @@ function StoneSVGComponent({
           }}
         >
           {isGravel ? (
-            // Галька - маленькие округлые камешки
+            // Галька - объединена в path
             <>
-              {/* Основной камешек */}
-              <rect
-                x="12"
-                y="16"
-                width="8"
-                height="6"
+              <path
+                d={createPathFromRects([
+                  { x: 12, y: 16, w: 8, h: 6 },
+                  { x: 11, y: 17, w: 2, h: 4 },
+                  { x: 19, y: 17, w: 2, h: 4 },
+                  { x: 8, y: 20, w: 4, h: 3 },
+                  { x: 20, y: 20, w: 4, h: 3 },
+                  { x: 14, y: 23, w: 4, h: 2 },
+                ])}
                 fill={seasonalColors.main}
               />
-              <rect
-                x="11"
-                y="17"
-                width="2"
-                height="4"
-                fill={seasonalColors.main}
-              />
-              <rect
-                x="19"
-                y="17"
-                width="2"
-                height="4"
-                fill={seasonalColors.main}
-              />
-
-              {/* Дополнительные мелкие камешки */}
-              <rect
-                x="8"
-                y="20"
-                width="4"
-                height="3"
-                fill={seasonalColors.main}
-              />
-              <rect
-                x="20"
-                y="20"
-                width="4"
-                height="3"
-                fill={seasonalColors.main}
-              />
-              <rect
-                x="14"
-                y="23"
-                width="4"
-                height="2"
-                fill={seasonalColors.main}
-              />
-
-              {/* Блики на гальке */}
-              <rect
-                x="12"
-                y="16"
-                width="3"
-                height="2"
+              <path
+                d="M12,16h3v2h-3z M8,20h2v1h-2z M20,20h2v1h-2z"
                 fill={seasonalColors.highlight}
               />
-              <rect
-                x="8"
-                y="20"
-                width="2"
-                height="1"
-                fill={seasonalColors.highlight}
-              />
-              <rect
-                x="20"
-                y="20"
-                width="2"
-                height="1"
-                fill={seasonalColors.highlight}
-              />
-
-              {/* Тени гальки */}
-              <rect
-                x="17"
-                y="20"
-                width="3"
-                height="2"
-                fill={seasonalColors.shadow}
-              />
-              <rect
-                x="10"
-                y="22"
-                width="2"
-                height="1"
-                fill={seasonalColors.shadow}
-              />
-              <rect
-                x="22"
-                y="22"
-                width="2"
-                height="1"
+              <path
+                d="M17,20h3v2h-3z M10,22h2v1h-2z M22,22h2v1h-2z"
                 fill={seasonalColors.shadow}
               />
             </>
           ) : isBoulder ? (
-            // Булыжник - большой массивный камень
+            // Булыжник - объединен в path
             <>
-              {/* Основной булыжник */}
-              <rect
-                x="4"
-                y="12"
-                width="24"
-                height="14"
-                fill={seasonalColors.main}
-              />
-              <rect
-                x="6"
-                y="8"
-                width="20"
-                height="4"
-                fill={seasonalColors.main}
-              />
-              <rect
-                x="8"
-                y="6"
-                width="16"
-                height="2"
-                fill={seasonalColors.main}
-              />
-
-              {/* Блики на булыжнике */}
-              <rect
-                x="4"
-                y="12"
-                width="10"
-                height="6"
+              <path d={stonePaths.boulderPath} fill={seasonalColors.main} />
+              <path
+                d="M4,12h10v6h-10z M6,8h8v4h-8z M8,6h6v2h-6z"
                 fill={seasonalColors.highlight}
               />
-              <rect
-                x="6"
-                y="8"
-                width="8"
-                height="4"
-                fill={seasonalColors.highlight}
-              />
-              <rect
-                x="8"
-                y="6"
-                width="6"
-                height="2"
-                fill={seasonalColors.highlight}
-              />
-
-              {/* Тени булыжника */}
-              <rect
-                x="18"
-                y="18"
-                width="10"
-                height="8"
-                fill={seasonalColors.shadow}
-              />
-              <rect
-                x="18"
-                y="8"
-                width="8"
-                height="10"
-                fill={seasonalColors.shadow}
-              />
-              <rect
-                x="18"
-                y="6"
-                width="6"
-                height="2"
+              <path
+                d="M18,18h10v8h-10z M18,8h8v10h-8z M18,6h6v2h-6z"
                 fill={seasonalColors.shadow}
               />
             </>
           ) : (
-            // Обычный камень (существующий код)
+            // Обычный камень - объединен в path
             <>
-              {/* Stone main body */}
-              <rect
-                x="6"
-                y="15"
-                width="20"
-                height="12"
-                fill={seasonalColors.main}
-              />
-
-              {/* Stone top sections */}
-              <rect
-                x="8"
-                y="12"
-                width="16"
-                height="3"
-                fill={seasonalColors.main}
-              />
-              <rect
-                x="10"
-                y="9"
-                width="12"
-                height="3"
-                fill={seasonalColors.main}
-              />
+              <path d={stonePaths.regularStonePath} fill={seasonalColors.main} />
               <rect
                 x="12"
                 y="7"
@@ -553,7 +420,7 @@ function StoneSVGComponent({
               y="16"
               width="4"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
             <rect
@@ -561,7 +428,7 @@ function StoneSVGComponent({
               y="15"
               width="2"
               height="3"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
             <rect
@@ -569,7 +436,7 @@ function StoneSVGComponent({
               y="14"
               width="1"
               height="1"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.8"
             />
 
@@ -579,7 +446,7 @@ function StoneSVGComponent({
               y="18"
               width="2"
               height="2"
-              fill={getRarityGlow()}
+              fill={getRarityGlow}
               opacity="0.9"
             />
             <rect
@@ -690,7 +557,7 @@ function StoneSVGComponent({
             width="16"
             height="16"
             fill="none"
-            stroke={getRarityGlow()}
+            stroke={getRarityGlow}
             strokeWidth="1"
             opacity="0.3"
             strokeDasharray="2,2"
@@ -898,7 +765,7 @@ function StoneSVGComponent({
         <motion.div
           className="absolute inset-0 rounded-full"
           style={{
-            background: `radial-gradient(circle, ${getRarityGlow()}10 0%, transparent 80%)`,
+            background: `radial-gradient(circle, ${getRarityGlow}10 0%, transparent 80%)`,
           }}
           animate={{
             scale: [1, 1.1, 1],

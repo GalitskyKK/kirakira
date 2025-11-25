@@ -161,21 +161,14 @@ function DecorationSVGComponent({
             animate={{ scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            {/* Main body */}
-            <rect x="15" y="16" width="2" height="6" fill="#4a5568" />
-            <rect x="15" y="16" width="1" height="6" fill="#718096" />
-
-            {/* Head */}
-            <rect x="15" y="14" width="2" height="2" fill="#2d3748" />
-            <rect x="15" y="14" width="1" height="1" fill="#4a5568" />
-
-            {/* Glowing abdomen */}
-            <motion.rect
-              x="15"
-              y="18"
-              width="2"
-              height="3"
-                fill="#fbbf24"
+            {/* Main body - объединен */}
+            <path d="M15,16h2v6h-2z" fill="#4a5568" />
+            <path d="M15,16h1v6h-1z" fill="#718096" />
+            <path d="M15,14h2v2h-2z" fill="#2d3748" />
+            <path d="M15,14h1v1h-1z" fill="#4a5568" />
+            <motion.path
+              d="M15,18h2v3h-2z"
+              fill="#fbbf24"
               animate={{
                 opacity: [0.6, 1, 0.6],
                 scale: [1, 1.1, 1],
@@ -186,17 +179,10 @@ function DecorationSVGComponent({
                 ease: 'easeInOut',
               }}
             />
-            <rect
-              x="15"
-              y="18"
-              width="1"
-              height="2"
-              fill="#ffffff"
-              opacity="0.8"
-            />
+            <path d="M15,18h1v2h-1z" fill="#ffffff" opacity="0.8" />
           </motion.g>
 
-          {/* Wings */}
+          {/* Wings - объединены */}
           <motion.g
             animate={{
               rotate: [-2, 2, -2],
@@ -210,30 +196,14 @@ function DecorationSVGComponent({
               transformOrigin: '16px 16px',
             }}
           >
-            {/* Left wing */}
-            <rect
-              x="12"
-              y="15"
-              width="3"
-              height="4"
+            <path
+              d="M12,15h3v4h-3z"
               fill="#ffffff"
               opacity="0.7"
             />
-            <rect
-              x="12"
-              y="15"
-              width="1"
-              height="4"
-              fill="#ffffff"
-              opacity="0.9"
-            />
-
-            {/* Right wing */}
-            <rect
-              x="17"
-              y="15"
-              width="3"
-              height="4"
+            <path d="M12,15h1v4h-1z" fill="#ffffff" opacity="0.9" />
+            <path
+              d="M17,15h3v4h-3z"
               fill="#ffffff"
               opacity="0.7"
             />
