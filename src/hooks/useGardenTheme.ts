@@ -187,7 +187,7 @@ const THEMES: readonly GardenTheme[] = [
     shelfShadow:
       '0 4px 6px -1px rgba(157, 78, 221, 0.5), 0 2px 4px -1px rgba(199, 125, 255, 0.3), 0 0 30px rgba(157, 78, 221, 0.3)',
     wallRadius: '0.5rem',
-    particleDensity: 40,
+    particleDensity: 20, // Уменьшено с 40 до 20 для производительности
     hasAnimations: true,
     shelfAnimation: 'magic-pulse 6s ease-in-out infinite',
     particleAnimation: 'magic-sparkle 4s ease-in-out infinite alternate',
@@ -215,7 +215,7 @@ const THEMES: readonly GardenTheme[] = [
     shelfShadow:
       '0 4px 6px -1px rgba(135, 206, 235, 0.4), 0 2px 4px -1px rgba(135, 206, 235, 0.3), 0 0 20px rgba(255, 215, 0, 0.2), 0 0 40px rgba(135, 206, 235, 0.1)',
     wallRadius: '0.75rem',
-    particleDensity: 30,
+    particleDensity: 18, // Уменьшено с 30 до 18 для производительности
     hasAnimations: true,
     shelfAnimation: 'space-shelf-shimmer 5s ease-in-out infinite',
     particleAnimation:
@@ -244,7 +244,7 @@ const THEMES: readonly GardenTheme[] = [
     shelfShadow:
       '0 4px 6px -1px rgba(255, 0, 128, 0.4), 0 2px 4px -1px rgba(0, 245, 255, 0.3), 0 0 20px rgba(255, 0, 128, 0.2), 0 0 40px rgba(0, 245, 255, 0.1)',
     wallRadius: '0.25rem',
-    particleDensity: 35,
+    particleDensity: 20, // Уменьшено с 35 до 20 для производительности
     hasAnimations: true,
     shelfAnimation: 'cyberpunk-shelf-pulse 4s ease-in-out infinite',
     particleAnimation:

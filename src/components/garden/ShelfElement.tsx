@@ -233,25 +233,23 @@ export const ShelfElement = memo(function ShelfElement({
       onMouseLeave={handleMouseLeave}
       initial={{
         opacity: 0,
-        scale: 0.9,
       }}
       animate={{
         opacity: 1,
-        scale: 1,
         filter: isSelected
-          ? `brightness(1.2) drop-shadow(0 8px 25px ${moodConfig.color}40)`
-          : 'brightness(1) drop-shadow(0 4px 12px rgba(0,0,0,0.15))',
+          ? `brightness(1.15) drop-shadow(0 6px 20px ${moodConfig.color}35)`
+          : 'brightness(1) drop-shadow(0 3px 10px rgba(0,0,0,0.12))',
       }}
       whileHover={{
-        scale: 1.03,
-        y: -2,
+        scale: 1.01,
+        y: -1,
       }}
-      whileTap={{ scale: 0.97 }}
+      whileTap={{ scale: 0.99 }}
       transition={{
         type: 'spring',
-        stiffness: 300,
-        damping: 20,
-        delay: position * 0.05, // Упрощенная задержка
+        stiffness: 500,
+        damping: 35,
+        delay: position * 0.02, // Уменьшена задержка
       }}
     >
       {/* Main object container - centered in flex container */}
@@ -335,14 +333,12 @@ export const ShelfElement = memo(function ShelfElement({
             left: '50%',
             marginLeft: -(objectSize + 30) / 2, // Center the aura
           }}
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0 }}
           animate={{
-            opacity: [0.3, 0.6, 0.3],
-            scale: [1, 1.1, 1],
+            opacity: [0.25, 0.5, 0.25],
           }}
           transition={{
-            opacity: { repeat: Infinity, duration: 3, ease: 'easeInOut' },
-            scale: { repeat: Infinity, duration: 3, ease: 'easeInOut' },
+            opacity: { repeat: Infinity, duration: 4, ease: 'easeInOut' }, // Упрощено и замедлено
           }}
         />
       )}
@@ -374,11 +370,10 @@ export const ShelfElement = memo(function ShelfElement({
                   animate={{
                     x: Math.cos((angle * Math.PI) / 180) * radius,
                     y: Math.sin((angle * Math.PI) / 180) * radius * 0.5,
-                    scale: [0.5, 1, 0.5],
-                    opacity: [0.3, 0.8, 0.3],
+                    opacity: [0.2, 0.6, 0.2],
                   }}
                   transition={{
-                    duration: 3 + i * 0.3,
+                    duration: 4 + i * 0.4, // Замедлено для производительности
                     repeat: Infinity,
                     ease: 'easeInOut',
                   }}

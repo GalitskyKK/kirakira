@@ -49,34 +49,10 @@ export function ShelfView({
   // Используем тему друга если она передана, иначе используем тему текущего пользователя
   const theme = friendTheme ?? defaultTheme
 
-  // Оптимизация: уменьшаем количество частиц и отключаем анимации при низкой производительности
-  const [isLowPerf, setIsLowPerf] = useState(false)
-  useEffect(() => {
-    // Простая проверка производительности - если FPS низкий, отключаем эффекты
-    let frames = 0
-    let start = performance.now()
-    let rafId = 0
-    const checkPerf = () => {
-      frames++
-      const now = performance.now()
-      if (now - start >= 1000) {
-        const fps = (frames * 1000) / (now - start)
-        setIsLowPerf(fps < 45)
-        return
-      }
-      rafId = requestAnimationFrame(checkPerf)
-    }
-    rafId = requestAnimationFrame(checkPerf)
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId)
-    }
-  }, [])
-
-  // Уменьшаем плотность частиц при низкой производительности
-  const effectiveParticleDensity = isLowPerf
-    ? Math.max(5, Math.floor(theme.particleDensity / 3))
-    : theme.particleDensity
-  const shouldUseAnimations = Boolean(theme.hasAnimations && !isLowPerf)
+  // Оптимизация: всегда используем уменьшенное количество частиц для производительности
+  // Canvas уже оптимизирован, но уменьшаем количество для всех устройств
+  const effectiveParticleDensity = Math.min(theme.particleDensity, 20) // Максимум 20 частиц для всех
+  const shouldUseAnimations = Boolean(theme.hasAnimations)
 
   useEffect(() => {
     const checkMobile = () => {
@@ -199,7 +175,7 @@ export function ShelfView({
           style={{
             background: theme.containerBackground,
             animation: shouldUseAnimations ? theme.glowAnimation : undefined,
-            willChange: shouldUseAnimations ? 'background, opacity' : 'auto',
+            willChange: shouldUseAnimations ? 'opacity' : 'auto', // Упрощено для производительности
           }}
         />
 
@@ -221,7 +197,6 @@ export function ShelfView({
         {/* Magical floating particles - Canvas оптимизация */}
         <ParticleCanvas
           theme={theme}
-          isLowPerf={isLowPerf}
           shouldUseAnimations={shouldUseAnimations}
           particleDensity={effectiveParticleDensity}
           containerRef={containerRef}
@@ -289,7 +264,7 @@ export function ShelfView({
                       animation: shouldUseAnimations
                         ? theme.shelfAnimation
                         : undefined,
-                      willChange: shouldUseAnimations ? 'transform, opacity' : 'auto',
+                      willChange: shouldUseAnimations ? 'opacity' : 'auto', // Упрощено для производительности
                     }}
                   >
                     {/* Wood grain details */}

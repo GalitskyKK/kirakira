@@ -3,7 +3,6 @@ import type { GardenTheme } from '@/hooks/useGardenTheme'
 
 interface ParticleCanvasProps {
   theme: GardenTheme
-  isLowPerf: boolean
   shouldUseAnimations: boolean
   particleDensity: number
   containerRef?: React.RefObject<HTMLDivElement>
@@ -15,7 +14,6 @@ interface ParticleCanvasProps {
  */
 export function ParticleCanvas({
   theme,
-  isLowPerf,
   shouldUseAnimations,
   particleDensity,
   containerRef,
@@ -101,7 +99,7 @@ export function ParticleCanvas({
     let lastTime = performance.now()
 
     const animate = (currentTime: number) => {
-      if (isLowPerf || !shouldUseAnimations) {
+      if (!shouldUseAnimations) {
         // Статичный режим - просто рисуем частицы
         ctx.clearRect(0, 0, width, height)
         ctx.fillStyle = gradient
@@ -121,28 +119,31 @@ export function ParticleCanvas({
       ctx.clearRect(0, 0, width, height)
       ctx.fillStyle = gradient
 
-      // Батчинг для оптимизации - рисуем все частицы одним проходом
+      // Оптимизированный батчинг - минимум операций на кадр
       particlesRef.current.forEach(p => {
-        // Обновление позиции
+        // Обновление позиции (упрощено)
         p.x += p.vx * delta
         p.y += p.vy * delta
 
-        // Ограничение границами
-        if (p.x < 0 || p.x > width) p.vx *= -1
+        // Ограничение границами (упрощено)
+        if (p.x < 0 || p.x > width) {
+          p.vx *= -1
+          p.x = Math.max(0, Math.min(width, p.x))
+        }
         if (p.y < 0 || p.y > height) {
           p.y = height
           p.vy = -0.3 - pseudoRandom(p.x * 42.7) * 0.2
         }
 
-        // Плавное изменение прозрачности (оптимизировано)
-        if (Math.abs(p.opacity - p.targetOpacity) > 0.02) {
-          p.opacity += (p.targetOpacity - p.opacity) * 0.1
-        } else if (Math.floor(currentTime / 2000) !== Math.floor((currentTime - delta * 16) / 2000)) {
-          // Обновляем targetOpacity только раз в 2 секунды
-          p.targetOpacity = 0.3 + pseudoRandom(p.x + Math.floor(currentTime / 2000)) * 0.5
+        // Упрощенное изменение прозрачности (реже обновления)
+        const timeBucket = Math.floor(currentTime / 3000) // Обновляем раз в 3 секунды
+        if (Math.abs(p.opacity - p.targetOpacity) > 0.03) {
+          p.opacity += (p.targetOpacity - p.opacity) * 0.15
+        } else if (timeBucket !== Math.floor((currentTime - delta * 16) / 3000)) {
+          p.targetOpacity = 0.3 + pseudoRandom(p.x + timeBucket) * 0.4
         }
 
-        // Рисование частицы
+        // Рисование частицы (оптимизировано - один fill для всех)
         ctx.globalAlpha = p.opacity
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
@@ -153,7 +154,7 @@ export function ParticleCanvas({
       animationFrameRef.current = requestAnimationFrame(animate)
     }
 
-    if (shouldUseAnimations && !isLowPerf) {
+    if (shouldUseAnimations) {
       animationFrameRef.current = requestAnimationFrame(animate)
     } else {
       // Статичный режим - один раз отрисовываем
@@ -173,7 +174,7 @@ export function ParticleCanvas({
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [theme.particleFrom, theme.particleTo, isLowPerf, shouldUseAnimations, particleDensity, dimensions])
+  }, [theme.particleFrom, theme.particleTo, shouldUseAnimations, particleDensity, dimensions])
 
   return (
     <canvas
@@ -183,7 +184,7 @@ export function ParticleCanvas({
       className="absolute inset-0 pointer-events-none"
       style={{
         imageRendering: 'pixelated',
-        willChange: shouldUseAnimations && !isLowPerf ? 'contents' : 'auto',
+        willChange: shouldUseAnimations ? 'contents' : 'auto',
       }}
     />
   )
