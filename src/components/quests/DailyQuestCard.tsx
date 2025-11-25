@@ -15,8 +15,6 @@ import {
   canClaimQuest,
   getQuestDescription,
   getQuestStatusInfo,
-  getQuestTimeRemaining,
-  formatTimeRemaining,
   formatQuestRewards,
 } from '@/types/dailyQuests'
 import type { DailyQuest } from '@/types/dailyQuests'
@@ -42,8 +40,8 @@ export function DailyQuestCard({
   const canClaim = canClaimQuest(quest)
   const description = getQuestDescription(quest)
   const statusInfo = getQuestStatusInfo(quest.status)
-  const timeRemaining = getQuestTimeRemaining(quest)
-  const timeRemainingText = formatTimeRemaining(quest.expiresAt)
+  // const timeRemaining = getQuestTimeRemaining(quest)
+  // const timeRemainingText = formatTimeRemaining(quest.expiresAt)
   const rewardsText = formatQuestRewards(quest.rewards)
 
   // Обработчики
@@ -155,11 +153,11 @@ export function DailyQuestCard({
               <span className="font-medium">Награда:</span> {rewardsText}
             </div>
 
-            {timeRemaining > 0 && (
+            {/* {timeRemaining > 0 && (
               <div className="text-xs text-gray-500 dark:text-gray-400">
                 Осталось: {timeRemainingText}
               </div>
-            )}
+            )} */}
           </div>
 
           {/* Действия */}
