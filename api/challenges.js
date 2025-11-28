@@ -1248,13 +1248,32 @@ async function handleDailyQuests(req, res) {
       .eq('quest_type', 'streak_gem_quest')
       .maybeSingle()
 
+    // 🔧 ИСПРАВЛЕНИЕ: Используем локальную дату клиента вместо UTC
+    // Клиент должен передать свою локальную дату в формате YYYY-MM-DD
+    const { localDate } = req.query
+    let todayStr
+    if (localDate) {
+      todayStr = localDate // Используем локальную дату пользователя из параметра
+      console.log(`📅 Using client's local date for quests: ${todayStr}`)
+    } else {
+      // Fallback: локальная дата сервера (не UTC!)
+      const today = new Date()
+      const todayYear = today.getFullYear()
+      const todayMonth = String(today.getMonth() + 1).padStart(2, '0')
+      const todayDay = String(today.getDate()).padStart(2, '0')
+      todayStr = `${todayYear}-${todayMonth}-${todayDay}`
+      console.warn(
+        `⚠️ No localDate provided for quests, using server local date: ${todayStr}`
+      )
+    }
+
     // Получаем текущие квесты (кроме streak_gem_quest, который обрабатывается отдельно)
     const { data: quests, error: questsError } = await supabase
       .from('daily_quests')
       .select('*')
       .eq('telegram_id', parseInt(telegramId))
       .neq('quest_type', 'streak_gem_quest') // Исключаем повторяемый квест
-      .gte('generated_at', new Date().toISOString().split('T')[0]) // Сегодняшние квесты
+      .gte('generated_at', todayStr) // Сегодняшние квесты (локальная дата)
       .order('generated_at', { ascending: true })
 
     if (questsError) {

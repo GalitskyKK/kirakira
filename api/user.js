@@ -1014,7 +1014,7 @@ async function handleCheckStreak(req, res) {
     let missedDays = 0
 
     if (user.streak_last_checkin) {
-      // Парсим даты как локальные (не UTC)
+      // 🔧 ИСПРАВЛЕНИЕ: Парсим даты как локальные (не UTC) для корректной работы с часовыми поясами
       const lastCheckinDate = new Date(user.streak_last_checkin + 'T00:00:00')
       const todayDate = new Date(todayFormatted + 'T00:00:00')
 

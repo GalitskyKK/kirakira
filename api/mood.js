@@ -177,25 +177,32 @@ async function handleRecord(req, res) {
     })
 
     if (!userFetchError && userData) {
-      const lastCheckin = userData.streak_last_checkin
-        ? new Date(userData.streak_last_checkin)
-        : null
-      const todayDate = new Date(formattedDate)
-      todayDate.setUTCHours(0, 0, 0, 0)
+      // 🔧 ИСПРАВЛЕНИЕ: Используем локальные даты для корректной работы с часовыми поясами
+      // formattedDate уже в формате YYYY-MM-DD (локальная дата пользователя)
+      const lastCheckinStr = userData.streak_last_checkin
+      const todayStr = formattedDate
 
       let newStreak = userData.current_streak || 0
       let diffDays = null // Объявляем вне блока для использования ниже
 
       console.log(`🔍 [STREAK DEBUG] Before calculation:`, {
-        lastCheckin: lastCheckin?.toISOString(),
-        todayDate: todayDate.toISOString(),
+        lastCheckinStr,
+        todayStr,
         currentStreakFromDB: userData.current_streak,
         newStreak,
       })
 
-      if (lastCheckin) {
-        lastCheckin.setUTCHours(0, 0, 0, 0)
-        diffDays = Math.floor((todayDate - lastCheckin) / (1000 * 60 * 60 * 24))
+      if (lastCheckinStr) {
+        // Сравниваем строки дат напрямую (формат YYYY-MM-DD)
+        // Если даты разные, вычисляем разницу в днях
+        if (lastCheckinStr !== todayStr) {
+          // Парсим как локальные даты для корректного расчета
+          const lastCheckinDate = new Date(lastCheckinStr + 'T00:00:00')
+          const todayDate = new Date(todayStr + 'T00:00:00')
+          diffDays = Math.floor((todayDate - lastCheckinDate) / (1000 * 60 * 60 * 24))
+        } else {
+          diffDays = 0 // Та же дата
+        }
 
         console.log(`🔍 [STREAK DEBUG] Days difference: ${diffDays}`)
 
@@ -341,14 +348,18 @@ async function handleRecord(req, res) {
         }
 
         // 💎 Обновляем квест "7 дней стрика за гем"
-        if (diffDays === 1 || diffDays === null) {
-          // Продолжаем стрик или первая отметка
+        // 🔧 ИСПРАВЛЕНИЕ: Обновляем квест даже если diffDays === 0 (обновление настроения в тот же день)
+        // Это важно для случая, когда пользователь использовал заморозку и отмечает настроение в тот же день
+        if (diffDays === 1 || diffDays === null || diffDays === 0) {
+          // Продолжаем стрик, первая отметка или обновление настроения в тот же день
+          // diffDays === 0 может быть после заморозки, когда streak_last_checkin установлен на вчера
+          // но пользователь отмечает настроение сегодня - в этом случае нужно обновить квест
           try {
             await updateStreakGemQuest(
               supabase,
               telegramUserId,
               formattedDate,
-              diffDays === 1
+              diffDays === 1 || (diffDays === 0 && userData.current_streak > 0)
             )
           } catch (questError) {
             console.error('❌ Failed to update streak gem quest:', questError)
@@ -761,11 +772,19 @@ async function updateStreakGemQuest(
     const yesterdayStr = yesterday.toISOString().split('T')[0]
     const lastProgressDate = existingQuest.metadata?.last_progress_date
 
+    // 🔧 ИСПРАВЛЕНИЕ: После заморозки может быть ситуация, когда diffDays === 0,
+    // но streak_last_checkin установлен на вчера, и пользователь отмечает настроение сегодня.
+    // В этом случае нужно увеличить прогресс, если lastProgressDate был вчера или раньше.
     if (isStreakContinued && lastProgressDate === yesterdayStr) {
       // Продолжаем стрик - увеличиваем прогресс
       newProgress = Math.min(newProgress + 1, 7)
-    } else if (!isStreakContinued || !lastProgressDate) {
-      // Первая отметка или новый стрик - начинаем с 1
+    } else if (
+      !isStreakContinued ||
+      !lastProgressDate ||
+      lastProgressDate < yesterdayStr
+    ) {
+      // Первая отметка, новый стрик или пропущен день (после заморозки) - начинаем с 1
+      // Если lastProgressDate < yesterdayStr, значит был пропуск, начинаем заново
       newProgress = 1
     }
     // Иначе прогресс остается прежним (повторная отметка в тот же день)

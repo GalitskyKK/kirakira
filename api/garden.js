@@ -95,6 +95,25 @@ async function handleAddElement(req, res) {
 
     // Сохраняем элемент сада
     // 🔑 КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: используем переданный ID для детерминизма
+    // 🔧 ИСПРАВЛЕНИЕ: Правильно форматируем дату с учетом часового пояса пользователя
+    // Клиент отправляет дату в ISO формате, нужно извлечь локальную дату
+    let unlockDateStr
+    if (element.unlockDate) {
+      const unlockDate = new Date(element.unlockDate)
+      // Получаем локальную дату пользователя (YYYY-MM-DD) независимо от UTC
+      const userYear = unlockDate.getFullYear()
+      const userMonth = String(unlockDate.getMonth() + 1).padStart(2, '0')
+      const userDay = String(unlockDate.getDate()).padStart(2, '0')
+      unlockDateStr = `${userYear}-${userMonth}-${userDay}`
+    } else {
+      // Fallback: используем локальную дату сервера
+      const today = new Date()
+      const todayYear = today.getFullYear()
+      const todayMonth = String(today.getMonth() + 1).padStart(2, '0')
+      const todayDay = String(today.getDate()).padStart(2, '0')
+      unlockDateStr = `${todayYear}-${todayMonth}-${todayDay}`
+    }
+
     const insertData = {
       telegram_id: telegramId,
       element_type: element.type,
@@ -102,7 +121,7 @@ async function handleAddElement(req, res) {
       position_x: element.position.x,
       position_y: element.position.y,
       mood_influence: element.moodInfluence,
-      unlock_date: element.unlockDate || new Date().toISOString(),
+      unlock_date: unlockDateStr,
       seasonal_variant: element.seasonalVariant || null, // 🍂 Сохраняем сезонный вариант
     }
 

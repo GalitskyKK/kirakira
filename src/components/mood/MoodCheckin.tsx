@@ -86,7 +86,11 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
             await questActions.recordMood(mood, !!note)
           }
 
-          if (!todaysMood && canUnlockToday()) {
+          // 🔧 ИСПРАВЛЕНИЕ: Генерируем элемент если можно разблокировать сегодня
+          // Важно: проверяем canUnlockToday() даже если todaysMood существует,
+          // так как после заморозки может быть ситуация, когда настроение уже отмечено,
+          // но элемент еще не создан
+          if (canUnlockToday()) {
             // Unlock garden element
             const element = await unlockElement(mood)
             if (element) {
