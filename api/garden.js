@@ -95,16 +95,22 @@ async function handleAddElement(req, res) {
 
     // Сохраняем элемент сада
     // 🔑 КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: используем переданный ID для детерминизма
-    // 🔧 ИСПРАВЛЕНИЕ: Правильно форматируем дату с учетом часового пояса пользователя
-    // Клиент отправляет дату в ISO формате, нужно извлечь локальную дату
+    // 🔧 ИСПРАВЛЕНИЕ: Клиент теперь отправляет локальную дату в формате YYYY-MM-DD
+    // Используем её напрямую, без парсинга через Date (чтобы избежать проблем с UTC)
     let unlockDateStr
     if (element.unlockDate) {
-      const unlockDate = new Date(element.unlockDate)
-      // Получаем локальную дату пользователя (YYYY-MM-DD) независимо от UTC
-      const userYear = unlockDate.getFullYear()
-      const userMonth = String(unlockDate.getMonth() + 1).padStart(2, '0')
-      const userDay = String(unlockDate.getDate()).padStart(2, '0')
-      unlockDateStr = `${userYear}-${userMonth}-${userDay}`
+      // Проверяем, является ли это строкой в формате YYYY-MM-DD
+      if (typeof element.unlockDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(element.unlockDate)) {
+        // Клиент отправил локальную дату в формате YYYY-MM-DD - используем напрямую
+        unlockDateStr = element.unlockDate
+      } else {
+        // Fallback для старого формата (ISO строка) - извлекаем локальную дату
+        const unlockDate = new Date(element.unlockDate)
+        const userYear = unlockDate.getFullYear()
+        const userMonth = String(unlockDate.getMonth() + 1).padStart(2, '0')
+        const userDay = String(unlockDate.getDate()).padStart(2, '0')
+        unlockDateStr = `${userYear}-${userMonth}-${userDay}`
+      }
     } else {
       // Fallback: используем локальную дату сервера
       const today = new Date()

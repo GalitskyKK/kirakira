@@ -28,6 +28,7 @@ import {
   getCurrentSeason,
 } from '@/utils/elementGeneration'
 import { awardElementSprouts } from '@/utils/currencyRewards'
+import { getLocalDateString } from '@/utils/dateHelpers'
 
 /**
  * Хук для управления состоянием сада
@@ -295,12 +296,18 @@ export function useGardenState() {
           telegramUserData.photoUrl = currentUser.photoUrl
         }
 
+        // 🔧 ИСПРАВЛЕНИЕ: Используем локальную дату вместо ISO строки (UTC)
+        // toISOString() конвертирует в UTC, что приводит к неправильной дате на сервере
+        // Например, если сейчас 00:10 по Екатеринбургу (GMT+5), то это 19:10 предыдущего дня по UTC
+        // Используем локальную дату в формате YYYY-MM-DD
+        const localDateStr = getLocalDateString(newElement.unlockDate)
+        
         const result = await addElementMutation.mutateAsync({
           telegramId: currentUser.telegramId,
           element: {
             type: newElement.type,
             position: newElement.position,
-            unlockDate: newElement.unlockDate.toISOString(),
+            unlockDate: localDateStr, // Локальная дата в формате YYYY-MM-DD
             moodInfluence: mood,
             rarity: newElement.rarity,
             seasonalVariant:
