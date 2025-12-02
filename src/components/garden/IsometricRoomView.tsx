@@ -7,23 +7,28 @@ import { RoomNavigator } from './RoomNavigator'
 import type { GardenElement, ViewMode } from '@/types'
 import type { GardenTheme } from '@/hooks/useGardenTheme'
 
-// --- ИСПРАВЛЕННЫЕ КОНСТАНТЫ ---
-// Уменьшили тайл, чтобы влезло в экран
+// --- КОНСТАНТЫ ---
 const TILE_SIZE = 22
 const ISO_ANGLE = 30 * (Math.PI / 180)
-const ORIGIN_X = 225 // Центр по ширине (450 / 2)
-// Опустили "пол" ниже (было 100), чтобы стены (которые растут вверх) не обрезались
-const ORIGIN_Y = 320
+const ORIGIN_X = 225 // Центр svg (450/2)
+const ORIGIN_Y = 320 // Смещение по вертикали
 
-// Математика изометрии
+// Математика: 3D -> 2D
 const toIso = (x: number, y: number, z: number) => {
-  const isoX = (x - y) * Math.cos(ISO_ANGLE) * TILE_SIZE + ORIGIN_X
+  // Защита от NaN
+  const safeX = Number(x) || 0
+  const safeY = Number(y) || 0
+  const safeZ = Number(z) || 0
+
+  const isoX = (safeX - safeY) * Math.cos(ISO_ANGLE) * TILE_SIZE + ORIGIN_X
   const isoY =
-    (x + y) * Math.sin(ISO_ANGLE) * TILE_SIZE - z * TILE_SIZE + ORIGIN_Y
+    (safeX + safeY) * Math.sin(ISO_ANGLE) * TILE_SIZE -
+    safeZ * TILE_SIZE +
+    ORIGIN_Y
   return { x: isoX, y: isoY }
 }
 
-// Генерация путей для куба
+// Генерация SVG пути для куба
 const createCubePath = (
   x: number,
   y: number,
@@ -32,14 +37,14 @@ const createCubePath = (
   d: number,
   h: number
 ) => {
-  const p1 = toIso(x, y, z + h) // Верх-зад
-  const p2 = toIso(x + w, y, z + h) // Верх-право
-  const p3 = toIso(x + w, y + d, z + h) // Верх-перед
-  const p4 = toIso(x, y + d, z + h) // Верх-лево
+  const p1 = toIso(x, y, z + h) // Top-Back
+  const p2 = toIso(x + w, y, z + h) // Top-Right
+  const p3 = toIso(x + w, y + d, z + h) // Top-Front
+  const p4 = toIso(x, y + d, z + h) // Top-Left
 
-  const p6 = toIso(x + w, y, z) // Низ-право
-  const p7 = toIso(x + w, y + d, z) // Низ-перед
-  const p8 = toIso(x, y + d, z) // Низ-лево
+  const p6 = toIso(x + w, y, z) // Bottom-Right
+  const p7 = toIso(x + w, y + d, z) // Bottom-Front
+  const p8 = toIso(x, y + d, z) // Bottom-Left
 
   return {
     top: `${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`,
@@ -85,7 +90,6 @@ export function IsometricRoomView({
     return currentRoom.elements
   }, [currentRoom])
 
-  // Координаты слотов (x, y, z)
   const getSlotPosition = (index: number) => {
     // Полки слева
     if (index < 4) {
@@ -118,7 +122,6 @@ export function IsometricRoomView({
       const local = index - 12
       return { x: 6 + local * 1.5, y: 6 + local * 0.5, z: 2.2 }
     }
-    // Пол
     return { x: 5, y: 5, z: 0 }
   }
 
@@ -142,7 +145,6 @@ export function IsometricRoomView({
         className="relative h-full w-full overflow-hidden"
         style={{ minHeight: '500px' }}
       >
-        {/* Фон */}
         <div className="absolute inset-0 bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50" />
 
         <ParticleCanvas
@@ -158,13 +160,11 @@ export function IsometricRoomView({
             className="h-full w-full max-w-[600px]"
             preserveAspectRatio="xMidYMid meet"
             style={{
-              overflow: 'visible', // Важно, чтобы элементы не обрезались, если вылезут
-              filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.1))',
+              overflow: 'visible',
+              filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.15))',
             }}
           >
-            {/* ГЕОМЕТРИЯ КОМНАТЫ */}
-
-            {/* 1. Пол - используем цвета вместо url(#...) для надежности */}
+            {/* 1. Пол (толстая плита) */}
             <IsoCube
               x={0}
               y={0}
@@ -176,7 +176,7 @@ export function IsometricRoomView({
               sideFill="#E1BEE7"
             />
 
-            {/* 2. Левая стена (Back Left) */}
+            {/* 2. Левая стена */}
             <IsoCube
               x={0}
               y={0}
@@ -189,7 +189,7 @@ export function IsometricRoomView({
               leftFill="#fff"
             />
 
-            {/* 3. Правая стена (Back Right) */}
+            {/* 3. Правая стена */}
             <IsoCube
               x={0}
               y={0}
@@ -204,7 +204,6 @@ export function IsometricRoomView({
 
             {/* Стол */}
             <g>
-              {/* Ножки */}
               <IsoCube
                 x={6}
                 y={6}
@@ -245,7 +244,6 @@ export function IsometricRoomView({
                 sideFill="#D4A574"
                 topFill="#D4A574"
               />
-              {/* Столешница */}
               <IsoCube
                 x={5.8}
                 y={5.8}
@@ -289,7 +287,7 @@ export function IsometricRoomView({
               fill="rgba(255,255,255,0.5)"
             />
 
-            {/* Растения */}
+            {/* Элементы */}
             {currentRoomElements.map(element => {
               const localSlotIndex =
                 (element.position.y * 4 + element.position.x) % 14
@@ -343,40 +341,53 @@ export function IsometricRoomView({
   )
 }
 
-// --- Компоненты отрисовки ---
+// --- Безопасные компоненты отрисовки ---
+
+interface IsoCubeProps {
+  x?: number
+  y?: number
+  z?: number
+  w?: number
+  d?: number
+  h?: number
+  topFill?: string
+  leftFill?: string
+  rightFill?: string
+  sideFill?: string
+  opacity?: number
+}
 
 function IsoCube({
-  x,
-  y,
-  z,
-  w,
-  d,
-  h,
+  x = 0,
+  y = 0,
+  z = 0,
+  w = 1,
+  d = 1,
+  h = 1,
   topFill,
   leftFill,
   rightFill,
   sideFill,
   opacity = 1,
-}: any) {
-  // Защита от NaN, если данные не пришли
-  if (x === undefined || y === undefined || z === undefined) return null
+}: IsoCubeProps) {
+  // Отладка: если координаты NaN, выводим ошибку в консоль
+  if (isNaN(x) || isNaN(y) || isNaN(z)) {
+    console.error('IsoCube received NaN coordinates:', { x, y, z })
+    return null
+  }
 
   const paths = createCubePath(x, y, z, w, d, h)
 
+  // Используем цвета по умолчанию, если ничего не передано
+  const fillTop = topFill || '#eeeeee'
+  const fillRight = rightFill || sideFill || '#cccccc'
+  const fillLeft = leftFill || sideFill || '#bbbbbb'
+
   return (
     <g opacity={opacity}>
-      <path
-        d={paths.right}
-        fill={rightFill || sideFill || '#ccc'}
-        stroke="none"
-      />
-      <path
-        d={paths.left}
-        fill={leftFill || sideFill || '#bbb'}
-        stroke="none"
-      />
-      <path d={paths.top} fill={topFill || '#eee'} stroke="none" />
-      {/* Легкая обводка для четкости */}
+      <path d={paths.right} fill={fillRight} stroke="none" />
+      <path d={paths.left} fill={fillLeft} stroke="none" />
+      <path d={paths.top} fill={fillTop} stroke="none" />
       <path
         d={paths.top}
         fill="none"
@@ -387,7 +398,7 @@ function IsoCube({
   )
 }
 
-function IsoWindow({ x, y, z, width, height }: any) {
+function IsoWindow({ x = 0, y = 0, z = 0, width = 1, height = 1 }: any) {
   const p1 = toIso(x, y, z + height)
   const p2 = toIso(x + width, y, z + height)
   const p3 = toIso(x + width, y, z)
@@ -406,7 +417,6 @@ function IsoWindow({ x, y, z, width, height }: any) {
         stroke="#D4A574"
         strokeWidth="3"
       />
-      {/* Рама крестом */}
       <path
         d={`${(p1.x + p2.x) / 2},${(p1.y + p2.y) / 2} ${(p3.x + p4.x) / 2},${(p3.y + p4.y) / 2}`}
         stroke="#D4A574"
