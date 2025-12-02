@@ -15,7 +15,6 @@ const ORIGIN_Y = 320 // Смещение по вертикали
 
 // Математика: 3D -> 2D
 const toIso = (x: number, y: number, z: number) => {
-  // Защита от NaN
   const safeX = Number(x) || 0
   const safeY = Number(y) || 0
   const safeZ = Number(z) || 0
@@ -28,7 +27,13 @@ const toIso = (x: number, y: number, z: number) => {
   return { x: isoX, y: isoY }
 }
 
-// Генерация SVG пути для куба
+// Генерация валидного SVG Path (M x y L x y Z)
+const toPathString = (points: { x: number; y: number }[]) => {
+  if (points.length === 0) return ''
+  // M = Move to (первая точка), L = Line to (остальные), Z = Close path (замкнуть)
+  return `M ${points.map(p => `${p.x},${p.y}`).join(' L ')} Z`
+}
+
 const createCubePath = (
   x: number,
   y: number,
@@ -47,9 +52,9 @@ const createCubePath = (
   const p8 = toIso(x, y + d, z) // Bottom-Left
 
   return {
-    top: `${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`,
-    right: `${p2.x},${p2.y} ${p3.x},${p3.y} ${p7.x},${p7.y} ${p6.x},${p6.y}`,
-    left: `${p4.x},${p4.y} ${p3.x},${p3.y} ${p7.x},${p7.y} ${p8.x},${p8.y}`,
+    top: toPathString([p1, p2, p3, p4]),
+    right: toPathString([p2, p3, p7, p6]),
+    left: toPathString([p4, p3, p7, p8]),
   }
 }
 
@@ -91,8 +96,8 @@ export function IsometricRoomView({
   }, [currentRoom])
 
   const getSlotPosition = (index: number) => {
-    // Полки слева
     if (index < 4) {
+      // Полки слева
       const shelfIdx = Math.floor(index / 2)
       const posInShelf = index % 2
       return {
@@ -101,8 +106,8 @@ export function IsometricRoomView({
         z: 4 + shelfIdx * 2.5,
       }
     }
-    // Полки справа
     if (index < 8) {
+      // Полки справа
       const local = index - 4
       const shelfIdx = Math.floor(local / 2)
       const posInShelf = local % 2
@@ -112,17 +117,17 @@ export function IsometricRoomView({
         z: 5 - shelfIdx * 2,
       }
     }
-    // Окно
     if (index < 12) {
+      // Окно
       const local = index - 8
       return { x: 3 + local * 1.2, y: 0.1, z: 3.5 }
     }
-    // Стол
     if (index < 14) {
+      // Стол
       const local = index - 12
       return { x: 6 + local * 1.5, y: 6 + local * 0.5, z: 2.2 }
     }
-    return { x: 5, y: 5, z: 0 }
+    return { x: 5, y: 5, z: 0 } // Пол
   }
 
   return (
@@ -164,7 +169,7 @@ export function IsometricRoomView({
               filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.15))',
             }}
           >
-            {/* 1. Пол (толстая плита) */}
+            {/* Пол */}
             <IsoCube
               x={0}
               y={0}
@@ -176,7 +181,7 @@ export function IsometricRoomView({
               sideFill="#E1BEE7"
             />
 
-            {/* 2. Левая стена */}
+            {/* Стены */}
             <IsoCube
               x={0}
               y={0}
@@ -188,8 +193,6 @@ export function IsometricRoomView({
               rightFill="#E0C3FC"
               leftFill="#fff"
             />
-
-            {/* 3. Правая стена */}
             <IsoCube
               x={0}
               y={0}
@@ -287,7 +290,7 @@ export function IsometricRoomView({
               fill="rgba(255,255,255,0.5)"
             />
 
-            {/* Элементы */}
+            {/* Растения */}
             {currentRoomElements.map(element => {
               const localSlotIndex =
                 (element.position.y * 4 + element.position.x) % 14
@@ -341,7 +344,7 @@ export function IsometricRoomView({
   )
 }
 
-// --- Безопасные компоненты отрисовки ---
+// --- Компоненты ---
 
 interface IsoCubeProps {
   x?: number
@@ -370,15 +373,9 @@ function IsoCube({
   sideFill,
   opacity = 1,
 }: IsoCubeProps) {
-  // Отладка: если координаты NaN, выводим ошибку в консоль
-  if (isNaN(x) || isNaN(y) || isNaN(z)) {
-    console.error('IsoCube received NaN coordinates:', { x, y, z })
-    return null
-  }
+  if (isNaN(x) || isNaN(y) || isNaN(z)) return null
 
   const paths = createCubePath(x, y, z, w, d, h)
-
-  // Используем цвета по умолчанию, если ничего не передано
   const fillTop = topFill || '#eeeeee'
   const fillRight = rightFill || sideFill || '#cccccc'
   const fillLeft = leftFill || sideFill || '#bbbbbb'
@@ -404,29 +401,17 @@ function IsoWindow({ x = 0, y = 0, z = 0, width = 1, height = 1 }: any) {
   const p3 = toIso(x + width, y, z)
   const p4 = toIso(x, y, z)
 
+  // Используем ту же функцию toPathString для генерации путей
+  const glassPath = toPathString([p1, p2, p3, p4])
+  const cross1 = `M ${(p1.x + p2.x) / 2},${(p1.y + p2.y) / 2} L ${(p3.x + p4.x) / 2},${(p3.y + p4.y) / 2}`
+  const cross2 = `M ${(p1.x + p4.x) / 2},${(p1.y + p4.y) / 2} L ${(p2.x + p3.x) / 2},${(p2.y + p3.y) / 2}`
+
   return (
     <g>
-      <path
-        d={`${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`}
-        fill="#FFFDE7"
-        opacity="0.8"
-      />
-      <path
-        d={`${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`}
-        fill="none"
-        stroke="#D4A574"
-        strokeWidth="3"
-      />
-      <path
-        d={`${(p1.x + p2.x) / 2},${(p1.y + p2.y) / 2} ${(p3.x + p4.x) / 2},${(p3.y + p4.y) / 2}`}
-        stroke="#D4A574"
-        strokeWidth="2"
-      />
-      <path
-        d={`${(p1.x + p4.x) / 2},${(p1.y + p4.y) / 2} ${(p2.x + p3.x) / 2},${(p2.y + p3.y) / 2}`}
-        stroke="#D4A574"
-        strokeWidth="2"
-      />
+      <path d={glassPath} fill="#FFFDE7" opacity="0.8" />
+      <path d={glassPath} fill="none" stroke="#D4A574" strokeWidth="3" />
+      <path d={cross1} stroke="#D4A574" strokeWidth="2" />
+      <path d={cross2} stroke="#D4A574" strokeWidth="2" />
     </g>
   )
 }
@@ -439,7 +424,8 @@ function createCirclePath(x: number, y: number, z: number, radius: number) {
     const cx = x + Math.cos(theta) * radius
     const cy = y + Math.sin(theta) * radius
     const p = toIso(cx, cy, z)
-    d += (i === 0 ? 'M' : 'L') + `${p.x},${p.y}`
+    // Добавляем M для первой точки и L для остальных
+    d += (i === 0 ? 'M ' : ' L ') + `${p.x},${p.y}`
   }
-  return d + 'Z'
+  return d + ' Z' // Замыкаем
 }
