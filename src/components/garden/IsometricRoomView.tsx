@@ -217,7 +217,7 @@ export function IsometricRoomView({
         }}
       >
         {/* Фон с градиентом и звездочками */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 z-0">
           <div
             className="absolute inset-0"
             style={{
@@ -264,7 +264,7 @@ export function IsometricRoomView({
         </div>
 
         {/* Изометрическая комната */}
-        <div className="relative flex h-full w-full items-center justify-center p-4 sm:p-8">
+        <div className="relative z-10 flex h-full w-full items-center justify-center p-4 sm:p-8">
           <div
             className="relative"
             style={{
@@ -272,18 +272,30 @@ export function IsometricRoomView({
               maxWidth: '600px',
               height: '100%',
               maxHeight: '600px',
-              perspective: '1000px',
-              transformStyle: 'preserve-3d',
+              minHeight: '400px',
             }}
           >
             {/* SVG для изометрической комнаты */}
             <svg
-              viewBox="0 0 400 400"
-              className="absolute inset-0 h-full w-full"
+              viewBox="0 0 450 450"
+              className="h-full w-full"
+              preserveAspectRatio="xMidYMid meet"
               style={{
                 filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.2))',
+                position: 'relative',
+                zIndex: 10,
               }}
             >
+            {/* Тестовый прямоугольник для проверки видимости */}
+            <rect
+              x="0"
+              y="0"
+              width="450"
+              height="450"
+              fill="rgba(255, 0, 0, 0.1)"
+              stroke="red"
+              strokeWidth="2"
+            />
             {/* Пол */}
             <IsometricFloor />
 
@@ -426,7 +438,7 @@ export function IsometricRoomView({
 
         {/* Пустое состояние */}
         {currentRoomElements.length === 0 && !isElementMoving && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 z-20 flex items-center justify-center">
           <motion.div
             className="text-center"
             initial={{ opacity: 0, y: 20 }}
@@ -472,6 +484,7 @@ function IsometricFloor() {
         stroke="#b8956a"
         strokeWidth="2"
         opacity="0.9"
+        style={{ pointerEvents: 'none' }}
       />
       {/* Текстура дерева */}
       <defs>
@@ -510,6 +523,7 @@ function IsometricBackWall() {
         stroke="#d4a0ff"
         strokeWidth="2"
         opacity="0.95"
+        style={{ pointerEvents: 'none' }}
       />
       {/* Текстура стены */}
       <defs>
@@ -540,8 +554,8 @@ function IsometricRightWall() {
         stroke="#d4a0ff"
         strokeWidth="2"
         opacity="0.95"
+        style={{ pointerEvents: 'none' }}
       />
-      {/* Окно (будет отдельным компонентом) */}
     </g>
   )
 }
@@ -556,6 +570,7 @@ function IsometricLeftWall() {
         stroke="#d4a0ff"
         strokeWidth="2"
         opacity="0.95"
+        style={{ pointerEvents: 'none' }}
       />
       {/* Вырез для полок */}
       <rect
@@ -565,6 +580,7 @@ function IsometricLeftWall() {
         height="120"
         fill="#f0e5ff"
         opacity="0.5"
+        style={{ pointerEvents: 'none' }}
       />
     </g>
   )
