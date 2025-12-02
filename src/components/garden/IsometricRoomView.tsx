@@ -7,31 +7,45 @@ import { RoomNavigator } from './RoomNavigator'
 import type { GardenElement, ViewMode } from '@/types'
 import type { GardenTheme } from '@/hooks/useGardenTheme'
 
-// --- НАСТРОЙКИ ГЕОМЕТРИИ ---
+// --- ИСПРАВЛЕННЫЕ КОНСТАНТЫ ---
+// Уменьшили тайл, чтобы влезло в экран
+const TILE_SIZE = 22
 const ISO_ANGLE = 30 * (Math.PI / 180)
-const TILE_SIZE = 32 // Немного увеличил масштаб
-const ORIGIN_X = 225 // Центр по горизонтали
-const ORIGIN_Y = 120 // Опустил точку отсчета ниже, чтобы комната не улетала вверх
+const ORIGIN_X = 225 // Центр по ширине (450 / 2)
+// Опустили "пол" ниже (было 100), чтобы стены (которые растут вверх) не обрезались
+const ORIGIN_Y = 320
 
-// ЦВЕТОВАЯ ПАЛИТРА (Hardcoded для надежности)
-const COLORS = {
-  floor: '#F3E5F5', // Светло-сиреневый пол
-  floorSide: '#E1BEE7', // Темный срез пола
-  wallLeft: '#D1C4E9', // Левая стена
-  wallRight: '#C5CAE9', // Правая стена
-  tableTop: '#FFECB3', // Стол верх
-  tableSide: '#FFE082', // Стол бок
-  shelf: '#FFFFFF', // Полки
-  outline: '#9FA8DA', // Цвет контуров (мягкий синий вместо черного)
-  rug: 'rgba(255, 255, 255, 0.5)',
-}
-
-// 3D -> 2D Проекция
+// Математика изометрии
 const toIso = (x: number, y: number, z: number) => {
   const isoX = (x - y) * Math.cos(ISO_ANGLE) * TILE_SIZE + ORIGIN_X
   const isoY =
     (x + y) * Math.sin(ISO_ANGLE) * TILE_SIZE - z * TILE_SIZE + ORIGIN_Y
   return { x: isoX, y: isoY }
+}
+
+// Генерация путей для куба
+const createCubePath = (
+  x: number,
+  y: number,
+  z: number,
+  w: number,
+  d: number,
+  h: number
+) => {
+  const p1 = toIso(x, y, z + h) // Верх-зад
+  const p2 = toIso(x + w, y, z + h) // Верх-право
+  const p3 = toIso(x + w, y + d, z + h) // Верх-перед
+  const p4 = toIso(x, y + d, z + h) // Верх-лево
+
+  const p6 = toIso(x + w, y, z) // Низ-право
+  const p7 = toIso(x + w, y + d, z) // Низ-перед
+  const p8 = toIso(x, y + d, z) // Низ-лево
+
+  return {
+    top: `${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`,
+    right: `${p2.x},${p2.y} ${p3.x},${p3.y} ${p7.x},${p7.y} ${p6.x},${p6.y}`,
+    left: `${p4.x},${p4.y} ${p3.x},${p3.y} ${p7.x},${p7.y} ${p8.x},${p8.y}`,
+  }
 }
 
 interface IsometricRoomViewProps {
@@ -71,46 +85,45 @@ export function IsometricRoomView({
     return currentRoom.elements
   }, [currentRoom])
 
-  // Логика координат слотов (где стоят растения)
+  // Координаты слотов (x, y, z)
   const getSlotPosition = (index: number) => {
-    // 0-3: Левая стена (полки)
+    // Полки слева
     if (index < 4) {
-      const shelfIdx = Math.floor(index / 2) // 0 или 1
+      const shelfIdx = Math.floor(index / 2)
       const posInShelf = index % 2
       return {
-        x: 0.8, // Чуть отступаем от стены
+        x: 0.2,
         y: 2 + shelfIdx * 3 + posInShelf * 1.5,
         z: 4 + shelfIdx * 2.5,
       }
     }
-    // 4-7: Правая стена (полки)
+    // Полки справа
     if (index < 8) {
       const local = index - 4
       const shelfIdx = Math.floor(local / 2)
       const posInShelf = local % 2
       return {
         x: 2 + shelfIdx * 3 + posInShelf * 1.5,
-        y: 0.8,
+        y: 0.2,
         z: 5 - shelfIdx * 2,
       }
     }
-    // 8-11: Подоконник (справа)
+    // Окно
     if (index < 12) {
       const local = index - 8
-      return { x: 3 + local * 1.2, y: 0.2, z: 3.2 }
+      return { x: 3 + local * 1.2, y: 0.1, z: 3.5 }
     }
-    // 12-13: Стол (центр)
+    // Стол
     if (index < 14) {
       const local = index - 12
-      return { x: 5.5 + local * 1.5, y: 5.5 + local * 0.5, z: 2.2 } // z = высота стола
+      return { x: 6 + local * 1.5, y: 6 + local * 0.5, z: 2.2 }
     }
     // Пол
-    return { x: 4, y: 4, z: 0 }
+    return { x: 5, y: 5, z: 0 }
   }
 
   return (
     <div className="relative w-full">
-      {/* Навигация */}
       <div className="mb-4 px-4">
         <RoomNavigator
           navigation={navigation}
@@ -127,9 +140,9 @@ export function IsometricRoomView({
       <div
         ref={containerRef}
         className="relative h-full w-full overflow-hidden"
-        style={{ minHeight: '600px' }}
+        style={{ minHeight: '500px' }}
       >
-        {/* Градиентный фон CSS (надежнее SVG) */}
+        {/* Фон */}
         <div className="absolute inset-0 bg-gradient-to-b from-indigo-50 via-purple-50 to-pink-50" />
 
         <ParticleCanvas
@@ -139,173 +152,159 @@ export function IsometricRoomView({
           containerRef={containerRef}
         />
 
-        {/* Сцена */}
         <div className="relative z-10 flex h-full w-full items-center justify-center p-4">
           <svg
             viewBox="0 0 450 450"
             className="h-full w-full max-w-[600px]"
             preserveAspectRatio="xMidYMid meet"
             style={{
+              overflow: 'visible', // Важно, чтобы элементы не обрезались, если вылезут
               filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.1))',
-              overflow: 'visible',
             }}
           >
-            {/* ГРУППА КОМНАТЫ */}
+            {/* ГЕОМЕТРИЯ КОМНАТЫ */}
+
+            {/* 1. Пол - используем цвета вместо url(#...) для надежности */}
+            <IsoCube
+              x={0}
+              y={0}
+              z={-0.5}
+              w={10}
+              d={10}
+              h={0.5}
+              topFill="#F3E5F5"
+              sideFill="#E1BEE7"
+            />
+
+            {/* 2. Левая стена (Back Left) */}
+            <IsoCube
+              x={0}
+              y={0}
+              z={0}
+              w={0.5}
+              d={10}
+              h={8}
+              topFill="#fff"
+              rightFill="#E0C3FC"
+              leftFill="#fff"
+            />
+
+            {/* 3. Правая стена (Back Right) */}
+            <IsoCube
+              x={0}
+              y={0}
+              z={0}
+              w={10}
+              d={0.5}
+              h={8}
+              topFill="#fff"
+              leftFill="#C8E6C9"
+              rightFill="#fff"
+            />
+
+            {/* Стол */}
             <g>
-              {/* 1. ПОЛ (Основание) */}
+              {/* Ножки */}
               <IsoCube
-                x={0}
-                y={0}
-                z={-0.5}
-                w={10}
-                d={10}
-                h={0.5}
-                top={COLORS.floor}
-                side={COLORS.floorSide}
-              />
-
-              {/* Коврик (рисуем поверх пола, но под мебелью) */}
-              <path d={createCirclePath(5, 5, 0.05, 3)} fill={COLORS.rug} />
-
-              {/* 2. СТЕНЫ */}
-              {/* Левая стена (задняя) */}
-              <IsoCube
-                x={0}
-                y={0}
+                x={6}
+                y={6}
                 z={0}
                 w={0.5}
-                d={10}
-                h={8}
-                top="#fff"
-                side={COLORS.wallLeft}
-                right={COLORS.wallLeft}
-              />
-              {/* Правая стена (задняя) */}
-              <IsoCube
-                x={0}
-                y={0}
-                z={0}
-                w={10}
                 d={0.5}
-                h={8}
-                top="#fff"
-                side={COLORS.wallRight}
-                left={COLORS.wallRight}
-              />
-
-              {/* 3. ОКНО (Вырез в правой стене) */}
-              <IsoWindow x={2} y={-0.1} z={2.5} width={4} height={3} />
-
-              {/* 4. ПОЛКИ (Левая стена) */}
-              <IsoCube
-                x={0.5}
-                y={2}
-                z={4}
-                w={1}
-                d={3}
-                h={0.2}
-                top={COLORS.shelf}
-                side="#DDD"
+                h={2}
+                sideFill="#D4A574"
+                topFill="#D4A574"
               />
               <IsoCube
-                x={0.5}
-                y={2}
-                z={6.5}
-                w={1}
-                d={2.5}
-                h={0.2}
-                top={COLORS.shelf}
-                side="#DDD"
+                x={8.5}
+                y={6}
+                z={0}
+                w={0.5}
+                d={0.5}
+                h={2}
+                sideFill="#D4A574"
+                topFill="#D4A574"
               />
-
-              {/* 5. ПОЛКИ (Правая стена) */}
               <IsoCube
-                x={2}
-                y={0.5}
-                z={5}
-                w={3}
-                d={1}
-                h={0.2}
-                top={COLORS.shelf}
-                side="#DDD"
+                x={6}
+                y={7.5}
+                z={0}
+                w={0.5}
+                d={0.5}
+                h={2}
+                sideFill="#D4A574"
+                topFill="#D4A574"
               />
-
-              {/* 6. СТОЛ */}
-              <g>
-                {/* Ножки */}
-                <IsoCube
-                  x={5.5}
-                  y={5.5}
-                  z={0}
-                  w={0.3}
-                  d={0.3}
-                  h={2}
-                  top={COLORS.tableSide}
-                  side={COLORS.tableSide}
-                />
-                <IsoCube
-                  x={7.5}
-                  y={5.5}
-                  z={0}
-                  w={0.3}
-                  d={0.3}
-                  h={2}
-                  top={COLORS.tableSide}
-                  side={COLORS.tableSide}
-                />
-                <IsoCube
-                  x={5.5}
-                  y={7.0}
-                  z={0}
-                  w={0.3}
-                  d={0.3}
-                  h={2}
-                  top={COLORS.tableSide}
-                  side={COLORS.tableSide}
-                />
-                <IsoCube
-                  x={7.5}
-                  y={7.0}
-                  z={0}
-                  w={0.3}
-                  d={0.3}
-                  h={2}
-                  top={COLORS.tableSide}
-                  side={COLORS.tableSide}
-                />
-                {/* Столешница */}
-                <IsoCube
-                  x={5.2}
-                  y={5.2}
-                  z={2}
-                  w={3}
-                  d={2.5}
-                  h={0.2}
-                  top={COLORS.tableTop}
-                  side={COLORS.tableSide}
-                />
-              </g>
+              <IsoCube
+                x={8.5}
+                y={7.5}
+                z={0}
+                w={0.5}
+                d={0.5}
+                h={2}
+                sideFill="#D4A574"
+                topFill="#D4A574"
+              />
+              {/* Столешница */}
+              <IsoCube
+                x={5.8}
+                y={5.8}
+                z={2}
+                w={3.4}
+                d={2.4}
+                h={0.2}
+                topFill="#FFF3E0"
+                sideFill="#FFE0B2"
+              />
             </g>
 
-            {/* РАСТЕНИЯ (Слой поверх геометрии) */}
+            {/* Окно */}
+            <IsoWindow x={2} y={-0.1} z={2.5} width={4} height={3} />
+
+            {/* Полки */}
+            <IsoCube
+              x={0.5}
+              y={2}
+              z={4}
+              w={1.5}
+              d={4}
+              h={0.2}
+              topFill="#F5F5F5"
+              sideFill="#E0E0E0"
+            />
+            <IsoCube
+              x={0.5}
+              y={2}
+              z={6.5}
+              w={1.5}
+              d={3}
+              h={0.2}
+              topFill="#F5F5F5"
+              sideFill="#E0E0E0"
+            />
+
+            {/* Ковер */}
+            <path
+              d={createCirclePath(5, 5, 0.05, 2.5)}
+              fill="rgba(255,255,255,0.5)"
+            />
+
+            {/* Растения */}
             {currentRoomElements.map(element => {
-              // Находим 3D координаты слота
               const localSlotIndex =
                 (element.position.y * 4 + element.position.x) % 14
               const pos = getSlotPosition(localSlotIndex)
               const screenPos = toIso(pos.x, pos.y, pos.z)
-
               const isSelected = selectedElement?.id === element.id
-              const isMoving = elementBeingMoved?.id === element.id
 
               return (
                 <foreignObject
                   key={element.id}
                   x={screenPos.x - 25}
-                  y={screenPos.y - 45} // Смещение, чтобы точка привязки была у горшка
+                  y={screenPos.y - 40}
                   width={50}
                   height={50}
-                  style={{ overflow: 'visible', zIndex: 50 }}
+                  style={{ overflow: 'visible', zIndex: 20 }}
                   className="pointer-events-none"
                 >
                   <div
@@ -321,17 +320,16 @@ export function IsometricRoomView({
                         transform: isSelected
                           ? 'scale(1.2) translateY(-10px)'
                           : 'scale(1)',
-                        transition: 'transform 0.2s ease-out',
+                        transition: 'transform 0.2s',
                         filter: isSelected
-                          ? 'drop-shadow(0 0 8px rgba(255,255,255,0.8))'
+                          ? 'drop-shadow(0 0 10px white)'
                           : 'none',
                       }}
                     >
                       <PlantRenderer
                         element={element}
-                        size={42}
+                        size={40}
                         isSelected={isSelected}
-                        isHovered={isMoving}
                       />
                     </div>
                   </div>
@@ -345,9 +343,8 @@ export function IsometricRoomView({
   )
 }
 
-// --- ВСПОМОГАТЕЛЬНЫЕ КОМПОНЕНТЫ ---
+// --- Компоненты отрисовки ---
 
-// Универсальный куб с обводкой и заливкой
 function IsoCube({
   x,
   y,
@@ -355,53 +352,36 @@ function IsoCube({
   w,
   d,
   h,
-  top,
-  side,
-  left,
-  right,
+  topFill,
+  leftFill,
+  rightFill,
+  sideFill,
   opacity = 1,
 }: any) {
-  // Вычисляем вершины
-  const p1 = toIso(x, y, z + h) // Top-Back
-  const p2 = toIso(x + w, y, z + h) // Top-Right
-  const p3 = toIso(x + w, y + d, z + h) // Top-Front
-  const p4 = toIso(x, y + d, z + h) // Top-Left
+  // Защита от NaN, если данные не пришли
+  if (x === undefined || y === undefined || z === undefined) return null
 
-  const p6 = toIso(x + w, y, z) // Bottom-Right
-  const p7 = toIso(x + w, y + d, z) // Bottom-Front
-  const p8 = toIso(x, y + d, z) // Bottom-Left
-
-  // Цвета граней
-  const topColor = top || '#eee'
-  const rightColor = right || side || '#ddd' // Правая видимая грань
-  const leftColor = left || side || '#ccc' // Левая видимая грань
-  const strokeColor = COLORS.outline
+  const paths = createCubePath(x, y, z, w, d, h)
 
   return (
     <g opacity={opacity}>
-      {/* Правая грань */}
       <path
-        d={`${p2.x},${p2.y} ${p3.x},${p3.y} ${p7.x},${p7.y} ${p6.x},${p6.y}`}
-        fill={rightColor}
-        stroke={strokeColor}
-        strokeWidth="1"
-        strokeLinejoin="round"
+        d={paths.right}
+        fill={rightFill || sideFill || '#ccc'}
+        stroke="none"
       />
-      {/* Левая грань (Передняя) */}
       <path
-        d={`${p4.x},${p4.y} ${p3.x},${p3.y} ${p7.x},${p7.y} ${p8.x},${p8.y}`}
-        fill={leftColor}
-        stroke={strokeColor}
-        strokeWidth="1"
-        strokeLinejoin="round"
+        d={paths.left}
+        fill={leftFill || sideFill || '#bbb'}
+        stroke="none"
       />
-      {/* Верхняя грань */}
+      <path d={paths.top} fill={topFill || '#eee'} stroke="none" />
+      {/* Легкая обводка для четкости */}
       <path
-        d={`${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`}
-        fill={topColor}
-        stroke={strokeColor}
+        d={paths.top}
+        fill="none"
+        stroke="rgba(0,0,0,0.05)"
         strokeWidth="1"
-        strokeLinejoin="round"
       />
     </g>
   )
@@ -415,29 +395,27 @@ function IsoWindow({ x, y, z, width, height }: any) {
 
   return (
     <g>
-      {/* Стекло */}
       <path
         d={`${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`}
-        fill="#E3F2FD"
-        opacity="0.7"
+        fill="#FFFDE7"
+        opacity="0.8"
       />
-      {/* Рама */}
       <path
         d={`${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p4.x},${p4.y}`}
         fill="none"
-        stroke={COLORS.tableSide}
+        stroke="#D4A574"
         strokeWidth="3"
       />
-      {/* Перекладины */}
+      {/* Рама крестом */}
       <path
         d={`${(p1.x + p2.x) / 2},${(p1.y + p2.y) / 2} ${(p3.x + p4.x) / 2},${(p3.y + p4.y) / 2}`}
-        stroke={COLORS.tableSide}
-        strokeWidth="1.5"
+        stroke="#D4A574"
+        strokeWidth="2"
       />
       <path
         d={`${(p1.x + p4.x) / 2},${(p1.y + p4.y) / 2} ${(p2.x + p3.x) / 2},${(p2.y + p3.y) / 2}`}
-        stroke={COLORS.tableSide}
-        strokeWidth="1.5"
+        stroke="#D4A574"
+        strokeWidth="2"
       />
     </g>
   )
