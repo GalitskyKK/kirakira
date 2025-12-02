@@ -286,16 +286,6 @@ export function IsometricRoomView({
                 zIndex: 10,
               }}
             >
-            {/* Тестовый прямоугольник для проверки видимости */}
-            <rect
-              x="0"
-              y="0"
-              width="450"
-              height="450"
-              fill="rgba(255, 0, 0, 0.1)"
-              stroke="red"
-              strokeWidth="2"
-            />
             {/* Пол */}
             <IsometricFloor />
 
@@ -341,78 +331,102 @@ export function IsometricRoomView({
             {/* Элементы на левой стене */}
             {elementPlacements
               .filter(p => p.location === 'leftShelf')
-              .map(placement => (
-                <IsometricElement
-                  key={placement.element.id}
-                  element={placement.element}
-                  x={50 + (placement.position ?? 0) * 40}
-                  y={200 - (placement.shelfIndex ?? 0) * 60 - 20}
-                  z={50}
-                  isSelected={selectedElement?.id === placement.element.id}
-                  isBeingMoved={
-                    elementBeingMoved?.id === placement.element.id
-                  }
-                  onClick={() => handleElementClick(placement.element)}
-                  onLongPress={() => handleElementLongPress(placement.element)}
-                />
-              ))}
+              .map(placement => {
+                const shelfY = 200 - (placement.shelfIndex ?? 0) * 60
+                const shelfX = 50
+                const elementX = shelfX + 20 + (placement.position ?? 0) * 30
+                const elementY = shelfY - 25
+                return (
+                  <IsometricElement
+                    key={placement.element.id}
+                    element={placement.element}
+                    x={elementX}
+                    y={elementY}
+                    z={50}
+                    isSelected={selectedElement?.id === placement.element.id}
+                    isBeingMoved={
+                      elementBeingMoved?.id === placement.element.id
+                    }
+                    onClick={() => handleElementClick(placement.element)}
+                    onLongPress={() => handleElementLongPress(placement.element)}
+                  />
+                )
+              })}
 
             {/* Элементы на задней стене */}
             {elementPlacements
               .filter(p => p.location === 'backShelf')
-              .map(placement => (
-                <IsometricElement
-                  key={placement.element.id}
-                  element={placement.element}
-                  x={200 - (placement.shelfIndex ?? 0) * 60 + (placement.position ?? 0) * 50}
-                  y={150 - 20}
-                  z={0}
-                  isSelected={selectedElement?.id === placement.element.id}
-                  isBeingMoved={
-                    elementBeingMoved?.id === placement.element.id
-                  }
-                  onClick={() => handleElementClick(placement.element)}
-                  onLongPress={() => handleElementLongPress(placement.element)}
-                />
-              ))}
+              .map(placement => {
+                const shelfY = 150
+                const shelfX = 200 - (placement.shelfIndex ?? 0) * 60
+                const elementX = shelfX + 25 + (placement.position ?? 0) * 35
+                const elementY = shelfY - 25
+                return (
+                  <IsometricElement
+                    key={placement.element.id}
+                    element={placement.element}
+                    x={elementX}
+                    y={elementY}
+                    z={0}
+                    isSelected={selectedElement?.id === placement.element.id}
+                    isBeingMoved={
+                      elementBeingMoved?.id === placement.element.id
+                    }
+                    onClick={() => handleElementClick(placement.element)}
+                    onLongPress={() => handleElementLongPress(placement.element)}
+                  />
+                )
+              })}
 
             {/* Элементы на подоконнике */}
             {elementPlacements
               .filter(p => p.location === 'windowSill')
-              .map(placement => (
-                <IsometricElement
-                  key={placement.element.id}
-                  element={placement.element}
-                  x={350 + placement.position * 30}
-                  y={150 - 10}
-                  z={50}
-                  isSelected={selectedElement?.id === placement.element.id}
-                  isBeingMoved={
-                    elementBeingMoved?.id === placement.element.id
-                  }
-                  onClick={() => handleElementClick(placement.element)}
-                  onLongPress={() => handleElementLongPress(placement.element)}
-                />
-              ))}
+              .map(placement => {
+                const windowSillX = 350
+                const windowSillY = 150
+                const elementX = windowSillX + 10 + placement.position * 25
+                const elementY = windowSillY - 15
+                return (
+                  <IsometricElement
+                    key={placement.element.id}
+                    element={placement.element}
+                    x={elementX}
+                    y={elementY}
+                    z={50}
+                    isSelected={selectedElement?.id === placement.element.id}
+                    isBeingMoved={
+                      elementBeingMoved?.id === placement.element.id
+                    }
+                    onClick={() => handleElementClick(placement.element)}
+                    onLongPress={() => handleElementLongPress(placement.element)}
+                  />
+                )
+              })}
 
             {/* Элементы на столе */}
             {elementPlacements
               .filter(p => p.location === 'table')
-              .map(placement => (
-                <IsometricElement
-                  key={placement.element.id}
-                  element={placement.element}
-                  x={200 + placement.position * 40}
-                  y={280 - 20}
-                  z={100}
-                  isSelected={selectedElement?.id === placement.element.id}
-                  isBeingMoved={
-                    elementBeingMoved?.id === placement.element.id
-                  }
-                  onClick={() => handleElementClick(placement.element)}
-                  onLongPress={() => handleElementLongPress(placement.element)}
-                />
-              ))}
+              .map(placement => {
+                const tableX = 200
+                const tableY = 280
+                const elementX = tableX + 25 + placement.position * 35
+                const elementY = tableY - 25
+                return (
+                  <IsometricElement
+                    key={placement.element.id}
+                    element={placement.element}
+                    x={elementX}
+                    y={elementY}
+                    z={100}
+                    isSelected={selectedElement?.id === placement.element.id}
+                    isBeingMoved={
+                      elementBeingMoved?.id === placement.element.id
+                    }
+                    onClick={() => handleElementClick(placement.element)}
+                    onLongPress={() => handleElementLongPress(placement.element)}
+                  />
+                )
+              })}
 
             {/* Элементы на полу */}
             {elementPlacements
@@ -422,7 +436,7 @@ export function IsometricRoomView({
                   key={placement.element.id}
                   element={placement.element}
                   x={300}
-                  y={320}
+                  y={350}
                   z={150}
                   isSelected={selectedElement?.id === placement.element.id}
                   isBeingMoved={
