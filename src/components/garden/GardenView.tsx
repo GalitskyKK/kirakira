@@ -7,6 +7,7 @@ import { useGardenState } from '@/hooks/index.v2'
 import { useMoodTracking } from '@/hooks/index.v2'
 import { useGardenClientStore } from '@/stores/gardenStore'
 import { GardenRoomManager } from './GardenRoomManager'
+import { IsometricRoomView } from './IsometricRoomView'
 import { GardenStats } from './GardenStats'
 import { PaletteMoodStats } from './PaletteMoodStats'
 import { ElementDetails } from './ElementDetails'
@@ -243,7 +244,9 @@ export function GardenView({ className }: GardenViewProps) {
                       <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                         {displayMode === GardenDisplayMode.PALETTE
                           ? 'Палитра Сада'
-                          : 'Мой Сад'}
+                          : displayMode === GardenDisplayMode.ISOMETRIC_ROOM
+                            ? 'Моя Комната'
+                            : 'Мой Сад'}
                       </h2>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         {displayMode === GardenDisplayMode.PALETTE
@@ -333,6 +336,27 @@ export function GardenView({ className }: GardenViewProps) {
                           className="flex h-full w-full items-center justify-center"
                         >
                           <PaletteView className="h-full w-full max-w-2xl" />
+                        </motion.div>
+                      ) : displayMode === GardenDisplayMode.ISOMETRIC_ROOM ? (
+                        <motion.div
+                          key="isometric-room"
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.3 }}
+                          className="h-full min-h-[600px]"
+                        >
+                          <IsometricRoomView
+                            elements={garden.elements}
+                            selectedElement={selectedElement}
+                            elementBeingMoved={elementBeingMoved}
+                            viewMode={viewMode}
+                            currentRoomIndex={currentRoomIndex}
+                            onRoomChange={setCurrentRoomIndex}
+                            onElementClick={handleElementClick}
+                            onElementLongPress={handleElementLongPress}
+                            onSlotClick={handleSlotClick}
+                          />
                         </motion.div>
                       ) : (
                         <motion.div

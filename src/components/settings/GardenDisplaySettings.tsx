@@ -4,7 +4,7 @@
  */
 
 import { motion } from 'framer-motion'
-import { Sprout, Palette, Lock } from 'lucide-react'
+import { Sprout, Palette, Home, Lock } from 'lucide-react'
 import { useGardenClientStore } from '@/stores/gardenStore'
 import { GardenDisplayMode } from '@/types/garden'
 
@@ -30,6 +30,13 @@ const DISPLAY_MODES: readonly DisplayModeOption[] = [
     label: 'Палитра',
     description: 'Визуализация настроений',
     icon: <Palette className="h-5 w-5" />,
+    available: true,
+  },
+  {
+    mode: GardenDisplayMode.ISOMETRIC_ROOM,
+    label: 'Комната',
+    description: 'Изометрическая 3D комната',
+    icon: <Home className="h-5 w-5" />,
     available: true,
   },
   // {

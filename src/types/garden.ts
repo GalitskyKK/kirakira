@@ -82,6 +82,7 @@ export enum ViewMode {
 export enum GardenDisplayMode {
   GARDEN = 'garden', // Классический сад с полками
   PALETTE = 'palette', // Палитра настроений (Canvas)
+  ISOMETRIC_ROOM = 'isometric_room', // Изометрическая 3D комната
   BONSAI = 'bonsai', // Дерево бонсай (будущее)
   BEDS = 'beds', // Грядки настроений (будущее)
 }
