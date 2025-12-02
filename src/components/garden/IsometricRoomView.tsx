@@ -38,7 +38,12 @@ const TOTAL_SLOTS =
 
 interface ElementPlacement {
   readonly element: GardenElement
-  readonly location: 'leftShelf' | 'backShelf' | 'windowSill' | 'table' | 'floor'
+  readonly location:
+    | 'leftShelf'
+    | 'backShelf'
+    | 'windowSill'
+    | 'table'
+    | 'floor'
   readonly shelfIndex?: number
   readonly position: number
 }
@@ -170,7 +175,7 @@ export function IsometricRoomView({
         }
       }
 
-      if (placement) {
+      if (placement !== null) {
         placements.push(placement)
       }
     })
@@ -229,30 +234,30 @@ export function IsometricRoomView({
             }}
           />
 
-        {/* Звездочки на фоне */}
-        {shouldUseAnimations && (
-          <div className="absolute inset-0">
-            {Array.from({ length: 30 }, (_, i) => (
-              <motion.div
-                key={`star-${i}`}
-                className="absolute h-1 w-1 rounded-full bg-white"
-                style={{
-                  left: `${(i * 37) % 100}%`,
-                  top: `${(i * 23) % 100}%`,
-                }}
-                animate={{
-                  opacity: [0.3, 1, 0.3],
-                  scale: [0.8, 1.2, 0.8],
-                }}
-                transition={{
-                  duration: 2 + (i % 3),
-                  repeat: Infinity,
-                  delay: i * 0.1,
-                }}
-              />
-            ))}
-          </div>
-        )}
+          {/* Звездочки на фоне */}
+          {shouldUseAnimations && (
+            <div className="absolute inset-0">
+              {Array.from({ length: 30 }, (_, i) => (
+                <motion.div
+                  key={`star-${i}`}
+                  className="absolute h-1 w-1 rounded-full bg-white"
+                  style={{
+                    left: `${(i * 37) % 100}%`,
+                    top: `${(i * 23) % 100}%`,
+                  }}
+                  animate={{
+                    opacity: [0.3, 1, 0.3],
+                    scale: [0.8, 1.2, 0.8],
+                  }}
+                  transition={{
+                    duration: 2 + (i % 3),
+                    repeat: Infinity,
+                    delay: i * 0.1,
+                  }}
+                />
+              ))}
+            </div>
+          )}
 
           {/* Частицы */}
           <ParticleCanvas
@@ -286,209 +291,219 @@ export function IsometricRoomView({
                 zIndex: 10,
               }}
             >
-            {/* Пол */}
-            <IsometricFloor />
+              {/* Пол */}
+              <IsometricFloor />
 
-            {/* Задняя стена */}
-            <IsometricBackWall />
+              {/* Задняя стена */}
+              <IsometricBackWall />
 
-            {/* Правая стена с окном */}
-            <IsometricRightWall />
+              {/* Правая стена с окном */}
+              <IsometricRightWall />
 
-            {/* Левая стена */}
-            <IsometricLeftWall />
+              {/* Левая стена */}
+              <IsometricLeftWall />
 
-            {/* Полки на левой стене */}
-            {Array.from({ length: LEFT_WALL_SHELVES }, (_, shelfIndex) => {
-              // Позиция полки на левой стене в изометрических координатах
-              const shelfX = 120
-              const shelfY = 180 + shelfIndex * 50
-              return (
-                <IsometricShelf
-                  key={`left-shelf-${shelfIndex}`}
-                  x={shelfX}
-                  y={shelfY}
-                  width={60}
-                  depth={20}
-                />
-              )
-            })}
-
-            {/* Полки на задней стене */}
-            {Array.from({ length: BACK_WALL_SHELVES }, (_, shelfIndex) => {
-              // Позиция полки на задней стене
-              const shelfX = 180 + shelfIndex * 40
-              const shelfY = 180 - shelfIndex * 30
-              return (
-                <IsometricShelf
-                  key={`back-shelf-${shelfIndex}`}
-                  x={shelfX}
-                  y={shelfY}
-                  width={80}
-                  depth={25}
-                />
-              )
-            })}
-
-            {/* Стол - у задней стены */}
-            <IsometricTable x={220} y={240} />
-
-            {/* Окно - встроено в правую стену */}
-            <IsometricWindow x={320} y={180} />
-
-            {/* Элементы на левой стене */}
-            {elementPlacements
-              .filter(p => p.location === 'leftShelf')
-              .map(placement => {
-                // Позиция полки на левой стене
-                const shelfX = 120
-                const shelfY = 180 + (placement.shelfIndex ?? 0) * 50
-                // Элемент на полке
-                const elementX = shelfX + 15 + (placement.position ?? 0) * 20
-                const elementY = shelfY
+              {/* Полки на левой стене (задней в изометрии) */}
+              {Array.from({ length: LEFT_WALL_SHELVES }, (_, shelfIndex) => {
+                // Позиция полки на левой стене (x близко к 0, y меняется)
+                const shelfX = -40
+                const shelfY = -30 + shelfIndex * 40
                 return (
+                  <IsometricShelf
+                    key={`left-shelf-${shelfIndex}`}
+                    x={shelfX}
+                    y={shelfY}
+                    width={50}
+                    depth={15}
+                  />
+                )
+              })}
+
+              {/* Полки на задней стене (правой в изометрии) */}
+              {Array.from({ length: BACK_WALL_SHELVES }, (_, shelfIndex) => {
+                // Позиция полки на задней стене (y близко к 0, x меняется)
+                const shelfX = 20 + shelfIndex * 35
+                const shelfY = -30 - shelfIndex * 20
+                return (
+                  <IsometricShelf
+                    key={`back-shelf-${shelfIndex}`}
+                    x={shelfX}
+                    y={shelfY}
+                    width={60}
+                    depth={20}
+                  />
+                )
+              })}
+
+              {/* Стол - у задней стены */}
+              <IsometricTable x={10} y={-20} />
+
+              {/* Окно - встроено в правую стену (заднюю в изометрии) */}
+              <IsometricWindow x={30} y={-10} />
+
+              {/* Элементы на левой стене (задней в изометрии) */}
+              {elementPlacements
+                .filter(p => p.location === 'leftShelf')
+                .map(placement => {
+                  // Позиция полки на левой стене
+                  const shelfX = -40
+                  const shelfY = -30 + (placement.shelfIndex ?? 0) * 40
+                  // Элемент на полке
+                  const elementX = shelfX + 10 + (placement.position ?? 0) * 15
+                  const elementY = shelfY
+                  return (
+                    <IsometricElement
+                      key={placement.element.id}
+                      element={placement.element}
+                      x={elementX}
+                      y={elementY}
+                      isSelected={selectedElement?.id === placement.element.id}
+                      isBeingMoved={
+                        elementBeingMoved?.id === placement.element.id
+                      }
+                      onClick={() => handleElementClick(placement.element)}
+                      onLongPress={() =>
+                        handleElementLongPress(placement.element)
+                      }
+                    />
+                  )
+                })}
+
+              {/* Элементы на задней стене (правой в изометрии) */}
+              {elementPlacements
+                .filter(p => p.location === 'backShelf')
+                .map(placement => {
+                  // Позиция полки на задней стене
+                  const shelfX = 20 + (placement.shelfIndex ?? 0) * 35
+                  const shelfY = -30 - (placement.shelfIndex ?? 0) * 20
+                  // Элемент на полке
+                  const elementX = shelfX + 15 + (placement.position ?? 0) * 20
+                  const elementY = shelfY
+                  return (
+                    <IsometricElement
+                      key={placement.element.id}
+                      element={placement.element}
+                      x={elementX}
+                      y={elementY}
+                      isSelected={selectedElement?.id === placement.element.id}
+                      isBeingMoved={
+                        elementBeingMoved?.id === placement.element.id
+                      }
+                      onClick={() => handleElementClick(placement.element)}
+                      onLongPress={() =>
+                        handleElementLongPress(placement.element)
+                      }
+                    />
+                  )
+                })}
+
+              {/* Элементы на подоконнике */}
+              {elementPlacements
+                .filter(p => p.location === 'windowSill')
+                .map(placement => {
+                  // Подоконник под окном на правой стене
+                  const windowSillX = 30
+                  const windowSillY = 10
+                  const elementX = windowSillX + 8 + placement.position * 15
+                  const elementY = windowSillY
+                  return (
+                    <IsometricElement
+                      key={placement.element.id}
+                      element={placement.element}
+                      x={elementX}
+                      y={elementY}
+                      isSelected={selectedElement?.id === placement.element.id}
+                      isBeingMoved={
+                        elementBeingMoved?.id === placement.element.id
+                      }
+                      onClick={() => handleElementClick(placement.element)}
+                      onLongPress={() =>
+                        handleElementLongPress(placement.element)
+                      }
+                    />
+                  )
+                })}
+
+              {/* Элементы на столе */}
+              {elementPlacements
+                .filter(p => p.location === 'table')
+                .map(placement => {
+                  // Стол у задней стены
+                  const tableX = 10
+                  const tableY = -20
+                  const elementX = tableX + 15 + placement.position * 20
+                  const elementY = tableY
+                  return (
+                    <IsometricElement
+                      key={placement.element.id}
+                      element={placement.element}
+                      x={elementX}
+                      y={elementY}
+                      isSelected={selectedElement?.id === placement.element.id}
+                      isBeingMoved={
+                        elementBeingMoved?.id === placement.element.id
+                      }
+                      onClick={() => handleElementClick(placement.element)}
+                      onLongPress={() =>
+                        handleElementLongPress(placement.element)
+                      }
+                    />
+                  )
+                })}
+
+              {/* Элементы на полу */}
+              {elementPlacements
+                .filter(p => p.location === 'floor')
+                .map(placement => (
                   <IsometricElement
                     key={placement.element.id}
                     element={placement.element}
-                    x={elementX}
-                    y={elementY}
+                    x={15}
+                    y={15}
                     isSelected={selectedElement?.id === placement.element.id}
                     isBeingMoved={
                       elementBeingMoved?.id === placement.element.id
                     }
                     onClick={() => handleElementClick(placement.element)}
-                    onLongPress={() => handleElementLongPress(placement.element)}
-                  />
-                )
-              })}
-
-            {/* Элементы на задней стене */}
-            {elementPlacements
-              .filter(p => p.location === 'backShelf')
-              .map(placement => {
-                // Позиция полки на задней стене
-                const shelfX = 180 + (placement.shelfIndex ?? 0) * 40
-                const shelfY = 180 - (placement.shelfIndex ?? 0) * 30
-                // Элемент на полке
-                const elementX = shelfX + 20 + (placement.position ?? 0) * 25
-                const elementY = shelfY
-                return (
-                  <IsometricElement
-                    key={placement.element.id}
-                    element={placement.element}
-                    x={elementX}
-                    y={elementY}
-                    isSelected={selectedElement?.id === placement.element.id}
-                    isBeingMoved={
-                      elementBeingMoved?.id === placement.element.id
+                    onLongPress={() =>
+                      handleElementLongPress(placement.element)
                     }
-                    onClick={() => handleElementClick(placement.element)}
-                    onLongPress={() => handleElementLongPress(placement.element)}
                   />
-                )
-              })}
-
-            {/* Элементы на подоконнике */}
-            {elementPlacements
-              .filter(p => p.location === 'windowSill')
-              .map(placement => {
-                // Подоконник под окном на правой стене
-                const windowSillX = 320
-                const windowSillY = 200
-                const elementX = windowSillX + 10 + placement.position * 20
-                const elementY = windowSillY
-                return (
-                  <IsometricElement
-                    key={placement.element.id}
-                    element={placement.element}
-                    x={elementX}
-                    y={elementY}
-                    isSelected={selectedElement?.id === placement.element.id}
-                    isBeingMoved={
-                      elementBeingMoved?.id === placement.element.id
-                    }
-                    onClick={() => handleElementClick(placement.element)}
-                    onLongPress={() => handleElementLongPress(placement.element)}
-                  />
-                )
-              })}
-
-            {/* Элементы на столе */}
-            {elementPlacements
-              .filter(p => p.location === 'table')
-              .map(placement => {
-                // Стол у задней стены
-                const tableX = 220
-                const tableY = 240
-                const elementX = tableX + 20 + placement.position * 25
-                const elementY = tableY
-                return (
-                  <IsometricElement
-                    key={placement.element.id}
-                    element={placement.element}
-                    x={elementX}
-                    y={elementY}
-                    isSelected={selectedElement?.id === placement.element.id}
-                    isBeingMoved={
-                      elementBeingMoved?.id === placement.element.id
-                    }
-                    onClick={() => handleElementClick(placement.element)}
-                    onLongPress={() => handleElementLongPress(placement.element)}
-                  />
-                )
-              })}
-
-            {/* Элементы на полу */}
-            {elementPlacements
-              .filter(p => p.location === 'floor')
-              .map(placement => (
-                <IsometricElement
-                  key={placement.element.id}
-                  element={placement.element}
-                  x={280}
-                  y={280}
-                  isSelected={selectedElement?.id === placement.element.id}
-                  isBeingMoved={
-                    elementBeingMoved?.id === placement.element.id
-                  }
-                  onClick={() => handleElementClick(placement.element)}
-                  onLongPress={() => handleElementLongPress(placement.element)}
-                />
-              ))}
+                ))}
             </svg>
           </div>
         </div>
 
         {/* Пустое состояние */}
         {currentRoomElements.length === 0 && !isElementMoving && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center">
-          <motion.div
-            className="text-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
+          <div className="absolute inset-0 z-20 flex items-center justify-center">
             <motion.div
-              className="mb-4 text-6xl"
-              animate={{
-                y: [0, -10, 0],
-                opacity: [0.7, 1, 0.7],
-              }}
-              transition={{
-                repeat: Infinity,
-                duration: 2.5,
-                ease: 'easeInOut',
-              }}
+              className="text-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
             >
-              🏠
+              <motion.div
+                className="mb-4 text-6xl"
+                animate={{
+                  y: [0, -10, 0],
+                  opacity: [0.7, 1, 0.7],
+                }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 2.5,
+                  ease: 'easeInOut',
+                }}
+              >
+                🏠
+              </motion.div>
+              <h3 className="mb-2 text-lg font-semibold text-gray-700 dark:text-gray-300">
+                Комната пуста
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Отметьте свое настроение, чтобы добавить первый элемент!
+              </p>
             </motion.div>
-            <h3 className="mb-2 text-lg font-semibold text-gray-700 dark:text-gray-300">
-              Комната пуста
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Отметьте свое настроение, чтобы добавить первый элемент!
-            </p>
-          </motion.div>
-        </div>
+          </div>
         )}
       </div>
     </div>
@@ -498,13 +513,14 @@ export function IsometricRoomView({
 // Компоненты для элементов комнаты
 
 function IsometricFloor() {
-  // Правильная изометрическая проекция: угол 30 градусов
-  // Для изометрии: x' = x - y, y' = (x + y) / 2
-  const floorPoints = "100,300 300,200 400,250 200,350"
-  
+  // Правильная изометрическая проекция
+  // Пол: ромб в изометрии
+  // Левая нижняя, правая нижняя, правая верхняя, левая верхняя
+  const floorPoints = '150,250 350,150 250,50 50,150'
+
   return (
     <g>
-      {/* Пол (изометрический параллелограмм) */}
+      {/* Пол (изометрический ромб) */}
       <polygon
         points={floorPoints}
         fill="#d4a574"
@@ -532,21 +548,19 @@ function IsometricFloor() {
           />
         </pattern>
       </defs>
-      <polygon
-        points={floorPoints}
-        fill="url(#woodGrain)"
-      />
+      <polygon points={floorPoints} fill="url(#woodGrain)" />
     </g>
   )
 }
 
 function IsometricBackWall() {
-  // Задняя стена: от пола вверх
-  const wallPoints = "100,300 300,200 300,50 100,150"
-  
+  // Задняя стена: вертикальная стена в изометрии
+  // От левой верхней точки пола вверх, до правой верхней точки пола вверх
+  const wallPoints = '50,150 150,250 150,50 50,-50'
+
   return (
     <g>
-      {/* Задняя стена (изометрический параллелограмм) */}
+      {/* Задняя стена (левая стена в изометрии) */}
       <polygon
         points={wallPoints}
         fill="#e8d5ff"
@@ -566,21 +580,18 @@ function IsometricBackWall() {
           <circle cx="15" cy="15" r="1" fill="#d4a0ff" opacity="0.2" />
         </pattern>
       </defs>
-      <polygon
-        points={wallPoints}
-        fill="url(#wallTexture)"
-      />
+      <polygon points={wallPoints} fill="url(#wallTexture)" />
     </g>
   )
 }
 
 function IsometricRightWall() {
-  // Правая стена: от пола вверх, с окном
-  const wallPoints = "300,200 400,250 400,100 300,50"
-  
+  // Правая стена: от правой нижней точки пола вверх, до правой верхней точки пола вверх
+  const wallPoints = '250,50 350,150 350,-50 250,-150'
+
   return (
     <g>
-      {/* Правая стена */}
+      {/* Правая стена (задняя стена в изометрии) */}
       <polygon
         points={wallPoints}
         fill="#e8d5ff"
@@ -594,22 +605,9 @@ function IsometricRightWall() {
 }
 
 function IsometricLeftWall() {
-  // Левая стена: от пола вверх
-  const wallPoints = "100,300 100,150 50,100 50,250"
-  
-  return (
-    <g>
-      {/* Левая стена */}
-      <polygon
-        points={wallPoints}
-        fill="#e8d5ff"
-        stroke="#d4a0ff"
-        strokeWidth="2"
-        opacity="0.95"
-        style={{ pointerEvents: 'none' }}
-      />
-    </g>
-  )
+  // В изометрии обычно видно только две стены (заднюю и правую)
+  // Левая стена не нужна, так как комната открыта спереди
+  return <g />
 }
 
 interface IsometricShelfProps {
@@ -619,26 +617,22 @@ interface IsometricShelfProps {
   readonly depth: number
 }
 
-function IsometricShelf({
-  x,
-  y,
-  width,
-  depth,
-}: IsometricShelfProps) {
-  // Правильная изометрическая проекция
-  // Для изометрии: isoX = x - y, isoY = (x + y) / 2
-  const isoX = x - y
-  const isoY = (x + y) / 2
-  
-  // Ширина и глубина в изометрических координатах
-  const isoWidth = width
-  const isoDepth = depth / 2
+function IsometricShelf({ x, y, width, depth }: IsometricShelfProps) {
+  // Правильная изометрическая проекция для полки
+  // x, y - координаты в изометрической системе (от центра комнаты)
+  // Преобразуем в экранные координаты
+  const screenX = 200 + (x - y) * 0.866
+  const screenY = 150 + (x + y) * 0.5
+
+  // Размеры полки в изометрии
+  const shelfWidth = width * 0.866
+  const shelfDepth = depth * 0.5
 
   return (
     <g>
       {/* Верхняя поверхность полки (стеклянная) */}
       <polygon
-        points={`${isoX},${isoY} ${isoX + isoWidth},${isoY - isoWidth/2} ${isoX + isoWidth + isoDepth},${isoY - isoWidth/2 + isoDepth} ${isoX + isoDepth},${isoY + isoDepth}`}
+        points={`${screenX},${screenY} ${screenX + shelfWidth},${screenY - shelfWidth / 2} ${screenX + shelfWidth + shelfDepth},${screenY - shelfWidth / 2 + shelfDepth} ${screenX + shelfDepth},${screenY + shelfDepth}`}
         fill="rgba(200, 220, 255, 0.6)"
         stroke="rgba(150, 180, 255, 0.8)"
         strokeWidth="1"
@@ -657,16 +651,16 @@ interface IsometricTableProps {
 
 function IsometricTable({ x, y }: IsometricTableProps) {
   // Правильная изометрическая проекция для стола
-  const isoX = x - y
-  const isoY = (x + y) / 2
-  const tableWidth = 80
-  const tableDepth = 40
+  const screenX = 200 + (x - y) * 0.866
+  const screenY = 150 + (x + y) * 0.5
+  const tableWidth = 60 * 0.866
+  const tableDepth = 30 * 0.5
 
   return (
     <g>
       {/* Верхняя поверхность стола (стеклянная) */}
       <polygon
-        points={`${isoX},${isoY} ${isoX + tableWidth},${isoY - tableWidth/2} ${isoX + tableWidth + tableDepth/2},${isoY - tableWidth/2 + tableDepth/2} ${isoX + tableDepth/2},${isoY + tableDepth/2}`}
+        points={`${screenX},${screenY} ${screenX + tableWidth},${screenY - tableWidth / 2} ${screenX + tableWidth + tableDepth},${screenY - tableWidth / 2 + tableDepth} ${screenX + tableDepth},${screenY + tableDepth}`}
         fill="rgba(200, 220, 255, 0.5)"
         stroke="rgba(150, 180, 255, 0.7)"
         strokeWidth="2"
@@ -684,18 +678,19 @@ interface IsometricWindowProps {
 }
 
 function IsometricWindow({ x, y }: IsometricWindowProps) {
-  // Окно встроено в правую стену
-  const isoX = x - y
-  const isoY = (x + y) / 2
-  const windowWidth = 60
-  const windowHeight = 80
+  // Окно встроено в правую стену (заднюю в изометрии)
+  // x, y - координаты центра окна в изометрической системе
+  const screenX = 200 + (x - y) * 0.866
+  const screenY = 150 + (x + y) * 0.5
+  const windowWidth = 50
+  const windowHeight = 60
 
   return (
     <g>
-      {/* Рама окна */}
+      {/* Рама окна - встроена в стену */}
       <rect
-        x={isoX}
-        y={isoY - windowHeight}
+        x={screenX - windowWidth / 2}
+        y={screenY - windowHeight}
         width={windowWidth}
         height={windowHeight}
         fill="#d4a574"
@@ -705,28 +700,28 @@ function IsometricWindow({ x, y }: IsometricWindowProps) {
       />
       {/* Стекло */}
       <rect
-        x={isoX + 5}
-        y={isoY - windowHeight + 5}
+        x={screenX - windowWidth / 2 + 5}
+        y={screenY - windowHeight + 5}
         width={windowWidth - 10}
         height={windowHeight - 10}
         fill="rgba(255, 255, 200, 0.6)"
         stroke="rgba(255, 255, 150, 0.8)"
         strokeWidth="1"
       />
-      {/* Переплет */}
+      {/* Переплет - крест */}
       <line
-        x1={isoX + windowWidth / 2}
-        y1={isoY - windowHeight + 5}
-        x2={isoX + windowWidth / 2}
-        y2={isoY - 5}
+        x1={screenX}
+        y1={screenY - windowHeight + 5}
+        x2={screenX}
+        y2={screenY - 5}
         stroke="#b8956a"
         strokeWidth="2"
       />
       <line
-        x1={isoX + 5}
-        y1={isoY - windowHeight / 2}
-        x2={isoX + windowWidth - 5}
-        y2={isoY - windowHeight / 2}
+        x1={screenX - windowWidth / 2 + 5}
+        y1={screenY - windowHeight / 2}
+        x2={screenX + windowWidth / 2 - 5}
+        y2={screenY - windowHeight / 2}
         stroke="#b8956a"
         strokeWidth="2"
       />
@@ -738,8 +733,8 @@ function IsometricWindow({ x, y }: IsometricWindowProps) {
         </radialGradient>
       </defs>
       <ellipse
-        cx={isoX + windowWidth / 2}
-        cy={isoY - windowHeight / 2}
+        cx={screenX}
+        cy={screenY - windowHeight / 2}
         rx={windowWidth}
         ry={windowHeight}
         fill="url(#windowLight)"
@@ -769,15 +764,16 @@ function IsometricElement({
   onLongPress,
 }: IsometricElementProps) {
   // Правильная изометрическая проекция для элементов
-  const isoX = x - y
-  const isoY = (x + y) / 2 - 25 // Смещение вверх для размещения элемента на полке
+  // x, y - координаты в изометрической системе
+  const screenX = 200 + (x - y) * 0.866
+  const screenY = 150 + (x + y) * 0.5 - 20 // Смещение вверх для размещения элемента на полке
 
   return (
     <foreignObject
-      x={isoX - 24}
-      y={isoY - 24}
-      width="48"
-      height="48"
+      x={screenX - 20}
+      y={screenY - 20}
+      width="40"
+      height="40"
       style={{
         cursor: 'pointer',
         filter: isSelected
@@ -785,7 +781,11 @@ function IsometricElement({
           : isBeingMoved
             ? 'drop-shadow(0 0 10px rgba(59, 130, 246, 0.6))'
             : 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))',
-        transform: isSelected ? 'scale(1.1)' : isBeingMoved ? 'scale(1.05)' : 'scale(1)',
+        transform: isSelected
+          ? 'scale(1.1)'
+          : isBeingMoved
+            ? 'scale(1.05)'
+            : 'scale(1)',
         transition: 'transform 0.2s, filter 0.2s',
         zIndex: isSelected || isBeingMoved ? 10 : 1,
       }}
@@ -798,7 +798,7 @@ function IsometricElement({
       <div className="flex h-full w-full items-center justify-center">
         <PlantRenderer
           element={element}
-          size={40}
+          size={36}
           isSelected={isSelected}
           isHovered={isBeingMoved}
           onClick={onClick}
@@ -807,4 +807,3 @@ function IsometricElement({
     </foreignObject>
   )
 }
-
