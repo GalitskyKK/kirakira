@@ -297,7 +297,17 @@ export function IsometricRoomView({
                 width="200%"
                 height="200%"
               >
-                <feGaussianBlur stdDeviation="3" />
+                <feGaussianBlur stdDeviation="4" />
+              </filter>
+              <filter
+                id="strongShadow"
+                x="-50%"
+                y="-50%"
+                width="200%"
+                height="200%"
+              >
+                <feGaussianBlur stdDeviation="6" />
+                <feOffset dx="2" dy="2" />
               </filter>
             </defs>
 
@@ -341,6 +351,20 @@ export function IsometricRoomView({
               leftFill="url(#wallRightGrad)"
               topFill="#fff"
               rightFill="#fff"
+              roundness={4}
+            />
+
+            {/* Угловой элемент для закрытия пустоты между стенами */}
+            <IsoCube
+              x={-1}
+              y={-1}
+              z={0}
+              w={1}
+              d={1}
+              h={9}
+              rightFill="url(#wallLeftGrad)"
+              leftFill="url(#wallRightGrad)"
+              topFill="#fff"
               roundness={4}
             />
 
@@ -397,6 +421,32 @@ export function IsometricRoomView({
             />
 
             {/* Окно и подоконник */}
+            {/* Рама окна (объемная) */}
+            <IsoCube
+              x={POSITIONS.windowSill.x - 0.15}
+              y={-0.25}
+              z={3.3}
+              w={6.3}
+              d={0.3}
+              h={4.4}
+              topFill="#fff"
+              leftFill="#fff"
+              rightFill="#fff"
+              roundness={2}
+            />
+            {/* Углубление окна */}
+            <IsoCube
+              x={POSITIONS.windowSill.x + 0.1}
+              y={-0.1}
+              z={3.6}
+              w={5.8}
+              d={0.2}
+              h={4}
+              topFill="#E8E8E8"
+              leftFill="#D0D0D0"
+              rightFill="#D0D0D0"
+              roundness={1}
+            />
             <IsoWindow
               x={POSITIONS.windowSill.x}
               y={-0.1}
@@ -483,9 +533,17 @@ export function IsometricRoomView({
               ))}
 
             {/* Коврик */}
+            {/* Тень коврика */}
+            <path
+              d={createCirclePath(6.6, 6.6, 0, 3.9)}
+              fill="rgba(100, 80, 120, 0.08)"
+              filter="url(#softShadow)"
+            />
             <path
               d={createCirclePath(6.5, 6.5, 0.02, 3.8)}
-              fill="rgba(255,255,255,0.3)"
+              fill="rgba(255,255,255,0.35)"
+              stroke="rgba(255,255,255,0.5)"
+              strokeWidth="1"
             />
 
             {/* --- РАСТЕНИЯ / ПРЕДМЕТЫ --- */}
@@ -587,8 +645,8 @@ function IsoCube({
     <g opacity={opacity}>
       {shadow && (
         <path
-          d={createRectPath(x + 0.1, y + 0.1, z - 0.05, w, d)}
-          fill="rgba(80, 60, 100, 0.1)"
+          d={createRectPath(x + 0.15, y + 0.15, z - 0.1, w, d)}
+          fill="rgba(80, 60, 100, 0.15)"
           filter="url(#softShadow)"
         />
       )}
@@ -615,11 +673,20 @@ function IsoCube({
         strokeLinejoin="round"
       />
 
+      {/* Легкая обводка для объема */}
       <path
         d={paths.top}
         fill="none"
-        stroke="rgba(255,255,255,0.5)"
-        strokeWidth="1"
+        stroke="rgba(255,255,255,0.6)"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      {/* Легкая тень на боковых гранях для объема */}
+      <path
+        d={paths.right}
+        fill="none"
+        stroke="rgba(0,0,0,0.1)"
+        strokeWidth="0.5"
         strokeLinejoin="round"
       />
     </g>
@@ -670,31 +737,49 @@ function IsoWindow({ x = 0, y = 0, z = 0, width = 1, height = 1 }: any) {
   const p4 = toIso(x, y, z)
 
   const glassPath = toPathString([p1, p2, p3, p4])
+
+  // Координаты для разделения на 4 панели
+  const midX = (p1.x + p2.x) / 2
+  const midY = (p1.y + p2.y) / 2
+  const midXBottom = (p3.x + p4.x) / 2
+  const midYBottom = (p3.y + p4.y) / 2
+  const midYLeft = (p1.y + p4.y) / 2
+  const midXLeft = (p1.x + p4.x) / 2
+  const midYRight = (p2.y + p3.y) / 2
+  const midXRight = (p2.x + p3.x) / 2
+
   return (
     <g>
-      <path d={glassPath} fill="#E1BEE7" opacity="0.4" />
+      {/* Стекло с легким градиентом */}
+      <path d={glassPath} fill="#E1BEE7" opacity="0.5" />
       <path
         d={glassPath}
         fill="none"
         stroke="#fff"
-        strokeWidth="6"
+        strokeWidth="8"
         strokeLinejoin="round"
       />
+      {/* Вертикальная перегородка */}
       <path
-        d={`M ${(p1.x + p2.x) / 2},${(p1.y + p2.y) / 2} L ${
-          (p3.x + p4.x) / 2
-        },${(p3.y + p4.y) / 2}`}
+        d={`M ${midX},${midY} L ${midXBottom},${midYBottom}`}
         stroke="#fff"
-        strokeWidth="4"
+        strokeWidth="5"
         strokeLinecap="round"
       />
+      {/* Горизонтальная перегородка */}
       <path
-        d={`M ${(p1.x + p4.x) / 2},${(p1.y + p4.y) / 2} L ${
-          (p2.x + p3.x) / 2
-        },${(p2.y + p3.y) / 2}`}
+        d={`M ${midXLeft},${midYLeft} L ${midXRight},${midYRight}`}
         stroke="#fff"
-        strokeWidth="4"
+        strokeWidth="5"
         strokeLinecap="round"
+      />
+      {/* Легкое свечение/отражение */}
+      <path
+        d={glassPath}
+        fill="none"
+        stroke="rgba(255,255,255,0.6)"
+        strokeWidth="2"
+        strokeLinejoin="round"
       />
     </g>
   )
