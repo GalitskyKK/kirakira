@@ -399,30 +399,6 @@ export function IsometricRoomView({
               roundness={2}
             />
 
-            {/* Плинтус */}
-            <IsoCube
-              x={0}
-              y={0}
-              z={0}
-              w={0.3}
-              d={10}
-              h={0.4}
-              topFill="#fff"
-              rightFill="#fff"
-              roundness={4}
-            />
-            <IsoCube
-              x={0}
-              y={0}
-              z={0}
-              w={10}
-              d={0.3}
-              h={0.4}
-              topFill="#fff"
-              leftFill="#fff"
-              roundness={4}
-            />
-
             {/* --- МЕБЕЛЬ --- */}
 
             {/* Полки слева */}
@@ -564,20 +540,6 @@ export function IsometricRoomView({
                 />
               ))}
 
-            {/* Коврик (под столом, выше, рендерится до стола) */}
-            {/* Тень коврика */}
-            <path
-              d={createCirclePath(6.75, 6.25, 0.25, 3.9)}
-              fill="rgba(100, 80, 120, 0.08)"
-              filter="url(#softShadow)"
-            />
-            <path
-              d={createCirclePath(6.75, 6.25, 0.3, 3.8)}
-              fill="rgba(255,255,255,0.4)"
-              stroke="rgba(255,255,255,0.6)"
-              strokeWidth="1.5"
-            />
-
             {/* --- РАСТЕНИЯ / ПРЕДМЕТЫ --- */}
             {placedElements.map(element => {
               const { x, y, z } = element.renderCoords
@@ -683,44 +645,9 @@ function IsoCube({
         />
       )}
 
-      <path
-        d={paths.right}
-        fill={fillRight}
-        stroke={fillRight}
-        strokeWidth={roundness > 0 ? 0.5 : 0}
-        strokeLinejoin="round"
-      />
-      <path
-        d={paths.left}
-        fill={fillLeft}
-        stroke={fillLeft}
-        strokeWidth={roundness > 0 ? 0.5 : 0}
-        strokeLinejoin="round"
-      />
-      <path
-        d={paths.top}
-        fill={fillTop}
-        stroke={fillTop}
-        strokeWidth={roundness > 0 ? 0.5 : 0}
-        strokeLinejoin="round"
-      />
-
-      {/* Легкая обводка для объема */}
-      <path
-        d={paths.top}
-        fill="none"
-        stroke="rgba(255,255,255,0.6)"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      {/* Легкая тень на боковых гранях для объема */}
-      <path
-        d={paths.right}
-        fill="none"
-        stroke="rgba(0,0,0,0.1)"
-        strokeWidth="0.5"
-        strokeLinejoin="round"
-      />
+      <path d={paths.right} fill={fillRight} />
+      <path d={paths.left} fill={fillLeft} />
+      <path d={paths.top} fill={fillTop} />
     </g>
   )
 }
