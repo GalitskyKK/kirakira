@@ -358,6 +358,12 @@ export function IsometricRoomView({
               leftFill="#fff"
               roundness={4}
             />
+            {/* Тень левой стены */}
+            <path
+              d={createRectPath(-1.1, 0, 0, 1, 10)}
+              fill="rgba(0,0,0,0.08)"
+              filter="url(#softShadow)"
+            />
 
             {/* 3. Правая стена (Толстая) */}
             <IsoCube
@@ -372,8 +378,14 @@ export function IsometricRoomView({
               rightFill="#fff"
               roundness={4}
             />
+            {/* Тень правой стены */}
+            <path
+              d={createRectPath(0, -1.1, 0, 10, 1)}
+              fill="rgba(0,0,0,0.08)"
+              filter="url(#softShadow)"
+            />
 
-            {/* Удлиненная верхняя белая панель правой стены для соединения */}
+            {/* Удлиненная верхняя белая панель правой стены (только верхняя часть) */}
             <IsoCube
               x={-1}
               y={-1}
@@ -382,8 +394,8 @@ export function IsometricRoomView({
               d={1}
               h={0.5}
               topFill="#fff"
-              leftFill="#fff"
-              rightFill="#fff"
+              leftFill="transparent"
+              rightFill="transparent"
               roundness={2}
             />
 
@@ -442,37 +454,37 @@ export function IsometricRoomView({
             {/* Окно и подоконник */}
             {/* Рама окна (объемная, цвет как у подоконника, но темнее) */}
             <IsoCube
-              x={POSITIONS.windowSill.x - 0.2}
-              y={-0.3}
-              z={3.2}
-              w={6.4}
-              d={0.4}
-              h={4.6}
+              x={POSITIONS.windowSill.x - 0.25}
+              y={-0.35}
+              z={3.1}
+              w={6.5}
+              d={0.5}
+              h={4.8}
               topFill="#D4B88A"
               leftFill="#C9A875"
               rightFill="#C9A875"
               roundness={2}
               shadow
             />
-            {/* Углубление окна */}
+            {/* Углубление окна (глубже) */}
             <IsoCube
-              x={POSITIONS.windowSill.x + 0.15}
-              y={-0.1}
-              z={3.7}
-              w={5.7}
-              d={0.25}
-              h={3.8}
+              x={POSITIONS.windowSill.x + 0.2}
+              y={-0.15}
+              z={3.8}
+              w={5.6}
+              d={0.3}
+              h={3.6}
               topFill="#D4B88A"
               leftFill="#C9A875"
               rightFill="#C9A875"
               roundness={1}
             />
             <IsoWindow
-              x={POSITIONS.windowSill.x}
-              y={-0.1}
-              z={3.5}
-              width={6}
-              height={4}
+              x={POSITIONS.windowSill.x + 0.25}
+              y={-0.15}
+              z={3.85}
+              width={5.5}
+              height={3.6}
             />
             <IsoCube
               x={POSITIONS.windowSill.x - 0.2}
@@ -552,15 +564,15 @@ export function IsometricRoomView({
                 />
               ))}
 
-            {/* Коврик (под столом, выше) */}
+            {/* Коврик (под столом, выше, рендерится до стола) */}
             {/* Тень коврика */}
             <path
-              d={createCirclePath(6.75, 6.25, 0.15, 3.9)}
+              d={createCirclePath(6.75, 6.25, 0.25, 3.9)}
               fill="rgba(100, 80, 120, 0.08)"
               filter="url(#softShadow)"
             />
             <path
-              d={createCirclePath(6.75, 6.25, 0.2, 3.8)}
+              d={createCirclePath(6.75, 6.25, 0.3, 3.8)}
               fill="rgba(255,255,255,0.4)"
               stroke="rgba(255,255,255,0.6)"
               strokeWidth="1.5"
@@ -772,8 +784,8 @@ function IsoWindow({ x = 0, y = 0, z = 0, width = 1, height = 1 }: any) {
     <g>
       {/* Свет за окном (градиент) */}
       <path d={glassPath} fill="url(#windowLight)" />
-      {/* Стекло осветленное */}
-      <path d={glassPath} fill="#F5E6C8" opacity="0.6" />
+      {/* Стекло белое (как на референсе) */}
+      <path d={glassPath} fill="#FFFFFF" opacity="0.85" />
       {/* Легкое свечение вокруг окна */}
       <path
         d={glassPath}
@@ -809,7 +821,7 @@ function IsoWindow({ x = 0, y = 0, z = 0, width = 1, height = 1 }: any) {
       <path
         d={glassPath}
         fill="none"
-        stroke="rgba(255,255,255,0.6)"
+        stroke="rgba(255,255,255,0.7)"
         strokeWidth="2"
         strokeLinejoin="round"
       />
