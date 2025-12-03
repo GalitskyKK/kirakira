@@ -53,6 +53,61 @@ const toPathString = (points: { x: number; y: number }[]) => {
     .join(' L ')} Z`
 }
 
+// Генерация пути со скругленными углами
+const toRoundedPathString = (
+  points: { x: number; y: number }[],
+  radius: number
+) => {
+  if (!points.length || points.length < 3) return toPathString(points)
+  if (radius <= 0) return toPathString(points)
+
+  let path = ''
+  const numPoints = points.length
+
+  for (let i = 0; i < numPoints; i++) {
+    const prevIdx = (i - 1 + numPoints) % numPoints
+    const currentIdx = i
+    const nextIdx = (i + 1) % numPoints
+
+    const prev = points[prevIdx]
+    const current = points[currentIdx]
+    const next = points[nextIdx]
+
+    if (!prev || !current || !next) continue
+
+    // Векторы к текущей точке
+    const dx1 = current.x - prev.x
+    const dy1 = current.y - prev.y
+    const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1)
+    const unit1 = len1 > 0 ? { x: dx1 / len1, y: dy1 / len1 } : { x: 0, y: 0 }
+
+    const dx2 = next.x - current.x
+    const dy2 = next.y - current.y
+    const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2)
+    const unit2 = len2 > 0 ? { x: dx2 / len2, y: dy2 / len2 } : { x: 0, y: 0 }
+
+    // Ограничиваем радиус скругления (не более 40% от длины сегмента)
+    const r = Math.min(radius, len1 * 0.4, len2 * 0.4, 8)
+
+    // Точки начала и конца скругления
+    const startX = current.x - unit1.x * r
+    const startY = current.y - unit1.y * r
+    const endX = current.x + unit2.x * r
+    const endY = current.y + unit2.y * r
+
+    if (i === 0) {
+      path = `M ${startX.toFixed(1)},${startY.toFixed(1)}`
+    } else {
+      path += ` L ${startX.toFixed(1)},${startY.toFixed(1)}`
+    }
+
+    // Квадратичная кривая для скругления угла
+    path += ` Q ${current.x.toFixed(1)},${current.y.toFixed(1)} ${endX.toFixed(1)},${endY.toFixed(1)}`
+  }
+
+  return path + ' Z'
+}
+
 // Генерация куба
 const createCubePath = (
   x: number,
@@ -60,7 +115,8 @@ const createCubePath = (
   z: number,
   w: number,
   d: number,
-  h: number
+  h: number,
+  roundness: number = 0
 ) => {
   const p1 = toIso(x, y, z + h) // Top-Back
   const p2 = toIso(x + w, y, z + h) // Top-Right
@@ -70,10 +126,15 @@ const createCubePath = (
   const p7 = toIso(x + w, y + d, z) // Bottom-Front
   const p8 = toIso(x, y + d, z) // Bottom-Left
 
+  const useRounded = roundness > 0
+  const pathFn = useRounded
+    ? (pts: { x: number; y: number }[]) => toRoundedPathString(pts, roundness)
+    : toPathString
+
   return {
-    top: toPathString([p1, p2, p3, p4]),
-    right: toPathString([p2, p3, p7, p6]),
-    left: toPathString([p4, p3, p7, p8]),
+    top: pathFn([p1, p2, p3, p4]),
+    right: pathFn([p2, p3, p7, p6]),
+    left: pathFn([p4, p3, p7, p8]),
   }
 }
 
@@ -266,7 +327,7 @@ export function IsometricRoomView({
               rightFill="url(#wallLeftGrad)"
               topFill="#fff"
               leftFill="#fff"
-              roundness={2}
+              roundness={4}
             />
 
             {/* 3. Правая стена (Толстая) */}
@@ -280,7 +341,7 @@ export function IsometricRoomView({
               leftFill="url(#wallRightGrad)"
               topFill="#fff"
               rightFill="#fff"
-              roundness={2}
+              roundness={4}
             />
 
             {/* Плинтус */}
@@ -515,12 +576,12 @@ function IsoCube({
 }: IsoCubeProps) {
   if (isNaN(x) || isNaN(y) || isNaN(z)) return null
 
-  const paths = createCubePath(x, y, z, w, d, h)
+  // Конвертируем roundness в пиксели для скругления (примерно 1-8 пикселей)
+  const roundedRadius = roundness > 0 ? roundness * 2 : 0
+  const paths = createCubePath(x, y, z, w, d, h, roundedRadius)
   const fillTop = topFill || '#fff'
   const fillRight = rightFill || sideFill || '#ddd'
   const fillLeft = leftFill || sideFill || '#ccc'
-
-  const strokeWidth = roundness > 0 ? roundness : 0
 
   return (
     <g opacity={opacity}>
@@ -536,21 +597,21 @@ function IsoCube({
         d={paths.right}
         fill={fillRight}
         stroke={fillRight}
-        strokeWidth={strokeWidth}
+        strokeWidth={roundness > 0 ? 0.5 : 0}
         strokeLinejoin="round"
       />
       <path
         d={paths.left}
         fill={fillLeft}
         stroke={fillLeft}
-        strokeWidth={strokeWidth}
+        strokeWidth={roundness > 0 ? 0.5 : 0}
         strokeLinejoin="round"
       />
       <path
         d={paths.top}
         fill={fillTop}
         stroke={fillTop}
-        strokeWidth={strokeWidth}
+        strokeWidth={roundness > 0 ? 0.5 : 0}
         strokeLinejoin="round"
       />
 
@@ -559,6 +620,7 @@ function IsoCube({
         fill="none"
         stroke="rgba(255,255,255,0.5)"
         strokeWidth="1"
+        strokeLinejoin="round"
       />
     </g>
   )
@@ -678,6 +740,7 @@ function createCylinderBody(
   let d = `M ${pStart.x},${pStart.y} `
   topPoints.forEach(p => (d += `L ${p.x},${p.y} `))
   d += `L ${pEnd.x},${pEnd.y} `
+  // Используем spread для reverse чтобы не мутировать исходный массив
   ;[...bottomPoints].reverse().forEach(p => (d += `L ${p.x},${p.y} `))
   d += 'Z'
   return d
