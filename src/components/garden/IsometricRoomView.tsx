@@ -18,7 +18,7 @@ const POSITIONS = {
   shelfTop: { z: 6.5, y: 2 },
   shelfBottom: { z: 3.5, y: 2 },
   windowSill: { z: 3.2, x: 2.2 },
-  table: { z: 3.2, x: 5.5, y: 5.5 },
+  table: { z: 2.2, x: 5.5, y: 7.5 },
 }
 
 // --- ЦВЕТОВАЯ ПАЛИТРА ---
@@ -422,32 +422,32 @@ export function IsometricRoomView({
               {/* Ножки */}
               <IsoCylinder
                 x={5.5}
-                y={5.5}
-                z={3.15}
+                y={7.5}
+                z={0.15}
                 r={0.25}
                 h={2.05}
                 fill={COLORS.woodDark}
               />
               <IsoCylinder
                 x={8.0}
-                y={5.5}
-                z={3.15}
+                y={7.5}
+                z={0.15}
                 r={0.25}
                 h={2.05}
                 fill={COLORS.woodDark}
               />
               <IsoCylinder
                 x={5.5}
-                y={7.0}
-                z={3.15}
+                y={9.0}
+                z={0.15}
                 r={0.25}
                 h={2.05}
                 fill={COLORS.woodDark}
               />
               <IsoCylinder
                 x={8.0}
-                y={7.0}
-                z={3.15}
+                y={9.0}
+                z={0.15}
                 r={0.25}
                 h={2.05}
                 fill={COLORS.woodDark}
