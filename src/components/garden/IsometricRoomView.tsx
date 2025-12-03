@@ -354,18 +354,18 @@ export function IsometricRoomView({
               roundness={4}
             />
 
-            {/* Угловой элемент для закрытия пустоты между стенами */}
+            {/* Удлиненная верхняя панель правой стены для соединения со стеной */}
             <IsoCube
               x={-1}
               y={-1}
-              z={0}
+              z={8.5}
               w={1}
               d={1}
-              h={9}
-              rightFill="url(#wallLeftGrad)"
-              leftFill="url(#wallRightGrad)"
+              h={0.5}
               topFill="#fff"
-              roundness={4}
+              leftFill="#fff"
+              rightFill="#fff"
+              roundness={2}
             />
 
             {/* Плинтус */}
@@ -421,7 +421,7 @@ export function IsometricRoomView({
             />
 
             {/* Окно и подоконник */}
-            {/* Рама окна (объемная) */}
+            {/* Рама окна (объемная, цвет как у подоконника, но темнее) */}
             <IsoCube
               x={POSITIONS.windowSill.x - 0.15}
               y={-0.25}
@@ -429,9 +429,9 @@ export function IsometricRoomView({
               w={6.3}
               d={0.3}
               h={4.4}
-              topFill="#fff"
-              leftFill="#fff"
-              rightFill="#fff"
+              topFill="#D4B88A"
+              leftFill="#C9A875"
+              rightFill="#C9A875"
               roundness={2}
             />
             {/* Углубление окна */}
@@ -442,9 +442,9 @@ export function IsometricRoomView({
               w={5.8}
               d={0.2}
               h={4}
-              topFill="#E8E8E8"
-              leftFill="#D0D0D0"
-              rightFill="#D0D0D0"
+              topFill="#D4B88A"
+              leftFill="#C9A875"
+              rightFill="#C9A875"
               roundness={1}
             />
             <IsoWindow
@@ -535,7 +535,7 @@ export function IsometricRoomView({
             {/* Коврик */}
             {/* Тень коврика */}
             <path
-              d={createCirclePath(6.6, 6.6, 0, 3.9)}
+              d={createCirclePath(6.5, 6.5, 0, 3.9)}
               fill="rgba(100, 80, 120, 0.08)"
               filter="url(#softShadow)"
             />
@@ -750,26 +750,26 @@ function IsoWindow({ x = 0, y = 0, z = 0, width = 1, height = 1 }: any) {
 
   return (
     <g>
-      {/* Стекло с легким градиентом */}
-      <path d={glassPath} fill="#E1BEE7" opacity="0.5" />
+      {/* Стекло с коричневатым оттенком (как дерево, но светлее) */}
+      <path d={glassPath} fill="#E8D4B0" opacity="0.6" />
       <path
         d={glassPath}
         fill="none"
-        stroke="#fff"
+        stroke="#C9A875"
         strokeWidth="8"
         strokeLinejoin="round"
       />
       {/* Вертикальная перегородка */}
       <path
         d={`M ${midX},${midY} L ${midXBottom},${midYBottom}`}
-        stroke="#fff"
+        stroke="#C9A875"
         strokeWidth="5"
         strokeLinecap="round"
       />
       {/* Горизонтальная перегородка */}
       <path
         d={`M ${midXLeft},${midYLeft} L ${midXRight},${midYRight}`}
-        stroke="#fff"
+        stroke="#C9A875"
         strokeWidth="5"
         strokeLinecap="round"
       />
@@ -777,7 +777,7 @@ function IsoWindow({ x = 0, y = 0, z = 0, width = 1, height = 1 }: any) {
       <path
         d={glassPath}
         fill="none"
-        stroke="rgba(255,255,255,0.6)"
+        stroke="rgba(255,255,255,0.4)"
         strokeWidth="2"
         strokeLinejoin="round"
       />
