@@ -332,7 +332,7 @@ export function IsometricRoomView({
 
             {/* --- СТРУКТУРА (МАССИВНЫЕ СТЕНЫ) --- */}
 
-            {/* 1. Пол (Массивный блок) */}
+            {/* 1. Пол (Массивный блок, объемный) */}
             <IsoCube
               x={0}
               y={0}
@@ -342,7 +342,7 @@ export function IsometricRoomView({
               h={1}
               topFill="#FDFBFD"
               sideFill="#EBE0F5"
-              roundness={1}
+              roundness={4}
             />
 
             {/* 2. Левая стена (Толстая) */}
@@ -358,12 +358,6 @@ export function IsometricRoomView({
               leftFill="#fff"
               roundness={4}
             />
-            {/* Тень левой стены */}
-            <path
-              d={createRectPath(-1.1, 0, 0, 1, 10)}
-              fill="rgba(0,0,0,0.08)"
-              filter="url(#softShadow)"
-            />
 
             {/* 3. Правая стена (Толстая) */}
             <IsoCube
@@ -377,12 +371,6 @@ export function IsometricRoomView({
               topFill="#fff"
               rightFill="#fff"
               roundness={4}
-            />
-            {/* Тень правой стены */}
-            <path
-              d={createRectPath(0, -1.1, 0, 10, 1)}
-              fill="rgba(0,0,0,0.08)"
-              filter="url(#softShadow)"
             />
 
             {/* Удлиненная верхняя белая панель правой стены (только верхняя часть) */}
