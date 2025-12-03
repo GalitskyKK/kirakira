@@ -728,11 +728,11 @@ function createCylinderBody(
   r: number,
   h: number
 ) {
-  const steps = 32
+  const steps = 12
   const topPoints: { x: number; y: number }[] = []
   const bottomPoints: { x: number; y: number }[] = []
 
-  // Рисуем всю видимую часть цилиндра (примерно 3/4 окружности для изометрии)
+  // Рисуем примерно 3/4 окружности для изометрической проекции (от -45° до 225°)
   const startAngle = -Math.PI / 4
   const endAngle = (5 * Math.PI) / 4
 
@@ -744,27 +744,18 @@ function createCylinderBody(
     bottomPoints.push(toIso(cx, cy, z))
   }
 
-  if (topPoints.length === 0 || bottomPoints.length === 0) return ''
+  // Явное извлечение точек в переменные для проверки
+  const pStart = topPoints[0]
+  const pEnd = bottomPoints[bottomPoints.length - 1]
 
-  // Создаем путь: верхняя дуга -> нижняя дуга (в обратном направлении)
-  let d = `M ${topPoints[0]!.x},${topPoints[0]!.y} `
+  // Если точки не определены, возвращаем пустой путь, чтобы TS не ругался
+  if (!pStart || !pEnd) return ''
 
-  // Верхняя дуга
-  for (let i = 1; i < topPoints.length; i++) {
-    d += `L ${topPoints[i]!.x},${topPoints[i]!.y} `
-  }
-
-  // Переход к нижней точке
-  const lastBottom = bottomPoints[bottomPoints.length - 1]
-  if (lastBottom) {
-    d += `L ${lastBottom.x},${lastBottom.y} `
-  }
-
-  // Нижняя дуга в обратном направлении
-  for (let i = bottomPoints.length - 2; i >= 0; i--) {
-    d += `L ${bottomPoints[i]!.x},${bottomPoints[i]!.y} `
-  }
-
+  let d = `M ${pStart.x},${pStart.y} `
+  topPoints.forEach(p => (d += `L ${p.x},${p.y} `))
+  d += `L ${pEnd.x},${pEnd.y} `
+  // Используем spread для reverse чтобы не мутировать исходный массив
+  ;[...bottomPoints].reverse().forEach(p => (d += `L ${p.x},${p.y} `))
   d += 'Z'
   return d
 }
