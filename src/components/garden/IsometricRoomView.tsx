@@ -426,7 +426,7 @@ export function IsometricRoomView({
                 z={1.5}
                 r={0.25}
                 h={2}
-                fill={COLORS.woodDark}
+                fill="#8B6F47"
               />
               <IsoCylinder
                 x={8.0}
@@ -434,7 +434,7 @@ export function IsometricRoomView({
                 z={1.5}
                 r={0.25}
                 h={2}
-                fill={COLORS.woodDark}
+                fill="#8B6F47"
               />
               <IsoCylinder
                 x={5.5}
@@ -442,7 +442,7 @@ export function IsometricRoomView({
                 z={1.5}
                 r={0.25}
                 h={2}
-                fill={COLORS.woodDark}
+                fill="#8B6F47"
               />
               <IsoCylinder
                 x={8.0}
@@ -450,7 +450,7 @@ export function IsometricRoomView({
                 z={1.5}
                 r={0.25}
                 h={2}
-                fill={COLORS.woodDark}
+                fill="#8B6F47"
               />
               {/* Столешница */}
               <IsoCube
@@ -631,23 +631,33 @@ function IsoCylinder({ x, y, z, r, h, fill }: any) {
   // Рисуем эллипс через path
   const circlePath = createCirclePath(x, y, z + h, r)
   const shadowPath = createCirclePath(x, y, z, r)
+  const bodyPath = createCylinderBody(x, y, z, r, h)
 
   return (
     <g>
       {/* Тень */}
       <path d={shadowPath} fill="rgba(0,0,0,0.1)" />
-      {/* Тело */}
+      {/* Тело цилиндра */}
       <path
-        d={createCylinderBody(x, y, z, r, h)}
+        d={bodyPath}
         fill={fill}
-        filter="brightness(0.9)"
+        stroke={fill}
+        strokeWidth="0.5"
+        strokeLinejoin="round"
       />
-      {/* Верх */}
+      {/* Верхний круг */}
       <path
         d={circlePath}
         fill={fill}
-        stroke="rgba(255,255,255,0.3)"
+        stroke="rgba(255,255,255,0.4)"
         strokeWidth="1"
+      />
+      {/* Нижний круг для видимости */}
+      <path
+        d={shadowPath}
+        fill={fill}
+        stroke="rgba(0,0,0,0.2)"
+        strokeWidth="0.5"
       />
     </g>
   )
