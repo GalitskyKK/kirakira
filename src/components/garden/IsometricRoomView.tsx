@@ -678,7 +678,6 @@ function createCylinderBody(
   let d = `M ${pStart.x},${pStart.y} `
   topPoints.forEach(p => (d += `L ${p.x},${p.y} `))
   d += `L ${pEnd.x},${pEnd.y} `
-  // Используем spread для reverse чтобы не мутировать исходный массив
   ;[...bottomPoints].reverse().forEach(p => (d += `L ${p.x},${p.y} `))
   d += 'Z'
   return d
