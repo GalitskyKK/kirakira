@@ -423,33 +423,33 @@ export function IsometricRoomView({
               <IsoCylinder
                 x={5.5}
                 y={5.5}
-                z={0}
+                z={0.15}
                 r={0.25}
-                h={2}
+                h={2.05}
                 fill={COLORS.woodDark}
               />
               <IsoCylinder
                 x={8.0}
                 y={5.5}
-                z={0}
+                z={0.15}
                 r={0.25}
-                h={2}
+                h={2.05}
                 fill={COLORS.woodDark}
               />
               <IsoCylinder
                 x={5.5}
                 y={7.0}
-                z={0}
+                z={0.15}
                 r={0.25}
-                h={2}
+                h={2.05}
                 fill={COLORS.woodDark}
               />
               <IsoCylinder
                 x={8.0}
                 y={7.0}
-                z={0}
+                z={0.15}
                 r={0.25}
-                h={2}
+                h={2.05}
                 fill={COLORS.woodDark}
               />
               {/* Столешница */}
