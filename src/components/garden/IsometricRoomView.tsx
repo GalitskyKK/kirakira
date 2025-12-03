@@ -309,6 +309,11 @@ export function IsometricRoomView({
                 <feGaussianBlur stdDeviation="6" />
                 <feOffset dx="2" dy="2" />
               </filter>
+              <radialGradient id="windowLight" cx="50%" cy="50%">
+                <stop offset="0%" stopColor="#FFF8E1" stopOpacity="0.8" />
+                <stop offset="40%" stopColor="#E8D4B0" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#D4B88A" stopOpacity="0.4" />
+              </radialGradient>
             </defs>
 
             {/* --- СТРУКТУРА (МАССИВНЫЕ СТЕНЫ) --- */}
@@ -340,32 +345,18 @@ export function IsometricRoomView({
               roundness={4}
             />
 
-            {/* 3. Правая стена (Толстая) */}
+            {/* 3. Правая стена (Толстая) - удлинена для соединения с левой стеной */}
             <IsoCube
-              x={0}
+              x={-1}
               y={-1}
               z={0}
-              w={10}
+              w={11}
               d={1}
               h={9}
               leftFill="url(#wallRightGrad)"
               topFill="#fff"
               rightFill="#fff"
               roundness={4}
-            />
-
-            {/* Удлиненная верхняя панель правой стены для соединения со стеной */}
-            <IsoCube
-              x={-1}
-              y={-1}
-              z={8.5}
-              w={1}
-              d={1}
-              h={0.5}
-              topFill="#fff"
-              leftFill="#fff"
-              rightFill="#fff"
-              roundness={2}
             />
 
             {/* Плинтус */}
@@ -423,25 +414,26 @@ export function IsometricRoomView({
             {/* Окно и подоконник */}
             {/* Рама окна (объемная, цвет как у подоконника, но темнее) */}
             <IsoCube
-              x={POSITIONS.windowSill.x - 0.15}
-              y={-0.25}
-              z={3.3}
-              w={6.3}
-              d={0.3}
-              h={4.4}
+              x={POSITIONS.windowSill.x - 0.2}
+              y={-0.3}
+              z={3.2}
+              w={6.4}
+              d={0.4}
+              h={4.6}
               topFill="#D4B88A"
               leftFill="#C9A875"
               rightFill="#C9A875"
               roundness={2}
+              shadow
             />
             {/* Углубление окна */}
             <IsoCube
-              x={POSITIONS.windowSill.x + 0.1}
+              x={POSITIONS.windowSill.x + 0.15}
               y={-0.1}
-              z={3.6}
-              w={5.8}
-              d={0.2}
-              h={4}
+              z={3.7}
+              w={5.7}
+              d={0.25}
+              h={3.8}
               topFill="#D4B88A"
               leftFill="#C9A875"
               rightFill="#C9A875"
@@ -532,15 +524,15 @@ export function IsometricRoomView({
                 />
               ))}
 
-            {/* Коврик */}
+            {/* Коврик (под столом) */}
             {/* Тень коврика */}
             <path
-              d={createCirclePath(6.5, 6.5, 0, 3.9)}
+              d={createCirclePath(6.75, 6.25, 0, 3.9)}
               fill="rgba(100, 80, 120, 0.08)"
               filter="url(#softShadow)"
             />
             <path
-              d={createCirclePath(6.5, 6.5, 0.02, 3.8)}
+              d={createCirclePath(6.75, 6.25, 0.02, 3.8)}
               fill="rgba(255,255,255,0.35)"
               stroke="rgba(255,255,255,0.5)"
               strokeWidth="1"
@@ -750,8 +742,10 @@ function IsoWindow({ x = 0, y = 0, z = 0, width = 1, height = 1 }: any) {
 
   return (
     <g>
+      {/* Свет за окном (градиент) */}
+      <path d={glassPath} fill="url(#windowLight)" />
       {/* Стекло с коричневатым оттенком (как дерево, но светлее) */}
-      <path d={glassPath} fill="#E8D4B0" opacity="0.6" />
+      <path d={glassPath} fill="#E8D4B0" opacity="0.5" />
       <path
         d={glassPath}
         fill="none"
@@ -777,7 +771,7 @@ function IsoWindow({ x = 0, y = 0, z = 0, width = 1, height = 1 }: any) {
       <path
         d={glassPath}
         fill="none"
-        stroke="rgba(255,255,255,0.4)"
+        stroke="rgba(255,255,255,0.5)"
         strokeWidth="2"
         strokeLinejoin="round"
       />
