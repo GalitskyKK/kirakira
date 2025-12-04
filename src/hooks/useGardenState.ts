@@ -28,7 +28,7 @@ import {
   getCurrentSeason,
 } from '@/utils/elementGeneration'
 import { awardElementSprouts } from '@/utils/currencyRewards'
-import { getLocalDateString, getLocalDateTimeString } from '@/utils/dateHelpers'
+import { getLocalDateTimeString } from '@/utils/dateHelpers'
 
 /**
  * Хук для управления состоянием сада
@@ -263,7 +263,7 @@ export function useGardenState() {
       try {
         // Используем реальное текущее время для unlockDate
         const currentTime = new Date()
-        
+
         // Генерируем элемент локально
         const existingPositions = currentGarden.elements.map(el => el.position)
         const newElement = generateDailyElement(
@@ -302,7 +302,7 @@ export function useGardenState() {
         // 🔧 ИСПРАВЛЕНИЕ: Передаем реальное время отметки с offset'ом часового пояса
         // Формат: "2025-12-03T23:47:00+05:00" - PostgreSQL корректно сохранит это время
         const localDateTimeStr = getLocalDateTimeString(newElement.unlockDate)
-        
+
         const result = await addElementMutation.mutateAsync({
           telegramId: currentUser.telegramId,
           element: {
