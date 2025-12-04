@@ -28,7 +28,7 @@ import {
   getCurrentSeason,
 } from '@/utils/elementGeneration'
 import { awardElementSprouts } from '@/utils/currencyRewards'
-import { getLocalDateString } from '@/utils/dateHelpers'
+import { getLocalDateString, getLocalDateTimeString } from '@/utils/dateHelpers'
 
 /**
  * Хук для управления состоянием сада
@@ -261,12 +261,15 @@ export function useGardenState() {
       }
 
       try {
+        // Используем реальное текущее время для unlockDate
+        const currentTime = new Date()
+        
         // Генерируем элемент локально
         const existingPositions = currentGarden.elements.map(el => el.position)
         const newElement = generateDailyElement(
           currentGarden.userId,
           new Date(currentGarden.createdAt),
-          new Date(),
+          currentTime, // Реальное время отметки настроения
           mood,
           existingPositions,
           currentUser?.experience ?? 0 // НОВОЕ: передаём опыт для rarityBonus
@@ -296,18 +299,16 @@ export function useGardenState() {
           telegramUserData.photoUrl = currentUser.photoUrl
         }
 
-        // 🔧 ИСПРАВЛЕНИЕ: Используем локальную дату вместо ISO строки (UTC)
-        // toISOString() конвертирует в UTC, что приводит к неправильной дате на сервере
-        // Например, если сейчас 00:10 по Екатеринбургу (GMT+5), то это 19:10 предыдущего дня по UTC
-        // Используем локальную дату в формате YYYY-MM-DD
-        const localDateStr = getLocalDateString(newElement.unlockDate)
+        // 🔧 ИСПРАВЛЕНИЕ: Передаем реальное время отметки с offset'ом часового пояса
+        // Формат: "2025-12-03T23:47:00+05:00" - PostgreSQL корректно сохранит это время
+        const localDateTimeStr = getLocalDateTimeString(newElement.unlockDate)
         
         const result = await addElementMutation.mutateAsync({
           telegramId: currentUser.telegramId,
           element: {
             type: newElement.type,
             position: newElement.position,
-            unlockDate: localDateStr, // Локальная дата в формате YYYY-MM-DD
+            unlockDate: localDateTimeStr, // Реальное время с часовым поясом
             moodInfluence: mood,
             rarity: newElement.rarity,
             seasonalVariant:

@@ -96,20 +96,36 @@ async function handleAddElement(req, res) {
     // Сохраняем элемент сада
     // 🔑 КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: используем переданный ID для детерминизма
     // 🔧 ИСПРАВЛЕНИЕ: Клиент теперь отправляет локальную дату в формате YYYY-MM-DD
-    // Используем её напрямую, без парсинга через Date (чтобы избежать проблем с UTC)
+    // 🔧 Обработка unlockDate с поддержкой разных форматов
     let unlockDateStr
     if (element.unlockDate) {
-      // Проверяем, является ли это строкой в формате YYYY-MM-DD
-      if (typeof element.unlockDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(element.unlockDate)) {
-        // Клиент отправил локальную дату в формате YYYY-MM-DD - используем напрямую
-        unlockDateStr = element.unlockDate
+      if (typeof element.unlockDate === 'string') {
+        // Проверяем формат YYYY-MM-DD (только дата)
+        if (/^\d{4}-\d{2}-\d{2}$/.test(element.unlockDate)) {
+          // Клиент отправил только дату - используем напрямую (старый формат)
+          unlockDateStr = element.unlockDate
+        } 
+        // Проверяем формат ISO с offset'ом: YYYY-MM-DDTHH:mm:ss+HH:mm или YYYY-MM-DDTHH:mm:ss-HH:mm
+        else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/.test(element.unlockDate)) {
+          // Клиент отправил полное время с offset'ом - PostgreSQL корректно обработает это
+          unlockDateStr = element.unlockDate
+        }
+        // Проверяем ISO формат без offset'а (с Z или без)
+        else if (/^\d{4}-\d{2}-\d{2}T/.test(element.unlockDate)) {
+          // ISO строка - парсим и используем как есть (PostgreSQL обработает)
+          unlockDateStr = element.unlockDate
+        }
+        else {
+          // Fallback: пытаемся парсить как дату и извлечь локальную дату
+          const unlockDate = new Date(element.unlockDate)
+          const userYear = unlockDate.getFullYear()
+          const userMonth = String(unlockDate.getMonth() + 1).padStart(2, '0')
+          const userDay = String(unlockDate.getDate()).padStart(2, '0')
+          unlockDateStr = `${userYear}-${userMonth}-${userDay}`
+        }
       } else {
-        // Fallback для старого формата (ISO строка) - извлекаем локальную дату
-        const unlockDate = new Date(element.unlockDate)
-        const userYear = unlockDate.getFullYear()
-        const userMonth = String(unlockDate.getMonth() + 1).padStart(2, '0')
-        const userDay = String(unlockDate.getDate()).padStart(2, '0')
-        unlockDateStr = `${userYear}-${userMonth}-${userDay}`
+        // Если это не строка, пытаемся конвертировать в строку
+        unlockDateStr = new Date(element.unlockDate).toISOString()
       }
     } else {
       // Fallback: используем локальную дату сервера
