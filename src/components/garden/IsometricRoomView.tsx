@@ -261,10 +261,10 @@ const SLOT_POSITIONS = {
   windowSill4: { x: 6.9, y: 0.8, z: 3.4 }, // Подоконник, позиция 4
 
   // Стол (4 слота: 8-11)
-  tableTopLeft: { x: 5.7, y: 5.7, z: 3.7 }, // Стол, верхний левый
-  tableTopRight: { x: 7.2, y: 5.7, z: 3.7 }, // Стол, верхний правый
-  tableBottomLeft: { x: 5.7, y: 7.2, z: 3.7 }, // Стол, нижний левый
-  tableBottomRight: { x: 7.2, y: 7.2, z: 3.7 }, // Стол, нижний правый
+  tableTopLeft: { x: 5.7, y: 5.7, z: 3.85 }, // Стол, верхний левый
+  tableTopRight: { x: 7.2, y: 5.7, z: 3.85 }, // Стол, верхний правый
+  tableBottomLeft: { x: 5.7, y: 7.2, z: 3.85 }, // Стол, нижний левый
+  tableBottomRight: { x: 7.2, y: 7.2, z: 3.85 }, // Стол, нижний правый
 
   // Пол (4 слота: 12-15)
   floor1: { x: 3.0, y: 8.0, z: 0.1 }, // Пол, позиция 1
@@ -748,10 +748,10 @@ export function IsometricRoomView({
               return (
                 <foreignObject
                   key={element.id}
-                  x={screenPos.x - 25}
-                  y={screenPos.y - 45}
-                  width={50}
-                  height={50}
+                  x={screenPos.x - 30}
+                  y={screenPos.y - 54}
+                  width={60}
+                  height={60}
                   style={{ overflow: 'visible', zIndex: 100 }}
                   className="pointer-events-none"
                 >
@@ -777,7 +777,7 @@ export function IsometricRoomView({
                     >
                       <PlantRenderer
                         element={element}
-                        size={44}
+                        size={52}
                         isSelected={isSelected}
                       />
                     </div>
