@@ -46,12 +46,48 @@ async function getSupabaseClient(jwt = null) {
 
 // Каталоги тем
 const GARDEN_THEMES = [
-  { id: 'light', name: 'Светлая', priceSprouts: 0, priceGems: 0, isDefault: true },
-  { id: 'dark', name: 'Тёмная', priceSprouts: 0, priceGems: 0, isDefault: true },
-  { id: 'sunset', name: 'Закат', priceSprouts: 500, priceGems: 0, isDefault: false },
-  { id: 'night', name: 'Ночное небо', priceSprouts: 600, priceGems: 0, isDefault: false },
-  { id: 'forest', name: 'Лесная', priceSprouts: 700, priceGems: 0, isDefault: false },
-  { id: 'aqua', name: 'Морская', priceSprouts: 800, priceGems: 0, isDefault: false },
+  {
+    id: 'light',
+    name: 'Светлая',
+    priceSprouts: 0,
+    priceGems: 0,
+    isDefault: true,
+  },
+  {
+    id: 'dark',
+    name: 'Тёмная',
+    priceSprouts: 0,
+    priceGems: 0,
+    isDefault: true,
+  },
+  {
+    id: 'sunset',
+    name: 'Закат',
+    priceSprouts: 500,
+    priceGems: 0,
+    isDefault: false,
+  },
+  {
+    id: 'night',
+    name: 'Ночное небо',
+    priceSprouts: 600,
+    priceGems: 0,
+    isDefault: false,
+  },
+  {
+    id: 'forest',
+    name: 'Лесная',
+    priceSprouts: 700,
+    priceGems: 0,
+    isDefault: false,
+  },
+  {
+    id: 'aqua',
+    name: 'Морская',
+    priceSprouts: 800,
+    priceGems: 0,
+    isDefault: false,
+  },
   {
     id: 'magic',
     name: 'Магия',
@@ -309,7 +345,10 @@ async function handleSpend(req, res) {
     console.log(`✅ Currency spent successfully:`, result)
 
     // Если это покупка темы, добавляем запись в shop_purchases
-    if ((reason === 'buy_theme' || reason === 'buy_room_theme') && metadata?.themeId) {
+    if (
+      (reason === 'buy_theme' || reason === 'buy_room_theme') &&
+      metadata?.themeId
+    ) {
       try {
         const themeType =
           metadata?.themeType === 'room' || reason === 'buy_room_theme'
@@ -576,6 +615,8 @@ async function handleListThemes(req, res) {
 
   try {
     const telegramId = parseInt(req.query.telegramId)
+    const themeType = req.query.themeType === 'room' ? 'room' : 'garden'
+    const itemType = themeType === 'room' ? 'room_theme' : 'garden_theme'
 
     if (!telegramId) {
       return res.status(400).json({
