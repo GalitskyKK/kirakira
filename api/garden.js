@@ -493,7 +493,7 @@ async function handleViewFriendGarden(req, res) {
     const { data: ownerSettings, error: settingsError } = await adminSupabase
       .from('users')
       .select(
-        'first_name, last_name, username, photo_url, share_garden, garden_theme, room_theme'
+        'first_name, last_name, username, photo_url, share_garden, garden_theme, room_theme, friend_garden_display'
       )
       .eq('telegram_id', friendIdNum)
       .single()
@@ -608,6 +608,7 @@ async function handleViewFriendGarden(req, res) {
           gardenCreated: friendStats?.created_at || null,
           gardenTheme: ownerSettings.garden_theme || 'light', // Добавляем тему сада друга
           roomTheme: ownerSettings.room_theme || 'isoRoom',
+          friendGardenDisplay: ownerSettings.friend_garden_display || 'garden',
         },
         gardenElements: gardenElements.map(element => ({
           id: element.id,

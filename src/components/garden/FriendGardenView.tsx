@@ -1,15 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  ArrowLeft,
-  Calendar,
-  Flame,
-  MapPin,
-  Info,
-  Palette as PaletteIcon,
-  Sprout,
-  Home,
-} from 'lucide-react'
+import { ArrowLeft, Calendar, Flame, MapPin, Info } from 'lucide-react'
 import { Button, Card, UserAvatar } from '@/components/ui'
 import {
   GardenStats,
@@ -59,6 +50,7 @@ interface FriendInfo {
   readonly gardenCreated?: string | null
   readonly gardenTheme: string
   readonly roomTheme?: string
+  readonly friendGardenDisplay?: GardenDisplayMode
 }
 
 interface FriendGardenElement {
@@ -87,28 +79,6 @@ interface FriendMoodEntry {
   readonly moodDate: string
   readonly createdAt?: string
 }
-
-const DISPLAY_OPTIONS: readonly {
-  readonly mode: GardenDisplayMode
-  readonly label: string
-  readonly icon: React.ReactNode
-}[] = [
-  {
-    mode: GardenDisplayMode.GARDEN,
-    label: 'Полки',
-    icon: <Sprout className="h-4 w-4" />,
-  },
-  {
-    mode: GardenDisplayMode.ISOMETRIC_ROOM,
-    label: 'Комната',
-    icon: <Home className="h-4 w-4" />,
-  },
-  {
-    mode: GardenDisplayMode.PALETTE,
-    label: 'Палитра',
-    icon: <PaletteIcon className="h-4 w-4" />,
-  },
-] as const
 
 interface FriendGardenViewProps {
   friendTelegramId: number
@@ -143,10 +113,9 @@ export function FriendGardenView({
   )
   // Состояние для управления комнатами сада друга
   const [currentRoomIndex, setCurrentRoomIndex] = useState(0)
-  const preferredDisplayMode =
-    currentUser?.preferences.garden.friendViewMode ?? GardenDisplayMode.GARDEN
-  const [displayMode, setDisplayMode] =
-    useState<GardenDisplayMode>(preferredDisplayMode)
+  const [displayMode, setDisplayMode] = useState<GardenDisplayMode>(
+    GardenDisplayMode.GARDEN
+  )
 
   // Обработчик изменения комнаты
   const handleRoomChange = useCallback(
@@ -239,8 +208,10 @@ export function FriendGardenView({
   }, [loadFriendGarden])
 
   useEffect(() => {
-    setDisplayMode(preferredDisplayMode)
-  }, [preferredDisplayMode])
+    if (friendGarden?.friendInfo.friendGardenDisplay) {
+      setDisplayMode(friendGarden.friendInfo.friendGardenDisplay)
+    }
+  }, [friendGarden?.friendInfo.friendGardenDisplay])
 
   // 🎨 Получаем тему сада друга
   const { theme: friendTheme } = useFriendGardenTheme(
@@ -476,31 +447,6 @@ export function FriendGardenView({
 
       {/* Рендер сада с поддержкой разных режимов просмотра */}
       <Card className="p-2 md:p-4">
-        <div className="flex flex-col gap-3 px-1 md:flex-row md:items-center md:justify-between md:px-2">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-            Вид сада
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {DISPLAY_OPTIONS.map(option => {
-              const isActive = displayMode === option.mode
-              return (
-                <button
-                  key={option.mode}
-                  onClick={() => setDisplayMode(option.mode)}
-                  className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                    isActive
-                      ? 'bg-kira-100 text-kira-700 dark:bg-kira-900/40 dark:text-kira-100'
-                      : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700'
-                  }`}
-                >
-                  {option.icon}
-                  <span>{option.label}</span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
         <div className="mt-2">
           {displayMode === GardenDisplayMode.PALETTE ? (
             canRenderPalette ? (

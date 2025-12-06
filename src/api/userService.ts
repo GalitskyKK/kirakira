@@ -318,12 +318,11 @@ export async function updateFriendGardenDisplay(
 }> {
   try {
     const response = await authenticatedFetch(
-      '/api/user?action=update-friend-garden-display',
+      `/api/user?action=update-friend-garden-display&telegramId=${telegramId}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          telegramId,
           friendGardenDisplay: displayMode,
         }),
       }
