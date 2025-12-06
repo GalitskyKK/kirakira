@@ -10,8 +10,10 @@ import {
   updateUserPhoto,
   addUserExperience,
   clearUserData,
+  updateFriendGardenDisplay,
 } from '@/api'
 import type { UserSyncResponse } from '@/api/userService'
+import type { GardenDisplayMode } from '@/types'
 
 // ============================================
 // QUERY KEYS - Константы для React Query
@@ -164,6 +166,31 @@ export function useUpdateUserPhoto() {
         )
       }
       console.error('❌ Failed to update user photo:', error)
+    },
+  })
+}
+
+/**
+ * Хук для обновления приоритетного вида сада друзей
+ */
+export function useUpdateFriendGardenDisplay() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      telegramId,
+      displayMode,
+    }: {
+      telegramId: number
+      displayMode: GardenDisplayMode
+    }) => updateFriendGardenDisplay(telegramId, displayMode),
+    onSuccess: (_result, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: userKeys.sync(variables.telegramId),
+      })
+    },
+    onError: error => {
+      console.error('❌ Failed to update friend garden display:', error)
     },
   })
 }

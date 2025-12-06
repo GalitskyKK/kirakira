@@ -102,6 +102,7 @@ export interface DatabaseUser {
   readonly theme: string
   readonly garden_theme: string
   readonly room_theme?: string
+  readonly friend_garden_display?: string
   readonly total_days: number
   readonly current_streak: number
   readonly longest_streak: number

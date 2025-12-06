@@ -4,6 +4,7 @@
  */
 
 import { authenticatedFetch } from '@/utils/apiClient'
+import { GardenDisplayMode } from '@/types'
 import type { User, UserPreferences, UserStats } from '@/types'
 import type {
   DatabaseUser,
@@ -58,7 +59,15 @@ const DEFAULT_PREFERENCES: UserPreferences = {
     soundEffects: false,
     hapticFeedback: true,
     seasonalThemes: true,
+    friendViewMode: GardenDisplayMode.GARDEN,
   },
+}
+
+function isValidDisplayMode(mode: unknown): mode is GardenDisplayMode {
+  return (
+    typeof mode === 'string' &&
+    Object.values(GardenDisplayMode).includes(mode as GardenDisplayMode)
+  )
 }
 
 function createDefaultStats(): UserStats {
@@ -105,6 +114,12 @@ export function convertServerUserToClient(
     roomTheme: serverUser.room_theme ?? 'isoRoom',
     preferences: {
       ...DEFAULT_PREFERENCES,
+      garden: {
+        ...DEFAULT_PREFERENCES.garden,
+        friendViewMode: isValidDisplayMode(serverUser.friend_garden_display)
+          ? (serverUser.friend_garden_display as GardenDisplayMode)
+          : DEFAULT_PREFERENCES.garden.friendViewMode,
+      },
       privacy: {
         ...DEFAULT_PREFERENCES.privacy,
         ...(serverUser.privacy_settings || {}),
@@ -287,6 +302,54 @@ export async function updateUserPhoto(
   } catch (error) {
     console.error('Failed to update user photo:', error)
     throw error
+  }
+}
+
+/**
+ * Обновляет приоритетный вид сада при просмотре друзей
+ */
+export async function updateFriendGardenDisplay(
+  telegramId: number,
+  displayMode: GardenDisplayMode
+): Promise<{
+  success: boolean
+  data?: { friendGardenDisplay: GardenDisplayMode }
+  error?: string
+}> {
+  try {
+    const response = await authenticatedFetch(
+      '/api/user?action=update-friend-garden-display',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          telegramId,
+          friendGardenDisplay: displayMode,
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to update friend garden display: ${response.status}`
+      )
+    }
+
+    const result = (await response.json()) as StandardApiResponse<{
+      friendGardenDisplay: GardenDisplayMode
+    }>
+
+    return {
+      success: result.success,
+      ...(result.data && { data: result.data }),
+      ...(result.error && { error: result.error }),
+    }
+  } catch (error) {
+    console.error('Failed to update friend garden display:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
   }
 }
 

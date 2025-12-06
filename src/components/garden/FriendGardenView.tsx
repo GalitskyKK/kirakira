@@ -1,8 +1,21 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Calendar, Flame, MapPin, Info } from 'lucide-react'
+import {
+  ArrowLeft,
+  Calendar,
+  Flame,
+  MapPin,
+  Info,
+  Palette as PaletteIcon,
+  Sprout,
+  Home,
+} from 'lucide-react'
 import { Button, Card, UserAvatar } from '@/components/ui'
-import { GardenStats, GardenRoomManager } from '@/components/garden'
+import {
+  GardenStats,
+  GardenRoomManager,
+  IsometricRoomView,
+} from '@/components/garden'
 import { useTelegram } from '@/hooks'
 import { useQuestIntegration } from '@/hooks/useQuestIntegration'
 import { useDailyQuests } from '@/hooks/queries/useDailyQuestQueries'
@@ -15,8 +28,14 @@ import type {
   RarityLevel,
   MoodType,
   Garden,
+  MoodEntry,
 } from '@/types'
-import { ViewMode, SeasonalVariant } from '@/types'
+import {
+  ViewMode,
+  SeasonalVariant,
+  GardenDisplayMode,
+  MoodIntensity,
+} from '@/types'
 import { authenticatedFetch } from '@/utils/apiClient'
 import {
   getElementName,
@@ -26,6 +45,7 @@ import {
   getElementScale,
 } from '@/utils/elementNames'
 import { getCurrentSeason } from '@/utils/elementGeneration'
+import { PaletteView } from './PaletteView'
 
 // Типы для данных друга и его сада
 interface FriendInfo {
@@ -38,6 +58,7 @@ interface FriendInfo {
   readonly totalElements: number
   readonly gardenCreated?: string | null
   readonly gardenTheme: string
+  readonly roomTheme?: string
 }
 
 interface FriendGardenElement {
@@ -53,10 +74,41 @@ interface FriendGardenElement {
 interface FriendGardenData {
   readonly friendInfo: FriendInfo
   readonly gardenElements: readonly FriendGardenElement[]
+  readonly moodHistory?: readonly FriendMoodEntry[]
   readonly total: number
   readonly canEdit: false
   readonly viewMode: 'friend'
 }
+
+interface FriendMoodEntry {
+  readonly id: string
+  readonly mood: MoodType
+  readonly intensity: number
+  readonly moodDate: string
+  readonly createdAt?: string
+}
+
+const DISPLAY_OPTIONS: readonly {
+  readonly mode: GardenDisplayMode
+  readonly label: string
+  readonly icon: React.ReactNode
+}[] = [
+  {
+    mode: GardenDisplayMode.GARDEN,
+    label: 'Полки',
+    icon: <Sprout className="h-4 w-4" />,
+  },
+  {
+    mode: GardenDisplayMode.ISOMETRIC_ROOM,
+    label: 'Комната',
+    icon: <Home className="h-4 w-4" />,
+  },
+  {
+    mode: GardenDisplayMode.PALETTE,
+    label: 'Палитра',
+    icon: <PaletteIcon className="h-4 w-4" />,
+  },
+] as const
 
 interface FriendGardenViewProps {
   friendTelegramId: number
@@ -91,6 +143,10 @@ export function FriendGardenView({
   )
   // Состояние для управления комнатами сада друга
   const [currentRoomIndex, setCurrentRoomIndex] = useState(0)
+  const preferredDisplayMode =
+    currentUser?.preferences.garden.friendViewMode ?? GardenDisplayMode.GARDEN
+  const [displayMode, setDisplayMode] =
+    useState<GardenDisplayMode>(preferredDisplayMode)
 
   // Обработчик изменения комнаты
   const handleRoomChange = useCallback(
@@ -182,6 +238,10 @@ export function FriendGardenView({
     void loadFriendGarden()
   }, [loadFriendGarden])
 
+  useEffect(() => {
+    setDisplayMode(preferredDisplayMode)
+  }, [preferredDisplayMode])
+
   // 🎨 Получаем тему сада друга
   const { theme: friendTheme } = useFriendGardenTheme(
     friendGarden?.friendInfo.gardenTheme
@@ -231,6 +291,24 @@ export function FriendGardenView({
         scale,
       }
     }) || []
+
+  const friendMoodHistory: MoodEntry[] =
+    friendGarden?.moodHistory?.map(entry => ({
+      id: entry.id,
+      userId: friendGarden.friendInfo.telegramId.toString(),
+      date: new Date(entry.moodDate),
+      mood: entry.mood,
+      intensity: Number(entry.intensity) as MoodIntensity,
+      createdAt: new Date(entry.createdAt ?? entry.moodDate),
+    })) ?? []
+
+  const canRenderPalette = friendMoodHistory.length > 0
+
+  useEffect(() => {
+    if (displayMode === GardenDisplayMode.PALETTE && !canRenderPalette) {
+      setDisplayMode(GardenDisplayMode.GARDEN)
+    }
+  }, [displayMode, canRenderPalette])
 
   // Обработчик выбора элемента (только для просмотра информации)
   const handleElementSelect = useCallback(
@@ -396,23 +474,86 @@ export function FriendGardenView({
         </div>
       </Card>
 
-      {/* Рендер сада с поддержкой комнат (только для просмотра) */}
+      {/* Рендер сада с поддержкой разных режимов просмотра */}
       <Card className="p-2 md:p-4">
-        <GardenRoomManager
-          elements={convertedElements}
-          selectedElement={
-            convertedElements.find(e => e.id === selectedElement?.id) || null
-          }
-          onElementClick={handleElementSelect}
-          onElementLongPress={() => {}} // Отключаем долгое нажатие для друзей
-          onSlotClick={() => {}} // Отключаем клики по слотам для друзей
-          elementBeingMoved={null} // Никогда не перемещаем элементы у друзей
-          draggedElement={null}
-          viewMode={ViewMode.OVERVIEW}
-          currentRoomIndex={currentRoomIndex}
-          onRoomChange={handleRoomChange}
-          friendTheme={friendTheme} // Передаем тему сада друга
-        />
+        <div className="flex flex-col gap-3 px-1 md:flex-row md:items-center md:justify-between md:px-2">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            Вид сада
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {DISPLAY_OPTIONS.map(option => {
+              const isActive = displayMode === option.mode
+              return (
+                <button
+                  key={option.mode}
+                  onClick={() => setDisplayMode(option.mode)}
+                  className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                    isActive
+                      ? 'bg-kira-100 text-kira-700 dark:bg-kira-900/40 dark:text-kira-100'
+                      : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700'
+                  }`}
+                >
+                  {option.icon}
+                  <span>{option.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="mt-2">
+          {displayMode === GardenDisplayMode.PALETTE ? (
+            canRenderPalette ? (
+              <div className="flex min-h-[360px] items-center justify-center p-2 sm:p-4 lg:p-6">
+                <PaletteView
+                  className="h-full w-full max-w-3xl"
+                  moodHistoryOverride={friendMoodHistory}
+                />
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-neutral-300/60 bg-neutral-50/70 px-4 py-6 text-center text-sm text-neutral-700 dark:border-neutral-600/60 dark:bg-neutral-900/60 dark:text-neutral-300">
+                У друга пока нет отметок настроения для палитры. Показан будет
+                классический сад.
+              </div>
+            )
+          ) : displayMode === GardenDisplayMode.ISOMETRIC_ROOM ? (
+            <IsometricRoomView
+              elements={convertedElements}
+              selectedElement={
+                convertedElements.find(e => e.id === selectedElement?.id) ||
+                null
+              }
+              elementBeingMoved={null}
+              viewMode={ViewMode.OVERVIEW}
+              currentRoomIndex={currentRoomIndex}
+              onRoomChange={handleRoomChange}
+              onElementClick={handleElementSelect}
+              onElementLongPress={() => {}}
+              onSlotClick={() => {}}
+              friendTheme={friendTheme}
+              roomThemeIdOverride={
+                friendGarden.friendInfo.roomTheme ?? 'isoRoom'
+              }
+            />
+          ) : (
+            <GardenRoomManager
+              elements={convertedElements}
+              selectedElement={
+                convertedElements.find(e => e.id === selectedElement?.id) ||
+                null
+              }
+              onElementClick={handleElementSelect}
+              onElementLongPress={() => {}} // Отключаем долгое нажатие для друзей
+              onSlotClick={() => {}} // Отключаем клики по слотам для друзей
+              elementBeingMoved={null} // Никогда не перемещаем элементы у друзей
+              draggedElement={null}
+              viewMode={ViewMode.OVERVIEW}
+              currentRoomIndex={currentRoomIndex}
+              onRoomChange={handleRoomChange}
+              friendTheme={friendTheme} // Передаем тему сада друга
+            />
+          )}
+        </div>
       </Card>
 
       {/* Статистика сада друга */}

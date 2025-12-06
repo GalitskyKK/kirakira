@@ -104,9 +104,13 @@ async function handleAddElement(req, res) {
         if (/^\d{4}-\d{2}-\d{2}$/.test(element.unlockDate)) {
           // Клиент отправил только дату - используем напрямую (старый формат)
           unlockDateStr = element.unlockDate
-        } 
+        }
         // Проверяем формат ISO с offset'ом: YYYY-MM-DDTHH:mm:ss+HH:mm или YYYY-MM-DDTHH:mm:ss-HH:mm
-        else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/.test(element.unlockDate)) {
+        else if (
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/.test(
+            element.unlockDate
+          )
+        ) {
           // Клиент отправил полное время с offset'ом - PostgreSQL корректно обработает это
           unlockDateStr = element.unlockDate
         }
@@ -114,8 +118,7 @@ async function handleAddElement(req, res) {
         else if (/^\d{4}-\d{2}-\d{2}T/.test(element.unlockDate)) {
           // ISO строка - парсим и используем как есть (PostgreSQL обработает)
           unlockDateStr = element.unlockDate
-        }
-        else {
+        } else {
           // Fallback: пытаемся парсить как дату и извлечь локальную дату
           const unlockDate = new Date(element.unlockDate)
           const userYear = unlockDate.getFullYear()
@@ -490,7 +493,7 @@ async function handleViewFriendGarden(req, res) {
     const { data: ownerSettings, error: settingsError } = await adminSupabase
       .from('users')
       .select(
-        'first_name, last_name, username, photo_url, share_garden, garden_theme'
+        'first_name, last_name, username, photo_url, share_garden, garden_theme, room_theme'
       )
       .eq('telegram_id', friendIdNum)
       .single()
@@ -564,6 +567,21 @@ async function handleViewFriendGarden(req, res) {
       })
     }
 
+    // 4. История настроений друга для палитры (без заметок)
+    const { data: friendMoodHistory, error: moodError } = await adminSupabase
+      .from('mood_entries')
+      .select('id, mood, intensity, mood_date, created_at')
+      .eq('telegram_id', friendIdNum)
+      .order('mood_date', { ascending: false })
+      .limit(120)
+
+    if (moodError) {
+      console.warn(
+        '⚠️ [GARDEN] Failed to fetch friend mood history:',
+        moodError
+      )
+    }
+
     // 4. Получаем статистику друга
     const { data: friendStats, error: statsError } = await supabase
       .from('users')
@@ -589,6 +607,7 @@ async function handleViewFriendGarden(req, res) {
           totalElements: friendStats?.total_elements || gardenElements.length,
           gardenCreated: friendStats?.created_at || null,
           gardenTheme: ownerSettings.garden_theme || 'light', // Добавляем тему сада друга
+          roomTheme: ownerSettings.room_theme || 'isoRoom',
         },
         gardenElements: gardenElements.map(element => ({
           id: element.id,
@@ -602,6 +621,14 @@ async function handleViewFriendGarden(req, res) {
           moodInfluence: element.mood_influence,
           createdAt: element.created_at,
         })),
+        moodHistory:
+          friendMoodHistory?.map(entry => ({
+            id: entry.id,
+            mood: entry.mood,
+            intensity: entry.intensity,
+            moodDate: entry.mood_date,
+            createdAt: entry.created_at,
+          })) ?? [],
         total: gardenElements.length,
         canEdit: false, // Всегда false для чужого сада
         viewMode: 'friend',

@@ -7,6 +7,7 @@ import { ThemeSettings } from '@/components/settings/ThemeSettings'
 import { RoomThemeSettings } from '@/components/settings/RoomThemeSettings'
 import { CompanionSettings } from '@/components/settings/CompanionSettings'
 import { GardenDisplaySettings } from '@/components/settings/GardenDisplaySettings'
+import { FriendGardenDisplaySettings } from '@/components/settings/FriendGardenDisplaySettings'
 import { SettingsSection } from '@/components/settings/SettingsSection'
 import { PageHeader } from '@/components/layout'
 
@@ -68,6 +69,15 @@ export function SettingsPage() {
           delay={0.05}
         >
           <GardenDisplaySettings />
+        </SettingsSection>
+
+        <SettingsSection
+          title="Просмотр садов друзей"
+          description="Выберите приоритетный вид, который будет открываться по умолчанию"
+          icon={<Sprout className="h-5 w-5" />}
+          delay={0.07}
+        >
+          <FriendGardenDisplaySettings user={currentUser} />
         </SettingsSection>
 
         {/* Игровые настройки */}

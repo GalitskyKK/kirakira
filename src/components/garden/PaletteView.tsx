@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useMoodTracking } from '@/hooks/useMoodTracking'
+import type { MoodEntry } from '@/types'
 import {
   convertMoodHistoryToPalette,
   type PaletteMetaBall,
@@ -17,6 +18,7 @@ interface PaletteViewProps {
   readonly className?: string
   readonly width?: number
   readonly height?: number
+  readonly moodHistoryOverride?: readonly MoodEntry[]
 }
 
 /**
@@ -40,6 +42,7 @@ export function PaletteView({
   className = '',
   width,
   height,
+  moodHistoryOverride,
 }: PaletteViewProps) {
   // Адаптивные размеры для мобильных устройств
   const [canvasSize, setCanvasSize] = useState({ width: 650, height: 650 })
@@ -143,7 +146,8 @@ export function PaletteView({
   const canvasWidth = width ?? canvasSize.width
   const canvasHeight = height ?? canvasSize.height
 
-  const { moodHistory } = useMoodTracking()
+  const { moodHistory: ownMoodHistory } = useMoodTracking()
+  const moodHistory = moodHistoryOverride ?? ownMoodHistory
   // const { isDark } = useTelegramTheme() // Unused for now as Vibe handles it
 
   const moodHistoryHashRef = useRef<string>('')

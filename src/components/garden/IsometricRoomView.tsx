@@ -108,6 +108,7 @@ interface IsometricRoomViewProps {
   readonly onElementLongPress?: (element: GardenElement) => void
   readonly onSlotClick?: (shelfIndex: number, position: number) => void
   readonly friendTheme?: GardenTheme | null
+  readonly roomThemeIdOverride?: string
 }
 
 export function IsometricRoomView({
@@ -119,6 +120,7 @@ export function IsometricRoomView({
   onElementClick,
   onElementLongPress,
   friendTheme,
+  roomThemeIdOverride,
 }: IsometricRoomViewProps) {
   const { theme: defaultTheme } = useGardenTheme()
   const { roomTheme } = useRoomTheme()
@@ -158,8 +160,9 @@ export function IsometricRoomView({
   }
 
   // Получаем путь к фоновому изображению для текущей комнаты
+  const activeRoomThemeId = roomThemeIdOverride ?? roomTheme?.id ?? 'isoRoom'
   const roomBackground =
-    ROOM_ASSETS[roomTheme?.id ?? 'isoRoom'] ?? ROOM_ASSETS['isoRoom']
+    ROOM_ASSETS[activeRoomThemeId] ?? ROOM_ASSETS['isoRoom']
 
   return (
     <div className="relative w-full">

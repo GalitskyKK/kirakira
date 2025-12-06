@@ -1,3 +1,5 @@
+import { GardenDisplayMode } from './garden'
+
 export interface User {
   readonly id: string
   readonly email?: string
@@ -53,6 +55,7 @@ export interface GardenPreferences {
   readonly soundEffects: boolean
   readonly hapticFeedback: boolean
   readonly seasonalThemes: boolean
+  readonly friendViewMode: GardenDisplayMode
 }
 
 export interface UserStats {
