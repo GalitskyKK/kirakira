@@ -974,6 +974,88 @@ async function handleUpdateGardenTheme(req, res) {
 }
 
 /**
+ * 🏠 НОВЫЙ ЭНДПОИНТ: Обновление темы комнаты
+ * POST /api/user?action=update-room-theme&telegramId=123
+ * Body: { roomTheme: 'cyberpunk_room' }
+ */
+async function handleUpdateRoomTheme(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' })
+  }
+
+  try {
+    const telegramId = parseInt(req.query.telegramId)
+    const { roomTheme } = req.body
+
+    if (!telegramId) {
+      return res
+        .status(400)
+        .json({ success: false, error: 'Missing telegramId' })
+    }
+
+    if (!roomTheme) {
+      return res
+        .status(400)
+        .json({ success: false, error: 'Missing roomTheme' })
+    }
+
+    const validThemes = [
+      'isoRoom',
+      'autumn_room',
+      'brick_room',
+      'cyberpunk_room',
+      'zodiac_room',
+    ]
+
+    if (!validThemes.includes(roomTheme)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid room theme. Valid themes: ${validThemes.join(', ')}`,
+      })
+    }
+
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+    console.log(
+      `🏠 Updating room theme for user ${telegramId} to ${roomTheme}`
+    )
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({
+        room_theme: roomTheme,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('telegram_id', telegramId)
+      .select('room_theme')
+      .single()
+
+    if (error) {
+      console.error('Failed to update room theme:', error)
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to update room theme',
+      })
+    }
+
+    console.log(
+      `✅ Room theme updated for user ${telegramId}: ${data.room_theme}`
+    )
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        roomTheme: data.room_theme,
+      },
+    })
+  } catch (error) {
+    console.error('Error in handleUpdateRoomTheme:', error)
+    return res
+      .status(500)
+      .json({ success: false, error: 'Internal server error' })
+  }
+}
+
+/**
  * 🔥 НОВЫЙ ЭНДПОИНТ: Проверка состояния стрика
  * GET /api/user?action=check-streak&telegramId=123
  */
@@ -1108,10 +1190,12 @@ async function protectedHandler(req, res) {
         return await handleCheckStreak(req, res)
       case 'update-garden-theme': // 🎨 НОВЫЙ ЭНДПОИНТ
         return await handleUpdateGardenTheme(req, res)
+      case 'update-room-theme': // 🏠 НОВЫЙ ЭНДПОИНТ
+        return await handleUpdateRoomTheme(req, res)
       default:
         return res.status(400).json({
           success: false,
-          error: `Unknown action: ${action}. Available actions: stats, update-photo, use-streak-freeze, buy-streak-freeze, get-streak-freezes, reset-streak, check-streak, update-garden-theme`,
+          error: `Unknown action: ${action}. Available actions: stats, update-photo, use-streak-freeze, buy-streak-freeze, get-streak-freezes, reset-streak, check-streak, update-garden-theme, update-room-theme`,
         })
     }
   } catch (error) {

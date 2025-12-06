@@ -102,6 +102,7 @@ export function convertServerUserToClient(
     lastVisitDate: serverUser.last_visit_date
       ? new Date(serverUser.last_visit_date)
       : new Date(),
+    roomTheme: serverUser.room_theme ?? 'isoRoom',
     preferences: {
       ...DEFAULT_PREFERENCES,
       privacy: {

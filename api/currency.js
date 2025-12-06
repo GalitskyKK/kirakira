@@ -44,6 +44,83 @@ async function getSupabaseClient(jwt = null) {
   )
 }
 
+// Каталоги тем
+const GARDEN_THEMES = [
+  { id: 'light', name: 'Светлая', priceSprouts: 0, priceGems: 0, isDefault: true },
+  { id: 'dark', name: 'Тёмная', priceSprouts: 0, priceGems: 0, isDefault: true },
+  { id: 'sunset', name: 'Закат', priceSprouts: 500, priceGems: 0, isDefault: false },
+  { id: 'night', name: 'Ночное небо', priceSprouts: 600, priceGems: 0, isDefault: false },
+  { id: 'forest', name: 'Лесная', priceSprouts: 700, priceGems: 0, isDefault: false },
+  { id: 'aqua', name: 'Морская', priceSprouts: 800, priceGems: 0, isDefault: false },
+  {
+    id: 'magic',
+    name: 'Магия',
+    priceSprouts: 1600,
+    priceGems: 16,
+    isDefault: false,
+    isPremium: true,
+  },
+  {
+    id: 'space',
+    name: 'Космос',
+    priceSprouts: 1800,
+    priceGems: 18,
+    isDefault: false,
+    isPremium: true,
+  },
+  {
+    id: 'cyberpunk',
+    name: 'Киберпанк',
+    priceSprouts: 2000,
+    priceGems: 20,
+    isDefault: false,
+    isPremium: true,
+  },
+]
+
+const ROOM_THEMES = [
+  {
+    id: 'isoRoom',
+    name: 'Базовая комната',
+    priceSprouts: 0,
+    priceGems: 0,
+    isDefault: true,
+    previewUrl: '/isoRoom/isoRoom.webp',
+  },
+  {
+    id: 'autumn_room',
+    name: 'Осенняя комната',
+    priceSprouts: 1200,
+    priceGems: 12,
+    isDefault: false,
+    previewUrl: '/isoRoom/autumn_room.webp',
+  },
+  {
+    id: 'brick_room',
+    name: 'Кирпичная комната',
+    priceSprouts: 1100,
+    priceGems: 11,
+    isDefault: false,
+    previewUrl: '/isoRoom/brick_room.webp',
+  },
+  {
+    id: 'cyberpunk_room',
+    name: 'Киберпанк-комната',
+    priceSprouts: 1500,
+    priceGems: 15,
+    isDefault: false,
+    previewUrl: '/isoRoom/cyberpunk_room.webp',
+  },
+  {
+    id: 'zodiac_room',
+    name: 'Зодиакальная комната',
+    priceSprouts: 1300,
+    priceGems: 13,
+    isDefault: false,
+    previewUrl: '/isoRoom/zodiac_room.webp',
+  },
+]
+
 // ===============================================
 // 💰 ACTION: EARN - Начисление валюты
 // ===============================================
@@ -232,12 +309,17 @@ async function handleSpend(req, res) {
     console.log(`✅ Currency spent successfully:`, result)
 
     // Если это покупка темы, добавляем запись в shop_purchases
-    if (reason === 'buy_theme' && metadata?.themeId) {
+    if ((reason === 'buy_theme' || reason === 'buy_room_theme') && metadata?.themeId) {
       try {
+        const themeType =
+          metadata?.themeType === 'room' || reason === 'buy_room_theme'
+            ? 'room_theme'
+            : 'garden_theme'
+
         // Правильно сохраняем цену в зависимости от валюты
         const purchaseData = {
           telegram_id: telegramId,
-          item_type: 'garden_theme',
+          item_type: themeType,
           item_id: metadata.themeId,
           price_sprouts: currencyType === 'sprouts' ? amount : 0,
           price_gems: currencyType === 'gems' ? amount : 0,
@@ -296,6 +378,8 @@ async function handleBalance(req, res) {
 
   try {
     const telegramId = parseInt(req.query.telegramId)
+    const themeType = req.query.themeType === 'room' ? 'room' : 'garden'
+    const itemType = themeType === 'room' ? 'room_theme' : 'garden_theme'
 
     if (!telegramId) {
       return res.status(400).json({
@@ -512,7 +596,7 @@ async function handleListThemes(req, res) {
       .from('shop_purchases')
       .select('item_id')
       .eq('telegram_id', telegramId)
-      .eq('item_type', 'garden_theme')
+      .eq('item_type', itemType)
 
     if (ownedError) {
       console.error('❌ Error fetching owned themes:', ownedError)
@@ -527,39 +611,7 @@ async function handleListThemes(req, res) {
     console.log(`🎨 Processed owned theme IDs:`, ownedThemeIds)
 
     // Статичный список тем (в будущем можно вынести в БД)
-    const themes = [
-      { id: 'light', name: 'Светлая', priceSprouts: 0, isDefault: true },
-      { id: 'dark', name: 'Тёмная', priceSprouts: 0, isDefault: true },
-      { id: 'sunset', name: 'Закат', priceSprouts: 500, isDefault: false },
-      { id: 'night', name: 'Ночное небо', priceSprouts: 600, isDefault: false },
-      { id: 'forest', name: 'Лесная', priceSprouts: 700, isDefault: false },
-      { id: 'aqua', name: 'Морская', priceSprouts: 800, isDefault: false },
-      // 🎨 ПРЕМИУМ ТЕМЫ - можно купить за ростки ИЛИ за гемы
-      {
-        id: 'magic',
-        name: 'Магия',
-        priceSprouts: 1600,
-        priceGems: 16,
-        isDefault: false,
-        isPremium: true,
-      },
-      {
-        id: 'space',
-        name: 'Космос',
-        priceSprouts: 1800,
-        priceGems: 18,
-        isDefault: false,
-        isPremium: true,
-      },
-      {
-        id: 'cyberpunk',
-        name: 'Киберпанк',
-        priceSprouts: 2000,
-        priceGems: 20,
-        isDefault: false,
-        isPremium: true,
-      },
-    ]
+    const themes = themeType === 'room' ? ROOM_THEMES : GARDEN_THEMES
 
     console.log(`✅ Themes fetched for user ${telegramId}:`, {
       total: themes.length,
@@ -591,7 +643,16 @@ async function handleBuyTheme(req, res) {
   }
 
   try {
-    const { telegramId, themeId, currencyType = 'sprouts' } = req.body
+    const {
+      telegramId,
+      themeId,
+      currencyType = 'sprouts',
+      themeType: requestedThemeType,
+    } = req.body
+
+    const themeType = requestedThemeType === 'room' ? 'room' : 'garden'
+    const itemType = themeType === 'room' ? 'room_theme' : 'garden_theme'
+    const purchaseReason = themeType === 'room' ? 'buy_room_theme' : 'buy_theme'
 
     if (!telegramId || !themeId) {
       return res.status(400).json({
@@ -612,40 +673,7 @@ async function handleBuyTheme(req, res) {
 
     console.log(`🛒 Buying theme ${themeId} for user ${telegramId}`)
 
-    // Получаем информацию о теме
-    const themes = [
-      { id: 'light', name: 'Светлая', priceSprouts: 0, isDefault: true },
-      { id: 'dark', name: 'Тёмная', priceSprouts: 0, isDefault: true },
-      { id: 'sunset', name: 'Закат', priceSprouts: 500, isDefault: false },
-      { id: 'night', name: 'Ночное небо', priceSprouts: 600, isDefault: false },
-      { id: 'forest', name: 'Лесная', priceSprouts: 700, isDefault: false },
-      { id: 'aqua', name: 'Морская', priceSprouts: 800, isDefault: false },
-      // 🎨 ПРЕМИУМ ТЕМЫ - можно купить за ростки ИЛИ за гемы
-      {
-        id: 'magic',
-        name: 'Магия',
-        priceSprouts: 1600,
-        priceGems: 16,
-        isDefault: false,
-        isPremium: true,
-      },
-      {
-        id: 'space',
-        name: 'Космос',
-        priceSprouts: 1800,
-        priceGems: 18,
-        isDefault: false,
-        isPremium: true,
-      },
-      {
-        id: 'cyberpunk',
-        name: 'Киберпанк',
-        priceSprouts: 2000,
-        priceGems: 20,
-        isDefault: false,
-        isPremium: true,
-      },
-    ]
+    const themes = themeType === 'room' ? ROOM_THEMES : GARDEN_THEMES
 
     const theme = themes.find(t => t.id === themeId)
     if (!theme) {
@@ -661,7 +689,7 @@ async function handleBuyTheme(req, res) {
       .select('id')
       .eq('telegram_id', telegramId)
       .eq('item_id', themeId)
-      .eq('item_type', 'garden_theme')
+      .eq('item_type', itemType)
       .single()
 
     if (checkError && checkError.code !== 'PGRST116') {
@@ -686,9 +714,9 @@ async function handleBuyTheme(req, res) {
         .insert({
           telegram_id: telegramId,
           item_id: themeId,
-          item_type: 'garden_theme',
-          cost_sprouts: 0,
-          cost_gems: 0,
+          item_type: itemType,
+          price_sprouts: 0,
+          price_gems: 0,
         })
         .select()
         .single()
@@ -745,12 +773,13 @@ async function handleBuyTheme(req, res) {
         p_telegram_id: telegramId,
         p_currency_type: actualCurrencyType,
         p_amount: amount,
-        p_reason: 'buy_theme',
+        p_reason: purchaseReason,
         p_description: `Покупка темы "${theme.name}"`,
         p_metadata: {
           themeId,
           themeName: theme.name,
           currencyType: actualCurrencyType,
+          themeType,
         },
       }
     )
@@ -782,9 +811,9 @@ async function handleBuyTheme(req, res) {
       .insert({
         telegram_id: telegramId,
         item_id: themeId,
-        item_type: 'garden_theme',
-        cost_sprouts: actualCurrencyType === 'sprouts' ? amount : 0,
-        cost_gems: actualCurrencyType === 'gems' ? amount : 0,
+        item_type: itemType,
+        price_sprouts: actualCurrencyType === 'sprouts' ? amount : 0,
+        price_gems: actualCurrencyType === 'gems' ? amount : 0,
       })
       .select()
       .single()

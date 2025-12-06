@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Palette, Snowflake, Sparkles, Leaf } from 'lucide-react'
 
 import { ThemeShopSection } from './ThemeShopSection'
+import { RoomThemeShopSection } from './RoomThemeShopSection'
 import { FreezeShopSection } from './FreezeShopSection'
 import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { useCurrencySync } from '@/hooks/useCurrencySync'
@@ -51,7 +52,7 @@ export function Shop({ isOpen, onClose, initialTab = 'themes' }: ShopProps) {
       const preventBodyScroll = (e: Event) => {
         const target = e.target as Element
         const modal = document.querySelector('[data-modal="shop"]')
-        if (modal && modal.contains(target)) {
+        if (modal?.contains(target)) {
           return
         }
         e.preventDefault()
@@ -118,14 +119,14 @@ export function Shop({ isOpen, onClose, initialTab = 'themes' }: ShopProps) {
                   <div className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 px-2.5 py-1.5 dark:from-green-900/20 dark:to-emerald-900/20">
                     <Leaf className="h-4 w-4 text-green-500" />
                     <span className="text-sm font-bold text-gray-900 dark:text-white">
-                      {userCurrency?.sprouts || 0}
+                      {userCurrency?.sprouts ?? 0}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 px-2.5 py-1.5 dark:from-blue-900/20 dark:to-cyan-900/20">
                     <Sparkles className="h-4 w-4 text-blue-500" />
                     <span className="text-sm font-bold text-gray-900 dark:text-white">
-                      {userCurrency?.gems || 0}
+                      {userCurrency?.gems ?? 0}
                     </span>
                   </div>
                 </div>
@@ -193,7 +194,20 @@ export function Shop({ isOpen, onClose, initialTab = 'themes' }: ShopProps) {
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <ThemeShopSection />
+                  <div className="space-y-8">
+                    <div>
+                      <h3 className="px-4 text-lg font-semibold text-gray-900 dark:text-white">
+                        Темы сада
+                      </h3>
+                      <ThemeShopSection />
+                    </div>
+                    <div>
+                      <h3 className="px-4 text-lg font-semibold text-gray-900 dark:text-white">
+                        Темы комнаты
+                      </h3>
+                      <RoomThemeShopSection />
+                    </div>
+                  </div>
                 </motion.div>
               )}
 

@@ -8,6 +8,7 @@ export interface User {
   readonly telegramId?: number
   readonly lastVisitDate?: Date
   readonly registrationDate: Date
+  readonly roomTheme?: string
   readonly preferences: UserPreferences
   readonly stats: UserStats
   readonly isAnonymous: boolean

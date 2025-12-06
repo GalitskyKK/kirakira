@@ -33,3 +33,4 @@ export { useCurrencySync } from './useCurrencySync'
 
 // Additional utility hooks can be added here
 export { useGardenTheme } from './useGardenTheme'
+export { useRoomTheme } from './useRoomTheme'

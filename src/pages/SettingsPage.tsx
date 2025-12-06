@@ -4,6 +4,7 @@ import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { ProfilePrivacySettings } from '@/components/profile/ProfilePrivacySettings'
 import { ThemeSettings } from '@/components/settings/ThemeSettings'
+import { RoomThemeSettings } from '@/components/settings/RoomThemeSettings'
 import { CompanionSettings } from '@/components/settings/CompanionSettings'
 import { GardenDisplaySettings } from '@/components/settings/GardenDisplaySettings'
 import { SettingsSection } from '@/components/settings/SettingsSection'
@@ -37,10 +38,7 @@ export function SettingsPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-    <PageHeader
-      title="Настройки"
-      icon={<Settings className="h-5 w-5" />}
-    />
+      <PageHeader title="Настройки" icon={<Settings className="h-5 w-5" />} />
 
       <div className="space-y-6 p-4 pb-24">
         {/* Внешний вид */}
@@ -51,6 +49,15 @@ export function SettingsPage() {
           delay={0}
         >
           <ThemeSettings />
+        </SettingsSection>
+
+        <SettingsSection
+          title="Тема комнаты"
+          description="Выберите тему для изометрической комнаты"
+          icon={<Palette className="h-5 w-5" />}
+          delay={0.02}
+        >
+          <RoomThemeSettings />
         </SettingsSection>
 
         {/* Режим отображения сада */}

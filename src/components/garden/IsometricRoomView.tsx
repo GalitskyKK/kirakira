@@ -8,6 +8,7 @@
 
 import { useMemo, useRef } from 'react'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
+import { useRoomTheme } from '@/hooks/useRoomTheme'
 import { useGardenRooms } from '@/hooks'
 import { ParticleCanvas } from './ParticleCanvas'
 import { PlantRenderer } from './plants/PlantRenderer'
@@ -26,9 +27,12 @@ const ORIGIN_Y = 300
 // ============================================
 
 // Фоновые изображения комнат
-const ROOM_ASSETS: Record<number, string> = {
-  0: '/isoRoom/isoRoom.webp', // Первая комната
-  1: '/isoRoom/isoRoom.webp', // Вторая комната (можно добавить разные изображения)
+const ROOM_ASSETS: Record<string, string> = {
+  isoRoom: '/isoRoom/isoRoom.webp',
+  autumn_room: '/isoRoom/autumn_room.webp',
+  brick_room: '/isoRoom/brick_room.webp',
+  cyberpunk_room: '/isoRoom/cyberpunk_room.webp',
+  zodiac_room: '/isoRoom/zodiac_room.webp',
 }
 
 // Позиции слотов для размещения элементов
@@ -117,6 +121,7 @@ export function IsometricRoomView({
   friendTheme,
 }: IsometricRoomViewProps) {
   const { theme: defaultTheme } = useGardenTheme()
+  const { roomTheme } = useRoomTheme()
   const theme = friendTheme ?? defaultTheme
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -153,7 +158,8 @@ export function IsometricRoomView({
   }
 
   // Получаем путь к фоновому изображению для текущей комнаты
-  const roomBackground = ROOM_ASSETS[currentRoomIndex] ?? ROOM_ASSETS[0]
+  const roomBackground =
+    ROOM_ASSETS[roomTheme?.id ?? 'isoRoom'] ?? ROOM_ASSETS['isoRoom']
 
   return (
     <div className="relative w-full">
@@ -175,7 +181,7 @@ export function IsometricRoomView({
         className="relative h-full w-full overflow-hidden"
         style={{ minHeight: '500px' }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50" />
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 transition-colors dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-800" />
         <ParticleCanvas
           theme={theme}
           shouldUseAnimations={true}

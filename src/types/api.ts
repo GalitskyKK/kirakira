@@ -101,6 +101,7 @@ export interface DatabaseUser {
   readonly notifications_enabled: boolean
   readonly theme: string
   readonly garden_theme: string
+  readonly room_theme?: string
   readonly total_days: number
   readonly current_streak: number
   readonly longest_streak: number
