@@ -119,9 +119,8 @@ export function FriendGardenDisplaySettings({
       </div>
 
       <div className="rounded-xl border border-dashed border-neutral-300/60 bg-neutral-50/70 px-4 py-3 text-sm text-neutral-700 dark:border-neutral-600/60 dark:bg-neutral-900/60 dark:text-neutral-300">
-        Выбранный режим будет автоматически использоваться при просмотре садов
-        друзей. Если данных для выбранного вида нет, будет показан классический
-        сад.
+        Этот выбор определяет, как другие увидят ваш сад. Если для выбранного
+        вида нет данных (например, пустая палитра), покажем классические полки.
       </div>
     </div>
   )

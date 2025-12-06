@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchRoomThemes, updateRoomTheme } from '@/api/roomThemeService'
 import { useTelegramId } from './useTelegramId'
 import { useUserSync } from './queries/useUserQueries'
+import { userKeys } from './queries/useUserQueries'
 import type { RoomTheme } from '@/types/room'
 
 const DEFAULT_ROOM_THEME_ID = 'isoRoom'
@@ -77,6 +78,9 @@ export function useRoomTheme() {
           queryKey: ['roomThemes', 'catalog', telegramId],
         }),
         queryClient.invalidateQueries({ queryKey: ['user', telegramId] }),
+        queryClient.invalidateQueries({
+          queryKey: userKeys.sync(telegramId),
+        }),
       ])
     } finally {
       setPendingThemeId(null)

@@ -72,8 +72,8 @@ export function SettingsPage() {
         </SettingsSection>
 
         <SettingsSection
-          title="Просмотр садов друзей"
-          description="Выберите приоритетный вид, который будет открываться по умолчанию"
+          title="Как друзья видят мой сад"
+          description="Выберите вид, который увидят другие при просмотре вашего сада"
           icon={<Sprout className="h-5 w-5" />}
           delay={0.07}
         >
