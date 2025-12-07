@@ -3,7 +3,6 @@ import { motion } from 'framer-motion'
 import { Sprout, TrendingUp, Calendar } from 'lucide-react'
 import { GardenView } from '@/components/garden'
 import { MoodCheckin, MoodStats } from '@/components/mood'
-import { MobileLayout } from '@/components/layout/MobileLayout'
 import { Card, TextTyping } from '@/components/ui'
 import {
   useGardenState,
@@ -12,6 +11,7 @@ import {
   useAnimationConfig,
 } from '@/hooks'
 import { formatDate } from '@/utils/dateHelpers'
+import { Navigate } from 'react-router-dom'
 
 export function HomePage() {
   const { garden: _garden, gardenStats } = useGardenState()
@@ -39,7 +39,7 @@ export function HomePage() {
 
   // Mobile layout
   if (isMobile) {
-    return <MobileLayout />
+    return <Navigate to="/mobile" replace />
   }
 
   // Desktop layout
