@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { MoodCheckin } from '@/components/mood'
@@ -6,7 +5,6 @@ import {
   CurrencyDisplay,
   StreakFreezeIndicator,
   StreakFreezeModal,
-  Shop,
   TextTyping,
 } from '@/components/ui'
 import { useGardenState, useMoodTracking } from '@/hooks/index.v2'
@@ -22,22 +20,21 @@ export function MoodPage() {
   const { garden, gardenStats } = useGardenState()
   const { canCheckinToday } = useMoodTracking()
   const { transition } = useAnimationConfig()
-  
+
   // Получаем данные пользователя через React Query
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
   const currentUser = userData?.user
-  
+
   // ✅ Автоматически загружаем и синхронизируем валюту через React Query
   useCurrencySync()
-  
   // Получаем валюту из v2 store (синхронизируется через useCurrencySync)
   const { userCurrency } = useCurrencyClientStore()
-  
-  const [isThemeShopOpen, setIsThemeShopOpen] = useState(false)
-  const [shopInitialTab, setShopInitialTab] = useState<'themes' | 'freezes'>(
-    'themes'
-  )
+
+  const openShop = (tab: 'themes' | 'freezes' = 'themes') => {
+    const tabSuffix = tab === 'themes' ? '' : `?tab=${tab}`
+    navigate(`/mobile/shop${tabSuffix}`)
+  }
 
   // 🧊 Заморозки стрика
   const {
@@ -75,7 +72,7 @@ export function MoodPage() {
             <div className="glass-card flex items-center gap-3 rounded-2xl px-4 py-2 text-sm">
               <div
                 className="dark:hover:bg-kira-950/30 cursor-pointer rounded-xl px-2 py-1 transition-all hover:bg-kira-50"
-                onClick={() => setIsThemeShopOpen(true)}
+                onClick={() => openShop('themes')}
               >
                 <CurrencyDisplay
                   size="md"
@@ -237,8 +234,7 @@ export function MoodPage() {
             onResetStreak={resetStreak as (() => Promise<void>) | undefined}
             onBuyFreeze={() => {
               closeModal()
-              setShopInitialTab('freezes')
-              setIsThemeShopOpen(true)
+              openShop('freezes')
             }}
             isLoading={freezeLoading}
             {...(userCurrency && {
@@ -250,16 +246,6 @@ export function MoodPage() {
           />
         )}
       </div>
-
-      {/* Shop Modal - вынесен за пределы space-y-6 */}
-      <Shop
-        isOpen={isThemeShopOpen}
-        onClose={() => {
-          setIsThemeShopOpen(false)
-          setShopInitialTab('themes')
-        }}
-        initialTab={shopInitialTab}
-      />
     </>
   )
 }

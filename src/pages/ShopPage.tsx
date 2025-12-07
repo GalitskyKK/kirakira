@@ -1,0 +1,60 @@
+import { useEffect, useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
+import { ShoppingBag } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
+import { PageHeader } from '@/components/layout'
+import { ShopContent, type ShopTab } from '@/components/ui/Shop'
+import { useCurrencySync } from '@/hooks/useCurrencySync'
+
+const TAB_PARAM_KEY = 'tab'
+
+const resolveTab = (param: string | null): ShopTab => {
+  if (param === 'freezes' || param === 'upgrades') {
+    return param
+  }
+  return 'themes'
+}
+
+export function ShopPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialTab = useMemo<ShopTab>(
+    () => resolveTab(searchParams.get(TAB_PARAM_KEY)),
+    [searchParams]
+  )
+  const [activeTab, setActiveTab] = useState<ShopTab>(initialTab)
+
+  useEffect(() => {
+    setActiveTab(initialTab)
+  }, [initialTab])
+
+  // ✅ Синхронизируем валюту для актуального баланса
+  useCurrencySync()
+
+  const handleTabChange = (tab: ShopTab) => {
+    setActiveTab(tab)
+    if (tab === 'themes') {
+      setSearchParams({}, { replace: true })
+      return
+    }
+    setSearchParams({ [TAB_PARAM_KEY]: tab }, { replace: true })
+  }
+
+  return (
+    <motion.div
+      className="min-h-screen bg-gradient-to-br from-kira-50 via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <PageHeader title="Магазин" icon={<ShoppingBag className="h-5 w-5" />} />
+
+      <div className="p-4 pb-24">
+        <ShopContent
+          variant="page"
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        />
+      </div>
+    </motion.div>
+  )
+}

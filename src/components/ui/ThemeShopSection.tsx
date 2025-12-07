@@ -53,7 +53,10 @@ export function ThemeShopSection() {
   const sliderRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const handleBuyTheme = async (themeId: string, currencyType: 'sprouts' | 'gems' = 'sprouts') => {
+  const handleBuyTheme = async (
+    themeId: string,
+    currencyType: 'sprouts' | 'gems' = 'sprouts'
+  ) => {
     // Защита от двойных кликов
     if (isProcessingRef.current || purchasingTheme !== null) {
       console.warn('⚠️ Purchase already in progress, ignoring duplicate click')
@@ -82,11 +85,14 @@ export function ThemeShopSection() {
       }
 
       // Определяем цену в зависимости от валюты
-      const amount = currencyType === 'gems' && theme.priceGems 
-        ? theme.priceGems 
-        : theme.priceSprouts
+      const amount =
+        currencyType === 'gems' && theme.priceGems
+          ? theme.priceGems
+          : theme.priceSprouts
 
-      console.log(`💰 Buying theme "${theme.name}" for ${amount} ${currencyType}`)
+      console.log(
+        `💰 Buying theme "${theme.name}" for ${amount} ${currencyType}`
+      )
 
       const result = await spendCurrencyMutation.mutateAsync({
         telegramId,
@@ -308,7 +314,7 @@ export function ThemeShopSection() {
           <div
             ref={containerRef}
             className="relative overflow-hidden"
-            style={{ touchAction: 'pan-x', minHeight: '270px' }}
+            style={{ touchAction: 'pan-x' }}
           >
             <motion.div
               ref={sliderRef}
@@ -456,7 +462,8 @@ export function ThemeShopSection() {
                                 className="w-full bg-gradient-to-r from-green-500 to-emerald-600"
                                 disabled={
                                   isPurchasing ||
-                                  (userCurrency?.sprouts || 0) < theme.priceSprouts
+                                  (userCurrency?.sprouts || 0) <
+                                    theme.priceSprouts
                                 }
                                 onClick={e => {
                                   e.stopPropagation()
@@ -494,7 +501,8 @@ export function ThemeShopSection() {
                                 )}
                               </Button>
                             </div>
-                          ) : (userCurrency?.sprouts || 0) >= theme.priceSprouts ? (
+                          ) : (userCurrency?.sprouts || 0) >=
+                            theme.priceSprouts ? (
                             // Обычная тема - одна кнопка
                             <Button
                               size="sm"

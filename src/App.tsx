@@ -53,6 +53,9 @@ const SettingsPage = lazy(() =>
     default: module.SettingsPage,
   }))
 )
+const ShopPage = lazy(() =>
+  import('@/pages/ShopPage').then(module => ({ default: module.ShopPage }))
+)
 const StatsPage = lazy(() =>
   import('@/pages/StatsPage').then(module => ({ default: module.StatsPage }))
 )
@@ -505,6 +508,7 @@ function App() {
                 path="/mobile/stats"
                 element={withSuspense(<StatsPage />)}
               />
+              <Route path="/mobile/shop" element={withSuspense(<ShopPage />)} />
               <Route
                 path="/mobile/mood-roadmap"
                 element={withSuspense(<MoodRoadmapPage />)}
@@ -616,6 +620,20 @@ function App() {
                       transition={routeTransition}
                     >
                       {withSuspense(<StatsPage />)}
+                    </motion.div>
+                  }
+                />
+                <Route
+                  path="/mobile/shop"
+                  element={
+                    <motion.div
+                      key="shop"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={routeTransition}
+                    >
+                      {withSuspense(<ShopPage />)}
                     </motion.div>
                   }
                 />

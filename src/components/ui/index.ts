@@ -27,7 +27,7 @@ export {
 export { StreakFreezeIndicator } from './StreakFreezeIndicator'
 export { StreakFreezeModal } from './StreakFreezeModal'
 export { ThemeShop } from './ThemeShop'
-export { Shop } from './Shop'
+export { Shop, ShopContent } from './Shop'
 export { ThemeShopSection } from './ThemeShopSection'
 export { FreezeShopSection } from './FreezeShopSection'
 export type { ShopTab } from './Shop'

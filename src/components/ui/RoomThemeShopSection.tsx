@@ -171,7 +171,7 @@ export function RoomThemeShopSection() {
           <div
             ref={containerRef}
             className="relative overflow-hidden"
-            style={{ touchAction: 'pan-x', minHeight: '280px' }}
+            style={{ touchAction: 'pan-x' }}
           >
             <motion.div
               ref={sliderRef}

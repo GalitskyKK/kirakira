@@ -11,14 +11,7 @@ function getLevelRequirementText(level: number): string {
     return 'Лумина сопровождает ваш сад'
   }
 
-  const remaining = Math.max(3 - level, 0)
-  if (remaining === 1) {
-    return 'До пробуждения духа — 1 уровень'
-  }
-  if (remaining >= 2 && remaining <= 4) {
-    return `До пробуждения духа — ${remaining} уровня`
-  }
-  return `До пробуждения духа — ${remaining} уровней`
+  return 'Лумина пока спит и скоро проснется'
 }
 
 export function CompanionSettings({ user }: CompanionSettingsProps) {
@@ -45,7 +38,11 @@ export function CompanionSettings({ user }: CompanionSettingsProps) {
               : 'cursor-not-allowed bg-neutral-100 text-neutral-400 dark:bg-neutral-800/70 dark:text-neutral-500'
           }`}
         >
-          {isVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+          {isVisible ? (
+            <Eye className="h-4 w-4" />
+          ) : (
+            <EyeOff className="h-4 w-4" />
+          )}
           {isVisible ? 'Показывать' : 'Скрывать'}
         </button>
       </div>
@@ -55,9 +52,9 @@ export function CompanionSettings({ user }: CompanionSettingsProps) {
       </div>
 
       <div className="rounded-lg bg-violet-50 px-3 py-2 text-xs text-violet-700 dark:bg-violet-900/20 dark:text-violet-300">
-        💡 После пробуждения вы сможете менять облик Лумины и открывать других духов
+        💡 После пробуждения вы сможете менять облик Лумины и открывать других
+        духов
       </div>
     </div>
   )
 }
-
