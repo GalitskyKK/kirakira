@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, splitVendorChunkPlugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
@@ -7,6 +7,7 @@ import path from 'path'
 export default defineConfig({
   plugins: [
     react(),
+    splitVendorChunkPlugin(),
     VitePWA({
       registerType: 'prompt', // ✅ Показываем кнопку обновления + автообновление при закрытии
       includeAssets: [
@@ -103,11 +104,14 @@ export default defineConfig({
     target: 'esnext',
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'motion-vendor': ['framer-motion'],
-          'router-vendor': ['react-router-dom'],
-          'date-vendor': ['date-fns'],
+        manualChunks: id => {
+          const normalized = id.replace(/\\/g, '/')
+          if (normalized.includes('node_modules')) return 'vendor'
+          if (normalized.includes('/src/pages/')) {
+            const name = path.basename(normalized, path.extname(normalized))
+            return `page-${name}`
+          }
+          return undefined
         },
       },
     },

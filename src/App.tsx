@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, lazy, Suspense, useCallback } from 'react'
 import {
   BrowserRouter as Router,
   Routes,
@@ -9,23 +9,58 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useUserClientStore, useUserSync } from '@/hooks/index.v2'
 import { UserProvider } from '@/contexts/UserContext'
 import { useReducedMotion } from '@/hooks'
-import { HomePage } from '@/pages/HomePage'
-import { OnboardingPage } from '@/pages/OnboardingPage'
-import { AuthPage } from '@/pages/AuthPage'
-import { ProfilePage } from '@/pages/ProfilePage'
-import { MoodPage } from '@/pages/MoodPage'
-import { MoodRoadmapPage } from '@/pages/MoodRoadmapPage'
-import { GardenPage } from '@/pages/GardenPage'
-import { TasksPage } from '@/pages/TasksPage'
-import { CommunityPage } from '@/pages/CommunityPage'
-import { SettingsPage } from '@/pages/SettingsPage'
-import { StatsPage } from '@/pages/StatsPage'
-import { MobileLayout } from '@/components/layout/MobileLayout'
-// ShowcasePage импортируется условно только в DEV режиме
 import { LoadingSpinner } from '@/components/ui'
-import { lazy, Suspense } from 'react'
 import { UpdatePrompt } from '@/components/ui/UpdatePrompt'
 import { CompanionOverlay } from '@/components/layout/CompanionOverlay'
+// Страницы лениво подгружаются для уменьшения initial bundle (явно указываем default)
+const HomePage = lazy(() =>
+  import('@/pages/HomePage').then(module => ({ default: module.HomePage }))
+)
+const OnboardingPage = lazy(() =>
+  import('@/pages/OnboardingPage').then(module => ({
+    default: module.OnboardingPage,
+  }))
+)
+const AuthPage = lazy(() =>
+  import('@/pages/AuthPage').then(module => ({ default: module.AuthPage }))
+)
+const ProfilePage = lazy(() =>
+  import('@/pages/ProfilePage').then(module => ({
+    default: module.ProfilePage,
+  }))
+)
+const MoodPage = lazy(() =>
+  import('@/pages/MoodPage').then(module => ({ default: module.MoodPage }))
+)
+const MoodRoadmapPage = lazy(() =>
+  import('@/pages/MoodRoadmapPage').then(module => ({
+    default: module.MoodRoadmapPage,
+  }))
+)
+const GardenPage = lazy(() =>
+  import('@/pages/GardenPage').then(module => ({ default: module.GardenPage }))
+)
+const TasksPage = lazy(() =>
+  import('@/pages/TasksPage').then(module => ({ default: module.TasksPage }))
+)
+const CommunityPage = lazy(() =>
+  import('@/pages/CommunityPage').then(module => ({
+    default: module.CommunityPage,
+  }))
+)
+const SettingsPage = lazy(() =>
+  import('@/pages/SettingsPage').then(module => ({
+    default: module.SettingsPage,
+  }))
+)
+const StatsPage = lazy(() =>
+  import('@/pages/StatsPage').then(module => ({ default: module.StatsPage }))
+)
+const MobileLayout = lazy(() =>
+  import('@/components/layout/MobileLayout').then(module => ({
+    default: module.MobileLayout,
+  }))
+)
 
 // Динамический импорт dev страниц только в DEV режиме
 const ShowcasePage = import.meta.env.DEV
@@ -62,6 +97,12 @@ interface AppInitState {
 function App() {
   const isDevelopment = import.meta.env.DEV
   const shouldReduceMotion = useReducedMotion()
+  const fallback = <LoadingSpinner />
+
+  const withSuspense = useCallback(
+    (node: JSX.Element) => <Suspense fallback={fallback}>{node}</Suspense>,
+    [fallback]
+  )
 
   // 🚨 ПРОВЕРКА ДИАГНОСТИЧЕСКОГО РЕЖИМА
   const urlParams = new URLSearchParams(window.location.search)
@@ -348,7 +389,9 @@ function App() {
 
   // Show onboarding for new users
   if (!hasCompletedOnboarding) {
-    return <OnboardingPage onComplete={handleOnboardingComplete} />
+    return withSuspense(
+      <OnboardingPage onComplete={handleOnboardingComplete} />
+    )
   }
 
   // Проверяем авторизацию только после завершения инициализации и загрузки данных
@@ -366,13 +409,13 @@ function App() {
     !isTelegramEnv &&
     !isDevShowcaseRoute
   ) {
-    return (
+    return withSuspense(
       <AuthPage
         onSuccess={() => {
           // После успешной авторизации перезагружаем страницу для обновления состояния
           window.location.reload()
         }}
-        onError={error => console.error('Auth error:', error)}
+        onError={(error: unknown) => console.error('Auth error:', error)}
       />
     )
   }
@@ -443,17 +486,29 @@ function App() {
           {/* AnimatePresence только если не включен режим уменьшения анимаций */}
           {shouldReduceMotion ? (
             <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/mobile" element={<MobileLayout />}>
-                <Route index element={<MoodPage />} />
-                <Route path="garden" element={<GardenPage />} />
-                <Route path="tasks" element={<TasksPage />} />
-                <Route path="community" element={<CommunityPage />} />
-                <Route path="profile" element={<ProfilePage />} />
+              <Route path="/" element={withSuspense(<HomePage />)} />
+              <Route path="/mobile" element={withSuspense(<MobileLayout />)}>
+                <Route index element={withSuspense(<MoodPage />)} />
+                <Route path="garden" element={withSuspense(<GardenPage />)} />
+                <Route path="tasks" element={withSuspense(<TasksPage />)} />
+                <Route
+                  path="community"
+                  element={withSuspense(<CommunityPage />)}
+                />
+                <Route path="profile" element={withSuspense(<ProfilePage />)} />
               </Route>
-              <Route path="/mobile/settings" element={<SettingsPage />} />
-              <Route path="/mobile/stats" element={<StatsPage />} />
-              <Route path="/mobile/mood-roadmap" element={<MoodRoadmapPage />} />
+              <Route
+                path="/mobile/settings"
+                element={withSuspense(<SettingsPage />)}
+              />
+              <Route
+                path="/mobile/stats"
+                element={withSuspense(<StatsPage />)}
+              />
+              <Route
+                path="/mobile/mood-roadmap"
+                element={withSuspense(<MoodRoadmapPage />)}
+              />
               {import.meta.env.DEV && ShowcasePage && (
                 <Route
                   path="/showcase"
@@ -486,29 +541,23 @@ function App() {
               )}
               <Route
                 path="/auth"
-                element={
+                element={withSuspense(
                   <AuthPage
                     onSuccess={() => window.location.replace('/')}
-                    onError={error => console.error('Auth error:', error)}
+                    onError={(error: unknown) =>
+                      console.error('Auth error:', error)
+                    }
                   />
-                }
+                )}
               />
-              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/profile" element={withSuspense(<ProfilePage />)} />
               <Route
                 path="/friend/:friendTelegramId"
-                element={
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <FriendProfilePage />
-                  </Suspense>
-                }
+                element={withSuspense(<FriendProfilePage />)}
               />
               <Route
                 path="/leaderboard"
-                element={
-                  <Suspense fallback={<LoadingSpinner />}>
-                    <LeaderboardPage />
-                  </Suspense>
-                }
+                element={withSuspense(<LeaderboardPage />)}
               />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
@@ -525,16 +574,22 @@ function App() {
                       exit={{ opacity: 0 }}
                       transition={routeTransition}
                     >
-                      <HomePage />
+                      {withSuspense(<HomePage />)}
                     </motion.div>
                   }
                 />
-                <Route path="/mobile" element={<MobileLayout />}>
-                  <Route index element={<MoodPage />} />
-                  <Route path="garden" element={<GardenPage />} />
-                  <Route path="tasks" element={<TasksPage />} />
-                  <Route path="community" element={<CommunityPage />} />
-                  <Route path="profile" element={<ProfilePage />} />
+                <Route path="/mobile" element={withSuspense(<MobileLayout />)}>
+                  <Route index element={withSuspense(<MoodPage />)} />
+                  <Route path="garden" element={withSuspense(<GardenPage />)} />
+                  <Route path="tasks" element={withSuspense(<TasksPage />)} />
+                  <Route
+                    path="community"
+                    element={withSuspense(<CommunityPage />)}
+                  />
+                  <Route
+                    path="profile"
+                    element={withSuspense(<ProfilePage />)}
+                  />
                 </Route>
                 <Route
                   path="/mobile/settings"
@@ -546,7 +601,7 @@ function App() {
                       exit={{ opacity: 0 }}
                       transition={routeTransition}
                     >
-                      <SettingsPage />
+                      {withSuspense(<SettingsPage />)}
                     </motion.div>
                   }
                 />
@@ -560,7 +615,7 @@ function App() {
                       exit={{ opacity: 0 }}
                       transition={routeTransition}
                     >
-                      <StatsPage />
+                      {withSuspense(<StatsPage />)}
                     </motion.div>
                   }
                 />
@@ -574,7 +629,7 @@ function App() {
                       exit={{ opacity: 0 }}
                       transition={routeTransition}
                     >
-                      <MoodRoadmapPage />
+                      {withSuspense(<MoodRoadmapPage />)}
                     </motion.div>
                   }
                 />
@@ -590,7 +645,7 @@ function App() {
                         transition={routeTransition}
                       >
                         <Suspense fallback={<LoadingSpinner />}>
-                          <ShowcasePage />
+                          {withSuspense(<ShowcasePage />)}
                         </Suspense>
                       </motion.div>
                     }
@@ -608,7 +663,7 @@ function App() {
                         transition={routeTransition}
                       >
                         <Suspense fallback={<LoadingSpinner />}>
-                          <TelegramTestPage />
+                          {withSuspense(<TelegramTestPage />)}
                         </Suspense>
                       </motion.div>
                     }
@@ -626,7 +681,7 @@ function App() {
                         transition={routeTransition}
                       >
                         <Suspense fallback={<LoadingSpinner />}>
-                          <StreakDebugPage />
+                          {withSuspense(<StreakDebugPage />)}
                         </Suspense>
                       </motion.div>
                     }
@@ -642,10 +697,14 @@ function App() {
                       exit={{ opacity: 0 }}
                       transition={routeTransition}
                     >
-                      <AuthPage
-                        onSuccess={() => window.location.replace('/')}
-                        onError={error => console.error('Auth error:', error)}
-                      />
+                      {withSuspense(
+                        <AuthPage
+                          onSuccess={() => window.location.replace('/')}
+                          onError={(error: unknown) =>
+                            console.error('Auth error:', error)
+                          }
+                        />
+                      )}
                     </motion.div>
                   }
                 />
@@ -659,7 +718,7 @@ function App() {
                       exit={{ opacity: 0 }}
                       transition={routeTransition}
                     >
-                      <ProfilePage />
+                      {withSuspense(<ProfilePage />)}
                     </motion.div>
                   }
                 />
@@ -673,9 +732,7 @@ function App() {
                       exit={{ opacity: 0 }}
                       transition={routeTransition}
                     >
-                      <Suspense fallback={<LoadingSpinner />}>
-                        <FriendProfilePage />
-                      </Suspense>
+                      {withSuspense(<FriendProfilePage />)}
                     </motion.div>
                   }
                 />
@@ -689,9 +746,7 @@ function App() {
                       exit={{ opacity: 0 }}
                       transition={routeTransition}
                     >
-                      <Suspense fallback={<LoadingSpinner />}>
-                        <LeaderboardPage />
-                      </Suspense>
+                      {withSuspense(<LeaderboardPage />)}
                     </motion.div>
                   }
                 />

@@ -5,37 +5,37 @@ import { GardenView } from '@/components/garden'
 import { MoodCheckin, MoodStats } from '@/components/mood'
 import { MobileLayout } from '@/components/layout/MobileLayout'
 import { Card, TextTyping } from '@/components/ui'
-import { useGardenState, useMoodTracking, useElementGeneration, useAnimationConfig } from '@/hooks'
+import {
+  useGardenState,
+  useMoodTracking,
+  useElementGeneration,
+  useAnimationConfig,
+} from '@/hooks'
 import { formatDate } from '@/utils/dateHelpers'
-import { useNavigate } from 'react-router-dom'
 
 export function HomePage() {
   const { garden: _garden, gardenStats } = useGardenState()
   const { todaysMood, streakCount } = useMoodTracking()
   const { canUnlock, getMilestoneInfo } = useElementGeneration()
   const { transition } = useAnimationConfig()
-  const [isMobile, setIsMobile] = useState(false)
-  const navigate = useNavigate()
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined'
+      ? window.matchMedia('(max-width: 767px)').matches
+      : false
+  )
 
   const milestoneInfo = getMilestoneInfo
 
-  // Check screen size
+  // Отслеживаем изменение медиа-запроса без навигации по роуту
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768) // md breakpoint
+    if (typeof window === 'undefined') return
+    const mediaQuery = window.matchMedia('(max-width: 767px)')
+    const handleChange = (event: MediaQueryListEvent) => {
+      setIsMobile(event.matches)
     }
-
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
   }, [])
-
-  // Mobile layout - redirect to mobile mood page
-  useEffect(() => {
-    if (isMobile) {
-      navigate('/mobile', { replace: true })
-    }
-  }, [isMobile, navigate])
 
   // Mobile layout
   if (isMobile) {
@@ -44,7 +44,7 @@ export function HomePage() {
 
   // Desktop layout
   return (
-    <div className="from-kira-50 min-h-screen bg-gradient-to-br via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
+    <div className="min-h-screen bg-gradient-to-br from-kira-50 via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
       <div className="container mx-auto max-w-7xl px-4 py-6">
         {/* Header - оптимизировано */}
         <motion.div
@@ -92,7 +92,7 @@ export function HomePage() {
               </Card>
 
               <Card padding="sm" className="glass-card text-center">
-                <div className="text-kira-600 dark:text-kira-400 mb-1 text-3xl font-bold">
+                <div className="mb-1 text-3xl font-bold text-kira-600 dark:text-kira-400">
                   {streakCount}
                 </div>
                 <div className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
@@ -124,7 +124,7 @@ export function HomePage() {
                   </div>
                   <div className="h-2 w-full rounded-full bg-neutral-200 dark:bg-neutral-700">
                     <motion.div
-                      className="from-kira-500 via-kira-400 h-2 rounded-full bg-gradient-to-r to-garden-500"
+                      className="h-2 rounded-full bg-gradient-to-r from-kira-500 via-kira-400 to-garden-500"
                       initial={{ width: 0 }}
                       animate={{ width: `${milestoneInfo.progress}%` }}
                       transition={transition}
