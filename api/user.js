@@ -1005,6 +1005,11 @@ async function handleUpdateRoomTheme(req, res) {
       'brick_room',
       'cyberpunk_room',
       'zodiac_room',
+      'dark_neon_room',
+      'high_tec_room',
+      'new_year_room',
+      'paint_room',
+      'prison_room',
     ]
 
     if (!validThemes.includes(roomTheme)) {

@@ -155,6 +155,46 @@ const ROOM_THEMES = [
     isDefault: false,
     previewUrl: '/isoRoom/zodiac_room.webp',
   },
+  {
+    id: 'dark_neon_room',
+    name: 'Тёмный неон',
+    priceSprouts: 1700,
+    priceGems: 17,
+    isDefault: false,
+    previewUrl: '/isoRoom/dark-neon_room.webp',
+  },
+  {
+    id: 'high_tec_room',
+    name: 'Хайтек',
+    priceSprouts: 1600,
+    priceGems: 16,
+    isDefault: false,
+    previewUrl: '/isoRoom/high-tec_room.webp',
+  },
+  {
+    id: 'new_year_room',
+    name: 'Новый год',
+    priceSprouts: 1400,
+    priceGems: 14,
+    isDefault: false,
+    previewUrl: '/isoRoom/new-year_room.webp',
+  },
+  {
+    id: 'paint_room',
+    name: 'Краски',
+    priceSprouts: 1250,
+    priceGems: 12,
+    isDefault: false,
+    previewUrl: '/isoRoom/paint_room.webp',
+  },
+  {
+    id: 'prison_room',
+    name: 'Камера',
+    priceSprouts: 900,
+    priceGems: 9,
+    isDefault: false,
+    previewUrl: '/isoRoom/prison_room.webp',
+  },
 ]
 
 // ===============================================

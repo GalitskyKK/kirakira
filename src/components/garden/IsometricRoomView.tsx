@@ -33,6 +33,11 @@ const ROOM_ASSETS: Record<string, string> = {
   brick_room: '/isoRoom/brick_room.webp',
   cyberpunk_room: '/isoRoom/cyberpunk_room.webp',
   zodiac_room: '/isoRoom/zodiac_room.webp',
+  dark_neon_room: '/isoRoom/dark-neon_room.webp',
+  high_tec_room: '/isoRoom/high-tec_room.webp',
+  new_year_room: '/isoRoom/new-year_room.webp',
+  paint_room: '/isoRoom/paint_room.webp',
+  prison_room: '/isoRoom/prison_room.webp',
 }
 
 // Позиции слотов для размещения элементов
