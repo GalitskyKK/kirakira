@@ -688,7 +688,7 @@ async function handleUpgradeElement(req, res) {
     // Универсальная обработка массива/объекта
     const result = Array.isArray(data) ? data[0] : data
 
-    // Проверяем результат функции
+    // Проверяем результат функцииe
     if (!result || !result.success) {
       console.log(`⚠️ Upgrade failed: ${result?.error}`)
       return res.status(400).json({
