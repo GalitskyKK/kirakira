@@ -52,7 +52,7 @@ export function MoodPage() {
 
   return (
     <>
-      <div className="space-y-6 p-4">
+      <div className="space-y-6">
         {/* Quick Status - serene minimalism */}
         <div className="text-center">
           <motion.div
