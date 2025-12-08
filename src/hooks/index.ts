@@ -30,6 +30,13 @@ export {
 export { useStreakFreeze } from './useStreakFreeze'
 export { useScrollToTop } from './useScrollToTop'
 export { useCurrencySync } from './useCurrencySync'
+export {
+  useFriendsData,
+  type Friend,
+  type FriendRequest,
+  type FriendsListData,
+  type SearchResult,
+} from './useFriendsData'
 
 // Additional utility hooks can be added here
 export { useGardenTheme } from './useGardenTheme'
