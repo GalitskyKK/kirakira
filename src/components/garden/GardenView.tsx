@@ -8,8 +8,6 @@ import { useMoodTracking } from '@/hooks/index.v2'
 import { useGardenClientStore } from '@/stores/gardenStore'
 import { GardenRoomManager } from './GardenRoomManager'
 import { IsometricRoomView } from './IsometricRoomView'
-import { GardenStats } from './GardenStats'
-import { PaletteMoodStats } from './PaletteMoodStats'
 import { ElementDetails } from './ElementDetails'
 import { PaletteView } from './PaletteView'
 import { LoadingOverlay, Card } from '@/components/ui'
@@ -237,43 +235,42 @@ export function GardenView({ className }: GardenViewProps) {
                 transition={{ duration: 0.3 }}
                 className="h-full"
               >
-                {/* Header */}
-                <div className="border-b border-gray-200 p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                {/* Compact controls */}
+                <div className="border-b border-gray-200 px-4 py-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                      <span className="rounded-full bg-neutral-100 px-2 py-1 font-semibold text-neutral-800 dark:bg-neutral-800 dark:text-neutral-100">
                         {displayMode === GardenDisplayMode.PALETTE
-                          ? 'Палитра Сада'
+                          ? 'Палитра'
                           : displayMode === GardenDisplayMode.ISOMETRIC_ROOM
-                            ? 'Моя Комната'
-                            : 'Мой Сад'}
-                      </h2>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                            ? 'Комната'
+                            : 'Сад'}
+                      </span>
+                      <span className="rounded-full bg-neutral-100 px-2 py-1 font-medium text-neutral-800 dark:bg-neutral-800 dark:text-neutral-100">
                         {displayMode === GardenDisplayMode.PALETTE
-                          ? `${moodHistory.length} ${moodHistory.length === 1 ? 'отметка настроения' : moodHistory.length < 5 ? 'отметки настроения' : 'отметок настроения'}`
-                          : `${garden.elements.length} ${garden.elements.length === 1 ? 'растение' : garden.elements.length < 5 ? 'растения' : 'растений'}`}
-                      </p>
+                          ? `${moodHistory.length} настроений`
+                          : `${garden.elements.length} элементов`}
+                      </span>
                     </div>
 
-                    <div className="flex space-x-2">
-                      {/* Режим перемещения элемента */}
+                    <div className="flex flex-wrap items-center gap-2">
                       {elementBeingMoved ? (
                         <>
-                          <div className="flex items-center space-x-2 rounded-lg bg-blue-50 px-3 py-1.5 dark:bg-blue-900/30">
+                          <div className="flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-1.5 dark:bg-blue-900/30">
                             <span className="text-sm text-blue-700 dark:text-blue-300">
                               Перемещение: {elementBeingMoved.name}
                             </span>
                           </div>
                           <button
                             onClick={handleConfirmMovement}
-                            className="rounded-lg bg-green-100 px-3 py-1.5 text-sm text-green-700 transition-colors hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50"
+                            className="rounded-lg bg-green-100 px-3 py-1.5 text-sm font-semibold text-green-700 transition-colors hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50"
                             title="Подтвердить перемещение"
                           >
                             ✓
                           </button>
                           <button
                             onClick={handleCancelMovement}
-                            className="rounded-lg bg-red-100 px-3 py-1.5 text-sm text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
+                            className="rounded-lg bg-red-100 px-3 py-1.5 text-sm font-semibold text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
                             title="Отменить перемещение"
                           >
                             ✕
@@ -303,7 +300,7 @@ export function GardenView({ className }: GardenViewProps) {
                             className={clsx(
                               'rounded-lg px-3 py-1.5 text-sm transition-colors',
                               viewMode === ViewMode.OVERVIEW
-                                ? 'bg-garden-100 text-garden-700 dark:bg-garden-700 dark:text-garden-100'
+                                ? 'bg-kira-100 text-kira-700 dark:bg-kira-800 dark:text-kira-100'
                                 : 'text-gray-600 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700'
                             )}
                           >
@@ -315,107 +312,72 @@ export function GardenView({ className }: GardenViewProps) {
                   </div>
                 </div>
 
-                {/* Mobile-first adaptive layout */}
-                <div className="flex flex-col lg:flex-row">
-                  {/* Garden Display - Switch between display modes */}
-                  <div
-                    className={clsx(
-                      displayMode === GardenDisplayMode.PALETTE
-                        ? 'flex min-h-[70vh] flex-1 items-center justify-center p-2 sm:p-4 lg:p-6'
-                        : 'flex-1 p-2 sm:p-4 lg:p-6'
-                    )}
-                  >
-                    <AnimatePresence mode="wait">
-                      {displayMode === GardenDisplayMode.PALETTE ? (
-                        <motion.div
-                          key="palette"
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          transition={{ duration: 0.3 }}
-                          className="flex h-full w-full items-center justify-center"
-                        >
-                          <PaletteView className="h-full w-full max-w-2xl" />
-                        </motion.div>
-                      ) : displayMode === GardenDisplayMode.ISOMETRIC_ROOM ? (
-                        <motion.div
-                          key="isometric-room"
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          transition={{ duration: 0.3 }}
-                          className="h-full min-h-[600px]"
-                        >
-                          <IsometricRoomView
-                            elements={garden.elements}
-                            selectedElement={selectedElement}
-                            elementBeingMoved={elementBeingMoved}
-                            viewMode={viewMode}
-                            currentRoomIndex={currentRoomIndex}
-                            onRoomChange={setCurrentRoomIndex}
-                            onElementClick={handleElementClick}
-                            onElementLongPress={handleElementLongPress}
-                            onSlotClick={handleSlotClick}
-                          />
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          key="garden"
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          transition={{ duration: 0.3 }}
-                          className="h-full"
-                        >
-                          <GardenRoomManager
-                            elements={garden.elements}
-                            selectedElement={selectedElement}
-                            draggedElement={draggedElement}
-                            elementBeingMoved={elementBeingMoved}
-                            viewMode={viewMode}
-                            currentRoomIndex={currentRoomIndex}
-                            onRoomChange={setCurrentRoomIndex}
-                            onElementClick={handleElementClick}
-                            onElementLongPress={handleElementLongPress}
-                            onSlotClick={handleSlotClick}
-                          />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Sidebar - Hidden on mobile, shown on desktop */}
-                  {viewMode === ViewMode.OVERVIEW && (
-                    <motion.div
-                      className="hidden border-t border-gray-200 p-4 lg:block lg:w-80 lg:border-l lg:border-t-0"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      {displayMode === GardenDisplayMode.PALETTE ? (
-                        <PaletteMoodStats />
-                      ) : (
-                        <GardenStats garden={garden} />
-                      )}
-                    </motion.div>
+                {/* Garden Display - Switch between display modes */}
+                <div
+                  className={clsx(
+                    displayMode === GardenDisplayMode.PALETTE
+                      ? 'flex min-h-[70vh] items-center justify-center p-2 sm:p-4 lg:p-6'
+                      : 'p-2 sm:p-4 lg:p-6'
                   )}
-                </div>
-
-                {/* Mobile Stats Panel - Only visible on mobile for overview mode */}
-                {viewMode === ViewMode.OVERVIEW && (
-                  <motion.div
-                    className="border-t border-gray-200 p-4 lg:hidden"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                  >
+                >
+                  <AnimatePresence mode="wait">
                     {displayMode === GardenDisplayMode.PALETTE ? (
-                      <PaletteMoodStats />
+                      <motion.div
+                        key="palette"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.3 }}
+                        className="flex h-full w-full items-center justify-center"
+                      >
+                        <PaletteView className="h-full w-full max-w-2xl" />
+                      </motion.div>
+                    ) : displayMode === GardenDisplayMode.ISOMETRIC_ROOM ? (
+                      <motion.div
+                        key="isometric-room"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.3 }}
+                        className="h-full min-h-[600px]"
+                      >
+                        <IsometricRoomView
+                          elements={garden.elements}
+                          selectedElement={selectedElement}
+                          elementBeingMoved={elementBeingMoved}
+                          viewMode={viewMode}
+                          currentRoomIndex={currentRoomIndex}
+                          onRoomChange={setCurrentRoomIndex}
+                          onElementClick={handleElementClick}
+                          onElementLongPress={handleElementLongPress}
+                          onSlotClick={handleSlotClick}
+                        />
+                      </motion.div>
                     ) : (
-                      <GardenStats garden={garden} />
+                      <motion.div
+                        key="garden"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.3 }}
+                        className="h-full"
+                      >
+                        <GardenRoomManager
+                          elements={garden.elements}
+                          selectedElement={selectedElement}
+                          draggedElement={draggedElement}
+                          elementBeingMoved={elementBeingMoved}
+                          viewMode={viewMode}
+                          currentRoomIndex={currentRoomIndex}
+                          onRoomChange={setCurrentRoomIndex}
+                          onElementClick={handleElementClick}
+                          onElementLongPress={handleElementLongPress}
+                          onSlotClick={handleSlotClick}
+                        />
+                      </motion.div>
                     )}
-                  </motion.div>
-                )}
+                  </AnimatePresence>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

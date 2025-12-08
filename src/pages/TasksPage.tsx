@@ -30,7 +30,7 @@ export function TasksPage() {
   return (
     <div className="space-y-4">
       {/* Табы */}
-      <div className="glass-card flex space-x-1 rounded-2xl p-1.5">
+      <div className="glass-card flex min-h-[56px] items-center space-x-1 rounded-2xl p-1.5">
         {[
           { id: 'daily', label: 'Ежедневные', icon: Calendar },
           { id: 'challenges', label: 'Челленджи', icon: Trophy },
@@ -42,7 +42,7 @@ export function TasksPage() {
               onClick={() => setActiveTab(tab.id as 'daily' | 'challenges')}
               className={`flex flex-1 items-center justify-center space-x-2 rounded-xl px-3 py-2 text-sm font-medium transition-all ${
                 activeTab === tab.id
-                  ? 'text-kira-600 dark:text-kira-400 bg-white shadow-md dark:bg-neutral-800'
+                  ? 'bg-white text-kira-600 shadow-md dark:bg-neutral-800 dark:text-kira-400'
                   : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100'
               }`}
             >
