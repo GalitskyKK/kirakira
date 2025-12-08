@@ -189,7 +189,7 @@ export function IsometricRoomView({
         className="relative h-full w-full overflow-hidden"
         style={{ minHeight: '500px' }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 transition-colors dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-800" />
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 transition-colors dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-800" />
         <ParticleCanvas
           theme={theme}
           shouldUseAnimations={true}
