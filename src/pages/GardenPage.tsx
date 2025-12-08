@@ -16,7 +16,7 @@ export function GardenPage() {
         : { title: 'Мой сад', Icon: Sprout, badge: 'Классика' }
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4">
       <div className="glass-card flex min-h-[56px] items-center justify-between rounded-2xl px-4 py-3">
         <div className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-200">
           <headerConfig.Icon className="h-4 w-4 text-kira-500" />
@@ -33,7 +33,7 @@ export function GardenPage() {
 
       {garden && (
         <div className="space-y-3">
-          <GardenStats garden={garden} />
+          <GardenStats garden={garden} displayMode={displayMode} />
         </div>
       )}
     </div>

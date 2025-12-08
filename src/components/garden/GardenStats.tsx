@@ -4,18 +4,20 @@ import { formatDistanceToNow } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { ChevronDown } from 'lucide-react'
 import { Card } from '@/components/ui'
-import type { Garden } from '@/types'
+import { GardenDisplayMode, type Garden } from '@/types'
 
 interface GardenStatsProps {
   readonly garden: Garden
+  readonly displayMode?: GardenDisplayMode
 }
 
 const COLLAPSED_LIMIT = 3
 
-export function GardenStats({ garden }: GardenStatsProps) {
+export function GardenStats({ garden, displayMode }: GardenStatsProps) {
   const [isTypeOpen, setIsTypeOpen] = useState(false)
   const [isRarityOpen, setIsRarityOpen] = useState(false)
   const [isMoodOpen, setIsMoodOpen] = useState(false)
+  const isPalette = displayMode === GardenDisplayMode.PALETTE
 
   const typeLabels: Record<string, string> = {
     flower: 'Цветок',
@@ -90,7 +92,7 @@ export function GardenStats({ garden }: GardenStatsProps) {
             oldestElement.unlockDate instanceof Date
               ? oldestElement.unlockDate
               : new Date(oldestElement.unlockDate),
-            { locale: ru, addSuffix: true }
+            { locale: ru, addSuffix: false }
           )
         : null,
     }
@@ -225,56 +227,82 @@ export function GardenStats({ garden }: GardenStatsProps) {
         </div>
       </Card>
 
-      {renderSection(
-        'По типам',
-        stats.byType,
-        isTypeOpen,
-        () => setIsTypeOpen(open => !open),
-        ([type, count], index) => (
-          <motion.div
-            key={type}
-            className="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/60"
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.03 }}
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-lg">{typeEmojis[type] ?? '🌿'}</span>
-              <span className="text-sm text-neutral-700 dark:text-neutral-200">
-                {typeLabels[type] ?? type}
-              </span>
+      {!isPalette && stats.newestElement && stats.newestElement.emoji && (
+        <Card padding="sm">
+          <h4 className="mb-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+            Последнее растение
+          </h4>
+          <div className="flex items-center gap-3 rounded-lg bg-neutral-50 px-3 py-2 dark:bg-neutral-800/60">
+            <div className="text-2xl">{stats.newestElement.emoji}</div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                {stats.newestElement.name}
+              </p>
+              <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                {formatDistanceToNow(
+                  stats.newestElement.unlockDate instanceof Date
+                    ? stats.newestElement.unlockDate
+                    : new Date(stats.newestElement.unlockDate),
+                  { locale: ru, addSuffix: false }
+                )}
+              </p>
             </div>
-            <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-              {count}
-            </span>
-          </motion.div>
-        )
+          </div>
+        </Card>
       )}
 
-      {renderSection(
-        'По редкости',
-        stats.byRarity,
-        isRarityOpen,
-        () => setIsRarityOpen(open => !open),
-        ([rarity, count], index) => (
-          <motion.div
-            key={rarity}
-            className="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/60"
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.03 }}
-          >
-            <span
-              className={`text-sm font-semibold ${rarityColors[rarity] ?? 'text-neutral-700 dark:text-neutral-200'}`}
+      {!isPalette &&
+        renderSection(
+          'По типам',
+          stats.byType,
+          isTypeOpen,
+          () => setIsTypeOpen(open => !open),
+          ([type, count], index) => (
+            <motion.div
+              key={type}
+              className="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/60"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.03 }}
             >
-              {rarityLabels[rarity] ?? rarity}
-            </span>
-            <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-              {count}
-            </span>
-          </motion.div>
-        )
-      )}
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{typeEmojis[type] ?? '🌿'}</span>
+                <span className="text-sm text-neutral-700 dark:text-neutral-200">
+                  {typeLabels[type] ?? type}
+                </span>
+              </div>
+              <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                {count}
+              </span>
+            </motion.div>
+          )
+        )}
+
+      {!isPalette &&
+        renderSection(
+          'По редкости',
+          stats.byRarity,
+          isRarityOpen,
+          () => setIsRarityOpen(open => !open),
+          ([rarity, count], index) => (
+            <motion.div
+              key={rarity}
+              className="flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/60"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.03 }}
+            >
+              <span
+                className={`text-sm font-semibold ${rarityColors[rarity] ?? 'text-neutral-700 dark:text-neutral-200'}`}
+              >
+                {rarityLabels[rarity] ?? rarity}
+              </span>
+              <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                {count}
+              </span>
+            </motion.div>
+          )
+        )}
 
       {renderSection(
         'По настроению',
@@ -297,30 +325,6 @@ export function GardenStats({ garden }: GardenStatsProps) {
             </span>
           </motion.div>
         )
-      )}
-
-      {stats.newestElement && stats.newestElement.emoji && (
-        <Card padding="sm">
-          <h4 className="mb-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-            Последнее растение
-          </h4>
-          <div className="flex items-center gap-3 rounded-lg bg-neutral-50 px-3 py-2 dark:bg-neutral-800/60">
-            <div className="text-2xl">{stats.newestElement.emoji}</div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                {stats.newestElement.name}
-              </p>
-              <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                {formatDistanceToNow(
-                  stats.newestElement.unlockDate instanceof Date
-                    ? stats.newestElement.unlockDate
-                    : new Date(stats.newestElement.unlockDate),
-                  { locale: ru, addSuffix: true }
-                )}
-              </p>
-            </div>
-          </div>
-        </Card>
       )}
     </div>
   )

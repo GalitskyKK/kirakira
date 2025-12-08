@@ -159,7 +159,7 @@ export function GardenRoomManager({
       </div>
 
       {/* Контейнер для комнат с анимацией */}
-      <div className="relative min-h-[650px] w-full overflow-hidden sm:min-h-[700px] lg:min-h-[750px]">
+      <div className="relative min-h-[650px] w-full overflow-hidden sm:min-h-[700px] lg:min-h-[750px] rounded-2xl">
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
             key={currentRoomIndex}
