@@ -117,7 +117,7 @@ export function convertServerUserToClient(
       garden: {
         ...DEFAULT_PREFERENCES.garden,
         friendViewMode: isValidDisplayMode(serverUser.friend_garden_display)
-          ? (serverUser.friend_garden_display as GardenDisplayMode)
+          ? serverUser.friend_garden_display
           : DEFAULT_PREFERENCES.garden.friendViewMode,
       },
       privacy: {

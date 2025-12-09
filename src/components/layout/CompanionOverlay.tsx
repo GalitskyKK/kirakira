@@ -9,17 +9,12 @@ import {
 } from '@/stores/companionStore'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useUserSync } from '@/hooks/index.v2'
-import type { CompanionPosition } from '@/types'
 
 export function CompanionOverlay() {
   const { isVisible } = useCompanionVisibility()
   const { isInfoOpen, setInfoOpen } = useCompanionInfoPanel()
-  const position = useCompanionStore(
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    state => state.position
-  ) as CompanionPosition
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  const isDragging = Boolean(useCompanionStore(state => state.isDragging))
+  const position = useCompanionStore(state => state.position)
+  const isDragging = useCompanionStore(state => state.isDragging)
 
   // Отслеживаем предыдущую сторону для определения смены
   const prevSideRef = useRef(position.side)

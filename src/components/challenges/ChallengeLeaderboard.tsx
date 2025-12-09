@@ -74,7 +74,7 @@ export function ChallengeLeaderboard({
       <Card className="p-6">
         <div className="space-y-4">
           <div className="h-6 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
-          {[...Array(5)].map((_, i) => (
+          {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex items-center space-x-3">
               <div className="h-10 w-10 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
               <div className="flex-1 space-y-2">

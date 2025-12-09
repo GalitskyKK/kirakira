@@ -236,6 +236,7 @@ export function TelegramShare({
       hapticFeedback('success')
       showAlert('Ссылка скопирована!')
     } catch (error) {
+      console.error('Clipboard copy failed, falling back to popup', error)
       // Fallback для старых браузеров
       if (webApp) {
         webApp.showPopup(

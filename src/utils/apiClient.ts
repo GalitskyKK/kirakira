@@ -65,11 +65,15 @@ export function decodeJWT(token: string): { telegram_id?: number } | null {
 
     const encodedPayload = parts[1]
     // Base64 URL decode
-    const payload = JSON.parse(
+    const payload: unknown = JSON.parse(
       atob(encodedPayload.replace(/-/g, '+').replace(/_/g, '/'))
     )
 
-    return payload
+    if (payload && typeof payload === 'object') {
+      return payload as { telegram_id?: number }
+    }
+
+    return null
   } catch (error) {
     console.warn('⚠️ Failed to decode JWT token:', error)
     return null
@@ -164,6 +168,11 @@ export async function authenticatedFetch(
   })
 }
 
+async function parseJson<T>(response: Response): Promise<T> {
+  const data: unknown = await response.json()
+  return data as T
+}
+
 /**
  * GET запрос с аутентификацией
  */
@@ -176,7 +185,7 @@ export async function apiGet<T = unknown>(url: string): Promise<T> {
     throw new Error(`API GET error: ${response.status} ${response.statusText}`)
   }
 
-  return response.json()
+  return parseJson<T>(response)
 }
 
 /**
@@ -195,7 +204,7 @@ export async function apiPost<T = unknown, B = unknown>(
     throw new Error(`API POST error: ${response.status} ${response.statusText}`)
   }
 
-  return response.json()
+  return parseJson<T>(response)
 }
 
 /**
@@ -214,7 +223,7 @@ export async function apiPut<T = unknown, B = unknown>(
     throw new Error(`API PUT error: ${response.status} ${response.statusText}`)
   }
 
-  return response.json()
+  return parseJson<T>(response)
 }
 
 /**
@@ -231,5 +240,5 @@ export async function apiDelete<T = unknown>(url: string): Promise<T> {
     )
   }
 
-  return response.json()
+  return parseJson<T>(response)
 }

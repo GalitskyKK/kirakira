@@ -1,6 +1,10 @@
 import { useCallback, useState } from 'react'
 import { useTelegram } from './useTelegram'
 import { authenticatedFetch } from '@/utils/apiClient'
+import type {
+  StandardApiResponse,
+  UserApiUpdatePhotoResponse,
+} from '@/types/api'
 
 interface PhotoUpdateResult {
   success: boolean
@@ -54,19 +58,19 @@ export function useUserPhotos() {
           }
         )
 
-        const result = await response.json()
+        const result = (await response.json()) as StandardApiResponse<UserApiUpdatePhotoResponse>
 
-        if (result.success) {
+        if (result.success && result.data) {
           return {
             success: true,
             photoUrl: result.data.photoUrl,
             message: result.data.message,
           }
-        } else {
-          return {
-            success: false,
-            error: result.error || 'Failed to update photo',
-          }
+        }
+
+        return {
+          success: false,
+          error: result.error ?? 'Failed to update photo',
         }
       } catch (error) {
         console.error('Error updating user photo:', error)
@@ -107,10 +111,22 @@ export function useUserPhotos() {
           }
         )
 
-        const result = await response.json()
+        const result = (await response.json()) as StandardApiResponse<{
+          total?: number
+          updated?: number
+          skipped?: number
+          errors?: number
+          message?: string
+        }>
 
-        if (result.success) {
-          const { total, updated, skipped, errors } = result.data
+        if (result.success && result.data) {
+          const {
+            total = 0,
+            updated = 0,
+            skipped = 0,
+            errors = 0,
+            message: serverMessage,
+          } = result.data
 
           // 🔥 ИСПРАВЛЕНИЕ: Упрощенное сообщение для пользователя
           let message: string
@@ -128,13 +144,13 @@ export function useUserPhotos() {
             updated,
             skipped,
             errors,
-            message,
+            message: message ?? serverMessage,
           }
-        } else {
-          return {
-            success: false,
-            error: result.error || 'Failed to update friends photos',
-          }
+        }
+
+        return {
+          success: false,
+          error: result.error ?? 'Failed to update friends photos',
         }
       } catch (error) {
         console.error('Error updating friends photos:', error)

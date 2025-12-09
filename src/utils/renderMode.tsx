@@ -45,20 +45,17 @@ export function useRenderMode() {
     React.useState<RenderMode>(getRenderMode)
 
   React.useEffect(() => {
-    const handleModeChange = (event: CustomEvent) => {
-      setRenderModeState(event.detail.mode)
+    const handleModeChange = (event: Event) => {
+      const customEvent = event as CustomEvent<{ mode?: RenderMode }>
+      if (customEvent.detail?.mode) {
+        setRenderModeState(customEvent.detail.mode)
+      }
     }
 
-    window.addEventListener(
-      'renderModeChanged',
-      handleModeChange as EventListener
-    )
+    window.addEventListener('renderModeChanged', handleModeChange)
 
     return () => {
-      window.removeEventListener(
-        'renderModeChanged',
-        handleModeChange as EventListener
-      )
+      window.removeEventListener('renderModeChanged', handleModeChange)
     }
   }, [])
 

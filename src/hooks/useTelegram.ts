@@ -255,7 +255,11 @@ export function useTelegramButtons() {
         if (params.color) mainButton.color = params.color
         if (params.textColor) mainButton.textColor = params.textColor
         if (params.isActive !== undefined) {
-          params.isActive ? mainButton.enable() : mainButton.disable()
+          if (params.isActive) {
+            mainButton.enable()
+          } else {
+            mainButton.disable()
+          }
         }
         mainButton.show()
       }
@@ -295,7 +299,11 @@ export function useTelegramButtons() {
         if (params.color) secondaryButton.color = params.color
         if (params.textColor) secondaryButton.textColor = params.textColor
         if (params.isActive !== undefined) {
-          params.isActive ? secondaryButton.enable() : secondaryButton.disable()
+          if (params.isActive) {
+            secondaryButton.enable()
+          } else {
+            secondaryButton.disable()
+          }
         }
         secondaryButton.show()
       }

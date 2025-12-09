@@ -17,7 +17,11 @@ import { Button, Card } from '@/components/ui'
 const loadOwnedThemesFromStorage = (): string[] => {
   try {
     const stored = localStorage.getItem('garden_owned_themes')
-    return stored ? JSON.parse(stored) : []
+    if (!stored) return []
+    const parsed: unknown = JSON.parse(stored)
+    return Array.isArray(parsed)
+      ? parsed.filter((id): id is string => typeof id === 'string')
+      : []
   } catch {
     return []
   }
@@ -29,6 +33,20 @@ const saveOwnedThemesToStorage = (themeIds: string[]): void => {
   } catch {
     // Игнорируем ошибки localStorage
   }
+}
+
+interface ThemesCatalogResponse {
+  readonly success: boolean
+  readonly data?: {
+    readonly themes: Array<{
+      readonly id: string
+      readonly name: string
+      readonly priceSprouts: number
+      readonly isDefault: boolean
+    }>
+    readonly ownedThemeIds: string[]
+  }
+  readonly error?: string
 }
 
 interface ThemeShopProps {
@@ -160,29 +178,15 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
         saveOwnedThemesToStorage(updatedOwned)
 
         // Принудительно обновляем React Query кеш
-        queryClient.setQueryData(
+        queryClient.setQueryData<ThemesCatalogResponse | undefined>(
           ['themes', 'catalog'],
-          (oldData: ReturnType<typeof Object> | undefined) => {
-            type ThemesCatalogResponse = {
-              success: boolean
-              data?: {
-                themes: Array<{
-                  id: string
-                  name: string
-                  priceSprouts: number
-                  isDefault: boolean
-                }>
-                ownedThemeIds: string[]
-              }
-              error?: string
-            }
-            const casted = oldData as ThemesCatalogResponse | undefined
-            if (casted?.success && casted.data?.ownedThemeIds) {
+          oldData => {
+            if (oldData?.success && oldData.data?.ownedThemeIds) {
               return {
-                ...casted,
+                ...oldData,
                 data: {
-                  ...casted.data,
-                  ownedThemeIds: [...casted.data.ownedThemeIds, themeId],
+                  ...oldData.data,
+                  ownedThemeIds: [...oldData.data.ownedThemeIds, themeId],
                 },
               }
             }

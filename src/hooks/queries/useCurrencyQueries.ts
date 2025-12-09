@@ -17,6 +17,11 @@ import type {
   CurrencyReason,
 } from '@/types/currency'
 
+type CurrencyMutationResponse = StandardApiResponse<{
+  balance_after: number
+  transaction_id: string
+}>
+
 // ============================================
 // QUERY KEYS - Константы для React Query
 // ============================================
@@ -136,12 +141,12 @@ async function earnCurrency(
     throw new Error(`Failed to earn currency: ${response.status}`)
   }
 
-  const result = await response.json()
+  const result = (await response.json()) as CurrencyMutationResponse
 
-  if (!result.success) {
+  if (!result.success || !result.data) {
     return {
       success: false,
-      error: result.error || 'Failed to earn currency',
+      error: result.error ?? 'Failed to earn currency',
     }
   }
 
@@ -185,12 +190,12 @@ async function spendCurrency(
     throw new Error(`Failed to spend currency: ${response.status}`)
   }
 
-  const result = await response.json()
+  const result = (await response.json()) as CurrencyMutationResponse
 
-  if (!result.success) {
+  if (!result.success || !result.data) {
     return {
       success: false,
-      error: result.error || 'Insufficient funds',
+      error: result.error ?? 'Insufficient funds',
     }
   }
 

@@ -37,6 +37,7 @@ import {
 } from '@/utils/elementNames'
 import { getCurrentSeason } from '@/utils/elementGeneration'
 import { PaletteView } from './PaletteView'
+import type { StandardApiResponse } from '@/types/api'
 
 // Типы для данных друга и его сада
 interface FriendInfo {
@@ -142,11 +143,11 @@ export function FriendGardenView({
         `/api/garden?action=view-friend-garden&viewerTelegramId=${currentUser.telegramId}&friendTelegramId=${friendTelegramId}`
       )
 
-      const result = await response.json()
+      const result = (await response.json()) as StandardApiResponse<FriendGardenData>
 
-      if (!response.ok || !result.success) {
+      if (!response.ok || !result.success || !result.data) {
         // Преобразуем английские ошибки в русские user-friendly сообщения
-        const errorMessage = result.error || 'Failed to load friend garden'
+        const errorMessage = result.error ?? 'Failed to load friend garden'
         let russianError = 'Не удалось загрузить сад друга'
 
         if (

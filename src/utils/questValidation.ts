@@ -61,12 +61,14 @@ export function validateQuestCondition(
     case 'maintain_streak':
       return validateMaintainStreakQuest(quest, context)
 
-    default:
+    default: {
+      const unreachable: never = questType
       return {
         isValid: false,
-        reason: `Unknown quest type: ${questType}`,
+        reason: `Unknown quest type: ${String(unreachable)}`,
         shouldIncrement: 0,
       }
+    }
   }
 }
 
@@ -88,11 +90,16 @@ function validateMoodQuest(
   }
 
   // Проверяем, соответствует ли тип настроения требованию квеста
-  const requiredMood = quest.metadata?.['requiredMood']
+  const requiredMood =
+    typeof quest.metadata?.['requiredMood'] === 'string'
+      ? quest.metadata['requiredMood']
+      : undefined
   if (requiredMood && context.moodType !== requiredMood) {
+    const requiredMoodLabel: string = requiredMood
+    const actualMood = context.moodType ?? 'unknown'
     return {
       isValid: false,
-      reason: `Wrong mood type. Required: ${requiredMood}, got: ${context.moodType}`,
+      reason: `Wrong mood type. Required: ${requiredMoodLabel}, got: ${actualMood}`,
       shouldIncrement: 0,
     }
   }

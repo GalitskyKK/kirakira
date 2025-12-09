@@ -57,7 +57,7 @@ export function ChallengeRewardModal({
           >
             {/* Confetti эффект */}
             <div className="pointer-events-none absolute inset-0">
-              {[...Array(30)].map((_, i) => (
+              {Array.from({ length: 30 }).map((_, i) => (
                 <motion.div
                   key={i}
                   className="absolute h-2 w-2 rounded-full bg-yellow-400"

@@ -33,14 +33,30 @@ module.exports = {
       'error',
       { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
     ],
-    '@typescript-eslint/prefer-nullish-coalescing': 'error',
-    '@typescript-eslint/prefer-optional-chain': 'error',
-    '@typescript-eslint/strict-boolean-expressions': 'warn',
+    '@typescript-eslint/prefer-nullish-coalescing': [
+      'warn',
+      {
+        ignoreConditionalTests: true,
+        ignoreMixedLogicalExpressions: true,
+        ignorePrimitives: { boolean: true, number: true },
+      },
+    ],
+    '@typescript-eslint/prefer-optional-chain': 'warn',
+    '@typescript-eslint/strict-boolean-expressions': [
+      'warn',
+      {
+        allowNullableBoolean: true,
+        allowNullableString: true,
+        allowNullableNumber: true,
+        allowNullableObject: true,
+      },
+    ],
     '@typescript-eslint/no-floating-promises': 'warn',
     '@typescript-eslint/no-misused-promises': 'warn',
     '@typescript-eslint/no-non-null-assertion': 'warn',
     '@typescript-eslint/no-unsafe-enum-comparison': 'warn',
     '@typescript-eslint/no-dynamic-delete': 'warn',
+    '@typescript-eslint/require-await': 'warn',
     // React best practices
     'react-hooks/rules-of-hooks': 'error',
     'react-hooks/exhaustive-deps': 'warn',

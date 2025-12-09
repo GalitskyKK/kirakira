@@ -87,7 +87,7 @@ export function ChallengeList({ garden: _garden }: ChallengeListProps) {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        {[...Array(3)].map((_, i) => (
+        {Array.from({ length: 3 }).map((_, i) => (
           <Card key={i} className="p-4">
             <div className="space-y-3">
               <div className="h-6 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />

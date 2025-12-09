@@ -85,7 +85,7 @@ export function TelegramTestSuite() {
       testResults.push({
         name: 'Haptic Feedback',
         status: 'fail',
-        message: `Ошибка haptic feedback: ${error}`,
+        message: `Ошибка haptic feedback: ${String(error)}`,
       })
     }
 
@@ -117,7 +117,7 @@ export function TelegramTestSuite() {
       testResults.push({
         name: 'Cloud Storage',
         status: 'fail',
-        message: `Ошибка CloudStorage: ${error}`,
+        message: `Ошибка CloudStorage: ${String(error)}`,
       })
     }
 
@@ -147,7 +147,7 @@ export function TelegramTestSuite() {
       testResults.push({
         name: 'Main Button',
         status: 'fail',
-        message: `Ошибка MainButton: ${error}`,
+        message: `Ошибка MainButton: ${String(error)}`,
       })
     }
 

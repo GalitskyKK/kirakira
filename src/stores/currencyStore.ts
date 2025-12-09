@@ -7,6 +7,7 @@
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import type { UserCurrency, CurrencyTransaction } from '@/types/currency'
+import { hasEnoughCurrency } from '@/types/currency'
 
 // ============================================
 // ТИПЫ СОСТОЯНИЯ
@@ -75,7 +76,6 @@ export const useCurrencyClientStore = create<CurrencyClientState>()(
       const { userCurrency } = get()
       if (!userCurrency) return false
 
-      const { hasEnoughCurrency } = require('@/types/currency')
       return hasEnoughCurrency(userCurrency, cost)
     },
 

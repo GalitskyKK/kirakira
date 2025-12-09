@@ -136,7 +136,7 @@ export function UpgradeAnimation({
       {/* Дополнительные particles для legendary */}
       {rarity === 'legendary' && (
         <div className="absolute inset-0">
-          {[...Array(20)].map((_, i) => (
+          {Array.from({ length: 20 }).map((_, i) => (
             <motion.div
               key={i}
               initial={{
@@ -170,7 +170,7 @@ export function UpgradeAnimation({
       {/* Круговые волны для epic и legendary */}
       {(rarity === 'epic' || rarity === 'legendary') && (
         <>
-          {[...Array(3)].map((_, i) => (
+          {Array.from({ length: 3 }).map((_, i) => (
             <motion.div
               key={`wave-${i}`}
               initial={{ scale: 0, opacity: 0.8 }}

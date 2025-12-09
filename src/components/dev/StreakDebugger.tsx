@@ -133,9 +133,19 @@ export function StreakDebugger() {
             const historyResponseText = await historyResponse.text()
 
             try {
-              const historyResult = JSON.parse(historyResponseText)
+              const historyResult = JSON.parse(
+                historyResponseText
+              ) as StandardApiResponse<{
+                moodHistory?: Array<{
+                  id: string
+                  mood_date?: string
+                  mood?: string
+                  intensity?: number
+                  created_at?: string
+                }>
+              }>
 
-              if (historyResult.success && historyResult.data.moodHistory) {
+              if (historyResult.success && historyResult.data?.moodHistory) {
                 // Вычисляем streak напрямую из БД данных
                 const dbMoods = historyResult.data.moodHistory
                 const dbStreak = calculateDatabaseStreak(dbMoods)

@@ -31,10 +31,10 @@ export async function updateGardenTheme(
     )
 
     if (!response.ok) {
-      const errorData = await response.json()
+      const errorData = (await response.json()) as { error?: string }
       return {
         success: false,
-        error: errorData.error || `HTTP ${response.status}`,
+        error: errorData?.error ?? `HTTP ${response.status}`,
       }
     }
 

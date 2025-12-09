@@ -6,6 +6,7 @@
  */
 
 import { authenticatedFetch } from '@/utils/apiClient'
+import type { StandardApiResponse, CurrencyApiTransactionResponse } from '@/types/api'
 import {
   type CurrencyType,
   type CurrencyReason,
@@ -57,20 +58,23 @@ export async function awardCurrency(
       throw new Error(`Failed to earn currency: ${response.status}`)
     }
 
-    const result = await response.json()
+    const result = (await response.json()) as StandardApiResponse<{
+      balance_after: number
+      transaction_id: string
+    }>
 
-    if (!result.success) {
+    if (!result.success || !result.data) {
       console.error(`❌ Failed to award currency: ${result.error}`)
       return {
         success: false,
-        error: result.error || 'Failed to earn currency',
+        error: result.error ?? 'Failed to earn currency',
       }
     }
 
     return {
       success: true,
-      newBalance: result.data?.balance_after,
-      transactionId: result.data?.transaction_id,
+      newBalance: result.data.balance_after,
+      transactionId: result.data.transaction_id,
     }
   } catch (error) {
     console.error('❌ Error awarding currency:', error)
@@ -494,13 +498,13 @@ export async function getCurrencyEarnedStats(
       throw new Error(`Failed to load transactions: ${response.status}`)
     }
 
-    const result = await response.json()
+    const result = (await response.json()) as StandardApiResponse<CurrencyApiTransactionResponse>
 
     if (!result.success || !result.data) {
-      throw new Error(result.error || 'Failed to load transactions')
+      throw new Error(result.error ?? 'Failed to load transactions')
     }
 
-    const transactions = result.data.transactions || []
+    const transactions = result.data.transactions ?? []
 
     // Фильтруем по дате если указано
     const filteredTransactions = transactions.filter(

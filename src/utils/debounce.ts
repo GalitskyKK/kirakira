@@ -3,14 +3,13 @@
  * Предотвращает слишком частое выполнение функций
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export function debounce<T extends (...args: any[]) => any>(
-  func: T,
+export function debounce<Args extends readonly unknown[], R>(
+  func: (...args: Args) => R,
   wait: number
-): (...args: Parameters<T>) => void {
+): (...args: Args) => void {
   let timeout: ReturnType<typeof setTimeout> | null = null
 
-  return function executedFunction(...args: Parameters<T>) {
+  return function executedFunction(...args: Args) {
     const later = () => {
       timeout = null
       func(...args)
@@ -27,14 +26,14 @@ export function debounce<T extends (...args: any[]) => any>(
  * Утилита для троттлинга функций
  * Ограничивает частоту выполнения функции
  */
-export function throttle<T extends (...args: any[]) => any>(
-  func: T,
+export function throttle<Args extends readonly unknown[], R>(
+  func: (...args: Args) => R,
   limit: number
-): (...args: Parameters<T>) => void {
+): (...args: Args) => R | undefined {
   let inThrottle: boolean = false
-  let lastResult: ReturnType<T>
+  let lastResult: R | undefined
 
-  return function executedFunction(...args: Parameters<T>) {
+  return function executedFunction(...args: Args) {
     if (!inThrottle) {
       lastResult = func(...args)
       inThrottle = true
@@ -63,7 +62,7 @@ export function createBatcher<T, R>(
   let timeout: ReturnType<typeof setTimeout> | null = null
   let resolvers: Array<{
     readonly resolve: (value: R) => void
-    readonly reject: (reason?: any) => void
+    readonly reject: (reason?: unknown) => void
   }> = []
 
   const flush = async () => {

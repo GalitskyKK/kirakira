@@ -39,6 +39,24 @@ function TreeSVGComponent({
 
   const prefersReducedMotion = useReducedMotion()
   const repeatInf = isVisible && !prefersReducedMotion && !staticMode ? Infinity : 0
+  const shouldRenderWindParticles =
+    !staticMode &&
+    (rarity === RarityLevel.LEGENDARY || rarity === RarityLevel.EPIC)
+
+  const windParticles = useMemo(() => {
+    const count = 5
+    const items: Array<{ key: number; left: string; top: string }> = []
+    const pseudoRandom = (seed: number): number => {
+      const x = Math.sin(seed) * 10000
+      return x - Math.floor(x)
+    }
+    for (let i = 0; i < count; i++) {
+      const left = 10 + pseudoRandom(100 + i) * 80
+      const top = 10 + pseudoRandom(200 + i) * 30
+      items.push({ key: i, left: `${left}%`, top: `${top}%` })
+    }
+    return items
+  }, [])
 
   const getRarityGlow = useMemo(() => {
     switch (rarity) {
@@ -627,41 +645,27 @@ function TreeSVGComponent({
       }}
     >
       {/* Wind particles for legendary trees - оптимизировано */}
-      {!staticMode && (rarity === RarityLevel.LEGENDARY || rarity === RarityLevel.EPIC) && (
+      {shouldRenderWindParticles && (
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          {useMemo(() => {
-            const count = 5 // Уменьшено с 8 до 5
-            const items = [] as Array<{ key: number; left: string; top: string }>
-            const pseudoRandom = (seed: number): number => {
-              const x = Math.sin(seed) * 10000
-              return x - Math.floor(x)
-            }
-            for (let i = 0; i < count; i++) {
-              const left = 10 + pseudoRandom(100 + i) * 80
-              const top = 10 + pseudoRandom(200 + i) * 30
-              items.push({ key: i, left: `${left}%`, top: `${top}%` })
-            }
-            return items
-          }, [])
-            .map((p, i) => (
-              <motion.div
-                key={p.key}
-                className="absolute h-1 w-1 rounded-full bg-green-300"
-                style={{ left: p.left, top: p.top, willChange: 'transform, opacity' }}
-                animate={{
-                  x: [0, 50, -20, 0],
-                  y: [0, -20, 10, 0],
-                  opacity: [0, 1, 0.5, 0],
-                  scale: [0.5, 1, 0.8, 0.5],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: repeatInf,
-                  delay: i * 0.5,
-                  ease: 'easeInOut',
-                }}
-              />
-            ))}
+          {windParticles.map((p, i) => (
+            <motion.div
+              key={p.key}
+              className="absolute h-1 w-1 rounded-full bg-green-300"
+              style={{ left: p.left, top: p.top, willChange: 'transform, opacity' }}
+              animate={{
+                x: [0, 50, -20, 0],
+                y: [0, -20, 10, 0],
+                opacity: [0, 1, 0.5, 0],
+                scale: [0.5, 1, 0.8, 0.5],
+              }}
+              transition={{
+                duration: 4,
+                repeat: repeatInf,
+                delay: i * 0.5,
+                ease: 'easeInOut',
+              }}
+            />
+          ))}
         </div>
       )}
 

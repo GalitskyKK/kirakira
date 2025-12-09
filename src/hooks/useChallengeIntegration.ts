@@ -15,6 +15,7 @@ import {
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { authenticatedFetch } from '@/utils/apiClient'
+import type { StandardApiResponse } from '@/types/api'
 
 export function useChallengeIntegration() {
   const telegramId = useTelegramId()
@@ -125,7 +126,7 @@ export function useChallengeIntegration() {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
-      const result = await response.json()
+      const result = (await response.json()) as StandardApiResponse<unknown>
 
       if (result.success) {
         // ✅ УЛУЧШЕНИЕ: Инвалидируем кеш только при успехе
@@ -277,7 +278,7 @@ export function useChallengeGardenIntegration() {
   const onGardenElementAdded = useCallback(async () => {
     try {
       await updateProgressRef.current()
-    } catch (error) {
+    } catch {
       // Ошибки не критичны, т.к. прогресс можно обновить позже
     }
   }, []) // 🔑 Пустой массив зависимостей - функция стабильна
@@ -300,7 +301,7 @@ export function useChallengeMoodIntegration() {
   const onMoodEntryAdded = useCallback(async () => {
     try {
       await updateProgressRef.current()
-    } catch (error) {
+    } catch {
       // Ошибки не критичны, т.к. прогресс можно обновить позже
     }
   }, []) // 🔑 Пустой массив зависимостей - функция стабильна

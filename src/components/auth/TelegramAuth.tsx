@@ -62,7 +62,11 @@ export function TelegramAuth({ onSuccess, onError }: TelegramAuthProps) {
               throw new Error('Ошибка авторизации на сервере')
             }
 
-            const authResult = await authResponse.json()
+            const authResult = (await authResponse.json()) as {
+              success: boolean
+              data?: { token?: string }
+              error?: string
+            }
             if (!authResult.success || !authResult.data?.token) {
               throw new Error('Не удалось получить токен авторизации')
             }
