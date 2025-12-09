@@ -37,7 +37,7 @@ export function validateTelegramLoginWidget(loginData, botToken) {
       .update(botToken)
       .digest()
 
-    // Вычисляем hash
+    // Вычисляем hash crypto
     const calculatedHash = crypto
       .createHmac('sha256', secretKey)
       .update(dataCheckString)
