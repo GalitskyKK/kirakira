@@ -4,7 +4,10 @@ import { Card } from '@/components/ui'
 import { useUserSync, useMoodSync, useTelegramId } from '@/hooks/index.v2'
 import { calculateMoodStats } from '@/utils/moodMapping'
 import { formatDate } from '@/utils/dateHelpers'
-import type { StandardApiResponse, ProfileApiGetProfileResponse } from '@/types/api'
+import type {
+  StandardApiResponse,
+  ProfileApiGetProfileResponse,
+} from '@/types/api'
 import type { MoodEntry } from '@/types'
 import { authenticatedFetch } from '@/utils/apiClient'
 
@@ -42,7 +45,7 @@ export function StreakDebugger() {
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
   const currentUser = userData?.user
-  
+
   // Получаем данные настроений через React Query
   const { data: moodData, refetch: refetchMood } = useMoodSync(
     telegramId,
@@ -50,7 +53,7 @@ export function StreakDebugger() {
     !!telegramId && !!currentUser?.id
   )
   const moodHistory = moodData?.moods ?? []
-  
+
   const [debugInfo, setDebugInfo] = useState<StreakDebugInfo | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [testTelegramId, setTestTelegramId] = useState('')
@@ -209,10 +212,12 @@ export function StreakDebugger() {
   }
 
   // Вычисляем streak из данных БД (копия логики из user.js)
-  const calculateDatabaseStreak = (moods: {
-    mood_date?: string
-    date?: Date
-  }[]) => {
+  const calculateDatabaseStreak = (
+    moods: {
+      mood_date?: string
+      date?: Date
+    }[]
+  ) => {
     if (!moods || moods.length === 0) {
       return { current: 0, longest: 0 }
     }
@@ -231,7 +236,9 @@ export function StreakDebugger() {
     for (let i = 0; i < sortedMoods.length; i++) {
       const mood = sortedMoods[i]
       if (!mood) continue
-      const moodDate = new Date((mood.mood_date ?? (mood.date as Date)).toString())
+      const moodDate = new Date(
+        (mood.mood_date ?? (mood.date as Date)).toString()
+      )
       const daysDiff = Math.floor(
         (today.getTime() - moodDate.getTime()) / (1000 * 60 * 60 * 24)
       )
@@ -354,7 +361,7 @@ export function StreakDebugger() {
                 </code>{' '}
                 или тестируйте на{' '}
                 <a
-                  href="https://kirakira-theta.vercel.app/streak-debug"
+                  href="https://kirakiragarden.ru/streak-debug"
                   className="underline"
                   target="_blank"
                   rel="noopener noreferrer"

@@ -256,10 +256,22 @@ export async function authenticateTelegramUser(req) {
 export function withAuth(handler) {
   return async (req, res) => {
     // 🔒 CORS headers - строгая политика (устанавливаем до проверки авторизации)
-    const allowedOrigin =
-      process.env.VITE_APP_URL || 'https://kirakira-theta.vercel.app'
+    const allowedOrigins = [
+      'https://kirakiragarden.ru',
+      'https://www.kirakiragarden.ru',
+      'https://kirakira-theta.vercel.app',
+      'http://localhost:3000', // Для локальной разработки
+      'http://localhost:5173', // Vite дефолтный порт
+    ]
+    const origin = req.headers.origin
+    const defaultOrigin =
+      process.env.VITE_APP_URL || 'https://kirakiragarden.ru'
 
-    res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
+    if (origin && allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin)
+    } else if (defaultOrigin) {
+      res.setHeader('Access-Control-Allow-Origin', defaultOrigin)
+    }
     res.setHeader(
       'Access-Control-Allow-Methods',
       'GET, POST, PUT, DELETE, OPTIONS'

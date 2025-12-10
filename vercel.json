@@ -22,7 +22,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://kirakira-theta.vercel.app"
+          "value": "https://kirakiragarden.ru"
         },
         {
           "key": "Access-Control-Allow-Methods",

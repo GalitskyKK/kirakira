@@ -464,8 +464,7 @@ const BOT_TOKEN =
   process.env.TELEGRAM_BOT_TOKEN || process.env.VITE_TELEGRAM_BOT_TOKEN
 
 // Всегда используем production URL для внутренних API вызовов
-const MINI_APP_URL =
-  process.env.VITE_APP_URL || 'https://kirakira-theta.vercel.app'
+const MINI_APP_URL = process.env.VITE_APP_URL || 'https://kirakiragarden.ru'
 
 console.log(
   `🔧 Bot config: BOT_TOKEN=${BOT_TOKEN ? 'SET' : 'MISSING'}, MINI_APP_URL=${MINI_APP_URL}`

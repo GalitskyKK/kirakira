@@ -58,8 +58,7 @@ const NOTIFICATION_TIME = {
 // Конфигурация
 const BOT_TOKEN =
   process.env.TELEGRAM_BOT_TOKEN || process.env.VITE_TELEGRAM_BOT_TOKEN
-const MINI_APP_URL =
-  process.env.VITE_APP_URL || 'https://kirakira-theta.vercel.app'
+const MINI_APP_URL = process.env.VITE_APP_URL || 'https://kirakiragarden.ru'
 
 /**
  * Получает всех активных пользователей для уведомлений

@@ -45,13 +45,15 @@ export function TelegramLoginWidget({
     if (scriptLoadedRef.current || !ref.current) return
 
     // Функция обратного вызова для Telegram
-    const callbackName = `telegramCallback_${Math.random().toString(36).substr(2, 9)}`
+    const callbackName = `telegramCallback_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`
 
-    ;(window as unknown as Record<string, (user: TelegramLoginData) => void>)[
-      callbackName
-    ] = (user: TelegramLoginData) => {
-      onAuth(user)
-    }
+    const globalCallbacks = window as unknown as Record<
+      string,
+      (user: TelegramLoginData) => void
+    >
+    globalCallbacks[callbackName] = (user: TelegramLoginData) => onAuth(user)
 
     // Очистка контейнера
     if (ref.current) {
@@ -67,7 +69,8 @@ export function TelegramLoginWidget({
     script.setAttribute('data-radius', cornerRadius.toString())
     script.setAttribute('data-request-access', requestAccess ? 'write' : '')
     script.setAttribute('data-lang', lang)
-    script.setAttribute('data-onauth', callbackName)
+    // Telegram ожидает JS-выражение, поэтому явно вызываем коллбэк с аргументом
+    script.setAttribute('data-onauth', `${callbackName}(user)`)
 
     script.onerror = () => {
       console.error('Failed to load Telegram login widget')
