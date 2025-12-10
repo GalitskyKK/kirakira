@@ -39,15 +39,14 @@ export function TelegramLoginWidget({
   lang = 'ru',
 }: TelegramLoginWidgetProps) {
   const ref = useRef<HTMLDivElement>(null)
-  const scriptLoadedRef = useRef(false)
   const callbackNameRef = useRef(
     `telegramCallback_${Math.random().toString(36).slice(2, 11)}`
   )
 
   useEffect(() => {
-    if (scriptLoadedRef.current || !ref.current) return
+    if (!ref.current) return
 
-    // Функция обратного вызова для Telegram
+    const container = ref.current
     const callbackName = callbackNameRef.current
 
     const globalCallbacks = window as unknown as Record<
@@ -60,9 +59,7 @@ export function TelegramLoginWidget({
     }
 
     // Очистка контейнера
-    if (ref.current) {
-      ref.current.innerHTML = ''
-    }
+    container.innerHTML = ''
 
     // Создаем скрипт для Telegram Login Widget
     const script = document.createElement('script')
@@ -82,7 +79,6 @@ export function TelegramLoginWidget({
     }
 
     script.onload = () => {
-      scriptLoadedRef.current = true
       console.info(
         '[TelegramLoginWidget] script loaded, callback:',
         callbackName
@@ -90,9 +86,7 @@ export function TelegramLoginWidget({
     }
 
     // Добавляем скрипт в контейнер
-    if (ref.current) {
-      ref.current.appendChild(script)
-    }
+    container.appendChild(script)
 
     // Cleanup функция
     return () => {
@@ -100,14 +94,8 @@ export function TelegramLoginWidget({
         string,
         (user: TelegramLoginData) => void
       >
-      if (windowWithCallback[callbackName]) {
-        delete windowWithCallback[callbackName]
-      }
-      // Удаляем вставленный скрипт/виджет, чтобы после strict-mode ремонта не было старой ссылки
-      if (ref.current) {
-        ref.current.innerHTML = ''
-      }
-      scriptLoadedRef.current = false
+      Reflect.deleteProperty(windowWithCallback, callbackName)
+      container.innerHTML = ''
     }
   }, [botName, onAuth, onError, buttonSize, cornerRadius, requestAccess, lang])
 
