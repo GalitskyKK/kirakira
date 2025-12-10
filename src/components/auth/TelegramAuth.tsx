@@ -37,8 +37,13 @@ export function TelegramAuth({ onSuccess, onError }: TelegramAuthProps) {
       setAuthError(null)
 
       try {
-        // Если не в Telegram Mini App - получаем JWT токен через API
-        if (!isTelegramEnv) {
+        const hasInitData =
+          typeof window !== 'undefined' &&
+          !!window.Telegram?.WebApp?.initData &&
+          window.Telegram.WebApp.initData.length > 0
+
+        // Если нет initData (браузерный сценарий) - получаем JWT токен через API
+        if (!hasInitData) {
           try {
             const authResponse = await fetch('/api/auth', {
               method: 'POST',
@@ -111,7 +116,7 @@ export function TelegramAuth({ onSuccess, onError }: TelegramAuthProps) {
         setIsLoading(false)
       }
     },
-    [queryClient, completeOnboarding, onSuccess, onError, isTelegramEnv]
+    [queryClient, completeOnboarding, onSuccess, onError]
   )
 
   const handleAuthError = useCallback(
