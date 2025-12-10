@@ -31,11 +31,9 @@ export function validateTelegramLoginWidget(loginData, botToken) {
       })
       .join('\n')
 
-    // Создаем секретный ключ из токена бота
-    const secretKey = crypto
-      .createHmac('sha256', 'WebAppData')
-      .update(botToken)
-      .digest()
+    // Создаем секретный ключ из токена бота согласно доке Telegram Login Widget:
+    // secret_key = SHA256(bot_token)
+    const secretKey = crypto.createHash('sha256').update(botToken).digest()
 
     // Вычисляем hash crypto
     const calculatedHash = crypto
