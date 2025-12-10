@@ -54,7 +54,10 @@ export function TelegramLoginWidget({
       string,
       (user: TelegramLoginData) => void
     >
-    globalCallbacks[callbackName] = (user: TelegramLoginData) => onAuth(user)
+    globalCallbacks[callbackName] = (user: TelegramLoginData) => {
+      console.info('[TelegramLoginWidget] onAuth', user)
+      onAuth(user)
+    }
 
     // Очистка контейнера
     if (ref.current) {
@@ -80,6 +83,10 @@ export function TelegramLoginWidget({
 
     script.onload = () => {
       scriptLoadedRef.current = true
+      console.info(
+        '[TelegramLoginWidget] script loaded, callback:',
+        callbackName
+      )
     }
 
     // Добавляем скрипт в контейнер
