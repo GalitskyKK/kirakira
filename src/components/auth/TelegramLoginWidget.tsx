@@ -70,8 +70,8 @@ export function TelegramLoginWidget({
     script.setAttribute('data-radius', cornerRadius.toString())
     script.setAttribute('data-request-access', requestAccess ? 'write' : '')
     script.setAttribute('data-lang', lang)
-    // Telegram ожидает имя глобальной функции-коллбэка; виджет сам передаст user
-    script.setAttribute('data-onauth', callbackName)
+    // Telegram ожидает JS-выражение с вызовом коллбэка и передачей user
+    script.setAttribute('data-onauth', `${callbackName}(user)`)
 
     script.onerror = () => {
       console.error('Failed to load Telegram login widget')
