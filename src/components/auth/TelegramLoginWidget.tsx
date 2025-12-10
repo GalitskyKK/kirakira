@@ -40,14 +40,15 @@ export function TelegramLoginWidget({
 }: TelegramLoginWidgetProps) {
   const ref = useRef<HTMLDivElement>(null)
   const scriptLoadedRef = useRef(false)
+  const callbackNameRef = useRef(
+    `telegramCallback_${Math.random().toString(36).slice(2, 11)}`
+  )
 
   useEffect(() => {
     if (scriptLoadedRef.current || !ref.current) return
 
     // Функция обратного вызова для Telegram
-    const callbackName = `telegramCallback_${Math.random()
-      .toString(36)
-      .substr(2, 9)}`
+    const callbackName = callbackNameRef.current
 
     const globalCallbacks = window as unknown as Record<
       string,
@@ -95,6 +96,11 @@ export function TelegramLoginWidget({
       if (windowWithCallback[callbackName]) {
         delete windowWithCallback[callbackName]
       }
+      // Удаляем вставленный скрипт/виджет, чтобы после strict-mode ремонта не было старой ссылки
+      if (ref.current) {
+        ref.current.innerHTML = ''
+      }
+      scriptLoadedRef.current = false
     }
   }, [botName, onAuth, onError, buttonSize, cornerRadius, requestAccess, lang])
 
