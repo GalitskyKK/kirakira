@@ -1586,6 +1586,9 @@ async function handleClaimDailyQuest(req, res) {
         .update({
           current_progress: 0,
           status: 'active',
+          // сбрасываем отметки получения, чтобы следующий цикл был клеймable
+          claimed_at: null,
+          completed_at: null,
           updated_at: new Date().toISOString(),
           metadata: {
             ...(questInfo.metadata || {}),
@@ -1617,12 +1620,18 @@ async function handleClaimDailyQuest(req, res) {
       rewards: questRow.rewards,
       generatedAt: new Date(questRow.generated_at).toISOString(),
       expiresAt: new Date(questRow.expires_at).toISOString(),
-      completedAt: questRow.completed_at
-        ? new Date(questRow.completed_at).toISOString()
-        : undefined,
-      claimedAt: questRow.claimed_at
-        ? new Date(questRow.claimed_at).toISOString()
-        : undefined,
+      completedAt:
+        questRow.quest_type === 'streak_gem_quest'
+          ? undefined
+          : questRow.completed_at
+            ? new Date(questRow.completed_at).toISOString()
+            : undefined,
+      claimedAt:
+        questRow.quest_type === 'streak_gem_quest'
+          ? undefined
+          : questRow.claimed_at
+            ? new Date(questRow.claimed_at).toISOString()
+            : undefined,
       metadata: {
         ...(questRow.metadata || {}),
         times_completed:

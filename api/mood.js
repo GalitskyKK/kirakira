@@ -765,12 +765,16 @@ async function updateStreakGemQuest(
   if (existingQuest) {
     // Обновляем существующий квест
     let newProgress = existingQuest.current_progress || 0
+    const targetValue = existingQuest.target_value || 7
 
     // Проверяем, был ли прогресс вчера (для продолжения стрика)
     const yesterday = new Date(todayDate)
     yesterday.setDate(yesterday.getDate() - 1)
     const yesterdayStr = yesterday.toISOString().split('T')[0]
     const lastProgressDate = existingQuest.metadata?.last_progress_date
+    const claimedAtDateStr = existingQuest.claimed_at
+      ? new Date(existingQuest.claimed_at).toISOString().split('T')[0]
+      : null
 
     // 🔧 ИСПРАВЛЕНИЕ: После заморозки может быть ситуация, когда diffDays === 0,
     // но streak_last_checkin установлен на вчера, и пользователь отмечает настроение сегодня.
@@ -789,7 +793,13 @@ async function updateStreakGemQuest(
     }
     // Иначе прогресс остается прежним (повторная отметка в тот же день)
 
-    const newStatus = newProgress >= 7 ? 'completed' : 'active'
+    const newStatus = newProgress >= targetValue ? 'completed' : 'active'
+    const progressedAfterClaim =
+      claimedAtDateStr && lastProgressDate && lastProgressDate > claimedAtDateStr
+
+    const shouldResetClaim =
+      (existingQuest.claimed_at || existingQuest.completed_at) &&
+      (newProgress < targetValue || progressedAfterClaim)
 
     await supabase
       .from('daily_quests')
@@ -801,6 +811,13 @@ async function updateStreakGemQuest(
           ...(existingQuest.metadata || {}),
           last_progress_date: todayDate,
         },
+        ...(shouldResetClaim
+          ? {
+              // очищаем старые отметки получения, если начинается новый цикл
+              claimed_at: null,
+              completed_at: null,
+            }
+          : {}),
       })
       .eq('id', existingQuest.id)
 

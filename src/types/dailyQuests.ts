@@ -255,7 +255,18 @@ export function isQuestCompleted(quest: DailyQuest): boolean {
  * Проверяет, можно ли получить награду
  */
 export function canClaimQuest(quest: DailyQuest): boolean {
-  return quest.status === 'completed' && quest.claimedAt === undefined
+  if (quest.status !== 'completed') {
+    return false
+  }
+
+  const expiresAt =
+    quest.expiresAt instanceof Date ? quest.expiresAt : new Date(quest.expiresAt)
+
+  if (Number.isNaN(expiresAt.getTime())) {
+    return false
+  }
+
+  return expiresAt > new Date() && quest.currentProgress >= quest.targetValue
 }
 
 /**
