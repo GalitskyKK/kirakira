@@ -16,6 +16,17 @@ interface UserProviderProps {
 export function UserProvider({ children }: UserProviderProps) {
   const { user: telegramUser } = useTelegram()
 
+  // Определяем, является ли среда реальным Telegram Mini App (а не расширение)
+  const isTelegramEnv = useMemo(() => {
+    if (typeof window === 'undefined') return false
+    const webApp = window.Telegram?.WebApp
+    if (!webApp) return false
+    const hasInitData =
+      Boolean(webApp.initData && webApp.initData.length > 0) ||
+      Boolean(webApp.initDataUnsafe?.user)
+    return hasInitData
+  }, [])
+
   // Получаем telegramId: приоритет Telegram WebApp > JWT токен из localStorage
   const telegramId = useMemo(() => {
     // Если в Telegram Mini App - используем данные из WebApp
@@ -30,7 +41,7 @@ export function UserProvider({ children }: UserProviderProps) {
 
   const value: UserContextType = {
     telegramId,
-    isTelegramEnv: !!window.Telegram?.WebApp,
+    isTelegramEnv,
   }
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>
