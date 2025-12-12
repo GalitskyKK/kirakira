@@ -59,6 +59,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
     soundEffects: false,
     hapticFeedback: true,
     seasonalThemes: true,
+    displayMode: GardenDisplayMode.GARDEN,
     friendViewMode: GardenDisplayMode.GARDEN,
   },
 }
@@ -116,6 +117,9 @@ export function convertServerUserToClient(
       ...DEFAULT_PREFERENCES,
       garden: {
         ...DEFAULT_PREFERENCES.garden,
+        displayMode: isValidDisplayMode(serverUser.garden_display_mode)
+          ? serverUser.garden_display_mode
+          : DEFAULT_PREFERENCES.garden.displayMode,
         friendViewMode: isValidDisplayMode(serverUser.friend_garden_display)
           ? serverUser.friend_garden_display
           : DEFAULT_PREFERENCES.garden.friendViewMode,
@@ -345,6 +349,53 @@ export async function updateFriendGardenDisplay(
     }
   } catch (error) {
     console.error('Failed to update friend garden display:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
+/**
+ * Обновляет режим отображения сада пользователя
+ */
+export async function updateGardenDisplay(
+  telegramId: number,
+  displayMode: GardenDisplayMode
+): Promise<{
+  success: boolean
+  data?: { gardenDisplayMode: GardenDisplayMode }
+  error?: string
+}> {
+  try {
+    const response = await authenticatedFetch(
+      `/api/user?action=update-garden-display&telegramId=${telegramId}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gardenDisplayMode: displayMode,
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to update garden display mode: ${response.status}`
+      )
+    }
+
+    const result = (await response.json()) as StandardApiResponse<{
+      gardenDisplayMode: GardenDisplayMode
+    }>
+
+    return {
+      success: result.success,
+      ...(result.data && { data: result.data }),
+      ...(result.error && { error: result.error }),
+    }
+  } catch (error) {
+    console.error('Failed to update garden display mode:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

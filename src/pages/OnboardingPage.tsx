@@ -224,12 +224,12 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
     <div className="from-kira-50 flex min-h-screen items-center justify-center bg-gradient-to-br via-garden-50 to-neutral-50 p-2 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900 sm:p-4">
       <div className="mx-auto w-full max-w-2xl">
         {/* Progress indicators */}
-        <div className="mb-8 flex justify-center">
-          <div className="flex space-x-2">
+        <div className="mb-8 flex justify-center px-3">
+          <div className="flex space-x-1.5">
             {ONBOARDING_STEPS.map((_, index) => (
               <motion.div
                 key={index}
-                className={`h-3 w-3 rounded-full transition-colors duration-300 ${
+                className={`h-2.5 w-2.5 rounded-full transition-colors duration-300 sm:h-3 sm:w-3 ${
                   index <= currentStep
                     ? 'bg-garden-500'
                     : 'bg-gray-300 dark:bg-gray-600'
@@ -287,7 +287,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
           </AnimatePresence>
 
           {/* Navigation */}
-          <div className="mt-6 flex flex-col items-center justify-between gap-4 border-t border-gray-200 pt-6 dark:border-gray-700 sm:mt-8 sm:flex-row">
+          <div className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-gray-200 pt-6 dark:border-gray-700 sm:mt-8 sm:flex-row sm:gap-4">
             <Button
               variant="outline"
               onClick={handleBack}
@@ -298,7 +298,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
               Назад
             </Button>
 
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="w-full text-center text-sm text-gray-500 dark:text-gray-400 sm:w-auto">
               {currentStep + 1} из {ONBOARDING_STEPS.length}
             </div>
 

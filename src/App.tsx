@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { useUserClientStore, useUserSync } from '@/hooks/index.v2'
 import { UserProvider } from '@/contexts/UserContext'
+import { useGardenClientStore } from '@/stores/gardenStore'
 import { useReducedMotion } from '@/hooks'
 import { LoadingSpinner } from '@/components/ui'
 import { UpdatePrompt } from '@/components/ui/UpdatePrompt'
@@ -103,6 +104,7 @@ function App() {
   const isDevelopment = import.meta.env.DEV
   const shouldReduceMotion = useReducedMotion()
   const fallback = <LoadingSpinner />
+  const { displayMode, setDisplayMode } = useGardenClientStore()
 
   const withSuspense = useCallback(
     (node: JSX.Element) => <Suspense fallback={fallback}>{node}</Suspense>,
@@ -179,6 +181,14 @@ function App() {
         : { duration: 0.3, ease: 'easeInOut' },
     [shouldReduceMotion]
   )
+
+  // Синхронизируем клиентский режим отображения сада с предпочтением из профиля
+  useEffect(() => {
+    const preferredMode = userData?.user?.preferences.garden.displayMode
+    if (preferredMode && preferredMode !== displayMode) {
+      setDisplayMode(preferredMode)
+    }
+  }, [userData?.user?.preferences.garden.displayMode, displayMode, setDisplayMode])
 
   // Применяем тему Telegram к корневому элементу
   useEffect(() => {

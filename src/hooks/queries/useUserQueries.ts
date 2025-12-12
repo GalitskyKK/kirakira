@@ -11,6 +11,7 @@ import {
   addUserExperience,
   clearUserData,
   updateFriendGardenDisplay,
+  updateGardenDisplay,
 } from '@/api'
 import type { UserSyncResponse } from '@/api/userService'
 import type { GardenDisplayMode } from '@/types'
@@ -191,6 +192,31 @@ export function useUpdateFriendGardenDisplay() {
     },
     onError: error => {
       console.error('❌ Failed to update friend garden display:', error)
+    },
+  })
+}
+
+/**
+ * Хук для обновления базового режима отображения сада
+ */
+export function useUpdateGardenDisplay() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      telegramId,
+      displayMode,
+    }: {
+      telegramId: number
+      displayMode: GardenDisplayMode
+    }) => updateGardenDisplay(telegramId, displayMode),
+    onSuccess: (_result, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: userKeys.sync(variables.telegramId),
+      })
+    },
+    onError: error => {
+      console.error('❌ Failed to update garden display mode:', error)
     },
   })
 }

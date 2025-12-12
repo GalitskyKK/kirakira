@@ -92,7 +92,7 @@ export function SettingsPage() {
           icon={<Sprout className="h-5 w-5" />}
           delay={0.05}
         >
-          <GardenDisplaySettings />
+          <GardenDisplaySettings user={currentUser} />
         </SettingsSection>
 
         <SettingsSection

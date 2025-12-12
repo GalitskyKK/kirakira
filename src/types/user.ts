@@ -55,6 +55,7 @@ export interface GardenPreferences {
   readonly soundEffects: boolean
   readonly hapticFeedback: boolean
   readonly seasonalThemes: boolean
+  readonly displayMode: GardenDisplayMode
   readonly friendViewMode: GardenDisplayMode
 }
 

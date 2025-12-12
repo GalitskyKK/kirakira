@@ -5,7 +5,10 @@
 
 import { motion } from 'framer-motion'
 import { Sprout, Palette, Home, Lock } from 'lucide-react'
+import { useEffect, useCallback } from 'react'
 import { useGardenClientStore } from '@/stores/gardenStore'
+import { useUpdateGardenDisplay } from '@/hooks/queries/useUserQueries'
+import type { User } from '@/types'
 import { GardenDisplayMode } from '@/types/garden'
 
 interface DisplayModeOption {
@@ -55,10 +58,43 @@ const DISPLAY_MODES: readonly DisplayModeOption[] = [
   //   available: false,
   //   comingSoon: true,
   // },
-] as const
+  ] as const
 
-export function GardenDisplaySettings() {
+interface GardenDisplaySettingsProps {
+  readonly user?: User | null
+}
+
+export function GardenDisplaySettings({ user }: GardenDisplaySettingsProps) {
   const { displayMode, setDisplayMode } = useGardenClientStore()
+  const updateGardenDisplay = useUpdateGardenDisplay()
+
+  const serverPreferredMode = user?.preferences.garden.displayMode
+
+  useEffect(() => {
+    if (
+      serverPreferredMode &&
+      serverPreferredMode !== displayMode &&
+      !updateGardenDisplay.isPending
+    ) {
+      setDisplayMode(serverPreferredMode)
+    }
+  }, [serverPreferredMode, displayMode, setDisplayMode, updateGardenDisplay.isPending])
+
+  const handleChange = useCallback(
+    (mode: GardenDisplayMode) => {
+      if (mode === displayMode) return
+
+      setDisplayMode(mode)
+
+      if (user?.telegramId) {
+        updateGardenDisplay.mutate({
+          telegramId: user.telegramId,
+          displayMode: mode,
+        })
+      }
+    },
+    [displayMode, setDisplayMode, updateGardenDisplay, user?.telegramId]
+  )
 
   return (
     <div className="space-y-4">
@@ -73,7 +109,7 @@ export function GardenDisplaySettings() {
               type="button"
               onClick={() => {
                 if (!isDisabled) {
-                  setDisplayMode(option.mode)
+                  handleChange(option.mode)
                 }
               }}
               disabled={isDisabled}

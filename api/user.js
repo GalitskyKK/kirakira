@@ -1124,6 +1124,71 @@ async function handleUpdateFriendGardenDisplay(req, res) {
 }
 
 /**
+ * 🌿 Обновление базового режима отображения сада пользователя
+ * POST /api/user?action=update-garden-display&telegramId=123
+ * Body: { gardenDisplayMode: 'garden' | 'palette' | 'isometric_room' }
+ */
+async function handleUpdateGardenDisplay(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ success: false, error: 'Method not allowed' })
+  }
+
+  try {
+    const telegramId = parseInt(req.query.telegramId)
+    const { gardenDisplayMode } = req.body
+
+    if (!telegramId) {
+      return res
+        .status(400)
+        .json({ success: false, error: 'Missing telegramId' })
+    }
+
+    const validModes = ['garden', 'palette', 'isometric_room']
+    if (!gardenDisplayMode || !validModes.includes(gardenDisplayMode)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid gardenDisplayMode. Valid values: ${validModes.join(', ')}`,
+      })
+    }
+
+    const supabase = await getSupabaseClient(req.auth?.jwt)
+    console.log(
+      `🌿 Updating garden display for user ${telegramId} to ${gardenDisplayMode}`
+    )
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({
+        garden_display_mode: gardenDisplayMode,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('telegram_id', telegramId)
+      .select('garden_display_mode')
+      .single()
+
+    if (error) {
+      console.error('Failed to update garden display mode:', error)
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to update garden display mode',
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        gardenDisplayMode: data.garden_display_mode,
+      },
+    })
+  } catch (error) {
+    console.error('Error in handleUpdateGardenDisplay:', error)
+    return res
+      .status(500)
+      .json({ success: false, error: 'Internal server error' })
+  }
+}
+
+/**
  * 🔥 НОВЫЙ ЭНДПОИНТ: Проверка состояния стрика
  * GET /api/user?action=check-streak&telegramId=123
  */
@@ -1262,10 +1327,12 @@ async function protectedHandler(req, res) {
         return await handleUpdateRoomTheme(req, res)
       case 'update-friend-garden-display': // 🌿 НОВЫЙ ЭНДПОИНТ
         return await handleUpdateFriendGardenDisplay(req, res)
+      case 'update-garden-display': // 🌿 НОВЫЙ ЭНДПОИНТ
+        return await handleUpdateGardenDisplay(req, res)
       default:
         return res.status(400).json({
           success: false,
-          error: `Unknown action: ${action}. Available actions: stats, update-photo, use-streak-freeze, buy-streak-freeze, get-streak-freezes, reset-streak, check-streak, update-garden-theme, update-room-theme, update-friend-garden-display`,
+          error: `Unknown action: ${action}. Available actions: stats, update-photo, use-streak-freeze, buy-streak-freeze, get-streak-freezes, reset-streak, check-streak, update-garden-theme, update-room-theme, update-friend-garden-display, update-garden-display`,
         })
     }
   } catch (error) {
