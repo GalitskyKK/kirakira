@@ -10,6 +10,8 @@ import {
   updateQuestProgress,
 } from '@/api/dailyQuestService'
 import type { DailyQuestsResponse } from '@/types/dailyQuests'
+import { currencyKeys } from './useCurrencyQueries'
+import type { UserCurrency } from '@/types/currency'
 
 // ===============================================
 // 🎯 QUERY KEYS
@@ -108,31 +110,65 @@ export function useClaimDailyQuest() {
       questId: string
     }) => claimDailyQuest(telegramId, questId),
     onSuccess: (result, variables) => {
-      // Инвалидируем кеш заданий
-      queryClient.invalidateQueries({
-        queryKey: dailyQuestKeys.quests(variables.telegramId),
-      })
-
-      // Инвалидируем кеш статистики
-      queryClient.invalidateQueries({
-        queryKey: dailyQuestKeys.stats(variables.telegramId),
-      })
-
-      // Инвалидируем кеш валюты (синхронизация баланса)
-      queryClient.invalidateQueries({
-        queryKey: ['currency', variables.telegramId],
-      })
-
-      // Инвалидируем кеш профиля (обновление опыта и уровня)
-      queryClient.invalidateQueries({
-        queryKey: ['user', variables.telegramId],
-      })
+      // Обновляем кеш списка заданий сразу, чтобы статус "получено" применился без перезагрузки
+      queryClient.setQueryData(
+        dailyQuestKeys.quests(variables.telegramId),
+        (old: DailyQuestsResponse | undefined) =>
+          old
+            ? {
+                ...old,
+                quests: old.quests.map(quest =>
+                  quest.id === variables.questId ? result.quest : quest
+                ),
+              }
+            : old
+      )
 
       // Обновляем конкретное задание в кеше
       queryClient.setQueryData(
         dailyQuestKeys.quest(variables.questId),
         result.quest
       )
+
+      // Мгновенно обновляем баланс в кеше валюты
+      queryClient.setQueryData<UserCurrency | undefined>(
+        currencyKeys.balance(variables.telegramId),
+        old =>
+          old
+            ? {
+                ...old,
+                sprouts: result.newBalance.sprouts,
+                gems: result.newBalance.gems,
+                lastUpdated: new Date(),
+              }
+            : old
+      )
+
+      // Инвалидируем связанные запросы, чтобы подтянуть транзакции/статистику с сервера
+      void Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: dailyQuestKeys.quests(variables.telegramId),
+          refetchType: 'active',
+        }),
+        queryClient.invalidateQueries({
+          queryKey: dailyQuestKeys.stats(variables.telegramId),
+          refetchType: 'active',
+        }),
+        queryClient.invalidateQueries({
+          predicate: query =>
+            Array.isArray(query.queryKey) &&
+            query.queryKey[0] === 'currency' &&
+            query.queryKey.includes(variables.telegramId),
+          refetchType: 'active',
+        }),
+        queryClient.invalidateQueries({
+          predicate: query =>
+            Array.isArray(query.queryKey) &&
+            (query.queryKey[0] === 'user' || query.queryKey[0] === 'profile') &&
+            query.queryKey.includes(variables.telegramId),
+          refetchType: 'active',
+        }),
+      ])
     },
     onError: error => {
       console.error('Claim daily quest error:', error)
