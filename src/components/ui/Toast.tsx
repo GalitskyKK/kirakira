@@ -70,7 +70,11 @@ export function Toast({
 
             {action && (
               <button
-                onClick={action.onClick}
+                type="button"
+                onClick={event => {
+                  event.stopPropagation()
+                  action.onClick()
+                }}
                 className="rounded-md bg-white/20 px-3 py-1 text-sm font-semibold transition-colors hover:bg-white/30"
               >
                 {action.label}
@@ -78,6 +82,7 @@ export function Toast({
             )}
 
             <button
+              type="button"
               onClick={onClose}
               className="flex-shrink-0 rounded-full p-1 transition-colors hover:bg-white/20"
               aria-label="Закрыть"

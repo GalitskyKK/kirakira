@@ -21,6 +21,7 @@ import { SettingsSection } from '@/components/settings/SettingsSection'
 import { PageHeader } from '@/components/layout'
 import { useUserContext } from '@/contexts/UserContext'
 import { clearJWTToken } from '@/utils/apiClient'
+import { clearAllData, clearGuestData } from '@/utils/storage'
 
 export function SettingsPage() {
   const { isTelegramEnv } = useUserContext()
@@ -32,6 +33,8 @@ export function SettingsPage() {
 
   const handleLogout = useCallback(() => {
     disableGuestMode()
+    clearAllData()
+    clearGuestData()
     clearJWTToken()
     queryClient.clear()
     window.location.replace('/auth')

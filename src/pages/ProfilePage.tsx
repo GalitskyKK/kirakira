@@ -61,11 +61,18 @@ export function ProfilePage() {
         <div className="glass-card rounded-3xl border border-neutral-200/50 p-6 text-center dark:border-neutral-700/50">
           <div className="mb-4 text-6xl">😔</div>
           <h2 className="mb-2 text-xl font-bold text-neutral-900 dark:text-neutral-100">
-            Пользователь не найден
+            Требуется авторизация
           </h2>
           <p className="text-neutral-600 dark:text-neutral-400">
-            Пожалуйста, авторизуйтесь для просмотра профиля
+            Войдите, чтобы открыть профиль и данные аккаунта
           </p>
+          <button
+            type="button"
+            onClick={() => navigate('/auth')}
+            className="mt-4 inline-flex items-center justify-center rounded-2xl bg-kira-500 px-4 py-2 text-white transition-colors hover:bg-kira-600"
+          >
+            Войти
+          </button>
         </div>
       </div>
     )

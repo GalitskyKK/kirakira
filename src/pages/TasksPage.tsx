@@ -20,8 +20,15 @@ export function TasksPage() {
             Требуется авторизация
           </h2>
           <p className="text-neutral-600 dark:text-neutral-400">
-            Войдите в аккаунт для просмотра заданий
+            Войдите, чтобы смотреть ежедневные задания и челленджи
           </p>
+          <button
+            type="button"
+            onClick={() => (window.location.href = '/auth')}
+            className="mt-4 inline-flex items-center justify-center rounded-2xl bg-kira-500 px-4 py-2 text-white transition-colors hover:bg-kira-600"
+          >
+            Войти
+          </button>
         </div>
       </div>
     )
