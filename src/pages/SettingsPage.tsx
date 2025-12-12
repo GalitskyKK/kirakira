@@ -1,6 +1,15 @@
+import { useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Settings, Palette, Sparkles, Lock, Sprout } from 'lucide-react'
-import { useUserSync } from '@/hooks/index.v2'
+import { useQueryClient } from '@tanstack/react-query'
+import {
+  Settings,
+  Palette,
+  Sparkles,
+  Lock,
+  Sprout,
+  LogOut,
+} from 'lucide-react'
+import { useUserSync, useUserClientStore } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { ProfilePrivacySettings } from '@/components/profile/ProfilePrivacySettings'
 import { ThemeSettings } from '@/components/settings/ThemeSettings'
@@ -10,11 +19,23 @@ import { GardenDisplaySettings } from '@/components/settings/GardenDisplaySettin
 import { FriendGardenDisplaySettings } from '@/components/settings/FriendGardenDisplaySettings'
 import { SettingsSection } from '@/components/settings/SettingsSection'
 import { PageHeader } from '@/components/layout'
+import { useUserContext } from '@/contexts/UserContext'
+import { clearJWTToken } from '@/utils/apiClient'
 
 export function SettingsPage() {
+  const { isTelegramEnv } = useUserContext()
+  const { disableGuestMode } = useUserClientStore()
+  const queryClient = useQueryClient()
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
   const currentUser = userData?.user
+
+  const handleLogout = useCallback(() => {
+    disableGuestMode()
+    clearJWTToken()
+    queryClient.clear()
+    window.location.replace('/auth')
+  }, [disableGuestMode, queryClient])
 
   if (!currentUser) {
     return (
@@ -99,6 +120,28 @@ export function SettingsPage() {
         >
           <ProfilePrivacySettings user={currentUser} />
         </SettingsSection>
+
+        {!isTelegramEnv && (
+          <SettingsSection
+            title="Аккаунт"
+            description="Управление входом в браузере"
+            icon={<LogOut className="h-5 w-5" />}
+            delay={0.25}
+          >
+            <motion.button
+              type="button"
+              onClick={handleLogout}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full rounded-2xl bg-red-500 px-4 py-3 text-white shadow-sm transition-colors hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2"
+            >
+              Выйти из аккаунта
+            </motion.button>
+            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+              Очистим токен браузера и вернём на экран входа.
+            </p>
+          </SettingsSection>
+        )}
       </div>
     </motion.div>
   )

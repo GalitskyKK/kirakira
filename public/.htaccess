@@ -1,0 +1,15 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  
+  # Если запрос идет к существующему файлу или папке - отдаем их как есть
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  
+  # ВАЖНО: Если запрос идет к /api, не перенаправляем его на index.html!
+  # Пусть с ним разбирается ваш прокси в папке api
+  RewriteCond %{REQUEST_URI} !^/api/
+
+  # Все остальные запросы перенаправляем на index.html
+  RewriteRule . /index.html [L]
+</IfModule>

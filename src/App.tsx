@@ -85,6 +85,8 @@ import { TelegramDiagnostic } from '@/components/TelegramDiagnostic'
 import { useTelegram, useTelegramTheme, useAppInitialization } from '@/hooks'
 import { InitializationStage } from '@/types/initialization'
 import { getTelegramIdFromJWT } from '@/utils/apiClient'
+import { hasGuestData, clearGuestData, loadGuestBundle } from '@/utils/storage'
+import { importGuestData } from '@/api'
 
 interface AppInitState {
   stage: InitializationStage
@@ -122,8 +124,11 @@ function App() {
   )
 
   // ✅ ВСЕ ХУКИ ДОЛЖНЫ БЫТЬ ВЫЗВАНЫ ДО ЛЮБОГО УСЛОВНОГО ВОЗВРАТА
-  const { hasCompletedOnboarding, isLoading: userStoreLoading } =
-    useUserClientStore()
+  const {
+    hasCompletedOnboarding,
+    isGuestModeEnabled,
+    isLoading: userStoreLoading,
+  } = useUserClientStore()
 
   // Telegram интеграция
   const {
@@ -194,6 +199,47 @@ function App() {
     const { completeOnboarding } = useUserClientStore.getState()
     completeOnboarding()
   }
+
+  const handleAuthSuccess = useCallback(async () => {
+    if (hasGuestData()) {
+      const shouldImportGuestData = window.confirm(
+        'Найден прогресс из гостевого режима. Импортировать его в аккаунт? Если у вас уже есть данные в аккаунте, мы НЕ будем их перезаписывать.'
+      )
+
+      if (shouldImportGuestData) {
+        const guestBundle = loadGuestBundle()
+        const targetTelegramId = actualTelegramId ?? telegramUser?.telegramId
+
+        if (targetTelegramId) {
+          try {
+            await importGuestData({
+              telegramId: targetTelegramId,
+              user: guestBundle.user,
+              garden: guestBundle.garden ?? null,
+              moodHistory: guestBundle.moodHistory,
+              onlyIfNew: true, // не трогаем существующие аккаунты
+            })
+          } catch (error) {
+            console.error('Импорт гостевых данных не удался:', error)
+          }
+        } else {
+          console.warn('Импорт гостевых данных пропущен: telegramId не определён')
+        }
+      } else {
+        clearGuestData()
+      }
+    }
+
+    const { disableGuestMode } = useUserClientStore.getState()
+    disableGuestMode()
+    window.location.reload()
+  }, [actualTelegramId, telegramUser?.telegramId])
+
+  const handleSkipAuth = useCallback(() => {
+    const { enableGuestMode } = useUserClientStore.getState()
+    enableGuestMode()
+    window.history.replaceState(null, '', '/')
+  }, [])
 
   // Show loading state during initialization
   if (initState.isLoading) {
@@ -410,14 +456,13 @@ function App() {
     shouldCheckAuth &&
     !isAuthenticated &&
     !isTelegramEnv &&
-    !isDevShowcaseRoute
+    !isDevShowcaseRoute &&
+    !isGuestModeEnabled
   ) {
     return withSuspense(
       <AuthPage
-        onSuccess={() => {
-          // После успешной авторизации перезагружаем страницу для обновления состояния
-          window.location.reload()
-        }}
+        onSuccess={handleAuthSuccess}
+        onSkip={handleSkipAuth}
         onError={(error: unknown) => console.error('Auth error:', error)}
       />
     )
@@ -547,7 +592,8 @@ function App() {
                 path="/auth"
                 element={withSuspense(
                   <AuthPage
-                    onSuccess={() => window.location.replace('/')}
+                    onSuccess={handleAuthSuccess}
+                    onSkip={handleSkipAuth}
                     onError={(error: unknown) =>
                       console.error('Auth error:', error)
                     }
@@ -717,7 +763,8 @@ function App() {
                     >
                       {withSuspense(
                         <AuthPage
-                          onSuccess={() => window.location.replace('/')}
+                        onSuccess={handleAuthSuccess}
+                        onSkip={handleSkipAuth}
                           onError={(error: unknown) =>
                             console.error('Auth error:', error)
                           }

@@ -1527,6 +1527,146 @@ async function protectedHandler(req, res) {
         }
       }
 
+      case 'import_guest': {
+        if (req.method !== 'POST') {
+          return res
+            .status(405)
+            .json({ success: false, error: 'Method not allowed' })
+        }
+
+        const { telegramId, user, garden, moodHistory, onlyIfNew } =
+          req.body || {}
+
+        if (!telegramId) {
+          return res
+            .status(400)
+            .json({ success: false, error: 'Missing telegramId' })
+        }
+
+        try {
+          // Проверяем существование пользователя
+          let existingUser = null
+          let existingUserError = null
+
+          try {
+            const { data, error } = await supabase
+              .from('users')
+              .select('telegram_id')
+              .eq('telegram_id', telegramId)
+              .single()
+            existingUser = data
+            existingUserError = error
+          } catch (err) {
+            if (err?.code === 'PGRST116') {
+              existingUser = null
+              existingUserError = null
+            } else {
+              existingUserError = err
+            }
+          }
+
+          if (existingUserError) {
+            console.error('Failed to check existing user:', existingUserError)
+            return res.status(500).json({
+              success: false,
+              error: 'Failed to check existing user',
+            })
+          }
+
+          if (existingUser && onlyIfNew) {
+            return res.status(200).json({
+              success: true,
+              skipped: true,
+              reason: 'User already exists',
+            })
+          }
+
+          // Создаем пользователя, если его нет
+          let ensuredUser = existingUser
+          if (!existingUser) {
+            const userData = user
+              ? {
+                  first_name: user.firstName ?? null,
+                  last_name: user.lastName ?? null,
+                  username: user.username ?? null,
+                  photo_url: user.photoUrl ?? null,
+                  language_code: user.preferences?.language ?? 'ru',
+                }
+              : {}
+
+            ensuredUser = await ensureUser(parseInt(telegramId, 10), userData)
+          }
+
+          // Импортируем историю настроений (только если передана)
+          let importedMoods = 0
+          if (Array.isArray(moodHistory) && moodHistory.length > 0) {
+            const moodRows = moodHistory.map(entry => ({
+              telegram_id: telegramId,
+              mood: entry.mood,
+              intensity: entry.intensity,
+              mood_date: entry.date
+                ? new Date(entry.date).toISOString().slice(0, 10)
+                : new Date().toISOString().slice(0, 10),
+              note: entry.note ?? null,
+              created_at: entry.createdAt
+                ? new Date(entry.createdAt).toISOString()
+                : new Date().toISOString(),
+            }))
+
+            const { error: moodError } = await supabase
+              .from('mood_entries')
+              .insert(moodRows)
+
+            if (moodError) {
+              console.error('Failed to import mood history:', moodError)
+            } else {
+              importedMoods = moodRows.length
+            }
+          }
+
+          // Импортируем сад (только если передан)
+          let importedElements = 0
+          if (garden?.elements?.length) {
+            const elementRows = garden.elements.map(el => ({
+              telegram_id: telegramId,
+              element_type: el.type,
+              rarity: el.rarity,
+              position_x: el.position?.x ?? 0,
+              position_y: el.position?.y ?? 0,
+              mood_influence: el.moodInfluence,
+              unlock_date: el.unlockDate
+                ? new Date(el.unlockDate).toISOString()
+                : new Date().toISOString(),
+              seasonal_variant: el.seasonalVariant ?? null,
+            }))
+
+            const { error: gardenError } = await supabase
+              .from('garden_elements')
+              .insert(elementRows)
+
+            if (gardenError) {
+              console.error('Failed to import garden elements:', gardenError)
+            } else {
+              importedElements = elementRows.length
+            }
+          }
+
+          return res.status(200).json({
+            success: true,
+            skipped: false,
+            imported: {
+              moodEntries: importedMoods,
+              gardenElements: importedElements,
+            },
+          })
+        } catch (error) {
+          console.error('Import guest data error:', error)
+          return res
+            .status(500)
+            .json({ success: false, error: 'Failed to import guest data' })
+        }
+      }
+
       // ⚠️ Административное действие - требует специальной защиты
       case 'update_all_user_stats': {
         if (req.method !== 'POST') {

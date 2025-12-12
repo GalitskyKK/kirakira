@@ -6,7 +6,12 @@
 
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
-import { saveOnboardingCompleted, isOnboardingCompleted } from '@/utils/storage'
+import {
+  saveOnboardingCompleted,
+  saveGuestModeEnabled,
+  isOnboardingCompleted,
+  isGuestModeEnabled as loadGuestModeEnabled,
+} from '@/utils/storage'
 
 // ============================================
 // ТИПЫ СОСТОЯНИЯ
@@ -15,6 +20,7 @@ import { saveOnboardingCompleted, isOnboardingCompleted } from '@/utils/storage'
 interface UserClientState {
   // Клиентское состояние
   readonly hasCompletedOnboarding: boolean
+  readonly isGuestModeEnabled: boolean
   readonly isAuthModalOpen: boolean
   readonly selectedTab: string
   readonly isLoading: boolean
@@ -23,6 +29,8 @@ interface UserClientState {
   // Actions для UI состояния
   completeOnboarding: () => void
   checkOnboardingStatus: () => boolean
+  enableGuestMode: () => void
+  disableGuestMode: () => void
   setAuthModalOpen: (isOpen: boolean) => void
   setSelectedTab: (tab: string) => void
   setLoading: (loading: boolean) => void
@@ -37,6 +45,7 @@ export const useUserClientStore = create<UserClientState>()(
   subscribeWithSelector((set, get) => ({
     // Начальное состояние
     hasCompletedOnboarding: isOnboardingCompleted(),
+    isGuestModeEnabled: loadGuestModeEnabled(),
     isAuthModalOpen: false,
     selectedTab: 'profile',
     isLoading: false,
@@ -50,6 +59,16 @@ export const useUserClientStore = create<UserClientState>()(
 
     checkOnboardingStatus: () => {
       return get().hasCompletedOnboarding
+    },
+
+    enableGuestMode: () => {
+      set({ isGuestModeEnabled: true })
+      saveGuestModeEnabled(true)
+    },
+
+    disableGuestMode: () => {
+      set({ isGuestModeEnabled: false })
+      saveGuestModeEnabled(false)
     },
 
     setAuthModalOpen: (isOpen: boolean) => {

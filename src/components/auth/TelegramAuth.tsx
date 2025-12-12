@@ -19,11 +19,16 @@ interface TelegramUser {
 }
 
 interface TelegramAuthProps {
-  onSuccess?: (() => void) | undefined
-  onError?: ((error: string) => void) | undefined
+  readonly onSuccess?: (() => void) | undefined
+  readonly onError?: ((error: string) => void) | undefined
+  readonly onSkip?: (() => void) | undefined
 }
 
-export function TelegramAuth({ onSuccess, onError }: TelegramAuthProps) {
+export function TelegramAuth({
+  onSuccess,
+  onError,
+  onSkip,
+}: TelegramAuthProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [authError, setAuthError] = useState<string | null>(null)
 
@@ -128,6 +133,15 @@ export function TelegramAuth({ onSuccess, onError }: TelegramAuthProps) {
     [onError]
   )
 
+  const handleSkipAuth = useCallback(() => {
+    if (onSkip) {
+      onSkip()
+      return
+    }
+
+    onSuccess?.()
+  }, [onSkip, onSuccess])
+
   // Если уже в Telegram, показываем информацию
   if (isTelegramEnv && telegramUser) {
     return (
@@ -201,7 +215,9 @@ export function TelegramAuth({ onSuccess, onError }: TelegramAuthProps) {
             <div className="text-center">
               <TelegramLoginWidget
                 botName="KiraKiraGardenBot"
-                onAuth={handleTelegramAuth}
+                onAuth={telegramData => {
+                  void handleTelegramAuth(telegramData)
+                }}
                 onError={handleAuthError}
                 buttonSize="large"
                 cornerRadius={12}
@@ -212,7 +228,7 @@ export function TelegramAuth({ onSuccess, onError }: TelegramAuthProps) {
 
             <div className="text-center">
               <motion.button
-                onClick={onSuccess}
+                onClick={handleSkipAuth}
                 className="text-sm text-gray-500 underline hover:text-gray-700"
                 whileHover={{ scale: 1.05 }}
               >

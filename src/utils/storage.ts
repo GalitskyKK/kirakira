@@ -14,7 +14,28 @@ export const STORAGE_KEYS = {
   LAST_VISIT: 'kirakira_last_visit',
   COMPANION: 'kirakira_companion',
   COMPANION_POSITION: 'kirakira_companion_position',
+  GUEST_MODE: 'kirakira_guest_mode',
 } as const
+
+const GUEST_DATA_KEYS = [
+  STORAGE_KEYS.USER,
+  STORAGE_KEYS.GARDEN,
+  STORAGE_KEYS.MOOD_HISTORY,
+  STORAGE_KEYS.PREFERENCES,
+  STORAGE_KEYS.LAST_VISIT,
+  STORAGE_KEYS.COMPANION,
+  STORAGE_KEYS.COMPANION_POSITION,
+] as const
+
+export interface GuestBundle {
+  readonly user: User | null
+  readonly garden: Garden | null
+  readonly moodHistory: readonly MoodEntry[]
+  readonly preferences: unknown
+  readonly lastVisit: Date | null
+  readonly companion: CompanionSelection | null
+  readonly companionPosition: CompanionPosition | null
+}
 
 /**
  * Safely parse JSON with error handling
@@ -234,6 +255,58 @@ export function saveOnboardingCompleted(completed: boolean): void {
 export function isOnboardingCompleted(): boolean {
   const stored = storage.getItem(STORAGE_KEYS.ONBOARDING)
   return stored === 'true'
+}
+
+/**
+ * Save guest mode flag
+ */
+export function saveGuestModeEnabled(enabled: boolean): void {
+  storage.setItem(STORAGE_KEYS.GUEST_MODE, String(enabled))
+}
+
+/**
+ * Check if guest mode is enabled
+ */
+export function isGuestModeEnabled(): boolean {
+  const stored = storage.getItem(STORAGE_KEYS.GUEST_MODE)
+  return stored === 'true'
+}
+
+/**
+ * Check if any guest data exists in storage
+ */
+export function hasGuestData(): boolean {
+  return GUEST_DATA_KEYS.some(key => storage.getItem(key) !== null)
+}
+
+/**
+ * Clear guest data without touching onboarding flag
+ */
+export function clearGuestData(): void {
+  GUEST_DATA_KEYS.forEach(key => {
+    storage.removeItem(key)
+  })
+}
+
+export function loadGuestBundle(): GuestBundle {
+  const user = loadUser()
+  const garden = loadGarden()
+  const moodHistory = loadMoodHistory()
+  const preferencesRaw = storage.getItem(STORAGE_KEYS.PREFERENCES)
+  const preferences = preferencesRaw ? safeJsonParse(preferencesRaw, null) : null
+  const lastVisit = getLastVisit()
+  const companion = loadCompanionSelection()
+  const companionPosition = loadCompanionPosition()
+
+  return {
+    user,
+    garden,
+    moodHistory,
+    preferences,
+    lastVisit,
+    companion,
+    companionPosition,
+  }
 }
 
 /**
