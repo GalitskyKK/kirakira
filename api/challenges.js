@@ -1248,15 +1248,29 @@ async function handleDailyQuests(req, res) {
       .eq('quest_type', 'streak_gem_quest')
       .maybeSingle()
 
-    // 🔧 ИСПРАВЛЕНИЕ: Используем локальную дату клиента вместо UTC
-    // Клиент должен передать свою локальную дату в формате YYYY-MM-DD
-    const { localDate } = req.query
+    // 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ (TZ):
+    // Квесты хранят generated_at как timestamptz (UTC). Если фильтровать по строке 'YYYY-MM-DD',
+    // то для UTC+ зон "полночь" будет смещена и квесты за локальный день не попадут в выборку.
+    //
+    // Клиент передает:
+    // - localDate=YYYY-MM-DD (локальный день пользователя)
+    // - tzOffsetMinutes (Date#getTimezoneOffset; напр. -300 для UTC+5)
+    const { localDate, tzOffsetMinutes } = req.query
+
+    const isYmd = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s)
+    const parseOffset = (v) => {
+      const n = Number.parseInt(String(v), 10)
+      if (!Number.isFinite(n)) return null
+      // sanity: [-14h, +14h] в минутах
+      if (n < -14 * 60 || n > 14 * 60) return null
+      return n
+    }
+
     let todayStr
-    if (localDate) {
-      todayStr = localDate // Используем локальную дату пользователя из параметра
+    if (isYmd(localDate)) {
+      todayStr = localDate
       console.log(`📅 Using client's local date for quests: ${todayStr}`)
     } else {
-      // Fallback: локальная дата сервера (не UTC!)
       const today = new Date()
       const todayYear = today.getFullYear()
       const todayMonth = String(today.getMonth() + 1).padStart(2, '0')
@@ -1267,14 +1281,61 @@ async function handleDailyQuests(req, res) {
       )
     }
 
+    const offsetMin = parseOffset(tzOffsetMinutes)
+    const ymdToUtcMs = (ymd) => {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd)
+      if (!m) return null
+      const year = Number(m[1])
+      const month = Number(m[2])
+      const day = Number(m[3])
+      if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+        return null
+      }
+      return Date.UTC(year, month - 1, day, 0, 0, 0, 0)
+    }
+
+    // Границы локального дня пользователя в UTC для фильтрации timestamptz
+    let dayStartUtcIso = null
+    let dayEndUtcIso = null
+    if (isYmd(todayStr) && offsetMin != null) {
+      const utcMidnightMs = ymdToUtcMs(todayStr)
+      if (utcMidnightMs != null) {
+        // UTC = local + offsetMinutes
+        const startMs = utcMidnightMs + offsetMin * 60 * 1000
+        const endMs = startMs + 24 * 60 * 60 * 1000
+        dayStartUtcIso = new Date(startMs).toISOString()
+        dayEndUtcIso = new Date(endMs).toISOString()
+      }
+    }
+
     // Получаем текущие квесты (кроме streak_gem_quest, который обрабатывается отдельно)
-    const { data: quests, error: questsError } = await supabase
+    let questsQuery = supabase
       .from('daily_quests')
       .select('*')
       .eq('telegram_id', parseInt(telegramId))
       .neq('quest_type', 'streak_gem_quest') // Исключаем повторяемый квест
-      .gte('generated_at', todayStr) // Сегодняшние квесты (локальная дата)
       .order('generated_at', { ascending: true })
+
+    if (dayStartUtcIso && dayEndUtcIso) {
+      questsQuery = questsQuery
+        .gte('generated_at', dayStartUtcIso)
+        .lt('generated_at', dayEndUtcIso)
+      console.log(`🕒 Daily quests UTC window:`, {
+        todayStr,
+        tzOffsetMinutes: offsetMin,
+        dayStartUtcIso,
+        dayEndUtcIso,
+      })
+    } else {
+      // Fallback: старое поведение (может быть неверным для TZ пользователя)
+      questsQuery = questsQuery.gte('generated_at', todayStr)
+      console.warn(`⚠️ Daily quests fallback window (may be TZ-incorrect):`, {
+        todayStr,
+        tzOffsetMinutes,
+      })
+    }
+
+    const { data: quests, error: questsError } = await questsQuery
 
     if (questsError) {
       console.error('Daily quests fetch error:', questsError)

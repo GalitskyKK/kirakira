@@ -12,6 +12,7 @@ import {
 import type { DailyQuestsResponse } from '@/types/dailyQuests'
 import { currencyKeys } from './useCurrencyQueries'
 import type { UserCurrency } from '@/types/currency'
+import { getLocalDateString } from '@/utils/dateHelpers'
 
 // ===============================================
 // 🎯 QUERY KEYS
@@ -22,12 +23,14 @@ export const dailyQuestKeys = {
   lists: () => [...dailyQuestKeys.all, 'list'] as const,
   list: (telegramId: number) =>
     [...dailyQuestKeys.lists(), telegramId] as const,
-  quests: (telegramId: number) =>
-    [...dailyQuestKeys.list(telegramId), 'quests'] as const,
+  day: (telegramId: number, localDate: string) =>
+    [...dailyQuestKeys.list(telegramId), localDate] as const,
+  quests: (telegramId: number, localDate: string) =>
+    [...dailyQuestKeys.day(telegramId, localDate), 'quests'] as const,
   quest: (questId: string) =>
     [...dailyQuestKeys.all, 'quest', questId] as const,
-  stats: (telegramId: number) =>
-    [...dailyQuestKeys.list(telegramId), 'stats'] as const,
+  stats: (telegramId: number, localDate: string) =>
+    [...dailyQuestKeys.day(telegramId, localDate), 'stats'] as const,
 } as const
 
 // ===============================================
@@ -38,8 +41,9 @@ export const dailyQuestKeys = {
  * Получает ежедневные задания пользователя
  */
 export function useDailyQuests(telegramId: number, enabled: boolean = true) {
+  const localDate = getLocalDateString(new Date())
   return useQuery({
-    queryKey: dailyQuestKeys.quests(telegramId),
+    queryKey: dailyQuestKeys.quests(telegramId, localDate),
     queryFn: () => getDailyQuests(telegramId),
     enabled: enabled && !!telegramId,
     staleTime: 10 * 60 * 1000, // 10 минут - увеличено для снижения нагрузки
@@ -55,8 +59,9 @@ export function useDailyQuests(telegramId: number, enabled: boolean = true) {
  * Получает статистику заданий пользователя
  */
 export function useQuestStats(telegramId: number, enabled: boolean = true) {
+  const localDate = getLocalDateString(new Date())
   return useQuery({
-    queryKey: dailyQuestKeys.stats(telegramId),
+    queryKey: dailyQuestKeys.stats(telegramId, localDate),
     queryFn: async () => {
       const response = await getDailyQuests(telegramId)
       return response.stats
@@ -110,9 +115,11 @@ export function useClaimDailyQuest() {
       questId: string
     }) => claimDailyQuest(telegramId, questId),
     onSuccess: (result, variables) => {
+      const localDate = getLocalDateString(new Date())
+
       // Обновляем кеш списка заданий сразу, чтобы статус "получено" применился без перезагрузки
       queryClient.setQueryData(
-        dailyQuestKeys.quests(variables.telegramId),
+        dailyQuestKeys.quests(variables.telegramId, localDate),
         (old: DailyQuestsResponse | undefined) =>
           old
             ? {
@@ -147,11 +154,11 @@ export function useClaimDailyQuest() {
       // Инвалидируем связанные запросы, чтобы подтянуть транзакции/статистику с сервера
       void Promise.all([
         queryClient.invalidateQueries({
-          queryKey: dailyQuestKeys.quests(variables.telegramId),
+          queryKey: dailyQuestKeys.quests(variables.telegramId, localDate),
           refetchType: 'active',
         }),
         queryClient.invalidateQueries({
-          queryKey: dailyQuestKeys.stats(variables.telegramId),
+          queryKey: dailyQuestKeys.stats(variables.telegramId, localDate),
           refetchType: 'active',
         }),
         queryClient.invalidateQueries({
@@ -202,9 +209,11 @@ export function useUpdateQuestProgress() {
       return updateQuestProgress(telegramId, questIdOrType, increment)
     },
     onSuccess: (result, variables) => {
+      const localDate = getLocalDateString(new Date())
+
       // Инвалидируем кеш заданий
       queryClient.invalidateQueries({
-        queryKey: dailyQuestKeys.quests(variables.telegramId),
+        queryKey: dailyQuestKeys.quests(variables.telegramId, localDate),
       })
 
       // Обновляем конкретное задание в кеше (если есть questId)
@@ -250,9 +259,11 @@ export function useUpdateMultipleQuestProgress() {
       return Promise.all(promises)
     },
     onSuccess: (results, variables) => {
+      const localDate = getLocalDateString(new Date())
+
       // Инвалидируем кеш заданий
       queryClient.invalidateQueries({
-        queryKey: dailyQuestKeys.quests(variables.telegramId),
+        queryKey: dailyQuestKeys.quests(variables.telegramId, localDate),
       })
 
       // Обновляем каждое задание в кеше
@@ -300,14 +311,16 @@ export function useClaimAllRewards() {
       return results
     },
     onSuccess: (_results, variables) => {
+      const localDate = getLocalDateString(new Date())
+
       // Инвалидируем кеш заданий
       queryClient.invalidateQueries({
-        queryKey: dailyQuestKeys.quests(variables.telegramId),
+        queryKey: dailyQuestKeys.quests(variables.telegramId, localDate),
       })
 
       // Инвалидируем кеш статистики
       queryClient.invalidateQueries({
-        queryKey: dailyQuestKeys.stats(variables.telegramId),
+        queryKey: dailyQuestKeys.stats(variables.telegramId, localDate),
       })
 
       // Инвалидируем кеш валюты (синхронизация баланса)
@@ -474,7 +487,8 @@ export function useOptimisticQuestProgress() {
     increment: number = 1
   ) => {
     // Получаем текущие данные
-    const queryKey = dailyQuestKeys.quests(telegramId)
+    const localDate = getLocalDateString(new Date())
+    const queryKey = dailyQuestKeys.quests(telegramId, localDate)
     const previousData = queryClient.getQueryData<DailyQuestsResponse>(queryKey)
 
     if (previousData) {

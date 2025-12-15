@@ -4,7 +4,7 @@
  * И Zustand для клиентского UI состояния
  */
 
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useMoodClientStore } from '@/stores/moodStore'
 import {
   useMoodSync,
@@ -15,9 +15,14 @@ import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useChallengeMoodIntegration } from '@/hooks/useChallengeIntegration'
 import { useQuestIntegration } from '@/hooks/useQuestIntegration'
+import { useUserClientStore } from '@/stores/userStore'
 import type { MoodType, MoodIntensity, MoodEntry, MoodStats } from '@/types'
 import { getMoodDisplayProps, getRecommendedMood } from '@/utils/moodMapping'
-import { getTimeUntilNextCheckin } from '@/utils/dateHelpers'
+import {
+  getLocalDateString,
+  getLocalDateTimeString,
+  getTimeUntilNextCheckin,
+} from '@/utils/dateHelpers'
 import { calculateMoodStats } from '@/utils/moodMapping'
 import { loadMoodHistory, saveMoodHistory } from '@/utils/storage'
 import { awardMoodRewards } from '@/utils/currencyRewards'
@@ -31,6 +36,9 @@ export function useMoodTracking() {
   const { data: userData } = useUserSync(telegramId, !!telegramId)
   const currentUser = userData?.user
   const userId = currentUser?.id
+  const { isGuestModeEnabled } = useUserClientStore()
+  const guestModeEnabled = isGuestModeEnabled === true
+  const [localVersion, setLocalVersion] = useState(0)
 
   // Серверное состояние через React Query
   const {
@@ -47,7 +55,10 @@ export function useMoodTracking() {
   })
 
   // Проверка возможности отметки настроения
-  const { canCheckin, todaysMood } = useCanCheckinToday(telegramId, userId)
+  const { canCheckin, todaysMood: serverTodaysMood } = useCanCheckinToday(
+    telegramId,
+    userId
+  )
 
   // Клиентское UI состояние через Zustand
   const {
@@ -63,6 +74,7 @@ export function useMoodTracking() {
   // 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Объединенное состояние с приоритетом серверным данным
   // Если после очистки localStorage нет истории, но есть серверные данные - используем их
   const moodHistory = useMemo(() => {
+    void localVersion
     const localMoodHistory = loadMoodHistory()
 
     // Если есть серверные данные - они приоритетнее
@@ -74,7 +86,23 @@ export function useMoodTracking() {
 
     // Fallback на локальные данные (offline-first)
     return localMoodHistory
-  }, [moodData])
+  }, [moodData, localVersion])
+
+  const todaysMoodLocal = useMemo(() => {
+    if (moodHistory.length === 0) {
+      return null
+    }
+
+    const todayKey = getLocalDateString(new Date())
+    return (
+      moodHistory.find(
+        entry => getLocalDateString(entry.date ?? new Date()) === todayKey
+      ) ?? null
+    )
+  }, [moodHistory])
+
+  const todaysMood = serverTodaysMood ?? todaysMoodLocal
+  const canCheckinTodayFlag = todaysMood === null && canCheckin
 
   // Статистика настроений
   // 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Используем серверные стрики из userData вместо локального расчета
@@ -124,13 +152,35 @@ export function useMoodTracking() {
       intensity: MoodIntensity,
       note?: string
     ): Promise<MoodEntry | null> => {
-      if (!currentUser?.telegramId || !currentUser?.id) {
-        console.error('❌ No user available')
+      if (!canCheckinTodayFlag) {
+        console.error('❌ Already checked in today')
         return null
       }
 
-      if (!canCheckin) {
-        console.error('❌ Already checked in today')
+      if (currentUser?.telegramId === undefined) {
+        if (guestModeEnabled) {
+          const now = new Date()
+          const todayKey = getLocalDateString(now)
+          const sanitizedHistory = moodHistory.filter(
+            entry => getLocalDateString(entry.date) !== todayKey
+          )
+
+          const guestEntry: MoodEntry = {
+            id: `guest_mood_${now.getTime()}`,
+            userId: currentUser?.id ?? 'guest_user',
+            date: now,
+            mood,
+            intensity,
+            note,
+            createdAt: now,
+          }
+
+          saveMoodHistory([guestEntry, ...sanitizedHistory])
+          setLocalVersion(version => version + 1)
+          return guestEntry
+        }
+
+        console.error('❌ No user available')
         return null
       }
 
@@ -165,12 +215,16 @@ export function useMoodTracking() {
           intensity: MoodIntensity
           note?: string
           date: string
+          localDate?: string
           telegramUserData: typeof telegramUserData
         } = {
           telegramUserId: currentUser.telegramId,
           mood,
           intensity,
-          date: new Date().toISOString(),
+          // 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: отправляем локальное время с offset'ом,
+          // а "день" передаем отдельно (YYYY-MM-DD), чтобы не было сдвига на UTC.
+          date: getLocalDateTimeString(new Date()),
+          localDate: getLocalDateString(new Date()),
           telegramUserData,
         }
 
@@ -181,7 +235,7 @@ export function useMoodTracking() {
         const entry = await addMoodMutation.mutateAsync(moodRequest)
 
         // 💰 Начисляем валюту за запись настроения
-        const isFirstToday = !todaysMood
+        const isFirstToday = todaysMood == null
         const currencyResult = await awardMoodRewards(
           currentUser.telegramId,
           isFirstToday
@@ -192,7 +246,7 @@ export function useMoodTracking() {
         }
 
         // 🎯 Обновляем прогресс daily quests
-        if (telegramId) {
+        if (telegramId !== undefined) {
           try {
             // Обновляем квесты настроения
             await questActions.recordMood(mood, !!note)
@@ -222,7 +276,17 @@ export function useMoodTracking() {
         return null
       }
     },
-    [currentUser, canCheckin, addMoodMutation]
+    [
+      currentUser,
+      canCheckinTodayFlag,
+      guestModeEnabled,
+      addMoodMutation,
+      moodHistory,
+      questActions,
+      telegramId,
+      todaysMood,
+      onMoodEntryAdded,
+    ]
   )
 
   // Получение свойств отображения настроения
@@ -232,8 +296,8 @@ export function useMoodTracking() {
 
   // Проверка возможности отметки
   const canCheckinNow = useCallback(() => {
-    return canCheckin
-  }, [canCheckin])
+    return canCheckinTodayFlag
+  }, [canCheckinTodayFlag])
 
   // Получение настроения за сегодня
   const getTodaysMoodEntry = useCallback(() => {

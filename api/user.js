@@ -449,7 +449,7 @@ async function handleUseStreakFreeze(req, res) {
   }
 
   try {
-    const { telegramId, freezeType = 'manual', missedDays = 1 } = req.body
+    const { telegramId, freezeType = 'manual', missedDays = 1, localDate = null } = req.body
 
     if (!telegramId) {
       return res
@@ -504,14 +504,49 @@ async function handleUseStreakFreeze(req, res) {
       updates.streak_freezes = user.streak_freezes - missedDays
     }
 
-    // 🔥 СИНХРОНИЗАЦИЯ: Обновляем дату последней отметки на ВЧЕРАШНИЙ день
-    // ВАЖНО: Используем локальную дату (не UTC), чтобы совпадать с форматом из api/mood.js
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    const yesterdayYear = yesterday.getFullYear()
-    const yesterdayMonth = String(yesterday.getMonth() + 1).padStart(2, '0')
-    const yesterdayDay = String(yesterday.getDate()).padStart(2, '0')
-    updates.streak_last_checkin = `${yesterdayYear}-${yesterdayMonth}-${yesterdayDay}`
+    // 🔥 СИНХРОНИЗАЦИЯ (TZ):
+    // "Вчера" должно считаться от локального дня пользователя, а не от времени сервера.
+    // Клиент передает localDate=YYYY-MM-DD.
+    const ymdToUtcMs = (ymd) => {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd)
+      if (!m) return null
+      const year = Number(m[1])
+      const month = Number(m[2])
+      const day = Number(m[3])
+      if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+        return null
+      }
+      return Date.UTC(year, month - 1, day, 0, 0, 0, 0)
+    }
+
+    const utcMsToYmd = (ms) => {
+      const d = new Date(ms)
+      const y = d.getUTCFullYear()
+      const m = String(d.getUTCMonth() + 1).padStart(2, '0')
+      const day = String(d.getUTCDate()).padStart(2, '0')
+      return `${y}-${m}-${day}`
+    }
+
+    let yesterdayStr = null
+    if (typeof localDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(localDate)) {
+      const todayMs = ymdToUtcMs(localDate)
+      yesterdayStr = todayMs != null ? utcMsToYmd(todayMs - 24 * 60 * 60 * 1000) : null
+    }
+
+    if (!yesterdayStr) {
+      // Fallback: локальная дата сервера (может быть неверной для TZ пользователя!)
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      const yesterdayYear = yesterday.getFullYear()
+      const yesterdayMonth = String(yesterday.getMonth() + 1).padStart(2, '0')
+      const yesterdayDay = String(yesterday.getDate()).padStart(2, '0')
+      yesterdayStr = `${yesterdayYear}-${yesterdayMonth}-${yesterdayDay}`
+      console.warn(
+        `⚠️ No/invalid localDate for use-streak-freeze, using server local yesterday: ${yesterdayStr}`
+      )
+    }
+
+    updates.streak_last_checkin = yesterdayStr
 
     console.log(`🔍 [FREEZE DEBUG] Before applying freeze:`, {
       telegramId,
@@ -576,7 +611,7 @@ async function handleResetStreak(req, res) {
   }
 
   try {
-    const { telegramId } = req.body
+    const { telegramId, localDate = null } = req.body
 
     if (!telegramId) {
       return res
@@ -588,15 +623,45 @@ async function handleResetStreak(req, res) {
 
     console.log(`🔄 Resetting streak for user ${telegramId}`)
 
-    // 🔥 СИНХРОНИЗАЦИЯ: Устанавливаем дату последней отметки на ВЧЕРА,
-    // чтобы пользователь мог сразу начать новый стрик сегодня.
-    // ВАЖНО: Используем локальную дату (не UTC), чтобы совпадать с форматом из api/mood.js
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    const yesterdayYear = yesterday.getFullYear()
-    const yesterdayMonth = String(yesterday.getMonth() + 1).padStart(2, '0')
-    const yesterdayDay = String(yesterday.getDate()).padStart(2, '0')
-    const yesterdayFormatted = `${yesterdayYear}-${yesterdayMonth}-${yesterdayDay}`
+    // 🔥 СИНХРОНИЗАЦИЯ (TZ): "Вчера" считаем от localDate пользователя.
+    const ymdToUtcMs = (ymd) => {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd)
+      if (!m) return null
+      const year = Number(m[1])
+      const month = Number(m[2])
+      const day = Number(m[3])
+      if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+        return null
+      }
+      return Date.UTC(year, month - 1, day, 0, 0, 0, 0)
+    }
+
+    const utcMsToYmd = (ms) => {
+      const d = new Date(ms)
+      const y = d.getUTCFullYear()
+      const m = String(d.getUTCMonth() + 1).padStart(2, '0')
+      const day = String(d.getUTCDate()).padStart(2, '0')
+      return `${y}-${m}-${day}`
+    }
+
+    let yesterdayFormatted = null
+    if (typeof localDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(localDate)) {
+      const todayMs = ymdToUtcMs(localDate)
+      yesterdayFormatted =
+        todayMs != null ? utcMsToYmd(todayMs - 24 * 60 * 60 * 1000) : null
+    }
+
+    if (!yesterdayFormatted) {
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      const yesterdayYear = yesterday.getFullYear()
+      const yesterdayMonth = String(yesterday.getMonth() + 1).padStart(2, '0')
+      const yesterdayDay = String(yesterday.getDate()).padStart(2, '0')
+      yesterdayFormatted = `${yesterdayYear}-${yesterdayMonth}-${yesterdayDay}`
+      console.warn(
+        `⚠️ No/invalid localDate for reset-streak, using server local yesterday: ${yesterdayFormatted}`
+      )
+    }
 
     // Сбрасываем стрик в базе данных
     const { data: updated, error: updateError } = await supabase
@@ -1219,22 +1284,47 @@ async function handleCheckStreak(req, res) {
     }
 
     // --- Логика расчета пропущенных дней ---
-    // ВАЖНО: Используем локальное время сервера, чтобы совпадать с api/mood.js
-    const today = new Date()
-    const todayYear = today.getFullYear()
-    const todayMonth = String(today.getMonth() + 1).padStart(2, '0')
-    const todayDay = String(today.getDate()).padStart(2, '0')
-    const todayFormatted = `${todayYear}-${todayMonth}-${todayDay}`
+    // 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ (TZ):
+    // "Сегодня" должно определяться по локальному дню пользователя, а не по времени сервера.
+    // Клиент передает localDate=YYYY-MM-DD.
+    const { localDate } = req.query
+    let todayFormatted
+    if (typeof localDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(localDate)) {
+      todayFormatted = localDate
+    } else {
+      // Fallback: локальная дата сервера (может быть неверной для пользователя!)
+      const today = new Date()
+      const todayYear = today.getFullYear()
+      const todayMonth = String(today.getMonth() + 1).padStart(2, '0')
+      const todayDay = String(today.getDate()).padStart(2, '0')
+      todayFormatted = `${todayYear}-${todayMonth}-${todayDay}`
+      console.warn(
+        `⚠️ No localDate provided for check-streak, using server local date: ${todayFormatted}`
+      )
+    }
+
+    const ymdToUtcMs = (ymd) => {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd)
+      if (!m) return null
+      const year = Number(m[1])
+      const month = Number(m[2])
+      const day = Number(m[3])
+      if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+        return null
+      }
+      return Date.UTC(year, month - 1, day, 0, 0, 0, 0)
+    }
 
     let missedDays = 0
 
     if (user.streak_last_checkin) {
-      // 🔧 ИСПРАВЛЕНИЕ: Парсим даты как локальные (не UTC) для корректной работы с часовыми поясами
-      const lastCheckinDate = new Date(user.streak_last_checkin + 'T00:00:00')
-      const todayDate = new Date(todayFormatted + 'T00:00:00')
-
-      const diffTime = todayDate.getTime() - lastCheckinDate.getTime()
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+      // Считаем разницу в ДНЯХ между двумя YYYY-MM-DD без влияния часового пояса.
+      const lastMs = ymdToUtcMs(user.streak_last_checkin)
+      const todayMs = ymdToUtcMs(todayFormatted)
+      const diffDays =
+        lastMs != null && todayMs != null
+          ? Math.floor((todayMs - lastMs) / (1000 * 60 * 60 * 24))
+          : 0
 
       console.log(
         `🔍 [CHECK STREAK] lastCheckin=${user.streak_last_checkin}, today=${todayFormatted}, diffDays=${diffDays}`

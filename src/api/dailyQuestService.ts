@@ -29,7 +29,8 @@ export async function getDailyQuests(
 ): Promise<DailyQuestsResponse> {
   // 🔧 ИСПРАВЛЕНИЕ: Передаем локальную дату клиента для корректной работы с часовыми поясами
   const localDate = getLocalDateString(new Date())
-  const url = `${DAILY_QUESTS_ENDPOINT}?action=daily-quests&telegramId=${telegramId}&localDate=${localDate}`
+  const tzOffsetMinutes = new Date().getTimezoneOffset()
+  const url = `${DAILY_QUESTS_ENDPOINT}?action=daily-quests&telegramId=${telegramId}&localDate=${localDate}&tzOffsetMinutes=${tzOffsetMinutes}`
   const response = await apiGet<{
     success: boolean
     data: DailyQuestsResponse

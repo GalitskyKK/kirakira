@@ -47,6 +47,7 @@ async function handleRecord(req, res) {
       telegramUserId,
       mood,
       date,
+      localDate = null,
       note = null,
       intensity = 2,
       telegramUserData = null,
@@ -122,19 +123,32 @@ async function handleRecord(req, res) {
       }
     }
 
-    // 🔧 ИСПРАВЛЕНИЕ: Правильно форматируем дату с учетом часового пояса пользователя
-    // Клиент отправляет дату в своем локальном времени, нужно извлечь только дату
-    const moodDate = new Date(date)
+    // 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ (TZ):
+    // НЕЛЬЗЯ вычислять "локальный день пользователя" через Date#getFullYear/getDate на сервере,
+    // потому что TZ сервера ≠ TZ пользователя, и получится сдвиг (например 00:22 Екб -> "вчера").
+    //
+    // Поэтому:
+    // 1) если клиент передал localDate (YYYY-MM-DD) — используем его напрямую
+    // 2) иначе, если date выглядит как ISO (YYYY-MM-DDT...) — берем первые 10 символов
+    // 3) иначе fallback на старую логику сервера (может быть неверной для TZ пользователя)
+    let formattedDate = null
+    if (typeof localDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(localDate)) {
+      formattedDate = localDate
+    } else if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(date)) {
+      formattedDate = date.slice(0, 10)
+    } else {
+      const moodDate = new Date(date)
+      const userYear = moodDate.getFullYear()
+      const userMonth = String(moodDate.getMonth() + 1).padStart(2, '0')
+      const userDay = String(moodDate.getDate()).padStart(2, '0')
+      formattedDate = `${userYear}-${userMonth}-${userDay}`
+    }
 
-    // Получаем локальную дату пользователя (YYYY-MM-DD) независимо от UTC
-    const userYear = moodDate.getFullYear()
-    const userMonth = String(moodDate.getMonth() + 1).padStart(2, '0')
-    const userDay = String(moodDate.getDate()).padStart(2, '0')
-    const formattedDate = `${userYear}-${userMonth}-${userDay}`
-
-    console.log(
-      `📅 Date processing: client sent ${date}, saving as ${formattedDate}`
-    )
+    console.log(`📅 Date processing: client sent`, {
+      date,
+      localDate,
+      savedAs: formattedDate,
+    })
 
     // Используем UPSERT для замены записи за день
     const { data, error } = await supabase

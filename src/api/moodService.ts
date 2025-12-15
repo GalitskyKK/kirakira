@@ -22,6 +22,11 @@ export interface AddMoodRequest {
   readonly intensity: MoodIntensity
   readonly note?: string
   readonly date: string
+  /**
+   * Локальная дата пользователя (YYYY-MM-DD).
+   * Нужна, чтобы бэкенд НЕ пытался выводить "день" из UTC времени сервера.
+   */
+  readonly localDate?: string
   readonly telegramUserData: {
     readonly userId: string
     readonly firstName: string

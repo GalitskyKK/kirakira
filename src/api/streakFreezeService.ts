@@ -4,6 +4,7 @@
  */
 
 import { authenticatedFetch } from '@/utils/apiClient'
+import { getLocalDateString } from '@/utils/dateHelpers'
 import type {
   BuyStreakFreezeRequest,
   BuyStreakFreezeResponse,
@@ -24,6 +25,7 @@ interface ApplyStreakFreezeRequest {
   readonly telegramId: number
   readonly freezeType: 'manual' | 'auto'
   readonly missedDays: number
+  readonly localDate?: string
 }
 
 interface ApplyStreakFreezeResponse {
@@ -122,12 +124,17 @@ export async function applyStreakFreeze(
   readonly currentStreak: number
 }> {
   try {
+    const withLocalDate: ApplyStreakFreezeRequest = {
+      ...request,
+      localDate: request.localDate ?? getLocalDateString(new Date()),
+    }
+
     const response = await authenticatedFetch(
       '/api/user?action=use-streak-freeze',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(request),
+        body: JSON.stringify(withLocalDate),
       }
     )
 
@@ -160,10 +167,15 @@ export async function resetStreak(request: ResetStreakRequest): Promise<{
   readonly message: string
 }> {
   try {
+    const withLocalDate: ResetStreakRequest & { readonly localDate: string } = {
+      ...request,
+      localDate: getLocalDateString(new Date()),
+    }
+
     const response = await authenticatedFetch('/api/user?action=reset-streak', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request),
+      body: JSON.stringify(withLocalDate),
     })
 
     if (!response.ok) {
@@ -196,8 +208,9 @@ export async function checkStreak(telegramId: number): Promise<{
   readonly lastCheckin: string | null
 }> {
   try {
+    const localDate = getLocalDateString(new Date())
     const response = await authenticatedFetch(
-      `/api/user?action=check-streak&telegramId=${telegramId}`
+      `/api/user?action=check-streak&telegramId=${telegramId}&localDate=${localDate}`
     )
 
     if (!response.ok) {
