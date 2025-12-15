@@ -1706,12 +1706,12 @@ async function handleClaimDailyQuest(req, res) {
       success: true,
       data: {
         quest: formattedQuest,
-        balance, // Баланс уже включен в ответ функции
-        rewards: {
-          sprouts: sproutsEarned,
-          gems: gemsEarned,
-          experience: experienceEarned,
-        },
+        // 🔧 ВАЖНО: фронт ожидает newBalance (а не balance)
+        // Оставляем balance для обратной совместимости, но добавляем newBalance как основной контракт
+        newBalance: balance,
+        balance,
+        // Возвращаем rewards как в квесте (там есть description)
+        rewards: questRow.rewards,
       },
     })
   } catch (error) {

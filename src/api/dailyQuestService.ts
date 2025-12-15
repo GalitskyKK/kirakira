@@ -52,9 +52,17 @@ export async function claimDailyQuest(
   questId: string
 ): Promise<ClaimQuestResponse> {
   const url = `${DAILY_QUESTS_ENDPOINT}?action=claim-daily-quest`
+  type ClaimDailyQuestApiData =
+    | ClaimQuestResponse
+    | {
+        readonly quest: ClaimQuestResponse['quest']
+        readonly balance: ClaimQuestResponse['newBalance']
+        readonly rewards: ClaimQuestResponse['rewards']
+      }
+
   const response = await apiPost<{
     success: boolean
-    data: ClaimQuestResponse
+    data: ClaimDailyQuestApiData
     error?: string
   }>(url, {
     telegramId,
@@ -65,7 +73,16 @@ export async function claimDailyQuest(
     throw new Error(response.error || 'Ошибка при получении награды')
   }
 
-  return response.data
+  const data = response.data
+  if ('newBalance' in data) {
+    return data
+  }
+
+  return {
+    quest: data.quest,
+    newBalance: data.balance,
+    rewards: data.rewards,
+  }
 }
 
 /**
