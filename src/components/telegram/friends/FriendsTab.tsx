@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { MessageCircle, TreePine, Trophy, User } from 'lucide-react'
+import { TreePine, User } from 'lucide-react'
 import type { Friend } from '@/hooks'
 import { Button, Card, UserAvatar } from '@/components/ui'
 
@@ -21,8 +21,6 @@ export function FriendsTab({
   onInvite,
   onViewGarden,
   onViewProfile,
-  onMessageFriend,
-  onChallengeFriend,
 }: FriendsTabProps) {
   return (
     <motion.div
