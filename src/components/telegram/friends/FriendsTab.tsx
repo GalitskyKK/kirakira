@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { MessageCircle, TreePine, Trophy } from 'lucide-react'
+import { MessageCircle, TreePine, Trophy, User } from 'lucide-react'
 import type { Friend } from '@/hooks'
 import { Button, Card, UserAvatar } from '@/components/ui'
 
@@ -120,13 +120,16 @@ export function FriendsTab({
                       className="min-w-0 flex-1"
                       title="Профиль"
                     >
-                      Профиль
+                      <User className="h-3 w-3" />
+                      <span className="ml-1 hidden truncate text-xs sm:inline">
+                        Профиль
+                      </span>
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => onViewGarden(friend)}
-                      className="min-w-0 flex-1 bg-green-50 text-green-700 hover:bg-green-100"
+                      className="min-w-0 flex-1"
                       title="Просмотр сада"
                     >
                       <TreePine className="h-3 w-3" />
@@ -134,7 +137,7 @@ export function FriendsTab({
                         Сад
                       </span>
                     </Button>
-                    <Button
+                    {/* <Button
                       size="sm"
                       variant="outline"
                       onClick={() => onMessageFriend(friend)}
@@ -145,8 +148,8 @@ export function FriendsTab({
                       <span className="ml-1 hidden truncate text-xs sm:inline">
                         Сообщ.
                       </span>
-                    </Button>
-                    <Button
+                    </Button> */}
+                    {/* <Button
                       size="sm"
                       variant="outline"
                       onClick={() => onChallengeFriend(friend)}
@@ -157,7 +160,7 @@ export function FriendsTab({
                       <span className="ml-1 hidden truncate text-xs sm:inline">
                         Челл.
                       </span>
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
               </Card>

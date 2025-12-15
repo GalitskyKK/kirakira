@@ -286,7 +286,7 @@ export function RoomThemeShopSection() {
                                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                                 ) : (
                                   <>
-                                    <Leaf className="mr-1.5 h-4 w-4" />
+                                    <Leaf className="mr-1.5 h-4 w-4 text-white" />
                                     {theme.priceSprouts}
                                   </>
                                 )}
@@ -308,7 +308,7 @@ export function RoomThemeShopSection() {
                                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                                 ) : (
                                   <>
-                                    <Gem className="mr-1.5 h-4 w-4" />
+                                    <Gem className="mr-1.5 h-4 w-4 text-white" />
                                     {theme.priceGems}
                                   </>
                                 )}
