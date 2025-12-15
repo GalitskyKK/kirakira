@@ -119,7 +119,7 @@ export function FriendsTab({
                       title="Профиль"
                     >
                       <User className="h-3 w-3" />
-                      <span className="ml-1 hidden truncate text-xs sm:inline">
+                      <span className="ml-1 truncate text-xs sm:inline">
                         Профиль
                       </span>
                     </Button>
@@ -131,7 +131,7 @@ export function FriendsTab({
                       title="Просмотр сада"
                     >
                       <TreePine className="h-3 w-3" />
-                      <span className="ml-1 hidden truncate text-xs sm:inline">
+                      <span className="ml-1 truncate text-xs sm:inline">
                         Сад
                       </span>
                     </Button>
