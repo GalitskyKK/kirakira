@@ -56,13 +56,6 @@ export const ACHIEVEMENTS_CONFIG: Omit<
     emoji: '🎯',
     category: AchievementCategory.STREAK,
   },
-  {
-    id: 'ambassador',
-    name: 'Амбассадор',
-    description: 'Поделиться садом 5 раз',
-    emoji: '🚀',
-    category: AchievementCategory.SOCIAL,
-  },
 ]
 
 // 🎯 Импортируем уровни из отдельного файла (50 уровней)
@@ -166,12 +159,6 @@ const ACHIEVEMENT_CONDITIONS: AchievementCheck[] = [
     condition: user => user.stats.totalDays >= 100,
     progress: user => user.stats.totalDays,
     maxProgress: 100,
-  },
-  {
-    id: 'ambassador',
-    condition: user => user.stats.gardensShared >= 5,
-    progress: user => user.stats.gardensShared,
-    maxProgress: 5,
   },
 ]
 

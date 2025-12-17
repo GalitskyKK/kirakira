@@ -4,6 +4,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useRef } from 'react'
 import {
   getProfile,
   addExperience,
@@ -11,6 +12,7 @@ import {
   type AddExperienceRequest,
 } from '@/api'
 import { saveUser, loadUser } from '@/utils/storage'
+import { awardAchievementRewards } from '@/utils/currencyRewards'
 import type { ProfileApiGetProfileResponse } from '@/types/api'
 import type { User } from '@/types'
 
@@ -31,9 +33,12 @@ export const profileKeys = {
 
 /**
  * Хук для получения собственного профиля
+ * Автоматически начисляет награды за новые достижения
  */
 export function useOwnProfile(telegramId: number | undefined, enabled = true) {
-  return useQuery({
+  const processedAchievementsRef = useRef<Set<string>>(new Set())
+
+  const query = useQuery({
     queryKey: profileKeys.own(telegramId ?? 0),
     queryFn: async () => {
       if (!telegramId) {
@@ -46,6 +51,60 @@ export function useOwnProfile(telegramId: number | undefined, enabled = true) {
     gcTime: 1000 * 60 * 10, // 10 минут в кеше
     refetchOnWindowFocus: true,
   })
+
+  // Обрабатываем новые достижения и начисляем награды
+  useEffect(() => {
+    if (!query.data || !telegramId) return
+
+    const newlyUnlocked = query.data.newlyUnlocked
+    if (!newlyUnlocked || newlyUnlocked.length === 0) return
+
+    // Обрабатываем каждое новое достижение
+    newlyUnlocked.forEach(async achievement => {
+      const achievementId = achievement.achievement_id
+
+      // Проверяем, не обработали ли мы уже это достижение
+      if (processedAchievementsRef.current.has(achievementId)) {
+        return
+      }
+
+      // Помечаем как обработанное
+      processedAchievementsRef.current.add(achievementId)
+
+      const rarity = achievement.achievements?.rarity
+
+      try {
+        console.log(
+          `🏆 Обработка нового достижения: ${achievementId} (rarity: ${rarity})`
+        )
+
+        const result = await awardAchievementRewards(
+          telegramId,
+          achievementId,
+          rarity
+        )
+
+        if (result.success) {
+          console.log(
+            `✅ Награды за достижение ${achievementId} начислены: ${result.sprouts} ростков, ${result.gems} кристаллов`
+          )
+        } else {
+          console.warn(
+            `⚠️ Не удалось начислить награды за достижение ${achievementId}`
+          )
+        }
+      } catch (error) {
+        console.error(
+          `❌ Ошибка при начислении наград за достижение ${achievementId}:`,
+          error
+        )
+        // Удаляем из обработанных, чтобы попробовать снова
+        processedAchievementsRef.current.delete(achievementId)
+      }
+    })
+  }, [query.data, telegramId])
+
+  return query
 }
 
 /**

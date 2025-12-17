@@ -220,8 +220,8 @@ export const SPROUT_REWARDS: Record<
 
   // Прогрессия
   level_up: { amount: 100, description: 'Повышение уровня (базово)' },
-  achievement_unlock: { amount: 50, description: 'Достижение разблокировано' },
-  rare_achievement: { amount: 150, description: 'Редкое достижение' },
+  achievement_unlock: { amount: 150, description: 'Достижение разблокировано' },
+  rare_achievement: { amount: 300, description: 'Редкое достижение' },
 
   // Элементы
   element_common: { amount: 5, description: 'Получен обычный элемент' },
@@ -280,8 +280,8 @@ export const GEM_REWARDS: Record<
   monthly_streak: { amount: 5, description: 'Стрик 30 дней' }, // 💎 РАБОТАЕТ!
   level_up_milestone_5: { amount: 3, description: 'Каждые 5 уровней' },
   level_up_milestone_10: { amount: 10, description: 'Каждые 10 уровней' },
-  rare_achievement: { amount: 3, description: 'Редкое достижение' },
-  epic_achievement: { amount: 8, description: 'Эпическое достижение' },
+  rare_achievement: { amount: 5, description: 'Редкое достижение' },
+  epic_achievement: { amount: 10, description: 'Эпическое достижение' },
 
   // Рейтинги
   daily_top_10: { amount: 2, description: 'Топ-10 дня' },
@@ -407,7 +407,7 @@ export interface CurrencyActions {
     telegramId: number,
     limit?: number
   ) => Promise<CurrencyTransaction[]>
-  
+
   // v2: Обновление из React Query (для обратной совместимости)
   updateCurrencyFromQuery?: (currency: UserCurrency) => void
 

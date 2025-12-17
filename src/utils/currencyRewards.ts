@@ -6,7 +6,10 @@
  */
 
 import { authenticatedFetch } from '@/utils/apiClient'
-import type { StandardApiResponse, CurrencyApiTransactionResponse } from '@/types/api'
+import type {
+  StandardApiResponse,
+  CurrencyApiTransactionResponse,
+} from '@/types/api'
 import {
   type CurrencyType,
   type CurrencyReason,
@@ -428,6 +431,51 @@ export async function awardLevelUpRewards(
   }
 }
 
+/**
+ * Начислить награды за разблокировку достижения
+ * Обычное достижение: 150 ростков
+ * Редкое достижение: 300 ростков + 5 кристаллов
+ */
+export async function awardAchievementRewards(
+  telegramId: number,
+  achievementId: string,
+  rarity?: string
+): Promise<{
+  sprouts: number
+  gems: number
+  success: boolean
+}> {
+  const isRare =
+    rarity === 'rare' || rarity === 'epic' || rarity === 'legendary'
+
+  // Начисляем ростки
+  const sproutReason: SproutEarnReason = isRare
+    ? 'rare_achievement'
+    : 'achievement_unlock'
+  const sproutsResult = await awardSprouts(telegramId, sproutReason, {
+    achievementId,
+    rarity,
+  })
+
+  // Начисляем кристаллы только за редкие достижения
+  const gemsResult = isRare
+    ? await awardGems(telegramId, 'rare_achievement', {
+        achievementId,
+        rarity,
+      })
+    : { success: true as const, amount: 0, newBalance: undefined }
+
+  console.log(
+    `🏆 Награды за достижение ${achievementId}: ${sproutsResult.amount} ростков, ${gemsResult.amount} кристаллов`
+  )
+
+  return {
+    sprouts: sproutsResult.amount,
+    gems: gemsResult.amount,
+    success: sproutsResult.success && gemsResult.success,
+  }
+}
+
 // ===============================================
 // 📊 УТИЛИТЫ
 // ===============================================
@@ -498,7 +546,8 @@ export async function getCurrencyEarnedStats(
       throw new Error(`Failed to load transactions: ${response.status}`)
     }
 
-    const result = (await response.json()) as StandardApiResponse<CurrencyApiTransactionResponse>
+    const result =
+      (await response.json()) as StandardApiResponse<CurrencyApiTransactionResponse>
 
     if (!result.success || !result.data) {
       throw new Error(result.error ?? 'Failed to load transactions')
