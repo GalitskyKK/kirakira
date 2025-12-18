@@ -298,14 +298,14 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
               <button
                 onClick={goToPrevious}
                 className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg backdrop-blur-sm transition-all hover:bg-white dark:bg-neutral-800/90 dark:hover:bg-neutral-800"
-                aria-label="Предыдущая тема"
+                aria-label={t.gardenActions.previousTheme}
               >
                 <ChevronLeft className="h-5 w-5 text-neutral-700 dark:text-neutral-300" />
               </button>
               <button
                 onClick={goToNext}
                 className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg backdrop-blur-sm transition-all hover:bg-white dark:bg-neutral-800/90 dark:hover:bg-neutral-800"
-                aria-label="Следующая тема"
+                aria-label={t.gardenActions.nextTheme}
               >
                 <ChevronRight className="h-5 w-5 text-neutral-700 dark:text-neutral-300" />
               </button>
@@ -457,7 +457,7 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
                       ? 'w-8 bg-kira-500'
                       : 'w-2 bg-neutral-300 dark:bg-neutral-600'
                   }`}
-                  aria-label={`Перейти к теме ${index + 1}`}
+                  aria-label={`${t.gardenActions.goToTheme} ${index + 1}`}
                 />
               ))}
             </div>

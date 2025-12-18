@@ -128,7 +128,7 @@ export function ProfilePage() {
     // Базовые поля - приоритет данным из API
     id: apiUser?.user_id ?? currentUser?.id ?? '',
     telegramId: apiUser?.telegram_id ?? currentUser?.telegramId ?? 0,
-    firstName: apiUser?.first_name ?? currentUser?.firstName ?? 'Пользователь',
+    firstName: apiUser?.first_name ?? currentUser?.firstName ?? t.common.user,
     lastName: apiUser?.last_name ?? currentUser?.lastName ?? '',
     username: apiUser?.username ?? currentUser?.username ?? '',
     photoUrl: apiUser?.photo_url ?? currentUser?.photoUrl ?? '',

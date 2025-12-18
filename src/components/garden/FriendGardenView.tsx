@@ -149,27 +149,27 @@ export function FriendGardenView({
         (await response.json()) as StandardApiResponse<FriendGardenData>
 
       if (!response.ok || !result.success || !result.data) {
-        // Преобразуем английские ошибки в русские user-friendly сообщения
+        // Преобразуем английские ошибки в локализованные user-friendly сообщения
         const errorMessage = result.error ?? 'Failed to load friend garden'
-        let russianError = 'Не удалось загрузить сад друга'
+        let localizedError = t.pages.community.friendGarden.loadError
 
         if (
           errorMessage.includes('not your friend') ||
           errorMessage.includes('not friends')
         ) {
-          russianError = 'Вы не являетесь друзьями с этим пользователем'
+          localizedError = t.pages.community.friendGarden.notFriends
         } else if (
           errorMessage.includes('private') ||
           errorMessage.includes('hidden')
         ) {
-          russianError = 'Этот пользователь скрыл свой сад'
+          localizedError = t.pages.community.friendGarden.gardenHidden
         } else if (errorMessage.includes('not found')) {
-          russianError = 'Пользователь не найден'
+          localizedError = t.pages.community.friendGarden.userNotFound
         } else if (errorMessage.includes('permission')) {
-          russianError = 'Нет доступа к саду этого пользователя'
+          localizedError = t.pages.community.friendGarden.noAccess
         }
 
-        throw new Error(russianError)
+        throw new Error(localizedError)
       }
       setFriendGarden(result.data)
       // Сбрасываем индекс комнаты при загрузке нового сада
@@ -305,7 +305,7 @@ export function FriendGardenView({
         >
           <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent dark:border-blue-400"></div>
           <p className="text-gray-600 dark:text-gray-400">
-            Загружаем сад друга...
+            {t.pages.community.friendGarden.loading}
           </p>
         </motion.div>
       </div>
@@ -314,14 +314,16 @@ export function FriendGardenView({
 
   // ❌ Состояние ошибки
   if (error || !friendGarden) {
-    const isFriendshipError = error?.includes('не являетесь друзьями') || false
-    const isPrivacyError = error?.includes('скрыл свой сад') || false
+    const isFriendshipError =
+      error?.includes(t.pages.community.friendGarden.notFriends) || false
+    const isPrivacyError =
+      error?.includes(t.pages.community.friendGarden.gardenHidden) || false
 
     return (
       <div className="space-y-4">
         <Button onClick={onBack} variant="outline" size="sm" className="mb-4">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Назад
+          {t.pages.community.friendGarden.back}
         </Button>
 
         <Card className="p-6 text-center">
@@ -330,13 +332,13 @@ export function FriendGardenView({
           </div>
           <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-gray-100">
             {isFriendshipError
-              ? 'Сад доступен только друзьям'
+              ? t.pages.community.friendGarden.onlyForFriends
               : isPrivacyError
-                ? 'Сад скрыт'
-                : 'Не удалось загрузить сад'}
+                ? t.pages.community.friendGarden.gardenPrivate
+                : t.pages.community.friendGarden.loadError}
           </h3>
           <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
-            {error || 'Возможно, пользователь ограничил доступ к своему саду'}
+            {error || t.pages.community.friendGarden.possibleRestricted}
           </p>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
@@ -350,7 +352,7 @@ export function FriendGardenView({
                 size="sm"
                 variant="primary"
               >
-                Добавить в друзья
+                {t.pages.community.friendGarden.addFriend}
               </Button>
             )}
             <Button
@@ -358,10 +360,10 @@ export function FriendGardenView({
               size="sm"
               variant={isFriendshipError ? 'outline' : 'primary'}
             >
-              Попробовать снова
+              {t.pages.community.friendGarden.tryAgain}
             </Button>
             <Button onClick={onBack} variant="outline" size="sm">
-              Вернуться
+              {t.pages.community.friendGarden.return}
             </Button>
           </div>
         </Card>
@@ -436,15 +438,20 @@ export function FriendGardenView({
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Сад {friendGarden.friendInfo.firstName}
+              {t.pages.community.friendGarden.gardenOf}{' '}
+              {friendGarden.friendInfo.firstName}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              {friendGarden.total} растений • Сад друга
+              {friendGarden.total} {t.pages.community.friendGarden.plants} •{' '}
+              {t.pages.community.friendGarden.friendGarden}
             </p>
           </div>
           <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
             <Flame className="h-4 w-4" />
-            <span>{friendGarden.friendInfo.currentStreak} дней</span>
+            <span>
+              {friendGarden.friendInfo.currentStreak}{' '}
+              {t.pages.community.friendGarden.days}
+            </span>
           </div>
         </div>
       </Card>
@@ -462,8 +469,7 @@ export function FriendGardenView({
               </div>
             ) : (
               <div className="rounded-xl border border-dashed border-neutral-300/60 bg-neutral-50/70 px-4 py-6 text-center text-sm text-neutral-700 dark:border-neutral-600/60 dark:bg-neutral-900/60 dark:text-neutral-300">
-                У друга пока нет отметок настроения для палитры. Показан будет
-                классический сад.
+                {t.pages.community.friendGarden.noMoodForPalette}
               </div>
             )
           ) : displayMode === GardenDisplayMode.ISOMETRIC_ROOM ? (
@@ -564,7 +570,7 @@ export function FriendGardenView({
               <div className="mt-3 flex items-center space-x-2 text-sm">
                 <Info className="h-4 w-4 text-blue-500 dark:text-blue-400" />
                 <span className="text-gray-600 dark:text-gray-400">
-                  Настроение:{' '}
+                  {t.pages.community.friendGarden.mood}{' '}
                   <span className="capitalize">
                     {selectedElement.moodInfluence}
                   </span>
@@ -582,11 +588,11 @@ export function FriendGardenView({
             <span className="text-4xl">🌱</span>
           </div>
           <h4 className="mb-2 font-medium text-gray-900 dark:text-gray-100">
-            Сад пуст
+            {t.pages.community.friendGarden.emptyGarden}
           </h4>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {friendGarden.friendInfo.firstName} ещё не добавил элементы в свой
-            сад
+            {friendGarden.friendInfo.firstName}{' '}
+            {t.pages.community.friendGarden.noElementsYet}
           </p>
         </Card>
       )}

@@ -208,7 +208,7 @@ export function HomePage() {
               <div className="space-y-4">
                 <Card padding="sm" variant="glass">
                   <h3 className="mb-3 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                    Состав сада
+                    {t.garden.composition}
                   </h3>
 
                   {Object.keys(gardenStats.elementsByType).length > 0 ? (
@@ -238,7 +238,7 @@ export function HomePage() {
 
                 <Card padding="sm" variant="glass">
                   <h3 className="mb-3 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                    Редкость элементов
+                    {t.garden.elementRarity}
                   </h3>
 
                   {Object.keys(gardenStats.elementsByRarity).length > 0 ? (
@@ -272,7 +272,7 @@ export function HomePage() {
                     </div>
                   ) : (
                     <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                      Пока нет данных о редкости
+                      {t.garden.noRarityData}
                     </p>
                   )}
                 </Card>
@@ -281,7 +281,7 @@ export function HomePage() {
                   gardenStats.newestElement.emoji && (
                     <Card padding="sm" variant="glass">
                       <h3 className="mb-3 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                        Последнее растение
+                        {t.garden.lastPlant}
                       </h3>
                       <div className="flex items-center space-x-3">
                         <div className="text-2xl">

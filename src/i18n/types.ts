@@ -22,6 +22,12 @@ export interface Translations {
     refresh: string
     pieces: string
     total: string
+    user: string
+    tryAgain: string
+    closeModal: string
+    previous: string
+    nextPage: string
+    previousPage: string
   }
 
   // Настройки
@@ -87,6 +93,20 @@ export interface Translations {
     intensityLabel: string
   }
 
+  // Обновления приложения
+  update: {
+    available: string
+    update: string
+    offlineReady: string
+  }
+
+  // Ошибки
+  error: {
+    title: string
+    message: string
+    description: string
+  }
+
   // Сад
   garden: {
     title: string
@@ -95,6 +115,10 @@ export interface Translations {
     daysInRow: string
     totalElements: string
     elements: string
+    composition: string
+    elementRarity: string
+    noRarityData: string
+    lastPlant: string
     rarity: {
       common: string
       uncommon: string
@@ -417,6 +441,26 @@ export interface Translations {
         back: string
         title: string
         viewOnly: string
+        notFriends: string
+        gardenHidden: string
+        userNotFound: string
+        noAccess: string
+        loadError: string
+        onlyForFriends: string
+        gardenPrivate: string
+        possibleRestricted: string
+        loading: string
+        addFriend: string
+        tryAgain: string
+        return: string
+        gardenOf: string
+        plants: string
+        friendGarden: string
+        days: string
+        noMoodForPalette: string
+        mood: string
+        emptyGarden: string
+        noElementsYet: string
       }
     }
   }
@@ -467,6 +511,31 @@ export interface Translations {
     error: string
     daysLeft: string
     hoursLeft: string
+    timeRemaining: string
+    participants: string
+    type: string
+    rewardsForCompletion: string
+    achievements: string
+    progress: string
+    completedPercent: string
+    yourContribution: string
+    percentOfGoal: string
+    joinChallenge: string
+    joining: string
+    joinSuccess: string
+    joinError: string
+    claimError: string
+    alreadyParticipating: string
+    challengeCompleted: string
+    authRequired: string
+    unavailable: string
+    loadingError: string
+    challengeNotFound: string
+    challengeNotFoundDescription: string
+    finished: string
+    days: string
+    hours: string
+    minutes: string
   }
 
   // Компаньон
@@ -741,6 +810,13 @@ export interface Translations {
       ninth: string
       tenth: string
     }
+    previousTheme: string
+    nextTheme: string
+    goToTheme: string
+    previousRoom: string
+    nextRoom: string
+    roomNumber: string
+    roomOf: string
   }
 
   // Друзья

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 import type { MoodEntry } from '@/types/mood'
 import { formatDate } from '@/utils/dateHelpers'
 import { endOfWeek, getDay } from 'date-fns'
@@ -36,6 +37,7 @@ export function WeekPage({
   canGoPrevious,
   canGoNext,
 }: WeekPageProps) {
+  const t = useTranslation()
   const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 })
 
   // Группируем записи по дням недели (1 = понедельник, 7 = воскресенье)
@@ -82,7 +84,7 @@ export function WeekPage({
           className="absolute left-0 top-0 z-10 flex h-full w-12 items-center justify-center transition-colors hover:bg-black/5 dark:hover:bg-white/5 sm:w-16"
           whileHover={{ scale: 1 }}
           whileTap={{ scale: 0.98 }}
-          aria-label="Предыдущая страница"
+          aria-label={t.common.previousPage}
         >
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm dark:bg-neutral-800/95 sm:h-10 sm:w-10">
             <ChevronLeft className="h-4 w-4 text-gray-700 dark:text-gray-200 sm:h-5 sm:w-5" />
@@ -97,7 +99,7 @@ export function WeekPage({
           className="absolute right-0 top-0 z-10 flex h-full w-12 items-center justify-center transition-colors hover:bg-black/5 dark:hover:bg-white/5 sm:w-16"
           whileHover={{ scale: 1 }}
           whileTap={{ scale: 0.98 }}
-          aria-label="Следующая страница"
+          aria-label={t.common.nextPage}
         >
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm dark:bg-neutral-800/95 sm:h-10 sm:w-10">
             <ChevronRight className="h-4 w-4 text-gray-700 dark:text-gray-200 sm:h-5 sm:w-5" />

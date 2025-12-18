@@ -85,7 +85,7 @@ export function ChallengeDetails({
       const diff = endDate.getTime() - now.getTime()
 
       if (diff <= 0) {
-        setTimeRemaining('Завершен')
+        setTimeRemaining(t.challenges.finished)
         return
       }
 
@@ -96,11 +96,15 @@ export function ChallengeDetails({
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
 
       if (days > 0) {
-        setTimeRemaining(`${days} дн. ${hours} ч.`)
+        setTimeRemaining(
+          `${days} ${t.challenges.days} ${hours} ${t.challenges.hours}`
+        )
       } else if (hours > 0) {
-        setTimeRemaining(`${hours} ч. ${minutes} мин.`)
+        setTimeRemaining(
+          `${hours} ${t.challenges.hours} ${minutes} ${t.challenges.minutes}`
+        )
       } else {
-        setTimeRemaining(`${minutes} мин.`)
+        setTimeRemaining(`${minutes} ${t.challenges.minutes}`)
       }
     }
 
@@ -123,12 +127,10 @@ export function ChallengeDetails({
         challengeId: currentChallenge.id,
       })
 
-      showAlert(
-        `Отлично! Вы присоединились к челленджу "${currentChallenge.title}"!`
-      )
+      showAlert(`${t.challenges.joinSuccess} "${currentChallenge.title}"!`)
     } catch (error) {
       console.error('Failed to join challenge:', error)
-      showAlert('Не удалось присоединиться к челленджу')
+      showAlert(t.challenges.joinError)
     } finally {
       setIsJoining(false)
     }
@@ -161,7 +163,7 @@ export function ChallengeDetails({
     } catch (error) {
       console.error('Failed to claim challenge reward:', error)
       hapticFeedback('error')
-      showAlert('Не удалось получить награду')
+      showAlert(t.challenges.claimError)
     }
   }, [
     currentUser?.telegramId,
@@ -194,14 +196,14 @@ export function ChallengeDetails({
         <div className="space-y-4">
           <div className="text-lg text-red-500">❌</div>
           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-            Ошибка загрузки
+            {t.challenges.loadingError}
           </h3>
           <p className="text-gray-600 dark:text-gray-400">
-            {error?.message || 'Произошла ошибка'}
+            {error?.message || t.challenges.error}
           </p>
           {onBack && (
             <Button onClick={onBack} variant="secondary">
-              Назад
+              {t.common.back}
             </Button>
           )}
         </div>
@@ -215,14 +217,14 @@ export function ChallengeDetails({
         <div className="space-y-4">
           <div className="text-lg text-gray-400">🔍</div>
           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-            Челлендж не найден
+            {t.challenges.challengeNotFound}
           </h3>
           <p className="text-gray-600 dark:text-gray-400">
-            Запрашиваемый челлендж не существует или был удален.
+            {t.challenges.challengeNotFoundDescription}
           </p>
           {onBack && (
             <Button onClick={onBack} variant="secondary">
-              Назад
+              {t.common.back}
             </Button>
           )}
         </div>
@@ -237,12 +239,12 @@ export function ChallengeDetails({
           canJoin:
             !isParticipating && new Date(currentChallenge.endDate) > new Date(),
           reason: isParticipating
-            ? 'Вы уже участвуете в этом челлендже'
+            ? t.challenges.alreadyParticipating
             : new Date(currentChallenge.endDate) <= new Date()
-              ? 'Челлендж завершен'
+              ? t.challenges.challengeCompleted
               : undefined,
         }
-      : { canJoin: false, reason: 'Необходима авторизация' }
+      : { canJoin: false, reason: t.challenges.authRequired }
 
   return (
     <div className="space-y-6">
@@ -269,7 +271,7 @@ export function ChallengeDetails({
             <div className="flex items-center space-x-2 text-sm">
               <Clock className="h-4 w-4 text-blue-500" />
               <span className="text-gray-600 dark:text-gray-400">
-                Осталось:
+                {t.challenges.timeRemaining}
               </span>
               <span className="font-medium text-gray-900 dark:text-gray-100">
                 {timeRemaining}
@@ -279,7 +281,7 @@ export function ChallengeDetails({
             <div className="flex items-center space-x-2 text-sm">
               <Users className="h-4 w-4 text-green-500" />
               <span className="text-gray-600 dark:text-gray-400">
-                Участников:
+                {t.challenges.participants}
               </span>
               <span className="font-medium text-gray-900 dark:text-gray-100">
                 {currentChallenge.participant_count || 0}
@@ -288,7 +290,9 @@ export function ChallengeDetails({
 
             <div className="flex items-center space-x-2 text-sm">
               <Target className="h-4 w-4 text-purple-500" />
-              <span className="text-gray-600 dark:text-gray-400">Цель:</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                {t.challenges.goal}:
+              </span>
               <span className="font-medium text-gray-900 dark:text-gray-100">
                 {currentChallenge.requirements.targetValue}
               </span>
@@ -296,13 +300,15 @@ export function ChallengeDetails({
 
             <div className="flex items-center space-x-2 text-sm">
               <Sparkles className="h-4 w-4 text-yellow-500" />
-              <span className="text-gray-600 dark:text-gray-400">Тип:</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                {t.challenges.type}:
+              </span>
               <span className="font-medium capitalize text-gray-900 dark:text-gray-100">
                 {currentChallenge.type === 'competitive'
-                  ? 'Соревнование'
+                  ? t.challenges.competitive
                   : currentChallenge.type === 'cooperative'
-                    ? 'Сотрудничество'
-                    : 'Личный'}
+                    ? t.challenges.group
+                    : t.challenges.personal}
               </span>
             </div>
           </div>
@@ -313,7 +319,7 @@ export function ChallengeDetails({
               <div className="mb-2 flex items-center space-x-2">
                 <Gift className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                 <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  Награды за выполнение:
+                  {t.challenges.rewardsForCompletion}
                 </span>
               </div>
               <div className="flex flex-wrap items-center gap-3">
@@ -351,7 +357,7 @@ export function ChallengeDetails({
                       <span>🏆</span>
                       <span className="font-medium text-gray-900 dark:text-gray-100">
                         {currentChallenge.rewards.achievements.length}{' '}
-                        достижений
+                        {t.challenges.achievements}
                       </span>
                     </span>
                   )}
@@ -372,7 +378,7 @@ export function ChallengeDetails({
                   <>
                     <div className="mb-2 flex items-center justify-between">
                       <span className="text-sm font-medium text-garden-700 dark:text-garden-300">
-                        Прогресс команды
+                        {t.challenges.teamProgress}
                       </span>
                       <span className="text-sm text-gray-600 dark:text-gray-400">
                         {currentLeaderboard[0]?.teamProgress || 0} /{' '}
@@ -394,12 +400,12 @@ export function ChallengeDetails({
                         {Math.round(
                           currentLeaderboard[0]?.progressPercentage || 0
                         )}
-                        % выполнено
+                        {t.challenges.completedPercent}
                       </span>
                       {currentProgress.isCompleted && (
                         <div className="flex items-center space-x-1 text-green-600 dark:text-green-400">
                           <CheckCircle className="h-3 w-3" />
-                          <span>Завершено!</span>
+                          <span>{t.challenges.completed}</span>
                         </div>
                       )}
                     </div>
@@ -408,7 +414,7 @@ export function ChallengeDetails({
                     <div className="mt-3 rounded-lg bg-white/50 p-3 dark:bg-gray-800/50">
                       <div className="mb-1 flex items-center justify-between">
                         <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                          Ваш вклад
+                          {t.challenges.yourContribution}
                         </span>
                         <span className="text-xs text-gray-500 dark:text-gray-500">
                           {currentProgress.progress} /{' '}
@@ -430,8 +436,8 @@ export function ChallengeDetails({
                         />
                       </div>
                       <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        {Math.round(currentProgress.progressPercentage)}% от
-                        цели
+                        {Math.round(currentProgress.progressPercentage)}
+                        {t.challenges.percentOfGoal}
                       </div>
                     </div>
                   </>
@@ -442,7 +448,7 @@ export function ChallengeDetails({
                 <>
                   <div className="mb-2 flex items-center justify-between">
                     <span className="text-sm font-medium text-garden-700 dark:text-garden-300">
-                      Ваш прогресс
+                      {t.challenges.yourProgress}
                     </span>
                     <span className="text-sm text-gray-600 dark:text-gray-400">
                       {currentProgress.progress} /{' '}
@@ -461,13 +467,13 @@ export function ChallengeDetails({
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-garden-600 dark:text-garden-400">
-                      {Math.round(currentProgress.progressPercentage)}%
-                      выполнено
+                      {Math.round(currentProgress.progressPercentage)}
+                      {t.challenges.completedPercent}
                     </span>
                     {currentProgress.isCompleted && (
                       <div className="flex items-center space-x-1 text-green-600 dark:text-green-400">
                         <CheckCircle className="h-3 w-3" />
-                        <span>Завершено!</span>
+                        <span>{t.challenges.completed}</span>
                       </div>
                     )}
                   </div>
@@ -509,12 +515,12 @@ export function ChallengeDetails({
                   {isJoining ? (
                     <>
                       <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
-                      Присоединяемся...
+                      {t.challenges.joining}
                     </>
                   ) : (
                     <>
                       <ArrowRight className="mr-2 h-4 w-4" />
-                      Присоединиться
+                      {t.challenges.joinChallenge}
                     </>
                   )}
                 </Button>
@@ -524,7 +530,7 @@ export function ChallengeDetails({
               !canJoin.canJoin &&
               !currentParticipation?.canClaimReward && (
                 <Button disabled className="flex-1">
-                  {canJoin.reason || 'Недоступно'}
+                  {canJoin.reason || t.challenges.unavailable}
                 </Button>
               )}
 
@@ -538,7 +544,7 @@ export function ChallengeDetails({
 
             {onBack && (
               <Button onClick={onBack} variant="outline" size="sm">
-                Назад
+                {t.common.back}
               </Button>
             )}
           </div>

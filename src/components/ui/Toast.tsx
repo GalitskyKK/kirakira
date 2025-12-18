@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, CheckCircle, AlertCircle, Info, RefreshCw } from 'lucide-react'
 import { useEffect } from 'react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export type ToastType = 'success' | 'error' | 'info' | 'update'
 
@@ -38,6 +39,7 @@ export function Toast({
   onClose,
   isVisible,
 }: ToastProps) {
+  const t = useTranslation()
   const Icon = toastIcons[type]
 
   useEffect(() => {
@@ -85,7 +87,7 @@ export function Toast({
               type="button"
               onClick={onClose}
               className="flex-shrink-0 rounded-full p-1 transition-colors hover:bg-white/20"
-              aria-label="Закрыть"
+              aria-label={t.common.close}
             >
               <X size={16} />
             </button>

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { createPortal } from 'react-dom'
 import { clsx } from 'clsx'
 import { X } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ModalProps {
   isOpen: boolean
@@ -31,6 +32,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
     },
     ref
   ) => {
+    const t = useTranslation()
     // Handle escape key
     useEffect(() => {
       if (!closeOnEscape || !isOpen) return
@@ -146,7 +148,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
                         'transition-colors duration-200',
                         !title && 'ml-auto'
                       )}
-                      aria-label="Закрыть модальное окно"
+                      aria-label={t.common.closeModal}
                     >
                       <X size={20} />
                     </button>

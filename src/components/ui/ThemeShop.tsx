@@ -367,14 +367,14 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
                     <button
                       onClick={goToPrevious}
                       className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg backdrop-blur-sm transition-all hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-800"
-                      aria-label="Предыдущая тема"
+                      aria-label={t.gardenActions.previousTheme}
                     >
                       <ChevronLeft className="h-5 w-5 text-gray-700 dark:text-gray-300" />
                     </button>
                     <button
                       onClick={goToNext}
                       className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg backdrop-blur-sm transition-all hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-800"
-                      aria-label="Следующая тема"
+                      aria-label={t.gardenActions.nextTheme}
                     >
                       <ChevronRight className="h-5 w-5 text-gray-700 dark:text-gray-300" />
                     </button>
@@ -549,7 +549,7 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
                             ? 'w-8 bg-blue-500'
                             : 'w-2 bg-gray-300 dark:bg-gray-600'
                         }`}
-                        aria-label={`Перейти к теме ${index + 1}`}
+                        aria-label={`${t.gardenActions.goToTheme} ${index + 1}`}
                       />
                     ))}
                   </div>

@@ -1,4 +1,18 @@
 import React from 'react'
+import { ru } from '@/i18n/locales/ru'
+import { en } from '@/i18n/locales/en'
+import { useLocaleStore } from '@/stores/localeStore'
+
+function getErrorTranslations() {
+  const locale = useLocaleStore.getState().locale
+  const translations = locale === 'en' ? en : ru
+  return {
+    title: translations.error.title,
+    message: translations.error.message,
+    description: translations.error.description,
+    tryAgain: translations.common.tryAgain,
+  }
+}
 
 interface ErrorBoundaryState {
   hasError: boolean
@@ -45,6 +59,7 @@ export class ErrorBoundary extends React.Component<
 
       // В продакшене показываем дружелюбный интерфейс
       if (!isDevelopment) {
+        const errorT = getErrorTranslations()
         return (
           <div
             className={`flex min-h-screen items-center justify-center p-4 ${
@@ -56,18 +71,13 @@ export class ErrorBoundary extends React.Component<
             <div className="mx-auto max-w-md text-center">
               <div className="mb-6">
                 <div className="text-6xl">🌸</div>
-                <h1 className="mt-4 text-2xl font-bold">
-                  Упс! Что-то пошло не так
-                </h1>
-                <p className="mt-2 text-sm opacity-70">
-                  Не переживайте, мы быстро это исправим
-                </p>
+                <h1 className="mt-4 text-2xl font-bold">{errorT.title}</h1>
+                <p className="mt-2 text-sm opacity-70">{errorT.message}</p>
               </div>
 
               <div className="mb-6 rounded-2xl bg-white/50 p-6 backdrop-blur-sm dark:bg-gray-800/50">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  🌱 Ваш эмоциональный сад временно недоступен, но все ваши
-                  данные сохранены в безопасности
+                  {errorT.description}
                 </p>
               </div>
 
@@ -76,7 +86,7 @@ export class ErrorBoundary extends React.Component<
                   onClick={() => window.location.reload()}
                   className="w-full rounded-2xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-4 font-semibold text-white shadow-lg transition-transform hover:scale-105"
                 >
-                  🔄 Попробовать снова
+                  🔄 {errorT.tryAgain}
                 </button>
 
                 {isTelegramEnv && (

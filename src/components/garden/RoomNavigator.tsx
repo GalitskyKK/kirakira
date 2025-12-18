@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { clsx } from 'clsx'
+import { useTranslation } from '@/hooks/useTranslation'
 import type { RoomNavigationState } from '@/types'
 
 interface RoomNavigatorProps {
@@ -25,6 +26,7 @@ export function RoomNavigator({
   className,
   isMovingElement = false,
 }: RoomNavigatorProps) {
+  const t = useTranslation()
   const { currentRoomIndex, totalRooms, canNavigatePrev, canNavigateNext } =
     navigation
 
@@ -60,7 +62,7 @@ export function RoomNavigator({
             : 'cursor-not-allowed border-transparent bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500'
         )}
         {...(canNavigatePrev ? { whileTap: { scale: 0.9 } } : {})}
-        aria-label="Предыдущая комната"
+        aria-label={t.gardenActions.previousRoom}
       >
         <ChevronLeft className="h-5 w-5" />
       </motion.button>
@@ -108,7 +110,7 @@ export function RoomNavigator({
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: index * 0.05 }}
-                aria-label={`Комната ${index + 1}`}
+                aria-label={`${t.gardenActions.roomNumber} ${index + 1}`}
               />
             )
           })}
@@ -116,7 +118,8 @@ export function RoomNavigator({
 
         {/* Счётчик элементов */}
         <div className="text-xs text-gray-500 dark:text-gray-400">
-          Комната {currentRoomIndex + 1} из {totalRooms}
+          {t.gardenActions.roomNumber} {currentRoomIndex + 1}{' '}
+          {t.gardenActions.roomOf} {totalRooms}
         </div>
       </div>
 

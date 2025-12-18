@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { Toast } from './Toast'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export function UpdatePrompt() {
+  const t = useTranslation()
   const [showToast, setShowToast] = useState(false)
   const intervalRef = useRef<number | undefined>(undefined)
   const focusHandlerRef = useRef<(() => void) | undefined>(undefined)
@@ -98,10 +100,10 @@ export function UpdatePrompt() {
   if (needRefresh) {
     return (
       <Toast
-        message="Доступна новая версия приложения!"
+        message={t.update.available}
         type="update"
         action={{
-          label: 'Обновить',
+          label: t.update.update,
           onClick: handleUpdate,
         }}
         onClose={handleClose}
@@ -114,7 +116,7 @@ export function UpdatePrompt() {
   if (offlineReady) {
     return (
       <Toast
-        message="Приложение готово к работе оффлайн"
+        message={t.update.offlineReady}
         type="success"
         duration={3000}
         onClose={handleClose}

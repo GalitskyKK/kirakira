@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 import type { MoodEntry } from '@/types/mood'
 import { MOOD_CONFIG } from '@/types/mood'
 import { MoodImage } from './MoodImage'
@@ -26,6 +27,7 @@ function generateStickerStyle(entryId: string) {
 }
 
 export function MoodSticker({ entry, index }: MoodStickerProps) {
+  const t = useTranslation()
   const moodConfig = MOOD_CONFIG[entry.mood]
   const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -135,7 +137,7 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
                 <button
                   onClick={() => setIsModalOpen(false)}
                   className="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:text-gray-500 dark:hover:bg-gray-700 dark:hover:text-gray-300"
-                  aria-label="Закрыть"
+                  aria-label={t.common.close}
                 >
                   <X size={20} />
                 </button>
