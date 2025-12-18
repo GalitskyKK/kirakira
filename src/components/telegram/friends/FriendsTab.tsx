@@ -1,13 +1,14 @@
 import { motion } from 'framer-motion'
 import { TreePine, User } from 'lucide-react'
 import type { Friend } from '@/hooks'
-import { Button, Card, UserAvatar } from '@/components/ui'
+import { Button, Card, UserAvatar, Skeleton } from '@/components/ui'
 import { useTranslation } from '@/hooks/useTranslation'
 
 interface FriendsTabProps {
   readonly searchQuery: string
   readonly onSearchChange: (value: string) => void
   readonly filteredFriends: readonly Friend[]
+  readonly isLoading?: boolean
   readonly onInvite: () => void
   readonly onViewGarden: (friend: Friend) => void
   readonly onViewProfile: (friend: Friend) => void
@@ -15,10 +16,38 @@ interface FriendsTabProps {
   readonly onChallengeFriend: (friend: Friend) => void
 }
 
+function FriendCardSkeleton() {
+  return (
+    <Card className="p-3">
+      <div className="space-y-3">
+        <div className="flex items-center space-x-3">
+          <Skeleton variant="circular" width={48} height={48} />
+          <div className="min-w-0 flex-1">
+            <div className="space-y-2">
+              <Skeleton variant="text" width="60%" height={20} />
+              <div className="flex items-center space-x-3">
+                <Skeleton variant="text" width={40} height={16} />
+                <Skeleton variant="text" width={40} height={16} />
+                <Skeleton variant="text" width={60} height={16} />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} variant="rectangular" height={32} />
+          ))}
+        </div>
+      </div>
+    </Card>
+  )
+}
+
 export function FriendsTab({
   searchQuery,
   onSearchChange,
   filteredFriends,
+  isLoading = false,
   onInvite,
   onViewGarden,
   onViewProfile,
@@ -46,7 +75,20 @@ export function FriendsTab({
       </div>
 
       <div className="space-y-3">
-        {filteredFriends.length === 0 ? (
+        {isLoading ? (
+          <>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.1 }}
+              >
+                <FriendCardSkeleton />
+              </motion.div>
+            ))}
+          </>
+        ) : filteredFriends.length === 0 ? (
           <Card className="p-6 text-center">
             <h4 className="mb-2 font-medium">{t.friends.noFriends}</h4>
             <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">

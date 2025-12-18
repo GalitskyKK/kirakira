@@ -440,6 +440,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             filteredFriends={filteredFriends}
+            isLoading={friendsQuery.isLoading}
             onInvite={handleInviteSpecificFriend}
             onViewGarden={handleViewFriendGarden}
             onViewProfile={handleViewFriendProfile}
