@@ -2,9 +2,8 @@
  * Компонент настроек языка
  */
 
-import { Languages } from 'lucide-react'
 import { useLocaleStore } from '@/stores/localeStore'
-import { useTranslation } from '@/hooks/useTranslation'
+// import { useTranslation } from '@/hooks/useTranslation'
 import type { Locale } from '@/i18n/types'
 
 const LOCALE_OPTIONS: readonly {
@@ -18,11 +17,11 @@ const LOCALE_OPTIONS: readonly {
 
 export function LanguageSettings() {
   const { locale, setLocale } = useLocaleStore()
-  const t = useTranslation()
+  // const t = useTranslation()
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
+      {/* <div className="flex items-center gap-2">
         <Languages className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
         <div>
           <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
@@ -32,7 +31,7 @@ export function LanguageSettings() {
             {t.settings.languageDescription}
           </p>
         </div>
-      </div>
+      </div> */}
 
       <div className="grid grid-cols-2 gap-2">
         {LOCALE_OPTIONS.map(option => {
