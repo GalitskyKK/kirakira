@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { formatDistanceToNow } from 'date-fns'
-import { ru } from 'date-fns/locale'
+import { ru, enUS } from 'date-fns/locale'
 import { ChevronDown } from 'lucide-react'
 import { Card } from '@/components/ui'
 import { GardenDisplayMode, type Garden } from '@/types'
+import { useTranslation } from '@/hooks/useTranslation'
+import { useLocaleStore } from '@/stores/localeStore'
 
 interface GardenStatsProps {
   readonly garden: Garden
@@ -18,21 +20,24 @@ export function GardenStats({ garden, displayMode }: GardenStatsProps) {
   const [isRarityOpen, setIsRarityOpen] = useState(false)
   const [isMoodOpen, setIsMoodOpen] = useState(false)
   const isPalette = displayMode === GardenDisplayMode.PALETTE
+  const t = useTranslation()
+  const locale = useLocaleStore(state => state.locale)
+  const dateLocale = locale === 'en' ? enUS : ru
 
   const typeLabels: Record<string, string> = {
-    flower: 'Цветок',
-    tree: 'Дерево',
-    stone: 'Камень',
-    water: 'Вода',
-    grass: 'Трава',
-    mushroom: 'Гриб',
-    crystal: 'Кристалл',
-    decoration: 'Декорация',
-    rainbow_flower: 'Радужный цветок',
-    glowing_crystal: 'Светящийся кристалл',
-    mystic_mushroom: 'Мистический гриб',
-    aurora_tree: 'Северное дерево',
-    starlight_decoration: 'Звездное украшение',
+    flower: t.elementTypes.flower,
+    tree: t.elementTypes.tree,
+    stone: t.elementTypes.stone,
+    water: t.elementTypes.water,
+    grass: t.elementTypes.grass,
+    mushroom: t.elementTypes.mushroom,
+    crystal: t.elementTypes.crystal,
+    decoration: t.elementTypes.decoration,
+    rainbow_flower: t.elementTypes.rainbowFlower,
+    glowing_crystal: t.elementTypes.glowingCrystal,
+    mystic_mushroom: t.elementTypes.mysticMushroom,
+    aurora_tree: t.elementTypes.auroraTree,
+    starlight_decoration: t.elementTypes.starlightDecoration,
   }
 
   const stats = useMemo(() => {
@@ -118,20 +123,20 @@ export function GardenStats({ garden, displayMode }: GardenStatsProps) {
   }
 
   const rarityLabels: Record<string, string> = {
-    common: 'Обычные',
-    uncommon: 'Необычные',
-    rare: 'Редкие',
-    epic: 'Эпические',
-    legendary: 'Легендарные',
+    common: t.elements.rarity.common,
+    uncommon: t.elements.rarity.uncommon,
+    rare: t.elements.rarity.rare,
+    epic: t.elements.rarity.epic,
+    legendary: t.elements.rarity.legendary,
   }
 
   const moodLabels: Record<string, string> = {
-    joy: 'Радость',
-    calm: 'Спокойствие',
-    stress: 'Стресс',
-    sadness: 'Грусть',
-    anger: 'Гнев',
-    anxiety: 'Тревога',
+    joy: t.moodLabels.joy,
+    calm: t.moodLabels.calm,
+    stress: t.moodLabels.stress,
+    sadness: t.moodLabels.sadness,
+    anger: t.moodLabels.anger,
+    anxiety: t.moodLabels.anxiety,
   }
 
   const renderSection = (
@@ -189,10 +194,10 @@ export function GardenStats({ garden, displayMode }: GardenStatsProps) {
     <div className="space-y-3">
       <div className="flex items-center justify-between px-1">
         <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-          Статистика сада
+          {t.gardenStats.statistics}
         </h3>
         <span className="text-xs text-neutral-500 dark:text-neutral-400">
-          {stats.total} элементов
+          {stats.total} {t.garden.elements}
         </span>
       </div>
 
@@ -200,7 +205,7 @@ export function GardenStats({ garden, displayMode }: GardenStatsProps) {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm text-neutral-600 dark:text-neutral-400">
-              Всего растений
+              {t.gardenStats.totalPlants}
             </span>
             <span className="text-base font-semibold text-kira-600 dark:text-kira-300">
               {stats.total}
@@ -209,16 +214,16 @@ export function GardenStats({ garden, displayMode }: GardenStatsProps) {
 
           <div className="flex items-center justify-between">
             <span className="text-sm text-neutral-600 dark:text-neutral-400">
-              Возраст сада
+              {t.gardenStats.age}
             </span>
             <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-              {stats.gardenAge ?? 'Новый сад'}
+              {stats.gardenAge ?? t.gardenStats.newGarden}
             </span>
           </div>
 
           <div className="flex items-center justify-between">
             <span className="text-sm text-neutral-600 dark:text-neutral-400">
-              Серия дней
+              {t.gardenStats.streak}
             </span>
             <span className="text-base font-semibold text-kira-600 dark:text-kira-300">
               {garden.streak}
@@ -230,7 +235,7 @@ export function GardenStats({ garden, displayMode }: GardenStatsProps) {
       {!isPalette && stats.newestElement && stats.newestElement.emoji && (
         <Card padding="sm">
           <h4 className="mb-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-            Последнее растение
+            {t.gardenStats.lastPlant}
           </h4>
           <div className="flex items-center gap-3 rounded-lg bg-neutral-50 px-3 py-2 dark:bg-neutral-800/60">
             <div className="text-2xl">{stats.newestElement.emoji}</div>
@@ -243,7 +248,7 @@ export function GardenStats({ garden, displayMode }: GardenStatsProps) {
                   stats.newestElement.unlockDate instanceof Date
                     ? stats.newestElement.unlockDate
                     : new Date(stats.newestElement.unlockDate),
-                  { locale: ru, addSuffix: false }
+                  { locale: dateLocale, addSuffix: false }
                 )}
               </p>
             </div>
@@ -253,7 +258,7 @@ export function GardenStats({ garden, displayMode }: GardenStatsProps) {
 
       {!isPalette &&
         renderSection(
-          'По типам',
+          t.gardenStats.byType,
           stats.byType,
           isTypeOpen,
           () => setIsTypeOpen(open => !open),
@@ -280,7 +285,7 @@ export function GardenStats({ garden, displayMode }: GardenStatsProps) {
 
       {!isPalette &&
         renderSection(
-          'По редкости',
+          t.gardenStats.byRarity,
           stats.byRarity,
           isRarityOpen,
           () => setIsRarityOpen(open => !open),
@@ -305,7 +310,7 @@ export function GardenStats({ garden, displayMode }: GardenStatsProps) {
         )}
 
       {renderSection(
-        'По настроению',
+        t.gardenStats.byMood,
         stats.byMood,
         isMoodOpen,
         () => setIsMoodOpen(open => !open),

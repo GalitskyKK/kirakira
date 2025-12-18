@@ -18,6 +18,7 @@ import {
   formatQuestRewards,
 } from '@/types/dailyQuests'
 import type { DailyQuest } from '@/types/dailyQuests'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface DailyQuestCardProps {
   readonly quest: DailyQuest
@@ -30,6 +31,7 @@ export function DailyQuestCard({
   telegramId,
   className = '',
 }: DailyQuestCardProps) {
+  const t = useTranslation()
   const { selectQuest, openQuestModal, showRewardAnimation } =
     useDailyQuestStore()
   const claimMutation = useClaimDailyQuest()
@@ -109,7 +111,7 @@ export function DailyQuestCard({
               <div className="text-2xl">{quest.metadata?.emoji || '🏆'}</div>
               <div>
                 <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                  {quest.metadata?.name || 'Задание'}
+                  {quest.metadata?.name || t.quests.quest}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {description}
@@ -129,7 +131,9 @@ export function DailyQuestCard({
           {/* Прогресс */}
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Прогресс</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                {t.quests.progress}
+              </span>
               <span className="font-medium text-gray-900 dark:text-gray-100">
                 {quest.currentProgress} / {quest.targetValue}
               </span>
@@ -143,14 +147,15 @@ export function DailyQuestCard({
             />
 
             <div className="text-xs text-gray-500 dark:text-gray-400">
-              {progress}% выполнено
+              {progress}% {t.quests.completed}
             </div>
           </div>
 
           {/* Награды */}
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600 dark:text-gray-400">
-              <span className="font-medium">Награда:</span> {rewardsText}
+              <span className="font-medium">{t.quests.reward}</span>{' '}
+              {rewardsText}
             </div>
 
             {/* {timeRemaining > 0 && (
@@ -167,7 +172,7 @@ export function DailyQuestCard({
               {quest.status === 'active' &&
                 quest.currentProgress < quest.targetValue && (
                   <div className="text-sm text-gray-500 dark:text-gray-400">
-                    💡 Выполните действие для обновления прогресса
+                    {t.quests.tip}
                   </div>
                 )}
             </div>
@@ -182,19 +187,19 @@ export function DailyQuestCard({
                 disabled={claimMutation.isPending}
                 className="bg-green-500 hover:bg-green-600"
               >
-                {claimMutation.isPending ? 'Получение...' : 'Получить награду'}
+                {claimMutation.isPending ? t.quests.claiming : t.quests.claim}
               </Button>
             )}
 
             {quest.status === 'claimed' && (
               <div className="text-sm font-medium text-green-600 dark:text-green-400">
-                ✅ Награда получена
+                {t.quests.claimed}
               </div>
             )}
 
             {quest.status === 'expired' && (
               <div className="text-sm font-medium text-red-600 dark:text-red-400">
-                ⏰ Время истекло
+                {t.quests.expired}
               </div>
             )}
           </div>

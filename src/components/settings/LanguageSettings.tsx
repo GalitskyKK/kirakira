@@ -13,7 +13,7 @@ const LOCALE_OPTIONS: readonly {
   flag: string
 }[] = [
   { value: 'ru', label: 'Русский', flag: '🇷🇺' },
-  { value: 'en', label: 'English', flag: '🇬🇧' },
+  { value: 'en', label: 'English', flag: '🇺🇸' },
 ] as const
 
 export function LanguageSettings() {

@@ -10,197 +10,153 @@ import {
 import { Button, Card } from '@/components/ui'
 import { useUserClientStore } from '@/hooks/index.v2'
 import { MOOD_CONFIG } from '@/types'
+import { useTranslation } from '@/hooks/useTranslation'
+import { getLocalizedMoodConfig } from '@/utils/moodLocalization'
 
 interface OnboardingPageProps {
   onComplete: () => void
 }
 
-const ONBOARDING_STEPS = [
-  {
-    id: 'welcome',
-    title: 'Добро пожаловать в KiraKira',
-    description: 'Ваш персональный цифровой сад эмоций',
-    icon: '🌸',
-    content: (
-      <div className="space-y-4 text-center">
-        <div className="mb-4 text-4xl sm:text-6xl">🌸</div>
-        <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300 sm:text-base">
-          KiraKira — это медитативное приложение, где ваши ежедневные эмоции
-          превращаются в красивый цифровой сад.
-        </p>
-        <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300 sm:text-base">
-          Каждый день, отмечая свое настроение, вы выращиваете уникальные
-          растения, создавая персональное пространство для размышлений.
-        </p>
-      </div>
-    ),
-  },
-  {
-    id: 'mood-tracking',
-    title: 'Отслеживание настроения',
-    description: 'Ежедневная практика осознанности',
-    icon: '💭',
-    content: (
-      <div className="space-y-4">
-        <div className="mb-4 flex justify-center">
-          <Heart size={48} className="text-red-400" />
+// Функция для получения шагов онбординга с переводами
+function getOnboardingSteps(t: ReturnType<typeof useTranslation>) {
+  return [
+    {
+      id: 'welcome',
+      title: t.onboarding.welcome.title,
+      description: t.onboarding.welcome.description,
+      icon: '🌸',
+      content: (
+        <div className="space-y-4 text-center">
+          <div className="mb-4 text-4xl sm:text-6xl">🌸</div>
+          <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300 sm:text-base">
+            {t.onboarding.welcome.content1}
+          </p>
+          <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300 sm:text-base">
+            {t.onboarding.welcome.content2}
+          </p>
         </div>
-        <p className="text-center text-sm leading-relaxed text-gray-600 dark:text-gray-300 sm:text-base">
-          Каждый день вы будете отмечать свое настроение — от радости до грусти,
-          от спокойствия до тревоги.
-        </p>
-        <div className="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-6">
-          {Object.values(MOOD_CONFIG).map((mood, index) => (
-            <motion.div
-              key={mood.label}
-              className="rounded-xl bg-gray-50 p-3 text-center text-2xl dark:bg-gray-800"
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              title={mood.label}
-            >
-              {mood.emoji}
-            </motion.div>
-          ))}
+      ),
+    },
+    {
+      id: 'mood-tracking',
+      title: t.onboarding.moodTracking.title,
+      description: t.onboarding.moodTracking.description,
+      icon: '💭',
+      content: (
+        <div className="space-y-4">
+          <div className="mb-4 flex justify-center">
+            <Heart size={48} className="text-red-400" />
+          </div>
+          <p className="text-center text-sm leading-relaxed text-gray-600 dark:text-gray-300 sm:text-base">
+            {t.onboarding.moodTracking.content}
+          </p>
+          <div className="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-6">
+            {Object.keys(MOOD_CONFIG).map((moodKey, index) => {
+              const mood = MOOD_CONFIG[moodKey as keyof typeof MOOD_CONFIG]
+              const localizedMood = getLocalizedMoodConfig(
+                moodKey as keyof typeof MOOD_CONFIG,
+                t
+              )
+              return (
+                <motion.div
+                  key={moodKey}
+                  className="rounded-xl bg-gray-50 p-3 text-center text-2xl dark:bg-gray-800"
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                  title={localizedMood.label}
+                >
+                  {mood.emoji}
+                </motion.div>
+              )
+            })}
+          </div>
+          <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+            {t.onboarding.moodTracking.emotionsNote}
+          </p>
         </div>
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-          Ваши эмоции — это не хорошо или плохо, это просто часть человеческого
-          опыта
-        </p>
-      </div>
-    ),
-  },
-  {
-    id: 'garden-growth',
-    title: 'Рост сада',
-    description: 'Ваши эмоции становятся растениями',
-    icon: '🌱',
-    content: (
-      <div className="space-y-4">
-        <div className="mb-4 flex justify-center">
-          <Sprout size={48} className="text-green-500" />
-        </div>
-        <p className="text-center text-sm leading-relaxed text-gray-600 dark:text-gray-300 sm:text-base">
-          Каждое настроение влияет на то, какое растение появится в вашем саду.
-          Радость приносит яркие цветы, спокойствие — водные элементы.
-        </p>
-        <div className="rounded-xl bg-garden-50 p-4 dark:bg-gray-800">
-          <div className="grid grid-cols-2 gap-4 text-center sm:grid-cols-4">
-            <div>
-              <div className="mb-1 text-2xl">🌼</div>
-              <div className="text-xs text-gray-600 dark:text-gray-300">
-                Радость
+      ),
+    },
+    {
+      id: 'garden-growth',
+      title: t.onboarding.gardenGrowth.title,
+      description: t.onboarding.gardenGrowth.description,
+      icon: '🌱',
+      content: (
+        <div className="space-y-4">
+          <div className="mb-4 flex justify-center">
+            <Sprout size={48} className="text-green-500" />
+          </div>
+          <p className="text-center text-sm leading-relaxed text-gray-600 dark:text-gray-300 sm:text-base">
+            {t.onboarding.gardenGrowth.content}
+          </p>
+          <div className="rounded-xl bg-garden-50 p-4 dark:bg-gray-800">
+            <div className="grid grid-cols-2 gap-4 text-center sm:grid-cols-4">
+              <div>
+                <div className="mb-1 text-2xl">🌼</div>
+                <div className="text-xs text-gray-600 dark:text-gray-300">
+                  {t.moodLabels.joy}
+                </div>
               </div>
-            </div>
-            <div>
-              <div className="mb-1 text-2xl">💧</div>
-              <div className="text-xs text-gray-600 dark:text-gray-300">
-                Спокойствие
+              <div>
+                <div className="mb-1 text-2xl">💧</div>
+                <div className="text-xs text-gray-600 dark:text-gray-300">
+                  {t.moodLabels.calm}
+                </div>
               </div>
-            </div>
-            <div>
-              <div className="mb-1 text-2xl">🌵</div>
-              <div className="text-xs text-gray-600 dark:text-gray-300">
-                Стресс
+              <div>
+                <div className="mb-1 text-2xl">🌵</div>
+                <div className="text-xs text-gray-600 dark:text-gray-300">
+                  {t.moodLabels.stress}
+                </div>
               </div>
-            </div>
-            <div>
-              <div className="mb-1 text-2xl">🍄</div>
-              <div className="text-xs text-gray-600 dark:text-gray-300">
-                Грусть
+              <div>
+                <div className="mb-1 text-2xl">🍄</div>
+                <div className="text-xs text-gray-600 dark:text-gray-300">
+                  {t.moodLabels.sadness}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <p className="text-center text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
-          Со временем ваш сад станет уникальным отражением вашего эмоционального
-          путешествия
-        </p>
-      </div>
-    ),
-  },
-  // {
-  //   id: 'privacy',
-  //   title: 'Конфиденциальность',
-  //   description: 'Ваши данные остаются при вас',
-  //   icon: '🔒',
-  //   content: (
-  //     <div className="space-y-4">
-  //       <div className="flex justify-center mb-4">
-  //         <div className="p-3 bg-blue-100 rounded-full">
-  //           <div className="text-3xl">🔒</div>
-  //         </div>
-  //       </div>
-  //       <div className="space-y-3">
-  //         <div className="flex items-start space-x-3">
-  //           <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-  //             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-  //           </div>
-  //           <div>
-  //             <p className="font-medium text-gray-900">Локальное хранение</p>
-  //             <p className="text-sm text-gray-600">
-  //               Все ваши данные хранятся только на вашем устройстве
-  //             </p>
-  //           </div>
-  //         </div>
-  //         <div className="flex items-start space-x-3">
-  //           <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-  //             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-  //           </div>
-  //           <div>
-  //             <p className="font-medium text-gray-900">Никакой аналитики</p>
-  //             <p className="text-sm text-gray-600">
-  //               Мы не отслеживаем ваше поведение и не собираем персональные данные
-  //             </p>
-  //           </div>
-  //         </div>
-  //         <div className="flex items-start space-x-3">
-  //           <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-  //             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-  //           </div>
-  //           <div>
-  //             <p className="font-medium text-gray-900">Анонимность</p>
-  //             <p className="text-sm text-gray-600">
-  //               Регистрация не требуется — начните пользоваться прямо сейчас
-  //             </p>
-  //           </div>
-  //         </div>
-  //       </div>
-  //     </div>
-  //   ),
-  // },
-  {
-    id: 'ready',
-    title: 'Готовы начать?',
-    description: 'Ваш сад ждет первое растение',
-    icon: '🌟',
-    content: (
-      <div className="space-y-4 text-center">
-        <div className="mb-4 flex justify-center">
-          <Sparkles size={48} className="text-yellow-500" />
-        </div>
-        <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300 sm:text-base">
-          Отметьте свое текущее настроение, чтобы вырастить первое растение в
-          вашем персональном саду эмоций.
-        </p>
-        <div className="rounded-xl bg-gradient-to-r from-garden-50 to-blue-50 p-4 dark:from-gray-800 dark:to-gray-700">
-          <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
-            💡 Совет для начинающих
-          </p>
-          <p className="text-sm text-gray-600 dark:text-gray-300">
-            Старайтесь отмечать настроение каждый день в одно и то же время. Это
-            поможет создать привычку и получить более точную картину ваших
-            эмоций.
+          <p className="text-center text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
+            {t.onboarding.gardenGrowth.overTime}
           </p>
         </div>
-      </div>
-    ),
-  },
-]
+      ),
+    },
+    {
+      id: 'ready',
+      title: t.onboarding.ready.title,
+      description: t.onboarding.ready.description,
+      icon: '🌟',
+      content: (
+        <div className="space-y-4 text-center">
+          <div className="mb-4 flex justify-center">
+            <Sparkles size={48} className="text-yellow-500" />
+          </div>
+          <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300 sm:text-base">
+            {t.onboarding.ready.content}
+          </p>
+          <div className="rounded-xl bg-gradient-to-r from-garden-50 to-blue-50 p-4 dark:from-gray-800 dark:to-gray-700">
+            <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+              {t.onboarding.ready.tipTitle}
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              {t.onboarding.ready.tipContent}
+            </p>
+          </div>
+        </div>
+      ),
+    },
+  ]
+}
 
 export function OnboardingPage({ onComplete }: OnboardingPageProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const { completeOnboarding } = useUserClientStore()
+  const t = useTranslation()
+
+  const ONBOARDING_STEPS = getOnboardingSteps(t)
 
   const handleNext = () => {
     if (currentStep < ONBOARDING_STEPS.length - 1) {
@@ -221,7 +177,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
   const isLastStep = currentStep === ONBOARDING_STEPS.length - 1
 
   return (
-    <div className="from-kira-50 flex min-h-screen items-center justify-center bg-gradient-to-br via-garden-50 to-neutral-50 p-2 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900 sm:p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-kira-50 via-garden-50 to-neutral-50 p-2 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900 sm:p-4">
       <div className="mx-auto w-full max-w-2xl">
         {/* Progress indicators */}
         <div className="mb-8 flex justify-center px-3">
@@ -295,11 +251,11 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
               leftIcon={<ChevronLeft size={16} />}
               className="w-full sm:w-auto"
             >
-              Назад
+              {t.common.back}
             </Button>
 
             <div className="w-full text-center text-sm text-gray-500 dark:text-gray-400 sm:w-auto">
-              {currentStep + 1} из {ONBOARDING_STEPS.length}
+              {currentStep + 1} {t.onboarding.of} {ONBOARDING_STEPS.length}
             </div>
 
             <Button
@@ -309,7 +265,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
               }
               className="w-full sm:w-auto"
             >
-              {isLastStep ? 'Начать!' : 'Далее'}
+              {isLastStep ? t.onboarding.start : t.common.next}
             </Button>
           </div>
         </Card>

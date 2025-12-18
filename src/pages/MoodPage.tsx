@@ -131,7 +131,7 @@ export function MoodPage() {
               {gardenStats.totalElements}
             </div>
             <div className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-              Растений
+              {t.garden.plants}
             </div>
           </motion.div>
 
@@ -145,7 +145,7 @@ export function MoodPage() {
               {garden?.streak ?? 0}
             </div>
             <div className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
-              Дней подряд
+              {t.garden.daysInRow}
             </div>
           </motion.div>
         </div>
@@ -159,12 +159,12 @@ export function MoodPage() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-semibold text-neutral-900 dark:text-neutral-100">
-                  Мой сад
+                  {t.pages.garden.myGarden}
                 </div>
                 <div className="text-sm text-neutral-600 dark:text-neutral-400">
                   {gardenStats.totalElements > 0
-                    ? `${gardenStats.totalElements} растений`
-                    : 'Вырастите первое растение'}
+                    ? `${gardenStats.totalElements} ${t.garden.plants}`
+                    : t.pages.mood.growFirstPlant}
                 </div>
               </div>
               <div className="text-3xl">🌱</div>
@@ -178,10 +178,10 @@ export function MoodPage() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-semibold text-neutral-900 dark:text-neutral-100">
-                  Ежедневные задания
+                  {t.pages.mood.dailyQuests}
                 </div>
                 <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Выполняйте и получайте награды
+                  {t.pages.mood.completeQuests}
                 </div>
               </div>
               <div className="text-3xl">🏆</div>
@@ -195,10 +195,10 @@ export function MoodPage() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-semibold text-neutral-900 dark:text-neutral-100">
-                  Комьюнити
+                  {t.pages.mood.community}
                 </div>
                 <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Челленджи и друзья
+                  {t.pages.mood.challengesAndFriends}
                 </div>
               </div>
               <div className="text-3xl">👥</div>
@@ -212,10 +212,10 @@ export function MoodPage() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-semibold text-neutral-900 dark:text-neutral-100">
-                  Статистика
+                  {t.pages.mood.statistics}
                 </div>
                 <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Аналитика настроения
+                  {t.pages.mood.moodAnalytics}
                 </div>
               </div>
               <div className="text-3xl">📊</div>

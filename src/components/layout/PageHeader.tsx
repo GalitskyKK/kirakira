@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface PageHeaderProps {
   readonly title: string
@@ -28,6 +29,7 @@ export function PageHeader({
   sticky = true,
 }: PageHeaderProps) {
   const navigate = useNavigate()
+  const t = useTranslation()
 
   const handleBack = () => {
     if (onBack) {
@@ -52,30 +54,25 @@ export function PageHeader({
             <button
               onClick={handleBack}
               className="flex-shrink-0 rounded-lg p-1.5 text-neutral-600 transition-colors hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-700"
-              aria-label="Назад"
+              aria-label={t.common.back}
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
-          
+
           {icon && (
             <div className="flex-shrink-0 text-neutral-600 dark:text-neutral-400">
               {icon}
             </div>
           )}
-          
+
           <h1 className="truncate text-lg font-bold text-neutral-900 dark:text-neutral-100">
             {title}
           </h1>
         </div>
 
-        {actions && (
-          <div className="ml-2 flex-shrink-0">
-            {actions}
-          </div>
-        )}
+        {actions && <div className="ml-2 flex-shrink-0">{actions}</div>}
       </div>
     </motion.div>
   )
 }
-

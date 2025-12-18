@@ -19,12 +19,14 @@ import {
   type StreakFreezeData,
 } from '@/types/streakFreeze'
 import { Button, Card } from '@/components/ui'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export function FreezeShopSection() {
   const { userCurrency } = useCurrencyClientStore()
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
   const queryClient = useQueryClient()
+  const t = useTranslation()
 
   // Получаем данные о заморозках из userData
   const [freezeData, setFreezeData] = useState<StreakFreezeData | null>(null)
@@ -247,7 +249,7 @@ export function FreezeShopSection() {
               <div className="mt-4">
                 <div className="mb-3 flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Цена:
+                    {t.freezes.price}:
                   </span>
                   <div className="flex items-center gap-1">
                     {manualCurrency === 'gems' ? (
@@ -268,7 +270,7 @@ export function FreezeShopSection() {
                     className="w-full"
                     disabled
                   >
-                    Достигнут лимит
+                    {t.freezes.limitReached}
                   </Button>
                 ) : !canBuyManual ? (
                   <Button
@@ -277,7 +279,7 @@ export function FreezeShopSection() {
                     className="w-full"
                     disabled
                   >
-                    Недостаточно средств
+                    {t.freezes.insufficientFunds}
                   </Button>
                 ) : (
                   <Button
@@ -289,7 +291,7 @@ export function FreezeShopSection() {
                     {purchasing === 'manual' ? (
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     ) : (
-                      `Купить за ${manualPrice}`
+                      `${t.freezes.buyFor} ${manualPrice}`
                     )}
                   </Button>
                 )}
@@ -310,7 +312,7 @@ export function FreezeShopSection() {
               </div>
               <div className="mt-2">
                 <span className="rounded-full bg-white/20 px-2 py-1 text-xs font-semibold">
-                  ПРЕМИУМ
+                  {t.freezes.premium}
                 </span>
               </div>
             </div>
@@ -349,7 +351,7 @@ export function FreezeShopSection() {
               <div className="mt-4">
                 <div className="mb-3 flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Цена:
+                    {t.freezes.price}:
                   </span>
                   <div className="flex items-center gap-1">
                     {autoCurrency === 'gems' ? (
@@ -370,7 +372,7 @@ export function FreezeShopSection() {
                     className="w-full"
                     disabled
                   >
-                    Недостаточно средств
+                    {t.freezes.insufficientFunds}
                   </Button>
                 ) : (
                   <Button
@@ -382,7 +384,7 @@ export function FreezeShopSection() {
                     {purchasing === 'auto' ? (
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     ) : (
-                      `Купить за ${autoPrice}`
+                      `${t.freezes.buyFor} ${autoPrice}`
                     )}
                   </Button>
                 )}
@@ -395,18 +397,16 @@ export function FreezeShopSection() {
       {/* Additional Info */}
       <div className="mt-4 rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
         <h4 className="mb-1 font-medium text-gray-900 dark:text-white">
-          💡 Полезная информация
+          {t.freezes.usefulInfo}
         </h4>
         <ul className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
           <li>
-            • Ручные заморозки можно накапливать до {freezeData?.max || 3} штук
-            (зависит от уровня)
+            • {t.freezes.manualAccumulation} {freezeData?.max || 3} (
+            {t.freezes.dependsOnLevel})
           </li>
-          <li>• Авто-заморозки используются автоматически при пропуске дня</li>
-          <li>• Заморозки защищают ваш стрик от сброса</li>
-          <li>
-            • Вы можете зарабатывать заморозки бесплатно за повышение уровня
-          </li>
+          <li>• {t.freezes.autoUsage}</li>
+          <li>• {t.freezes.protectsFromReset}</li>
+          <li>• {t.freezes.earnForLevelUp}</li>
         </ul>
       </div>
     </div>

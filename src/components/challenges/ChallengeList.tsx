@@ -10,6 +10,7 @@ import { Button, Card } from '@/components/ui'
 import { ChallengeDetails } from './ChallengeDetails'
 import { ChallengeRewardModal } from './ChallengeRewardModal'
 import { useChallengeList } from '@/hooks/queries/useChallengeQueries'
+import { useTranslation } from '@/hooks/useTranslation'
 import type { Garden, Challenge } from '@/types'
 import type { ChallengeParticipant } from '@/types/challenges'
 
@@ -22,6 +23,7 @@ export function ChallengeList({ garden: _garden }: ChallengeListProps) {
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
   const currentUser = userData?.user
+  const t = useTranslation()
 
   // Загружаем активные челленджи через React Query
   const {
@@ -104,7 +106,7 @@ export function ChallengeList({ garden: _garden }: ChallengeListProps) {
     return (
       <Card className="p-4 text-center">
         <div className="text-sm text-red-500">
-          ❌ {error.message || 'Произошла ошибка'}
+          ❌ {error.message || t.challenges.error}
         </div>
       </Card>
     )
@@ -115,10 +117,10 @@ export function ChallengeList({ garden: _garden }: ChallengeListProps) {
       <Card className="p-6 text-center">
         <Trophy className="mx-auto mb-4 h-12 w-12 text-gray-400" />
         <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-gray-100">
-          Нет активных челленджей
+          {t.challenges.noActive}
         </h3>
         <p className="text-gray-600 dark:text-gray-400">
-          Новые вызовы появятся скоро. Следите за обновлениями!
+          {t.challenges.comingSoon}
         </p>
       </Card>
     )
@@ -176,10 +178,10 @@ export function ChallengeList({ garden: _garden }: ChallengeListProps) {
                         }`}
                       >
                         {challenge.type === 'competitive'
-                          ? 'Соревн.'
+                          ? t.challenges.competitive
                           : challenge.type === 'cooperative'
-                            ? 'Группа'
-                            : 'Личный'}
+                            ? t.challenges.group
+                            : t.challenges.personal}
                       </span>
                     </div>
                   </div>
@@ -199,7 +201,7 @@ export function ChallengeList({ garden: _garden }: ChallengeListProps) {
                       <>
                         <div className="mb-2 flex items-center justify-between">
                           <span className="text-sm font-medium text-garden-700 dark:text-garden-300">
-                            Прогресс команды
+                            {t.challenges.teamProgress}
                           </span>
                           <span className="text-sm text-gray-600 dark:text-gray-400">
                             {participation.teamProgress} /{' '}
@@ -226,12 +228,12 @@ export function ChallengeList({ garden: _garden }: ChallengeListProps) {
                                 challenge.requirements.targetValue) *
                                 100
                             )}
-                            % выполнено
+                            % {t.quests.completed}
                           </span>
                           {participation.status === 'completed' && (
                             <div className="flex items-center space-x-1 text-green-600 dark:text-green-400">
                               <CheckCircle className="h-3 w-3" />
-                              <span>Завершено!</span>
+                              <span>{t.challenges.completed}</span>
                             </div>
                           )}
                         </div>
@@ -241,7 +243,7 @@ export function ChallengeList({ garden: _garden }: ChallengeListProps) {
                       <>
                         <div className="mb-2 flex items-center justify-between">
                           <span className="text-sm font-medium text-garden-700 dark:text-garden-300">
-                            Ваш прогресс
+                            {t.challenges.yourProgress}
                           </span>
                           <span className="text-sm text-gray-600 dark:text-gray-400">
                             {participation.currentProgress} /{' '}
@@ -268,12 +270,12 @@ export function ChallengeList({ garden: _garden }: ChallengeListProps) {
                                 challenge.requirements.targetValue) *
                                 100
                             )}
-                            % выполнено
+                            % {t.quests.completed}
                           </span>
                           {participation.status === 'completed' && (
                             <div className="flex items-center space-x-1 text-green-600 dark:text-green-400">
                               <CheckCircle className="h-3 w-3" />
-                              <span>Завершено!</span>
+                              <span>{t.challenges.completed}</span>
                             </div>
                           )}
                         </div>
@@ -287,12 +289,16 @@ export function ChallengeList({ garden: _garden }: ChallengeListProps) {
                   <span className="flex items-center space-x-1">
                     <Clock className="h-3 w-3" />
                     <span>
-                      {daysLeft > 0 ? `${daysLeft} дн.` : `${hoursLeft} ч.`}
+                      {daysLeft > 0
+                        ? `${daysLeft} ${t.challenges.daysLeft}`
+                        : `${hoursLeft} ${t.challenges.hoursLeft}`}
                     </span>
                   </span>
                   <span className="flex items-center space-x-1">
                     <Trophy className="h-3 w-3" />
-                    <span>Цель: {challenge.requirements.targetValue}</span>
+                    <span>
+                      {t.challenges.goal}: {challenge.requirements.targetValue}
+                    </span>
                   </span>
                   {/* {challenge.rewards && (
                     <span className="flex items-center space-x-1">
@@ -303,8 +309,8 @@ export function ChallengeList({ garden: _garden }: ChallengeListProps) {
                           : challenge.rewards.gems
                             ? `💎 ${challenge.rewards.gems}`
                             : challenge.rewards.experience
-                              ? `⭐ ${challenge.rewards.experience} опыта`
-                              : 'Награда'}
+                              ? `⭐ ${challenge.rewards.experience} ${t.challenges.experience}`
+                              : t.challenges.reward}
                       </span>
                     </span>
                   )} */}
@@ -326,7 +332,7 @@ export function ChallengeList({ garden: _garden }: ChallengeListProps) {
                       <span className="text-xs">
                         {claimRewardMutation.isPending
                           ? 'Получение...'
-                          : 'Получить награду'}
+                          : t.challenges.claimReward}
                       </span>
                     </Button>
                   </div>

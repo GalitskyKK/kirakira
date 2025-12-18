@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { formatDistanceToNow, format } from 'date-fns'
-import { ru } from 'date-fns/locale'
+import { ru, enUS } from 'date-fns/locale'
 import { ArrowLeft, Calendar, Heart, Star } from 'lucide-react'
 import { Button, Card } from '@/components/ui'
 import { MOOD_CONFIG } from '@/types/mood'
@@ -10,6 +10,9 @@ import { ElementUpgradeManager } from './ElementUpgradeManager'
 import { SuccessUpgradeOverlay } from './SuccessUpgradeOverlay'
 import { useGardenSync, useTelegramId } from '@/hooks/index.v2'
 import { useScrollToTop } from '@/hooks/useScrollToTop'
+import { useTranslation } from '@/hooks/useTranslation'
+import { useLocaleStore } from '@/stores/localeStore'
+import { getLocalizedMoodConfig } from '@/utils/moodLocalization'
 import { useEffect, useState } from 'react'
 
 interface ElementDetailsProps {
@@ -26,6 +29,10 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
     newRarity: RarityLevel
     xpReward: number
   } | null>(null)
+
+  const t = useTranslation()
+  const locale = useLocaleStore(state => state.locale)
+  const dateLocale = locale === 'en' ? enUS : ru
 
   // 🔑 Получаем telegramId через хук
   const telegramId = useTelegramId()
@@ -60,35 +67,42 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
     }
   }, [gardenData?.elements, element.id, currentElement.rarity])
 
-  const moodConfig =
+  const moodConfig = getLocalizedMoodConfig(
     currentElement.moodInfluence in MOOD_CONFIG
-      ? MOOD_CONFIG[currentElement.moodInfluence]
-      : MOOD_CONFIG.joy // Fallback to joy if invalid mood
+      ? currentElement.moodInfluence
+      : 'joy',
+    t
+  )
 
   const rarityLabels: Record<string, string> = {
-    common: 'Обычный',
-    uncommon: 'Необычный',
-    rare: 'Редкий',
-    epic: 'Эпический',
-    legendary: 'Легендарный',
+    common: t.elements.rarity.common,
+    uncommon: t.elements.rarity.uncommon,
+    rare: t.elements.rarity.rare,
+    epic: t.elements.rarity.epic,
+    legendary: t.elements.rarity.legendary,
   }
 
   const seasonLabels: Record<string, string> = {
-    spring: 'Весна',
-    summer: 'Лето',
-    autumn: 'Осень',
-    winter: 'Зима',
+    spring: t.seasons.spring,
+    summer: t.seasons.summer,
+    autumn: t.seasons.autumn,
+    winter: t.seasons.winter,
   }
 
   const typeLabels: Record<string, string> = {
-    flower: 'Цветок',
-    tree: 'Дерево',
-    stone: 'Камень',
-    water: 'Вода',
-    grass: 'Трава',
-    mushroom: 'Гриб',
-    crystal: 'Кристалл',
-    decoration: 'Декорация',
+    flower: t.elementTypes.flower,
+    tree: t.elementTypes.tree,
+    stone: t.elementTypes.stone,
+    water: t.elementTypes.water,
+    grass: t.elementTypes.grass,
+    mushroom: t.elementTypes.mushroom,
+    crystal: t.elementTypes.crystal,
+    decoration: t.elementTypes.decoration,
+    rainbow_flower: t.elementTypes.rainbowFlower,
+    glowing_crystal: t.elementTypes.glowingCrystal,
+    mystic_mushroom: t.elementTypes.mysticMushroom,
+    aurora_tree: t.elementTypes.auroraTree,
+    starlight_decoration: t.elementTypes.starlightDecoration,
   }
 
   const getRarityColor = (rarity: string) => {
@@ -119,7 +133,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
             leftIcon={<ArrowLeft size={16} />}
           ></Button>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Детали растения
+            {t.gardenStats.details}
           </h2>
         </div>
       </div>
@@ -191,7 +205,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  Дата появления
+                  {t.gardenStats.unlockDate}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
                   {format(
@@ -199,7 +213,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
                       ? currentElement.unlockDate
                       : new Date(currentElement.unlockDate),
                     'dd MMMM yyyy',
-                    { locale: ru }
+                    { locale: dateLocale }
                   )}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -207,7 +221,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
                     currentElement.unlockDate instanceof Date
                       ? currentElement.unlockDate
                       : new Date(currentElement.unlockDate),
-                    { locale: ru, addSuffix: true }
+                    { locale: dateLocale, addSuffix: true }
                   )}
                 </p>
               </div>
@@ -285,14 +299,14 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
             >
               <div className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-green-400" />
               <div>
-                <p className="font-medium">Растение выросло</p>
+                <p className="font-medium">{t.gardenStats.plantGrew}</p>
                 <p className="text-gray-500">
                   {format(
                     currentElement.unlockDate instanceof Date
                       ? currentElement.unlockDate
                       : new Date(currentElement.unlockDate),
                     'dd MMM yyyy, HH:mm',
-                    { locale: ru }
+                    { locale: dateLocale }
                   )}
                 </p>
               </div>

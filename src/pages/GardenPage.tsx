@@ -3,17 +3,31 @@ import { GardenView, GardenStats } from '@/components/garden'
 import { useGardenState } from '@/hooks/index.v2'
 import { useGardenClientStore } from '@/stores/gardenStore'
 import { GardenDisplayMode } from '@/types'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export function GardenPage() {
   const { garden } = useGardenState()
   const displayMode = useGardenClientStore(state => state.displayMode)
+  const t = useTranslation()
 
   const headerConfig =
     displayMode === GardenDisplayMode.ISOMETRIC_ROOM
-      ? { title: 'Моя комната', Icon: Home, badge: 'Изометрия' }
+      ? {
+          title: t.pages.garden.myRoom,
+          Icon: Home,
+          badge: t.pages.garden.isometric,
+        }
       : displayMode === GardenDisplayMode.PALETTE
-        ? { title: 'Моя палитра', Icon: Palette, badge: 'Палитра' }
-        : { title: 'Мой сад', Icon: Sprout, badge: 'Классика' }
+        ? {
+            title: t.pages.garden.myPalette,
+            Icon: Palette,
+            badge: t.pages.garden.palette,
+          }
+        : {
+            title: t.pages.garden.myGarden,
+            Icon: Sprout,
+            badge: t.pages.garden.classic,
+          }
 
   return (
     <div className="space-y-4">

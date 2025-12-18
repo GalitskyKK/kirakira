@@ -125,13 +125,13 @@ export function TransactionHistory({
               active={currencyFilter === 'sprouts'}
               onClick={() => setCurrencyFilter('sprouts')}
             >
-              {t.transactionHistory.all}
+              {t.transactionHistory.sprouts}
             </FilterButton>
             <FilterButton
               active={currencyFilter === 'gems'}
               onClick={() => setCurrencyFilter('gems')}
             >
-              Кристаллы
+              {t.transactionHistory.gems}
             </FilterButton>
           </div>
         </div>
@@ -141,7 +141,7 @@ export function TransactionHistory({
       <div className="space-y-2">
         {filteredTransactions.length === 0 ? (
           <p className="py-8 text-center text-gray-500 dark:text-gray-400">
-            Нет транзакций с выбранными фильтрами
+            {t.transactionHistory.noTransactionsWithFilters}
           </p>
         ) : (
           filteredTransactions.map((tx, index) => (

@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { Button } from './Button'
+import { useTranslation } from '@/hooks/useTranslation'
 
 /**
  * 🧊 Модалка использования заморозки стрика
@@ -38,6 +39,7 @@ export function StreakFreezeModal({
   isLoading = false,
   userCurrency,
 }: StreakFreezeModalProps) {
+  const t = useTranslation()
   const hasEnoughManual = availableFreezes.manual >= missedDays
   const hasAuto = availableFreezes.auto > 0
   const canRecover = missedDays <= 7
@@ -83,36 +85,42 @@ export function StreakFreezeModal({
               <div className="mb-4 text-center">
                 <div className="mb-2 text-6xl">😢</div>
                 <h3 className="mb-2 text-xl font-bold text-white">
-                  Стрик потерян безвозвратно
+                  {t.streakFreeze.lostForever}
                 </h3>
                 <p className="text-sm text-gray-400">
-                  Пропущено слишком много дней:{' '}
+                  {t.streakFreeze.tooManyDaysMissed}:{' '}
                   <span className="font-semibold text-red-400">
                     {missedDays}
                   </span>
                 </p>
                 <p className="mt-2 text-xs text-gray-500">
-                  Максимум можно восстановить 7 дней
+                  {t.streakFreeze.maxRestore}
                 </p>
               </div>
 
               {/* Статистика */}
               <div className="mb-6 rounded-xl bg-gray-800/50 p-4">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-400">Был стрик:</span>
+                  <span className="text-gray-400">
+                    {t.streakFreeze.wasStreak}:
+                  </span>
                   <span className="font-semibold text-white">
-                    {currentStreak} дней
+                    {currentStreak} {t.streakFreeze.days}
                   </span>
                 </div>
                 <div className="mt-2 flex items-center justify-between text-sm">
-                  <span className="text-gray-400">Новый стрик:</span>
-                  <span className="font-semibold text-red-400">0 дней</span>
+                  <span className="text-gray-400">
+                    {t.streakFreeze.newStreak}:
+                  </span>
+                  <span className="font-semibold text-red-400">
+                    0 {t.streakFreeze.days}
+                  </span>
                 </div>
               </div>
 
               {/* Кнопка */}
               <Button onClick={onClose} fullWidth>
-                Понятно
+                {t.streakFreeze.understood}
               </Button>
             </motion.div>
           </motion.div>
@@ -154,10 +162,10 @@ export function StreakFreezeModal({
             <div className="mb-4 text-center">
               <div className="mb-2 text-6xl">😢</div>
               <h3 className="mb-2 text-xl font-bold text-white">
-                Стрик прерван!
+                {t.streakFreeze.interrupted}
               </h3>
               <p className="text-sm text-gray-400">
-                Пропущено дней:{' '}
+                {t.streakFreeze.missedDays}:{' '}
                 <span className="font-semibold text-orange-400">
                   {missedDays}
                 </span>
@@ -167,20 +175,28 @@ export function StreakFreezeModal({
             {/* Статистика стрика */}
             <div className="mb-4 rounded-xl bg-gray-800/50 p-4">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-400">Текущий стрик:</span>
+                <span className="text-gray-400">
+                  {t.streakFreeze.currentStreak}:
+                </span>
                 <span className="font-semibold text-white">
-                  {currentStreak} дней
+                  {currentStreak} {t.streakFreeze.days}
                 </span>
               </div>
               <div className="mt-2 flex items-center justify-between text-sm">
-                <span className="text-gray-400">После потери:</span>
-                <span className="font-semibold text-red-400">0 дней</span>
+                <span className="text-gray-400">
+                  {t.streakFreeze.afterLoss}:
+                </span>
+                <span className="font-semibold text-red-400">
+                  0 {t.streakFreeze.days}
+                </span>
               </div>
             </div>
 
             {/* Доступные заморозки */}
             <div className="mb-6 rounded-xl border border-blue-500/30 bg-blue-500/10 p-4">
-              <p className="mb-3 text-sm text-gray-300">У вас есть:</p>
+              <p className="mb-3 text-sm text-gray-300">
+                {t.streakFreeze.youHave}
+              </p>
 
               {/* Авто-заморозки */}
               {hasAuto && (
@@ -194,10 +210,10 @@ export function StreakFreezeModal({
                     </span>
                     <div>
                       <p className="text-sm font-semibold text-cyan-400">
-                        Авто-заморозка
+                        {t.streakFreeze.autoFreeze}
                       </p>
                       <p className="text-xs text-gray-400">
-                        Срабатывает автоматически
+                        {t.streakFreeze.triggersAutomatically}
                       </p>
                     </div>
                   </div>
@@ -213,12 +229,12 @@ export function StreakFreezeModal({
                   <span className="text-2xl">❄️</span>
                   <div>
                     <p className="text-sm font-semibold text-blue-400">
-                      Обычные заморозки
+                      {t.streakFreeze.regularFreezes}
                     </p>
                     <p className="text-xs text-gray-400">
                       {missedDays > 1
-                        ? `Нужно: ${missedDays}`
-                        : 'Используются вручную'}
+                        ? `${t.streakFreeze.needToUse}: ${missedDays}`
+                        : t.freezes.manualUse}
                     </p>
                   </div>
                 </div>
@@ -241,11 +257,11 @@ export function StreakFreezeModal({
                   className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
                 >
                   {isLoading ? (
-                    'Использование...'
+                    t.streakFreeze.using
                   ) : (
                     <>
                       <span className="mr-2 text-lg">❄️✨</span>
-                      Использовать авто-заморозку
+                      {t.streakFreeze.useAutoFreeze}
                     </>
                   )}
                 </Button>
@@ -265,13 +281,13 @@ export function StreakFreezeModal({
                   }
                 >
                   {isLoading ? (
-                    'Использование...'
+                    t.streakFreeze.using
                   ) : (
                     <>
                       <span className="mr-2 text-lg">❄️</span>
                       {missedDays > 1
-                        ? `Использовать ${missedDays} заморозок`
-                        : 'Использовать заморозку'}
+                        ? `${t.streakFreeze.useFreezes} ${missedDays} ${t.freezes.manual}`
+                        : t.streakFreeze.useFreeze}
                     </>
                   )}
                 </Button>
@@ -287,9 +303,11 @@ export function StreakFreezeModal({
                   className="border border-green-500/50 bg-green-500/10 hover:bg-green-500/20 dark:border-green-400/50 dark:bg-green-400/10 dark:hover:bg-green-400/20"
                 >
                   <span className="mr-2 text-lg">🛒</span>
-                  Купить{' '}
-                  {missedDays > 1 ? `${missedDays} заморозок` : 'заморозку'} (
-                  {manualFreezeCost * missedDays} 🌿)
+                  {t.streakFreeze.buyFreezes}{' '}
+                  {missedDays > 1
+                    ? `${missedDays} ${t.freezes.manual}`
+                    : t.freezes.manual}{' '}
+                  ({manualFreezeCost * missedDays} 🌿)
                 </Button>
               )}
 
@@ -313,14 +331,16 @@ export function StreakFreezeModal({
                     : ''
                 }
               >
-                {hasEnoughManual || hasAuto ? 'Отмена' : 'Сбросить стрик'}
+                {hasEnoughManual || hasAuto
+                  ? t.streakFreeze.cancel
+                  : t.streakFreeze.resetStreak}
               </Button>
             </div>
 
             {/* Подсказка */}
             {canRecover && (
               <p className="mt-4 text-center text-xs text-gray-500">
-                💡 Можно восстановить до 7 пропущенных дней
+                {t.streakFreeze.tip}
               </p>
             )}
           </motion.div>

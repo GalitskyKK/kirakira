@@ -7,6 +7,7 @@ import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { useSpendCurrency, currencyKeys } from '@/hooks/queries'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export function RoomThemeShopSection() {
   const {
@@ -21,6 +22,7 @@ export function RoomThemeShopSection() {
   const spendCurrencyMutation = useSpendCurrency()
   const telegramId = useTelegramId()
   const queryClient = useQueryClient()
+  const t = useTranslation()
 
   const [purchasingTheme, setPurchasingTheme] = useState<string | null>(null)
   const isProcessingRef = useRef(false)
@@ -109,7 +111,7 @@ export function RoomThemeShopSection() {
         currencyType,
         amount: price,
         reason: 'buy_room_theme',
-        description: `Покупка темы комнаты "${theme.name}"`,
+        description: `${t.themes.buy} "${theme.name}"`,
         metadata: {
           themeId,
           themeName: theme.name,
@@ -154,14 +156,14 @@ export function RoomThemeShopSection() {
               <button
                 onClick={goToPrevious}
                 className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg backdrop-blur-sm transition-all hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-800"
-                aria-label="Предыдущая тема комнаты"
+                aria-label={t.themes.previousRoomTheme}
               >
                 <ChevronLeft className="h-5 w-5 text-gray-700 dark:text-gray-300" />
               </button>
               <button
                 onClick={goToNext}
                 className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg backdrop-blur-sm transition-all hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-800"
-                aria-label="Следующая тема комнаты"
+                aria-label={t.themes.nextRoomTheme}
               >
                 <ChevronRight className="h-5 w-5 text-gray-700 dark:text-gray-300" />
               </button>
@@ -238,17 +240,22 @@ export function RoomThemeShopSection() {
                           {theme.priceSprouts === 0 ? (
                             <div className="flex items-center gap-1.5">
                               <Leaf className="h-4 w-4 text-green-500" />
-                              <span>Бесплатно</span>
+                              <span>{t.themes.free}</span>
                             </div>
                           ) : (
                             <>
                               <div className="flex items-center gap-1.5">
                                 <Leaf className="h-4 w-4 text-green-500" />
-                                <span>{theme.priceSprouts} ростков</span>
+                                <span>
+                                  {theme.priceSprouts}{' '}
+                                  {t.currency.sproutsPlural}
+                                </span>
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <Gem className="h-4 w-4 text-purple-500" />
-                                <span>{theme.priceGems} гемов</span>
+                                <span>
+                                  {theme.priceGems} {t.currency.gemsPlural}
+                                </span>
                               </div>
                             </>
                           )}
@@ -265,7 +272,7 @@ export function RoomThemeShopSection() {
                                 handleSelectTheme(theme.id)
                               }}
                             >
-                              Выбрать
+                              {t.themes.select}
                             </Button>
                           ) : (
                             <>
@@ -337,7 +344,7 @@ export function RoomThemeShopSection() {
                       ? 'w-8 bg-kira-500'
                       : 'w-2 bg-neutral-300 dark:bg-neutral-600'
                   }`}
-                  aria-label={`Перейти к теме комнаты ${index + 1}`}
+                  aria-label={`${t.themes.goToTheme} ${index + 1}`}
                 />
               ))}
             </div>

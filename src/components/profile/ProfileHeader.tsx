@@ -8,6 +8,7 @@ import {
   calculateExperienceFromStats,
 } from '@/utils/achievements'
 import { useGardenState, useMoodTracking } from '@/hooks/index.v2'
+import { useTranslation } from '@/hooks/useTranslation'
 
 /**
  * Получает классы цветов градиента в зависимости от уровня
@@ -51,7 +52,8 @@ export function ProfileHeader({
   leaderboardPosition,
 }: ProfileHeaderProps) {
   const navigate = useNavigate()
-  const displayName = user.firstName ?? user.username ?? 'Пользователь'
+  const t = useTranslation()
+  const displayName = user.firstName ?? user.username ?? t.profile.user
   const username = user.username != null ? `@${user.username}` : null
 
   // Hooks for calculating level
@@ -107,12 +109,12 @@ export function ProfileHeader({
 
   const leaderboardLabel = (() => {
     if (leaderboardPosition?.isLoading) {
-      return 'Топ...'
+      return `${t.profile.rating}...`
     }
     if (leaderboardPosition?.position != null) {
-      return `Топ #${leaderboardPosition.position}`
+      return `${t.profile.rating} #${leaderboardPosition.position}`
     }
-    return 'Вне топа'
+    return t.profile.outsideTop
   })()
 
   return (
@@ -156,21 +158,21 @@ export function ProfileHeader({
             <button
               onClick={() => navigate('/leaderboard')}
               className="flex items-center justify-center rounded-lg bg-white p-2 text-gray-600 shadow-sm transition-colors hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-              title="Рейтинг"
+              title={t.profile.rating}
             >
               <Trophy className="h-4 w-4" />
             </button>
             <button
               onClick={() => navigate('/mobile/stats')}
               className="flex items-center justify-center rounded-lg bg-white p-2 text-gray-600 shadow-sm transition-colors hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-              title="Статистика"
+              title={t.profile.statistics}
             >
               <BarChart3 className="h-4 w-4" />
             </button>
             <button
               onClick={() => navigate('/mobile/settings')}
               className="flex items-center justify-center rounded-lg bg-white p-2 text-gray-600 shadow-sm transition-colors hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-              title="Настройки"
+              title={t.settings.title}
             >
               <Settings className="h-4 w-4" />
             </button>
@@ -190,7 +192,7 @@ export function ProfileHeader({
               </span>
               <span className="sm:hidden">{levelInfo.currentLevel.name}</span>
               <span className="ml-1.5 rounded-full bg-white/20 px-2 py-0.5 text-xs dark:bg-black/20">
-                Ур. {levelInfo.currentLevel.level}
+                {t.profile.levelShort} {levelInfo.currentLevel.level}
               </span>
             </div>
             <div className="inline-flex items-center rounded-full border border-garden-200/70 bg-white/80 px-3 py-1 text-xs font-semibold text-garden-600 shadow-sm backdrop-blur dark:border-garden-400/30 dark:bg-garden-900/40 dark:text-garden-100">
@@ -203,10 +205,10 @@ export function ProfileHeader({
               <span>🗓️</span>
               <span className="ml-1">
                 {daysSinceRegistration === 0
-                  ? 'Сегодня'
+                  ? t.profile.today
                   : daysSinceRegistration === 1
-                    ? '1 день'
-                    : `${daysSinceRegistration} дней`}
+                    ? `1 ${t.profile.day}`
+                    : `${daysSinceRegistration} ${t.profile.days}`}
               </span>
             </div>
           </div>
@@ -215,10 +217,12 @@ export function ProfileHeader({
           {levelInfo.nextLevel && (
             <div className="w-full">
               <div className="mb-1 flex justify-between text-xs text-gray-600 dark:text-gray-400">
-                <span>Опыт: {experience}</span>
+                <span>
+                  {t.profile.experience}: {experience}
+                </span>
                 <span className="hidden sm:inline">
-                  До Ур.{levelInfo.nextLevel.level}:{' '}
-                  {levelInfo.experienceToNext}
+                  {t.profile.toLevel}
+                  {levelInfo.nextLevel.level}: {levelInfo.experienceToNext}
                 </span>
                 <span className="sm:hidden">+{levelInfo.experienceToNext}</span>
               </div>

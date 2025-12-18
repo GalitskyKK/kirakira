@@ -266,7 +266,7 @@ export const MoodSelector = memo(function MoodSelector({
                           {labels[intensity - 1]}
                         </p>
                         <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                          Интенсивность: {intensity}/3
+                          {t.mood.intensity.label}: {intensity}/3
                         </p>
                       </div>
                       <div className="flex space-x-1">
@@ -293,7 +293,7 @@ export const MoodSelector = memo(function MoodSelector({
               onClick={handleBack}
               className="mt-4 w-full"
             >
-              Назад
+              {t.common.back}
             </Button>
           </motion.div>
         )}
@@ -307,12 +307,12 @@ export const MoodSelector = memo(function MoodSelector({
             transition={transition}
           >
             <h3 className="mb-4 text-center text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-              Добавить заметку? (необязательно)
+              {t.mood.addNote} {t.mood.addNoteOptional}
             </h3>
             <textarea
               value={note}
               onChange={e => setNote(e.target.value)}
-              placeholder="Что вы чувствуете сегодня?"
+              placeholder={t.mood.notePlaceholder}
               className="w-full rounded-xl border-2 border-neutral-200 bg-white p-4 text-neutral-900 placeholder-neutral-400 transition-colors focus:border-kira-500 focus:outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-500"
               rows={4}
               maxLength={200}
@@ -327,7 +327,7 @@ export const MoodSelector = memo(function MoodSelector({
                 onClick={handleBack}
                 className="flex-1"
               >
-                Назад
+                {t.common.back}
               </Button>
               <Button
                 variant="primary"
@@ -337,7 +337,7 @@ export const MoodSelector = memo(function MoodSelector({
                 disabled={isLoading ?? false}
                 className="flex-1"
               >
-                {todaysMood ? 'Обновить' : 'Сохранить'}
+                {todaysMood ? t.mood.update : t.common.save}
               </Button>
             </div>
           </motion.div>
@@ -356,11 +356,17 @@ export const MoodSelector = memo(function MoodSelector({
               <MoodImage mood={todaysMood.mood} size={32} />
               <div>
                 <p className="text-sm font-medium text-garden-800 dark:text-garden-200">
-                  {MOOD_CONFIG[todaysMood.mood].label}
+                  {getLocalizedMoodConfig(todaysMood.mood, t).label}
                 </p>
                 <p className="text-xs text-garden-600 dark:text-garden-300">
-                  Интенсивность:{' '}
-                  {['Слабо', 'Умеренно', 'Сильно'][todaysMood.intensity - 1]}
+                  {t.mood.intensityLabel}:{' '}
+                  {
+                    [
+                      t.mood.intensity.low,
+                      t.mood.intensity.medium,
+                      t.mood.intensity.high,
+                    ][todaysMood.intensity - 1]
+                  }
                 </p>
                 {(todaysMood.note ?? '').length > 0 && (
                   <p className="mt-1 text-xs text-garden-700 dark:text-garden-300">

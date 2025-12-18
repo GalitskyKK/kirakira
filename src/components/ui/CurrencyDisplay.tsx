@@ -6,6 +6,7 @@
 import { motion } from 'framer-motion'
 import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { Gem, Leaf } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface CurrencyDisplayProps {
   readonly telegramId?: number
@@ -29,6 +30,7 @@ export function CurrencyDisplay({
   showBorder = true,
 }: CurrencyDisplayProps): JSX.Element {
   const { userCurrency, isLoading } = useCurrencyClientStore()
+  const t = useTranslation()
 
   // Размеры в зависимости от size prop
   const sizeClasses = {
@@ -102,7 +104,7 @@ export function CurrencyDisplay({
         </span>
         {showLabels && variant === 'full' && (
           <span className="text-xs text-gray-500 dark:text-gray-400">
-            ростков
+            {t.currency.sproutsPlural}
           </span>
         )}
       </motion.div>
@@ -122,7 +124,7 @@ export function CurrencyDisplay({
         </span>
         {showLabels && variant === 'full' && (
           <span className="text-xs text-gray-500 dark:text-gray-400">
-            кристаллов
+            {t.currency.gemsPlural}
           </span>
         )}
       </motion.div>
@@ -148,6 +150,7 @@ export function SingleCurrencyDisplay({
   showLabel = false,
   showAnimation = true,
 }: SingleCurrencyDisplayProps): JSX.Element {
+  const t = useTranslation()
   const iconSizes = {
     sm: 14,
     md: 16,
@@ -162,7 +165,8 @@ export function SingleCurrencyDisplay({
 
   const Icon = type === 'sprouts' ? Leaf : Gem
   const color = type === 'sprouts' ? 'text-green-500' : 'text-purple-500'
-  const label = type === 'sprouts' ? 'ростков' : 'кристаллов'
+  const label =
+    type === 'sprouts' ? t.currency.sproutsPlural : t.currency.gemsPlural
 
   return (
     <motion.div

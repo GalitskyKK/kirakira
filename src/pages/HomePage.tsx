@@ -114,7 +114,7 @@ export function HomePage() {
                     className="text-kira-600 dark:text-kira-400"
                   />
                   <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                    До достижения
+                    {t.pages.mood.untilMilestone}
                   </span>
                 </div>
                 <div className="space-y-2">
@@ -123,7 +123,7 @@ export function HomePage() {
                       {milestoneInfo.nextMilestone.title}
                     </span>
                     <span className="font-medium text-neutral-900 dark:text-neutral-100">
-                      {milestoneInfo.daysToNext} дн.
+                      {milestoneInfo.daysToNext} {t.pages.mood.days}
                     </span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-neutral-200 dark:bg-neutral-700">
@@ -135,7 +135,7 @@ export function HomePage() {
                     />
                   </div>
                   <div className="text-xs text-neutral-500 dark:text-neutral-400">
-                    Награда: {milestoneInfo.nextMilestone.reward}
+                    {t.pages.mood.reward}: {milestoneInfo.nextMilestone.reward}
                   </div>
                 </div>
               </Card>
@@ -146,18 +146,18 @@ export function HomePage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-neutral-600 dark:text-neutral-400">
-                    Настроение
+                    {t.pages.mood.mood}
                   </span>
                   <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                    {todaysMood ? '✅ Отмечено' : '⏳ Ждет отметки'}
+                    {todaysMood ? t.pages.mood.checked : t.pages.mood.waiting}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-neutral-600 dark:text-neutral-400">
-                    Растение
+                    {t.pages.mood.plant}
                   </span>
                   <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                    {canUnlock ? '🌱 Готово к росту' : '✅ Выращено'}
+                    {canUnlock ? t.pages.mood.readyToGrow : t.pages.mood.grown}
                   </span>
                 </div>
               </div>
@@ -190,7 +190,7 @@ export function HomePage() {
                   size={24}
                   className="text-kira-600 dark:text-kira-400"
                 />
-                <span>Статистика настроения</span>
+                <span>{t.pages.mood.moodAnalytics}</span>
               </h2>
               <MoodStats />
             </div>
@@ -202,7 +202,7 @@ export function HomePage() {
                   size={24}
                   className="text-garden-600 dark:text-garden-400"
                 />
-                <span>Инсайты сада</span>
+                <span>{t.pages.mood.gardenComposition}</span>
               </h2>
 
               <div className="space-y-4">
@@ -231,8 +231,7 @@ export function HomePage() {
                     </div>
                   ) : (
                     <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                      Сад пуст. Отметьте настроение, чтобы вырастить первое
-                      растение!
+                      {t.pages.mood.emptyGarden}
                     </p>
                   )}
                 </Card>

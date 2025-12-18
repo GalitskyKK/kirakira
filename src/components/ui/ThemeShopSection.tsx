@@ -12,6 +12,7 @@ import { useSpendCurrency, currencyKeys } from '@/hooks/queries'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button, Card } from '@/components/ui'
+import { useTranslation } from '@/hooks/useTranslation'
 
 // Импортируем функции для работы с локальным хранилищем
 const loadOwnedThemesFromStorage = (): string[] => {
@@ -62,6 +63,7 @@ export function ThemeShopSection() {
   const spendCurrencyMutation = useSpendCurrency()
   const telegramId = useTelegramId()
   const queryClient = useQueryClient()
+  const t = useTranslation()
 
   const [purchasingTheme, setPurchasingTheme] = useState<string | null>(null)
   const isProcessingRef = useRef(false) // Защита от двойных кликов
@@ -117,7 +119,7 @@ export function ThemeShopSection() {
         currencyType,
         amount,
         reason: 'buy_theme',
-        description: `Покупка темы "${theme.name}"`,
+        description: `${t.themes.buy} "${theme.name}"`,
         metadata: { themeId, themeName: theme.name, currencyType },
       })
 
@@ -300,14 +302,14 @@ export function ThemeShopSection() {
               <button
                 onClick={goToPrevious}
                 className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg backdrop-blur-sm transition-all hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-800"
-                aria-label="Предыдущая тема"
+                aria-label={t.themes.previousTheme}
               >
                 <ChevronLeft className="h-5 w-5 text-gray-700 dark:text-gray-300" />
               </button>
               <button
                 onClick={goToNext}
                 className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-lg backdrop-blur-sm transition-all hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-800"
-                aria-label="Следующая тема"
+                aria-label={t.themes.nextTheme}
               >
                 <ChevronRight className="h-5 w-5 text-gray-700 dark:text-gray-300" />
               </button>
@@ -414,7 +416,7 @@ export function ThemeShopSection() {
                             <div className="flex items-center gap-1.5">
                               <Leaf className="h-4 w-4 text-green-500" />
                               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Бесплатно
+                                {t.themes.free}
                               </span>
                             </div>
                           ) : theme.isPremium && theme.priceGems ? (
@@ -423,13 +425,14 @@ export function ThemeShopSection() {
                               <div className="flex items-center gap-1.5">
                                 <Leaf className="h-4 w-4 text-green-500" />
                                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                  {theme.priceSprouts} ростков
+                                  {theme.priceSprouts}{' '}
+                                  {t.currency.sproutsPlural}
                                 </span>
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <Gem className="h-4 w-4 text-purple-500" />
                                 <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
-                                  {theme.priceGems} гемов
+                                  {theme.priceGems} {t.currency.gemsPlural}
                                 </span>
                               </div>
                             </>
@@ -456,7 +459,7 @@ export function ThemeShopSection() {
                                 handleSelectTheme(theme.id)
                               }}
                             >
-                              Выбрать
+                              {t.themes.select}
                             </Button>
                           ) : theme.isPremium && theme.priceGems ? (
                             // Премиум тема - две кнопки выбора валюты
@@ -535,7 +538,7 @@ export function ThemeShopSection() {
                               className="w-full"
                               disabled
                             >
-                              Недостаточно средств
+                              {t.freezes.insufficientFunds}
                             </Button>
                           )}
                         </div>
@@ -559,7 +562,7 @@ export function ThemeShopSection() {
                       ? 'w-8 bg-kira-500'
                       : 'w-2 bg-neutral-300 dark:bg-neutral-600'
                   }`}
-                  aria-label={`Перейти к теме ${index + 1}`}
+                  aria-label={`${t.themes.goToTheme} ${index + 1}`}
                 />
               ))}
             </div>

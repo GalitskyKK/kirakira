@@ -5,12 +5,15 @@ import {
   useCompanionInfoPanel,
 } from '@/stores/companionStore'
 import { MOOD_CONFIG } from '@/types'
+import { useTranslation } from '@/hooks/useTranslation'
+import { getLocalizedMoodConfig } from '@/utils/moodLocalization'
 
 export function CompanionInfoPanel() {
   const { isInfoOpen, setInfoOpen } = useCompanionInfoPanel()
   const activeCompanionId = useCompanionStore(state => state.activeCompanionId)
   const currentEmotion = useCompanionStore(state => state.currentEmotion)
   const lastMood = useCompanionStore(state => state.lastMood)
+  const t = useTranslation()
 
   const definition = getCompanionDefinition(activeCompanionId)
   const emotionVisual = definition.emotions[currentEmotion]
@@ -42,7 +45,7 @@ export function CompanionInfoPanel() {
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Дух сада
+                    {t.companion.spirit}
                   </p>
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                     {definition.name}
@@ -53,7 +56,7 @@ export function CompanionInfoPanel() {
                   onClick={() => setInfoOpen(false)}
                   className="rounded-full bg-slate-200/60 px-2 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-300/70 dark:bg-slate-700/60 dark:text-slate-200 dark:hover:bg-slate-600/80"
                 >
-                  Закрыть
+                  {t.common.close}
                 </button>
               </div>
 
@@ -63,7 +66,7 @@ export function CompanionInfoPanel() {
 
               <div className="mt-3 rounded-xl bg-gradient-to-r from-indigo-100/70 via-white/40 to-indigo-50/60 p-3 shadow-inner dark:from-indigo-500/15 dark:via-slate-900/60 dark:to-indigo-400/10">
                 <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">
-                  Текущее состояние
+                  {t.companion.currentState}
                 </p>
                 <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
                   {emotionVisual.label}
@@ -73,17 +76,16 @@ export function CompanionInfoPanel() {
                 </p>
                 {lastMood && (
                   <p className="mt-2 text-xs text-slate-500 dark:text-slate-300">
-                    Настроение дня:{' '}
+                    {t.companion.moodOfDay}{' '}
                     <span className="font-semibold text-slate-700 dark:text-slate-100">
-                      {`${MOOD_CONFIG[lastMood].emoji} ${MOOD_CONFIG[lastMood].label}`}
+                      {`${MOOD_CONFIG[lastMood].emoji} ${getLocalizedMoodConfig(lastMood, t).label}`}
                     </span>
                   </p>
                 )}
               </div>
 
               <div className="mt-3 rounded-xl border border-dashed border-slate-300/60 p-3 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-300">
-                ✨ В будущих обновлениях вы сможете менять облик Лумины и
-                открывать коллекцию питомцев.
+                {t.companion.futureUpdate}
               </div>
             </motion.div>
           </motion.div>

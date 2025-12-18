@@ -8,17 +8,16 @@ import { useTelegramId } from '@/hooks/useTelegramId'
 import { DailyQuestList } from '@/components/quests'
 // import { MobileLayout } from '@/components/layout'
 import { ErrorMessage } from '@/components/ui/ErrorMessage'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export function QuestsPage() {
   const telegramId = useTelegramId()
+  const t = useTranslation()
 
   if (!telegramId) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
-        <ErrorMessage
-          message="Необходима авторизация для просмотра заданий"
-          showRetry={false}
-        />
+        <ErrorMessage message={t.pages.quests.authRequired} showRetry={false} />
       </div>
     )
   }
@@ -39,7 +38,7 @@ export function QuestsPage() {
             transition={{ duration: 0.3, delay: 0.1 }}
             className="text-2xl font-bold text-gray-900 dark:text-gray-100"
           >
-            Ежедневные задания
+            {t.pages.quests.title}
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: -10 }}
@@ -47,7 +46,7 @@ export function QuestsPage() {
             transition={{ duration: 0.3, delay: 0.2 }}
             className="mt-1 text-gray-600 dark:text-gray-400"
           >
-            Выполняйте задания и получайте награды каждый день
+            {t.pages.quests.description}
           </motion.p>
         </div>
       </div>
