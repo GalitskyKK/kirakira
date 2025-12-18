@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Snowflake, Leaf, Zap } from 'lucide-react'
+import { Snowflake, Leaf, Gem, Zap } from 'lucide-react'
 import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { buyStreakFreeze } from '@/api/streakFreezeService'
@@ -99,7 +99,6 @@ export function FreezeShopSection() {
       })
 
       if (result.success && telegramId) {
-
         // 🔄 1. Оптимистичное обновление баланса валюты
         if (
           result.data?.newBalance !== undefined &&
@@ -252,7 +251,7 @@ export function FreezeShopSection() {
                   </span>
                   <div className="flex items-center gap-1">
                     {manualCurrency === 'gems' ? (
-                      <Zap className="h-4 w-4 text-blue-500" />
+                      <Gem className="h-4 w-4 text-purple-500" />
                     ) : (
                       <Leaf className="h-4 w-4 text-green-500" />
                     )}
@@ -354,7 +353,7 @@ export function FreezeShopSection() {
                   </span>
                   <div className="flex items-center gap-1">
                     {autoCurrency === 'gems' ? (
-                      <Zap className="h-4 w-4 text-blue-500" />
+                      <Gem className="h-4 w-4 text-purple-500" />
                     ) : (
                       <Leaf className="h-4 w-4 text-green-500" />
                     )}

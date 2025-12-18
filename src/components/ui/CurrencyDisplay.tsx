@@ -5,7 +5,7 @@
 
 import { motion } from 'framer-motion'
 import { useCurrencyClientStore } from '@/stores/currencyStore'
-import { Sparkles, Leaf } from 'lucide-react'
+import { Gem, Leaf } from 'lucide-react'
 
 interface CurrencyDisplayProps {
   readonly telegramId?: number
@@ -60,7 +60,7 @@ export function CurrencyDisplay({
           <span className="font-semibold">0</span>
         </div>
         <div className="flex items-center gap-1">
-          <Sparkles size={iconSizes[size]} className="text-purple-500" />
+          <Gem size={iconSizes[size]} className="text-purple-500" />
           <span className="font-semibold">0</span>
         </div>
       </div>
@@ -116,7 +116,7 @@ export function CurrencyDisplay({
         })}
         transition={{ duration: 0.2, delay: 0.1 }}
       >
-        <Sparkles size={iconSizes[size]} className="text-purple-500" />
+        <Gem size={iconSizes[size]} className="text-purple-500" />
         <span className="font-semibold text-gray-800 dark:text-gray-100">
           {(userCurrency.gems ?? 0).toLocaleString()}
         </span>
@@ -160,7 +160,7 @@ export function SingleCurrencyDisplay({
     lg: 'text-base',
   }
 
-  const Icon = type === 'sprouts' ? Leaf : Sparkles
+  const Icon = type === 'sprouts' ? Leaf : Gem
   const color = type === 'sprouts' ? 'text-green-500' : 'text-purple-500'
   const label = type === 'sprouts' ? 'ростков' : 'кристаллов'
 

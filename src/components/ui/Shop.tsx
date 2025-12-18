@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Palette, Snowflake, Sparkles, Leaf } from 'lucide-react'
+import { X, Palette, Snowflake, Gem, Leaf } from 'lucide-react'
 
 import { ThemeShopSection } from './ThemeShopSection'
 import { RoomThemeShopSection } from './RoomThemeShopSection'
@@ -73,8 +73,8 @@ export function ShopContent({
                 </span>
               </div>
 
-              <div className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 px-2.5 py-1.5 dark:from-blue-900/20 dark:to-cyan-900/20">
-                <Sparkles className="h-4 w-4 text-blue-500" />
+              <div className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 px-2.5 py-1.5 dark:from-purple-900/20 dark:to-pink-900/20">
+                <Gem className="h-4 w-4 text-purple-500" />
                 <span className="text-sm font-bold text-gray-900 dark:text-white">
                   {userCurrency?.gems ?? 0}
                 </span>
@@ -185,7 +185,7 @@ export function ShopContent({
               className="flex items-center justify-center p-12"
             >
               <div className="text-center">
-                <Sparkles className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" />
+                <Gem className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" />
                 <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">
                   Скоро появится
                 </h3>

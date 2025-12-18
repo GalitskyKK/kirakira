@@ -5,7 +5,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useState } from 'react'
-import { Sparkles, Leaf } from 'lucide-react'
+import { Gem, Leaf } from 'lucide-react'
 import confetti from 'canvas-confetti'
 
 interface CurrencyAnimationProps {
@@ -57,7 +57,7 @@ export function CurrencyAnimation({
     return undefined
   }, [show, amount, type, duration, onComplete])
 
-  const Icon = type === 'sprouts' ? Leaf : Sparkles
+  const Icon = type === 'sprouts' ? Leaf : Gem
   const bgColor =
     type === 'sprouts'
       ? 'from-green-500 to-emerald-600'
@@ -159,7 +159,7 @@ export function CurrencyAnimation({
  */
 function ParticleEffect({ type }: { readonly type: 'sprouts' | 'gems' }) {
   const particles = Array.from({ length: 8 }, (_, i) => i)
-  const Icon = type === 'sprouts' ? Leaf : Sparkles
+  const Icon = type === 'sprouts' ? Leaf : Gem
 
   return (
     <div className="pointer-events-none absolute inset-0">
@@ -231,7 +231,7 @@ export function MiniCurrencyAnimation({
     return undefined
   }, [show, onComplete])
 
-  const Icon = type === 'sprouts' ? Leaf : Sparkles
+  const Icon = type === 'sprouts' ? Leaf : Gem
   const color = type === 'sprouts' ? 'text-green-500' : 'text-purple-500'
 
   return (

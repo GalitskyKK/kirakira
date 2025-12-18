@@ -11,6 +11,7 @@ import {
   CheckCircle,
   TrendingUp,
   Sparkles,
+  Gem,
   ArrowRight,
   Gift,
   Leaf,
@@ -326,7 +327,7 @@ export function ChallengeDetails({
                 {typeof currentChallenge.rewards.gems === 'number' &&
                   currentChallenge.rewards.gems > 0 && (
                     <span className="flex items-center space-x-1 rounded-full bg-white/60 px-3 py-1 text-sm dark:bg-gray-800/60">
-                      <Sparkles size={16} className="text-purple-500" />
+                      <Gem size={16} className="text-purple-500" />
                       <span className="font-medium text-gray-900 dark:text-gray-100">
                         {currentChallenge.rewards.gems}
                       </span>

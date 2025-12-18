@@ -485,7 +485,7 @@ export function ThemeShopSection() {
                               </Button>
                               <Button
                                 size="sm"
-                                className="w-full bg-gradient-to-r from-purple-500 to-pink-600"
+                                className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white"
                                 disabled={
                                   isPurchasing ||
                                   (userCurrency?.gems || 0) < theme.priceGems
@@ -499,8 +499,10 @@ export function ThemeShopSection() {
                                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                                 ) : (
                                   <>
-                                    <Gem className="mr-1.5 h-4 w-4" />
-                                    {theme.priceGems}
+                                    <Gem className="mr-1.5 h-4 w-4 text-white" />
+                                    <span className="text-white">
+                                      {theme.priceGems}
+                                    </span>
                                   </>
                                 )}
                               </Button>
