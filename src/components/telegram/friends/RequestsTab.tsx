@@ -2,6 +2,8 @@ import { motion } from 'framer-motion'
 import { CheckCircle, Clock, XCircle } from 'lucide-react'
 import type { FriendRequest } from '@/hooks'
 import { Button, Card, UserAvatar } from '@/components/ui'
+import { useTranslation } from '@/hooks/useTranslation'
+import { useLocaleStore } from '@/stores/localeStore'
 
 interface RequestsTabProps {
   readonly incomingRequests: readonly FriendRequest[]
@@ -14,6 +16,8 @@ export function RequestsTab({
   outgoingRequests,
   onRespond,
 }: RequestsTabProps) {
+  const t = useTranslation()
+  const locale = useLocaleStore(state => state.locale)
   return (
     <motion.div
       key="requests"
@@ -23,16 +27,16 @@ export function RequestsTab({
       className="space-y-4"
     >
       <div className="text-center">
-        <h3 className="text-lg font-semibold">Запросы дружбы</h3>
+        <h3 className="text-lg font-semibold">{t.friends.requests.title}</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Управляйте входящими и исходящими запросами
+          {t.friends.requests.subtitle}
         </p>
       </div>
 
       {incomingRequests.length > 0 && (
         <div>
           <h4 className="mb-3 text-sm font-semibold text-gray-700">
-            Входящие запросы ({incomingRequests.length})
+            {t.friends.requests.incoming} ({incomingRequests.length})
           </h4>
           <div className="space-y-3">
             {incomingRequests.map((request, index) => (
@@ -75,7 +79,7 @@ export function RequestsTab({
                         </span>
                         <span>
                           {new Date(request.requestDate).toLocaleDateString(
-                            'ru'
+                            locale === 'en' ? 'en-US' : 'ru-RU'
                           )}
                         </span>
                       </div>
@@ -108,7 +112,7 @@ export function RequestsTab({
       {outgoingRequests.length > 0 && (
         <div>
           <h4 className="mb-3 text-sm font-semibold text-gray-700">
-            Исходящие запросы ({outgoingRequests.length})
+            {t.friends.requests.outgoing} ({outgoingRequests.length})
           </h4>
           <div className="space-y-3">
             {outgoingRequests.map((request, index) => (
@@ -141,13 +145,17 @@ export function RequestsTab({
                           )}
                       </div>
                       <div className="mt-1 text-xs text-gray-500">
-                        Запрос отправлен{' '}
-                        {new Date(request.requestDate).toLocaleDateString('ru')}
+                        {t.friends.requests.sent}{' '}
+                        {new Date(request.requestDate).toLocaleDateString(
+                          locale === 'en' ? 'en-US' : 'ru-RU'
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 text-orange-600">
                       <Clock className="h-4 w-4" />
-                      <span className="text-sm">Ожидание</span>
+                      <span className="text-sm">
+                        {t.friends.requests.waiting}
+                      </span>
                     </div>
                   </div>
                 </Card>
@@ -160,9 +168,9 @@ export function RequestsTab({
       {incomingRequests.length === 0 && outgoingRequests.length === 0 && (
         <Card className="p-6 text-center">
           <Clock className="mx-auto mb-3 h-8 w-8 text-gray-400" />
-          <h4 className="mb-2 font-medium">Нет запросов</h4>
+          <h4 className="mb-2 font-medium">{t.friends.requests.noRequests}</h4>
           <p className="text-sm text-gray-600">
-            Используйте реферальные коды, чтобы найти друзей
+            {t.friends.requests.useReferralCodes}
           </p>
         </Card>
       )}

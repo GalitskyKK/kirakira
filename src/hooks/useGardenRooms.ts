@@ -1,6 +1,7 @@
 import { useMemo, useCallback } from 'react'
 import type { GardenElement, GardenRoom, RoomNavigationState } from '@/types'
 import { SHELVES_PER_ROOM, ELEMENTS_PER_ROOM } from '@/types'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface UseGardenRoomsParams {
   readonly elements: readonly GardenElement[]
@@ -31,6 +32,8 @@ export function useGardenRooms({
   elements,
   currentRoomIndex,
 }: UseGardenRoomsParams): UseGardenRoomsResult {
+  const t = useTranslation()
+
   /**
    * Вычисляет номер комнаты для элемента на основе его позиции
    */
@@ -72,13 +75,30 @@ export function useGardenRooms({
    * Мемоизировано для производительности
    */
   const rooms = useMemo<readonly GardenRoom[]>(() => {
+    const getRoomNameLocalized = (index: number): string => {
+      const roomNames = t.gardenActions.roomNames
+      const names = [
+        roomNames.first,
+        roomNames.second,
+        roomNames.third,
+        roomNames.fourth,
+        roomNames.fifth,
+        roomNames.sixth,
+        roomNames.seventh,
+        roomNames.eighth,
+        roomNames.ninth,
+        roomNames.tenth,
+      ]
+      return names[index] ?? `${t.gardenActions.roomNames.first} ${index + 1}`
+    }
+
     if (elements.length === 0) {
       // Даже если нет элементов, создаём первую комнату
       return [
         {
           id: 'room-0',
           index: 0,
-          name: 'Первая комната',
+          name: getRoomNameLocalized(0),
           elements: [],
           capacity: ELEMENTS_PER_ROOM,
           isFull: false,
@@ -103,13 +123,13 @@ export function useGardenRooms({
       return {
         id: `room-${roomIndex}`,
         index: roomIndex,
-        name: getRoomName(roomIndex),
+        name: getRoomNameLocalized(roomIndex),
         elements: roomElements,
         capacity: ELEMENTS_PER_ROOM,
         isFull,
       }
     })
-  }, [elements, getRoomForElement, getElementsInRoom])
+  }, [elements, getRoomForElement, getElementsInRoom, t])
 
   /**
    * Получает текущую комнату
@@ -138,24 +158,4 @@ export function useGardenRooms({
     getElementsInRoom,
     isRoomFull,
   }
-}
-
-/**
- * Генерирует красивое имя для комнаты
- */
-function getRoomName(index: number): string {
-  const roomNames = [
-    'Первая комната',
-    'Вторая комната',
-    'Третья комната',
-    'Четвёртая комната',
-    'Пятая комната',
-    'Шестая комната',
-    'Седьмая комната',
-    'Восьмая комната',
-    'Девятая комната',
-    'Десятая комната',
-  ]
-
-  return roomNames[index] ?? `Комната ${index + 1}`
 }

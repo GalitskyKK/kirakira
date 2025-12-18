@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion'
 import { CheckCircle, QrCode, Search, User as UserIcon } from 'lucide-react'
 import { Button, Card, UserAvatar } from '@/components/ui'
+import { useTranslation } from '@/hooks/useTranslation'
+import { useLocaleStore } from '@/stores/localeStore'
 import type { FriendApiSearchUser } from '@/types/api'
 import type { SearchResult } from '@/hooks/useFriendsData'
 
@@ -35,6 +37,8 @@ export function FindTab({
   onLoadMore,
   onSendFriendRequest,
 }: FindTabProps) {
+  const t = useTranslation()
+  const locale = useLocaleStore(state => state.locale)
   return (
     <motion.div
       key="find"
@@ -44,10 +48,8 @@ export function FindTab({
       className="space-y-4"
     >
       <div className="text-center">
-        <h3 className="text-lg font-semibold">Найти друзей</h3>
-        <p className="text-sm text-gray-600">
-          Добавляйте друзей разными способами
-        </p>
+        <h3 className="text-lg font-semibold">{t.friends.find.title}</h3>
+        <p className="text-sm text-gray-600">{t.friends.find.subtitle}</p>
       </div>
 
       <Card className="p-4">
@@ -57,9 +59,9 @@ export function FindTab({
               <Search className="h-6 w-6 text-green-600" />
             </div>
             <div className="min-w-0 flex-1">
-              <h4 className="font-medium">Поиск пользователей</h4>
+              <h4 className="font-medium">{t.friends.find.userSearch}</h4>
               <p className="text-sm text-gray-600">
-                Найдите друзей по имени или @username
+                {t.friends.find.userSearchDescription}
               </p>
             </div>
           </div>
@@ -67,7 +69,7 @@ export function FindTab({
           <div className="flex space-x-2">
             <input
               type="text"
-              placeholder="Введите имя или @username..."
+              placeholder={t.friends.find.enterNameOrUsername}
               value={globalSearchQuery}
               onChange={e => onGlobalSearchChange(e.target.value)}
               className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800"
@@ -78,14 +80,14 @@ export function FindTab({
               className="flex items-center space-x-2 bg-green-500 px-4 hover:bg-green-600"
             >
               <Search className="h-4 w-4" />
-              <span>Искать</span>
+              <span>{t.friends.find.search}</span>
             </Button>
           </div>
 
           <div className="space-y-2">
             {globalSearchResults.length === 0 && !isSearching && (
               <p className="text-sm text-gray-500">
-                Введите запрос и нажмите &quot;Искать&quot;
+                {t.friends.find.enterQuery}
               </p>
             )}
 
@@ -105,14 +107,14 @@ export function FindTab({
                       </h4>
                       {user.relationshipStatus === 'accepted' && (
                         <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
-                          Уже друг
+                          {t.friends.find.alreadyFriend}
                         </span>
                       )}
                     </div>
                     <div className="mt-1 text-xs text-gray-500">
-                      Зарегистрирован:{' '}
+                      {t.friends.find.registered}{' '}
                       {new Date(user.registration_date).toLocaleDateString(
-                        'ru'
+                        locale === 'en' ? 'en-US' : 'ru-RU'
                       )}
                     </div>
                   </div>
@@ -123,7 +125,7 @@ export function FindTab({
                     className="flex items-center space-x-1"
                   >
                     <UserIcon className="h-4 w-4" />
-                    <span>Добавить</span>
+                    <span>{t.friends.find.add}</span>
                   </Button>
                 </div>
               </Card>
@@ -136,7 +138,9 @@ export function FindTab({
                 variant="outline"
                 className="w-full"
               >
-                {isLoadingMore ? 'Загрузка...' : 'Показать еще'}
+                {isLoadingMore
+                  ? t.friends.find.loading
+                  : t.friends.find.showMore}
               </Button>
             )}
           </div>
@@ -150,9 +154,9 @@ export function FindTab({
               <QrCode className="h-6 w-6 text-blue-600" />
             </div>
             <div className="min-w-0 flex-1">
-              <h4 className="font-medium">Поиск по реферальному коду</h4>
+              <h4 className="font-medium">{t.friends.find.referralSearch}</h4>
               <p className="text-sm text-gray-600">
-                Быстро добавьте друга по его коду
+                {t.friends.find.referralSearchDescription}
               </p>
             </div>
           </div>
@@ -160,7 +164,7 @@ export function FindTab({
           <div className="flex space-x-2">
             <input
               type="text"
-              placeholder="Введите реферальный код..."
+              placeholder={t.friends.find.enterReferralCode}
               value={referralSearchQuery}
               onChange={e => onReferralSearchChange(e.target.value)}
               className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800"
@@ -171,7 +175,7 @@ export function FindTab({
               className="flex items-center space-x-2 bg-blue-500 px-4 hover:bg-blue-600"
             >
               <QrCode className="h-4 w-4" />
-              <span>Искать</span>
+              <span>{t.friends.find.search}</span>
             </Button>
           </div>
 
@@ -205,11 +209,11 @@ export function FindTab({
                       className="flex items-center space-x-1"
                     >
                       <CheckCircle className="h-4 w-4" />
-                      <span>Добавить</span>
+                      <span>{t.friends.find.add}</span>
                     </Button>
                   ) : (
                     <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
-                      Запрос отправлен
+                      {t.friends.find.requestSent}
                     </span>
                   )}
                 </div>

@@ -13,6 +13,7 @@ import { useGardenRooms } from '@/hooks'
 import { ParticleCanvas } from './ParticleCanvas'
 import { PlantRenderer } from './plants/PlantRenderer'
 import { RoomNavigator } from './RoomNavigator'
+import { useTranslation } from '@/hooks/useTranslation'
 import type { GardenElement, ViewMode } from '@/types'
 import type { GardenTheme } from '@/hooks/useGardenTheme'
 
@@ -168,13 +169,14 @@ export function IsometricRoomView({
   const activeRoomThemeId = roomThemeIdOverride ?? roomTheme?.id ?? 'isoRoom'
   const roomBackground =
     ROOM_ASSETS[activeRoomThemeId] ?? ROOM_ASSETS['isoRoom']
+  const t = useTranslation()
 
   return (
     <div className="relative w-full">
       <div className="mb-4 px-4">
         <RoomNavigator
           navigation={navigation}
-          roomName={currentRoom?.name ?? 'Комната'}
+          roomName={currentRoom?.name ?? t.gardenActions.room}
           onNavigate={dir =>
             onRoomChange(
               dir === 'prev' ? currentRoomIndex - 1 : currentRoomIndex + 1

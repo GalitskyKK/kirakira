@@ -14,6 +14,7 @@ import {
 import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
+import { useTranslation } from '@/hooks/useTranslation'
 import { TrendingUp, Sparkles } from 'lucide-react'
 
 interface ElementUpgradeButtonProps {
@@ -31,6 +32,7 @@ export function ElementUpgradeButton({
   disabled = false,
   isLoading = false,
 }: ElementUpgradeButtonProps) {
+  const t = useTranslation()
   const { userCurrency } = useCurrencyClientStore()
 
   // Получаем данные пользователя через React Query
@@ -76,10 +78,10 @@ export function ElementUpgradeButton({
       <span className="flex items-center gap-2">
         <span>
           {isLoading
-            ? 'Улучшение...'
+            ? t.gardenActions.upgrading
             : hasFreeUpgrades
-              ? 'Улучшить бесплатно'
-              : `Улучшить за ${cost}🌿`}
+              ? t.gardenActions.upgradeFree
+              : `${t.gardenActions.upgradeFor} ${cost}🌿`}
         </span>
         {!isLoading && (
           <>

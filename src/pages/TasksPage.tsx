@@ -5,8 +5,10 @@ import { useTelegramId } from '@/hooks/useTelegramId'
 import { DailyQuestList } from '@/components/quests'
 import { ChallengeList } from '@/components/challenges/ChallengeList'
 import { useGardenState } from '@/hooks/index.v2'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export function TasksPage() {
+  const t = useTranslation()
   const [activeTab, setActiveTab] = useState<'daily' | 'challenges'>('daily')
   const telegramId = useTelegramId()
   const { garden } = useGardenState()
@@ -17,17 +19,17 @@ export function TasksPage() {
         <div className="glass-card rounded-3xl p-6 text-center">
           <div className="mb-4 text-6xl">🔒</div>
           <h2 className="mb-2 text-xl font-bold text-neutral-900 dark:text-neutral-100">
-            Требуется авторизация
+            {t.quests.authRequired}
           </h2>
           <p className="text-neutral-600 dark:text-neutral-400">
-            Войдите, чтобы смотреть ежедневные задания и челленджи
+            {t.quests.loginToView}
           </p>
           <button
             type="button"
             onClick={() => (window.location.href = '/auth')}
             className="mt-4 inline-flex items-center justify-center rounded-2xl bg-kira-500 px-4 py-2 text-white transition-colors hover:bg-kira-600"
           >
-            Войти
+            {t.quests.login}
           </button>
         </div>
       </div>
@@ -39,8 +41,8 @@ export function TasksPage() {
       {/* Табы */}
       <div className="glass-card flex min-h-[56px] items-center space-x-1 rounded-2xl p-1.5">
         {[
-          { id: 'daily', label: 'Ежедневные', icon: Calendar },
-          { id: 'challenges', label: 'Челленджи', icon: Trophy },
+          { id: 'daily', label: t.quests.daily, icon: Calendar },
+          { id: 'challenges', label: t.quests.challenges, icon: Trophy },
         ].map(tab => {
           const Icon = tab.icon
           return (

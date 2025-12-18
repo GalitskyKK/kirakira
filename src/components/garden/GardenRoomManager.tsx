@@ -3,6 +3,7 @@ import { motion, AnimatePresence, PanInfo } from 'framer-motion'
 import { useGardenRooms } from '@/hooks'
 import { ShelfView } from './ShelfView'
 import { RoomNavigator } from './RoomNavigator'
+import { useTranslation } from '@/hooks/useTranslation'
 import type { GardenElement, ViewMode } from '@/types'
 import { ROOM_TRANSITION_DURATION, SHELVES_PER_ROOM } from '@/types'
 import type { GardenTheme } from '@/hooks/useGardenTheme'
@@ -45,6 +46,7 @@ export function GardenRoomManager({
   onSlotClick,
   friendTheme,
 }: GardenRoomManagerProps) {
+  const t = useTranslation()
   // Используем хук для управления комнатами
   const { rooms, currentRoom, navigation } = useGardenRooms({
     elements,
@@ -152,14 +154,14 @@ export function GardenRoomManager({
       <div className="mb-4 px-4">
         <RoomNavigator
           navigation={navigation}
-          roomName={currentRoom?.name ?? 'Загрузка...'}
+          roomName={currentRoom?.name ?? t.gardenActions.loading}
           onNavigate={handleNavigate}
           isMovingElement={!!elementBeingMoved}
         />
       </div>
 
       {/* Контейнер для комнат с анимацией */}
-      <div className="relative min-h-[650px] w-full overflow-hidden sm:min-h-[700px] lg:min-h-[750px] rounded-2xl">
+      <div className="relative min-h-[650px] w-full overflow-hidden rounded-2xl sm:min-h-[700px] lg:min-h-[750px]">
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
             key={currentRoomIndex}
@@ -207,10 +209,11 @@ export function GardenRoomManager({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          {currentRoom.elements.length} из {currentRoom.capacity} элементов
+          {currentRoom.elements.length} {t.gardenActions.of}{' '}
+          {currentRoom.capacity} {t.gardenActions.elements}
           {currentRoom.isFull && (
             <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-amber-700">
-              Комната заполнена
+              {t.gardenActions.roomFull}
             </span>
           )}
         </motion.div>

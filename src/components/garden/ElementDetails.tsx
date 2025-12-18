@@ -239,7 +239,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  Настроение
+                  {t.gardenStats.mood}
                 </p>
                 <p className="flex items-center space-x-1 text-xs text-gray-600 dark:text-gray-400">
                   <span>{moodConfig.emoji}</span>
@@ -261,7 +261,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    Сезон
+                    {t.gardenStats.season}
                   </p>
                   <p className="text-xs text-gray-600 dark:text-gray-400">
                     {seasonLabels[currentElement.seasonalVariant] ??
@@ -276,7 +276,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
           <Card padding="sm">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                Позиция в саду
+                {t.gardenStats.position}
               </p>
               <p className="text-xs text-gray-600 dark:text-gray-400">
                 ({currentElement.position.x}, {currentElement.position.y})
@@ -288,7 +288,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
         {/* Element Journey */}
         <Card padding="sm">
           <h4 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
-            История элемента
+            {t.gardenStats.history}
           </h4>
           <div className="space-y-3 text-xs text-gray-600 dark:text-gray-400">
             <motion.div
@@ -320,8 +320,10 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
             >
               <div className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-blue-400" />
               <div>
-                <p className="font-medium">Настроение: {moodConfig.label}</p>
-                <p className="text-gray-500">Влияние настроения на рост</p>
+                <p className="font-medium">
+                  {t.gardenStats.mood}: {moodConfig.label}
+                </p>
+                <p className="text-gray-500">{t.gardenStats.moodInfluence}</p>
               </div>
             </motion.div>
 
@@ -334,7 +336,7 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
               >
                 <div className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-purple-400" />
                 <div>
-                  <p className="font-medium">Сезонный вариант</p>
+                  <p className="font-medium">{t.gardenStats.seasonalVariant}</p>
                   <p className="text-gray-500">
                     {seasonLabels[currentElement.seasonalVariant]}
                   </p>
@@ -347,12 +349,10 @@ export function ElementDetails({ element, onBack }: ElementDetailsProps) {
         {/* Care Tips */}
         <Card padding="sm" variant="glass">
           <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
-            💡 Знаете ли вы?
+            {t.gardenStats.didYouKnow}
           </h4>
           <p className="text-xs text-gray-600 dark:text-gray-400">
-            Каждое растение в вашем саду уникально и создается на основе вашего
-            настроения в день его появления. Рост растений зависит от
-            регулярности ведения дневника настроения.
+            {t.gardenStats.careTip}
           </p>
         </Card>
       </div>

@@ -326,6 +326,15 @@ export interface Translations {
     starlightDecoration: string
   }
 
+  // Редкость элементов (для модалки улучшения)
+  rarityLabels: {
+    common: string
+    uncommon: string
+    rare: string
+    epic: string
+    legendary: string
+  }
+
   // Сезоны
   seasons: {
     spring: string
@@ -352,6 +361,14 @@ export interface Translations {
     lastPlant: string
     plantGrew: string
     statistics: string
+    mood: string
+    season: string
+    position: string
+    history: string
+    moodInfluence: string
+    seasonalVariant: string
+    didYouKnow: string
+    careTip: string
   }
 
   // Страницы
@@ -412,6 +429,11 @@ export interface Translations {
       social: string
       streak: string
     }
+    daily: string
+    challenges: string
+    authRequired: string
+    loginToView: string
+    login: string
   }
 
   // Челленджи
@@ -626,6 +648,36 @@ export interface Translations {
     confirmMove: string
     cancelMove: string
     overview: string
+    upgradeFree: string
+    upgradeFor: string
+    upgrading: string
+    upgrade: string
+    upgradeElement: string
+    successRate: string
+    bonus: string
+    attempts: string
+    soonSuccess: string
+    chooseUpgradeMethod: string
+    or: string
+    insufficientSprouts: string
+    legendaryWarning: string
+    loading: string
+    room: string
+    of: string
+    elements: string
+    roomFull: string
+    roomNames: {
+      first: string
+      second: string
+      third: string
+      fourth: string
+      fifth: string
+      sixth: string
+      seventh: string
+      eighth: string
+      ninth: string
+      tenth: string
+    }
   }
 
   // Друзья
@@ -638,6 +690,66 @@ export interface Translations {
     garden: string
     was: string
     online: string
+    title: string
+    subtitle: string
+    friendsTab: string
+    requestsTab: string
+    findTab: string
+    invitesTab: string
+    loadError: string
+    enterReferralCode: string
+    userNotFound: string
+    minSearchLength: string
+    authRequired: string
+    searchError: string
+    connectionError: string
+    searchByCode: string
+    telegramOnly: string
+    requests: {
+      title: string
+      subtitle: string
+      incoming: string
+      outgoing: string
+      sent: string
+      waiting: string
+      noRequests: string
+      useReferralCodes: string
+    }
+    find: {
+      title: string
+      subtitle: string
+      userSearch: string
+      userSearchDescription: string
+      enterNameOrUsername: string
+      search: string
+      enterQuery: string
+      alreadyFriend: string
+      registered: string
+      add: string
+      loading: string
+      showMore: string
+      referralSearch: string
+      referralSearchDescription: string
+      enterReferralCode: string
+      requestSent: string
+    }
+    invites: {
+      title: string
+      subtitle: string
+      sendInvitation: string
+      sendInvitationDescription: string
+      send: string
+      referralCode: string
+      shareCode: string
+      share: string
+      creatingCode: string
+      refreshData: string
+      ifCodeNotAppeared: string
+      statistics: string
+      friends: string
+      invited: string
+      shareToGrow: string
+    }
   }
 
   // Темы - названия и описания

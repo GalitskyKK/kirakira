@@ -5,6 +5,7 @@ import { useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/layout'
 import { ShopContent, type ShopTab } from '@/components/ui/Shop'
 import { useCurrencySync } from '@/hooks/useCurrencySync'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const TAB_PARAM_KEY = 'tab'
 
@@ -16,6 +17,7 @@ const resolveTab = (param: string | null): ShopTab => {
 }
 
 export function ShopPage() {
+  const t = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
   const initialTab = useMemo<ShopTab>(
     () => resolveTab(searchParams.get(TAB_PARAM_KEY)),
@@ -46,7 +48,10 @@ export function ShopPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <PageHeader title="Магазин" icon={<ShoppingBag className="h-5 w-5" />} />
+      <PageHeader
+        title={t.shop.title}
+        icon={<ShoppingBag className="h-5 w-5" />}
+      />
 
       <div className="p-4 pb-24">
         <ShopContent

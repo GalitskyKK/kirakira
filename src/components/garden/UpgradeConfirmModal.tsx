@@ -13,6 +13,7 @@ import {
   UPGRADE_SUCCESS_RATES,
 } from '@/types/garden'
 import { X, TrendingUp, Sparkles, AlertCircle } from 'lucide-react'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface UpgradeConfirmModalProps {
   readonly isOpen: boolean
@@ -37,6 +38,7 @@ export function UpgradeConfirmModal({
   currentSprouts,
   isLoading = false,
 }: UpgradeConfirmModalProps) {
+  const t = useTranslation()
   if (!isOpen) return null
 
   const nextRarity = getNextRarity(element.rarity)
@@ -86,20 +88,7 @@ export function UpgradeConfirmModal({
   }
 
   const getRarityLabel = (rarity: RarityLevel): string => {
-    switch (rarity) {
-      case 'common':
-        return 'Обычный'
-      case 'uncommon':
-        return 'Необычный'
-      case 'rare':
-        return 'Редкий'
-      case 'epic':
-        return 'Эпический'
-      case 'legendary':
-        return 'Легендарный'
-      default:
-        return 'Обычный'
-    }
+    return t.rarityLabels[rarity] ?? t.rarityLabels.common
   }
 
   if (!isOpen) return null
@@ -137,7 +126,9 @@ export function UpgradeConfirmModal({
             <div className="flex items-center gap-2">
               <TrendingUp className="h-6 w-6" />
               <div>
-                <h2 className="text-lg font-bold">Улучшить элемент</h2>
+                <h2 className="text-lg font-bold">
+                  {t.gardenActions.upgradeElement}
+                </h2>
                 <p className="text-xs opacity-90">{element.name}</p>
               </div>
             </div>
@@ -181,7 +172,7 @@ export function UpgradeConfirmModal({
             <div className="rounded-lg bg-gray-100 p-3 dark:bg-gray-700">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                  Шанс успеха
+                  {t.gardenActions.successRate}
                 </span>
                 <span className="text-xl font-bold text-purple-600 dark:text-purple-400">
                   {totalSuccessRate}%
@@ -200,7 +191,7 @@ export function UpgradeConfirmModal({
 
               {progressBonus > 0 && (
                 <div className="mt-1 text-right text-xs font-bold text-green-600 dark:text-green-400">
-                  Бонус: +{progressBonus}%
+                  {t.gardenActions.bonus} +{progressBonus}%
                 </div>
               )}
             </div>
@@ -211,8 +202,8 @@ export function UpgradeConfirmModal({
                 <div className="flex items-center gap-2 text-xs text-orange-700 dark:text-orange-300">
                   <AlertCircle className="h-3 w-3" />
                   <span>
-                    Попыток: {failedAttempts}
-                    {failedAttempts >= 3 && ' (скоро успех!)'}
+                    {t.gardenActions.attempts} {failedAttempts}
+                    {failedAttempts >= 3 && ` ${t.gardenActions.soonSuccess}`}
                   </span>
                 </div>
               </div>
@@ -223,14 +214,14 @@ export function UpgradeConfirmModal({
               {hasFreeUpgrades && canAffordSprouts ? (
                 <div className="text-center">
                   <div className="mb-2 text-sm text-gray-600 dark:text-gray-400">
-                    Выберите способ улучшения:
+                    {t.gardenActions.chooseUpgradeMethod}
                   </div>
                   <div className="flex justify-center gap-4">
                     <div className="flex items-center gap-1 text-lg font-bold text-purple-600 dark:text-purple-400">
                       <Sparkles className="h-5 w-5" />
-                      <span>Бесплатно</span>
+                      <span>{t.themes.free}</span>
                     </div>
-                    <div className="text-gray-400">или</div>
+                    <div className="text-gray-400">{t.gardenActions.or}</div>
                     <div className="flex items-center gap-1 text-lg font-bold text-green-600 dark:text-green-400">
                       <span>{cost}🌿</span>
                     </div>
@@ -239,7 +230,7 @@ export function UpgradeConfirmModal({
               ) : hasFreeUpgrades ? (
                 <div className="flex items-center justify-center gap-2 text-lg font-bold text-purple-600 dark:text-purple-400">
                   <Sparkles className="h-5 w-5" />
-                  <span>Бесплатно</span>
+                  <span>{t.themes.free}</span>
                 </div>
               ) : (
                 <div className="flex items-center justify-center gap-2 text-lg font-bold">
@@ -251,7 +242,7 @@ export function UpgradeConfirmModal({
 
               {!hasFreeUpgrades && !canAffordSprouts && (
                 <div className="mt-2 text-center text-xs text-red-600 dark:text-red-400">
-                  Недостаточно ростков (у вас: {currentSprouts}🌿)
+                  {t.gardenActions.insufficientSprouts} {currentSprouts}🌿)
                 </div>
               )}
             </div>
@@ -261,7 +252,7 @@ export function UpgradeConfirmModal({
               <div className="rounded-lg bg-yellow-100 p-2 text-xs text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
                 <div className="flex items-start gap-2">
                   <AlertCircle className="mt-0.5 h-3 w-3 flex-shrink-0" />
-                  <p>Улучшение до legendary всегда с шансом 50%</p>
+                  <p>{t.gardenActions.legendaryWarning}</p>
                 </div>
               </div>
             )}
@@ -276,14 +267,16 @@ export function UpgradeConfirmModal({
                     disabled={isLoading}
                     className="flex-1 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 px-3 py-2 text-sm font-bold text-white transition-all hover:from-purple-600 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {isLoading ? 'Улучшение...' : '✨ Бесплатно'}
+                    {isLoading
+                      ? t.gardenActions.upgrading
+                      : `✨ ${t.themes.free}`}
                   </button>
                   <button
                     onClick={() => onConfirm(false)}
                     disabled={isLoading}
                     className="flex-1 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-2 text-sm font-bold text-white transition-all hover:from-green-600 hover:to-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {isLoading ? 'Улучшение...' : `🌿 ${cost}`}
+                    {isLoading ? t.gardenActions.upgrading : `🌿 ${cost}`}
                   </button>
                 </div>
               )}
@@ -303,10 +296,10 @@ export function UpgradeConfirmModal({
                   `}
                 >
                   {isLoading
-                    ? 'Улучшение...'
+                    ? t.gardenActions.upgrading
                     : hasFreeUpgrades
-                      ? '✨ Улучшить'
-                      : 'Улучшить'}
+                      ? `✨ ${t.gardenActions.upgrade}`
+                      : t.gardenActions.upgrade}
                 </button>
               )}
 
@@ -315,7 +308,7 @@ export function UpgradeConfirmModal({
                 onClick={onClose}
                 className="w-full rounded-xl border-2 border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
               >
-                Отмена
+                {t.common.cancel}
               </button>
             </div>
           </div>

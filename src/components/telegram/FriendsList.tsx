@@ -10,6 +10,7 @@ import {
 } from '@/hooks'
 import { FriendGardenView } from '@/components/garden'
 import { Card } from '@/components/ui'
+import { useTranslation } from '@/hooks/useTranslation'
 import type { User } from '@/types'
 import type { FriendApiSearchUser } from '@/types/api'
 import type { Friend, SearchResult } from '@/hooks'
@@ -23,6 +24,7 @@ interface FriendsListProps {
 }
 
 export function FriendsList({ currentUser }: FriendsListProps) {
+  const t = useTranslation()
   const navigate = useNavigate()
   const { webApp, hapticFeedback, showAlert, isTelegramEnv } = useTelegram()
   const { checkPendingInvite, clearPendingInvite } = useDeepLink()
@@ -67,7 +69,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
       showAlert(
         friendsQuery.error instanceof Error
           ? friendsQuery.error.message
-          : 'Ошибка загрузки данных о друзьях'
+          : t.friends.loadError
       )
     }
   }, [friendsQuery.error, showAlert])
@@ -111,7 +113,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
     async (customQuery?: string) => {
       const searchQuery = customQuery ?? referralSearchQuery.trim()
       if (!searchQuery || !currentUser?.telegramId) {
-        showAlert('Введите реферальный код!')
+        showAlert(t.friends.enterReferralCode)
         return
       }
 
@@ -123,7 +125,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
       } catch (error) {
         console.error('Search error:', error)
         showAlert(
-          error instanceof Error ? error.message : 'Пользователь не найден'
+          error instanceof Error ? error.message : t.friends.userNotFound
         )
         setSearchResult(null)
       } finally {
@@ -136,6 +138,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
       showAlert,
       hapticFeedback,
       searchByReferral,
+      t,
     ]
   )
 
@@ -143,12 +146,12 @@ export function FriendsList({ currentUser }: FriendsListProps) {
   const handleGlobalUserSearch = useCallback(
     async (query: string, page = 1) => {
       if (!query.trim() || query.length < 2) {
-        showAlert('Введите минимум 2 символа для поиска')
+        showAlert(t.friends.minSearchLength)
         return
       }
 
       if (!currentUser?.telegramId) {
-        showAlert('Необходима авторизация')
+        showAlert(t.friends.authRequired)
         return
       }
 
@@ -169,7 +172,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
       } catch (error) {
         console.error('Global search error:', error)
         showAlert(
-          error instanceof Error ? error.message : 'Ошибка поиска пользователей'
+          error instanceof Error ? error.message : t.friends.searchError
         )
         if (page === 1) {
           setGlobalSearchResults([])
@@ -179,7 +182,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
         setIsLoadingMore(false)
       }
     },
-    [currentUser?.telegramId, showAlert, hapticFeedback, searchGlobal]
+    [currentUser?.telegramId, showAlert, hapticFeedback, searchGlobal, t]
   )
 
   // Загрузить еще результатов
@@ -209,10 +212,12 @@ export function FriendsList({ currentUser }: FriendsListProps) {
         setReferralSearchQuery('')
       } catch (error) {
         console.error('Send request error:', error)
-        showAlert(error instanceof Error ? error.message : 'Ошибка подключения')
+        showAlert(
+          error instanceof Error ? error.message : t.friends.connectionError
+        )
       }
     },
-    [currentUser?.telegramId, hapticFeedback, showAlert, sendFriendRequest]
+    [currentUser?.telegramId, hapticFeedback, showAlert, sendFriendRequest, t]
   )
 
   // Ответить на запрос дружбы
@@ -229,10 +234,12 @@ export function FriendsList({ currentUser }: FriendsListProps) {
         showAlert(message)
       } catch (error) {
         console.error('Respond to request error:', error)
-        showAlert(error instanceof Error ? error.message : 'Ошибка подключения')
+        showAlert(
+          error instanceof Error ? error.message : t.friends.connectionError
+        )
       }
     },
-    [currentUser?.telegramId, hapticFeedback, showAlert, respondRequest]
+    [currentUser?.telegramId, hapticFeedback, showAlert, respondRequest, t]
   )
 
   // Пригласить друзей через Telegram
@@ -330,13 +337,14 @@ export function FriendsList({ currentUser }: FriendsListProps) {
       clearPendingInvite()
 
       // Показываем уведомление пользователю
-      showAlert?.(`🔍 Поиск друга по коду: ${pendingInvite}`)
+      showAlert?.(`${t.friends.searchByCode} ${pendingInvite}`)
     }
   }, [
     checkPendingInvite,
     clearPendingInvite,
     showAlert,
     handleSearchByReferralCode,
+    t,
   ])
 
   // Если просматриваем сад друга, показываем FriendGardenView
@@ -354,9 +362,9 @@ export function FriendsList({ currentUser }: FriendsListProps) {
     return (
       <Card className="p-6 text-center">
         <Users className="mx-auto mb-4 h-12 w-12 text-blue-500" />
-        <h3 className="mb-2 text-lg font-semibold">Друзья</h3>
+        <h3 className="mb-2 text-lg font-semibold">{t.friends.title}</h3>
         <p className="text-gray-600 dark:text-gray-400">
-          Функции друзей доступны только в Telegram Mini App
+          {t.friends.telegramOnly}
         </p>
       </Card>
     )
@@ -374,10 +382,8 @@ export function FriendsList({ currentUser }: FriendsListProps) {
         >
           {/* <Users className="mx-auto h-16 w-16 text-blue-500" /> */}
         </motion.div>
-        <h2 className="text-lg font-semibold">Друзья</h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          Добавляйте друзей и поддерживайте друг друга
-        </p>
+        <h2 className="text-lg font-semibold">{t.friends.title}</h2>
+        <p className="text-gray-600 dark:text-gray-400">{t.friends.subtitle}</p>
       </div>
 
       {/* Табы */}
@@ -385,18 +391,18 @@ export function FriendsList({ currentUser }: FriendsListProps) {
         {[
           {
             id: 'friends',
-            label: 'Друзья',
+            label: t.friends.friendsTab,
             icon: Users,
             count: friends.length,
           },
           {
             id: 'requests',
-            label: 'Запросы',
+            label: t.friends.requestsTab,
             icon: Clock,
             count: incomingRequests.length,
           },
-          { id: 'find', label: 'Найти', icon: Search },
-          { id: 'invites', label: 'Пригласить', icon: UserPlus },
+          { id: 'find', label: t.friends.findTab, icon: Search },
+          { id: 'invites', label: t.friends.invitesTab, icon: UserPlus },
         ].map(tab => {
           const Icon = tab.icon
           return (
