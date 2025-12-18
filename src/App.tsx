@@ -1,4 +1,4 @@
-import { useEffect, useMemo, lazy, Suspense, useCallback } from 'react'
+import { useEffect, useMemo, Suspense, useCallback } from 'react'
 import {
   BrowserRouter as Router,
   Routes,
@@ -13,54 +13,57 @@ import { useReducedMotion } from '@/hooks'
 import { LoadingSpinner } from '@/components/ui'
 import { UpdatePrompt } from '@/components/ui/UpdatePrompt'
 import { CompanionOverlay } from '@/components/layout/CompanionOverlay'
-// Страницы лениво подгружаются для уменьшения initial bundle (явно указываем default)
-const HomePage = lazy(() =>
+import { lazyWithRetry } from '@/utils/lazyWithRetry'
+
+// Страницы лениво подгружаются с автоматическим retry при ошибках загрузки
+// Это решает проблему 404 ошибок при деплое на Vercel
+const HomePage = lazyWithRetry(() =>
   import('@/pages/HomePage').then(module => ({ default: module.HomePage }))
 )
-const OnboardingPage = lazy(() =>
+const OnboardingPage = lazyWithRetry(() =>
   import('@/pages/OnboardingPage').then(module => ({
     default: module.OnboardingPage,
   }))
 )
-const AuthPage = lazy(() =>
+const AuthPage = lazyWithRetry(() =>
   import('@/pages/AuthPage').then(module => ({ default: module.AuthPage }))
 )
-const ProfilePage = lazy(() =>
+const ProfilePage = lazyWithRetry(() =>
   import('@/pages/ProfilePage').then(module => ({
     default: module.ProfilePage,
   }))
 )
-const MoodPage = lazy(() =>
+const MoodPage = lazyWithRetry(() =>
   import('@/pages/MoodPage').then(module => ({ default: module.MoodPage }))
 )
-const MoodRoadmapPage = lazy(() =>
+const MoodRoadmapPage = lazyWithRetry(() =>
   import('@/pages/MoodRoadmapPage').then(module => ({
     default: module.MoodRoadmapPage,
   }))
 )
-const GardenPage = lazy(() =>
+const GardenPage = lazyWithRetry(() =>
   import('@/pages/GardenPage').then(module => ({ default: module.GardenPage }))
 )
-const TasksPage = lazy(() =>
+const TasksPage = lazyWithRetry(() =>
   import('@/pages/TasksPage').then(module => ({ default: module.TasksPage }))
 )
-const CommunityPage = lazy(() =>
+const CommunityPage = lazyWithRetry(() =>
   import('@/pages/CommunityPage').then(module => ({
     default: module.CommunityPage,
   }))
 )
-const SettingsPage = lazy(() =>
+const SettingsPage = lazyWithRetry(() =>
   import('@/pages/SettingsPage').then(module => ({
     default: module.SettingsPage,
   }))
 )
-const ShopPage = lazy(() =>
+const ShopPage = lazyWithRetry(() =>
   import('@/pages/ShopPage').then(module => ({ default: module.ShopPage }))
 )
-const StatsPage = lazy(() =>
+const StatsPage = lazyWithRetry(() =>
   import('@/pages/StatsPage').then(module => ({ default: module.StatsPage }))
 )
-const MobileLayout = lazy(() =>
+const MobileLayout = lazyWithRetry(() =>
   import('@/components/layout/MobileLayout').then(module => ({
     default: module.MobileLayout,
   }))
@@ -68,20 +71,22 @@ const MobileLayout = lazy(() =>
 
 // Динамический импорт dev страниц только в DEV режиме
 const ShowcasePage = import.meta.env.DEV
-  ? lazy(() => import('@/pages/ShowcasePage'))
+  ? lazyWithRetry(() => import('@/pages/ShowcasePage'))
   : null
 
 const TelegramTestPage = import.meta.env.DEV
-  ? lazy(() => import('@/pages/TelegramTestPage'))
+  ? lazyWithRetry(() => import('@/pages/TelegramTestPage'))
   : null
 
 const StreakDebugPage = import.meta.env.DEV
-  ? lazy(() => import('@/pages/StreakDebugPage'))
+  ? lazyWithRetry(() => import('@/pages/StreakDebugPage'))
   : null
 
 // Lazy import для страницы профиля друга
-const FriendProfilePage = lazy(() => import('@/pages/FriendProfilePage'))
-const LeaderboardPage = lazy(() => import('@/pages/LeaderboardPage'))
+const FriendProfilePage = lazyWithRetry(
+  () => import('@/pages/FriendProfilePage')
+)
+const LeaderboardPage = lazyWithRetry(() => import('@/pages/LeaderboardPage'))
 import { TelegramDiagnostic } from '@/components/TelegramDiagnostic'
 import { useTelegram, useTelegramTheme, useAppInitialization } from '@/hooks'
 import { InitializationStage } from '@/types/initialization'
@@ -188,7 +193,11 @@ function App() {
     if (preferredMode && preferredMode !== displayMode) {
       setDisplayMode(preferredMode)
     }
-  }, [userData?.user?.preferences.garden.displayMode, displayMode, setDisplayMode])
+  }, [
+    userData?.user?.preferences.garden.displayMode,
+    displayMode,
+    setDisplayMode,
+  ])
 
   // Применяем тему Telegram к корневому элементу
   useEffect(() => {
@@ -233,7 +242,9 @@ function App() {
             console.error('Импорт гостевых данных не удался:', error)
           }
         } else {
-          console.warn('Импорт гостевых данных пропущен: telegramId не определён')
+          console.warn(
+            'Импорт гостевых данных пропущен: telegramId не определён'
+          )
         }
       } else {
         clearGuestData()
@@ -773,8 +784,8 @@ function App() {
                     >
                       {withSuspense(
                         <AuthPage
-                        onSuccess={handleAuthSuccess}
-                        onSkip={handleSkipAuth}
+                          onSuccess={handleAuthSuccess}
+                          onSkip={handleSkipAuth}
                           onError={(error: unknown) =>
                             console.error('Auth error:', error)
                           }

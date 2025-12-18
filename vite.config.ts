@@ -72,6 +72,23 @@ export default defineConfig({
             },
           },
           {
+            // ✅ КРИТИЧНО: JS чанки с NetworkFirst стратегией
+            // Это гарантирует получение свежих версий при деплое
+            urlPattern: /\.js$/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'js-chunks-cache',
+              networkTimeoutSeconds: 3,
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60, // 1 hour - короткий кеш для JS
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
             // API запросы с network-first стратегией
             urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
             handler: 'NetworkFirst',
