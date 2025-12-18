@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { User, Garden, MoodStats } from '@/types'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ProfileStatsProps {
   readonly user: User
@@ -66,6 +67,7 @@ export function ProfileStats({
   moodStats: _moodStats,
   totalElements,
 }: ProfileStatsProps) {
+  const t = useTranslation()
   // Защита от undefined - создаем fallback значения (используется в будущем)
   // const _safeMoodStats = moodStats ?? { ... }
 
@@ -89,43 +91,45 @@ export function ProfileStats({
       transition={{ delay: 0.2 }}
     >
       <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-        📊 Статистика
+        📊 {t.profile.statistics}
       </h2>
 
       {/* Main Stats Grid - минимизированные карточки */}
       <div className="grid grid-cols-2 gap-3">
         <StatCard
           emoji="🔥"
-          label="Стрик"
+          label={t.profile.streak}
           value={currentStreak}
-          subtitle={currentStreak > 0 ? 'дней' : 'начните!'}
+          subtitle={currentStreak > 0 ? t.profile.days : t.profile.start}
           color="orange"
           delay={0.1}
         />
 
         <StatCard
           emoji="🌱"
-          label="Растений"
+          label={t.garden.plants}
           value={totalElements}
-          subtitle={totalElements > 0 ? 'шт.' : 'вырастите!'}
+          subtitle={
+            totalElements > 0 ? t.common.pieces : t.pages.mood.growFirstPlant
+          }
           color="green"
           delay={0.15}
         />
 
         <StatCard
           emoji="📅"
-          label="Дней"
+          label={t.profile.days}
           value={totalDays}
-          subtitle="всего"
+          subtitle={t.common.total}
           color="blue"
           delay={0.2}
         />
 
         <StatCard
           emoji="⭐"
-          label="Редких"
+          label={t.profile.rare}
           value={rareElements}
-          subtitle="найдено"
+          subtitle={t.profile.found}
           color="purple"
           delay={0.25}
         />

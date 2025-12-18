@@ -4,6 +4,7 @@ import { Sprout, Palette, Home } from 'lucide-react'
 import { GardenDisplayMode, type User } from '@/types'
 import { useUpdateFriendGardenDisplay } from '@/hooks/queries/useUserQueries'
 import { useTelegram } from '@/hooks/useTelegram'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface DisplayModeOption {
   readonly mode: GardenDisplayMode
@@ -16,33 +17,38 @@ interface FriendGardenDisplaySettingsProps {
   readonly user: User
 }
 
-const OPTIONS: readonly DisplayModeOption[] = [
-  {
-    mode: GardenDisplayMode.GARDEN,
-    label: 'Полки',
-    description: 'Классический вид сада',
-    icon: <Sprout className="h-5 w-5" />,
-  },
-  {
-    mode: GardenDisplayMode.ISOMETRIC_ROOM,
-    label: 'Комната',
-    description: 'Изометрический вид комнаты',
-    icon: <Home className="h-5 w-5" />,
-  },
-  {
-    mode: GardenDisplayMode.PALETTE,
-    label: 'Палитра',
-    description: 'Визуализация настроений друга',
-    icon: <Palette className="h-5 w-5" />,
-  },
-] as const
+const getOptions = (
+  t: ReturnType<typeof useTranslation>
+): readonly DisplayModeOption[] =>
+  [
+    {
+      mode: GardenDisplayMode.GARDEN,
+      label: t.displayMode.shelves,
+      description: t.displayMode.shelvesDescription,
+      icon: <Sprout className="h-5 w-5" />,
+    },
+    {
+      mode: GardenDisplayMode.ISOMETRIC_ROOM,
+      label: t.displayMode.room,
+      description: t.displayMode.roomDescription,
+      icon: <Home className="h-5 w-5" />,
+    },
+    {
+      mode: GardenDisplayMode.PALETTE,
+      label: t.displayMode.palette,
+      description: t.displayMode.paletteDescription,
+      icon: <Palette className="h-5 w-5" />,
+    },
+  ] as const
 
 export function FriendGardenDisplaySettings({
   user,
 }: FriendGardenDisplaySettingsProps) {
+  const t = useTranslation()
   const telegramId = user.telegramId
   const { showAlert } = useTelegram()
   const { mutateAsync, isPending } = useUpdateFriendGardenDisplay()
+  const options = useMemo(() => getOptions(t), [t])
 
   const preferredMode = useMemo(
     () => user.preferences.garden.friendViewMode ?? GardenDisplayMode.GARDEN,
@@ -77,7 +83,7 @@ export function FriendGardenDisplaySettings({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {OPTIONS.map(option => {
+        {options.map(option => {
           const isSelected = selectedMode === option.mode
 
           return (
@@ -119,8 +125,7 @@ export function FriendGardenDisplaySettings({
       </div>
 
       <div className="rounded-xl border border-dashed border-neutral-300/60 bg-neutral-50/70 px-4 py-3 text-sm text-neutral-700 dark:border-neutral-600/60 dark:bg-neutral-900/60 dark:text-neutral-300">
-        Этот выбор определяет, как другие увидят ваш сад. Если для выбранного
-        вида нет данных (например, пустая палитра), покажем классические полки.
+        {t.displayMode.friendViewInfo}
       </div>
     </div>
   )

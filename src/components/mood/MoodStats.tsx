@@ -5,6 +5,8 @@ import { Card } from '@/components/ui'
 import { useMoodTracking } from '@/hooks/index.v2'
 import { MOOD_CONFIG } from '@/types/mood'
 import { MoodImage } from './MoodImage'
+import { useTranslation } from '@/hooks/useTranslation'
+import { getLocalizedMoodConfig } from '@/utils/moodLocalization'
 import type { MoodType, MoodEntry } from '@/types'
 
 interface MoodStatsProps {
@@ -12,6 +14,7 @@ interface MoodStatsProps {
 }
 
 export function MoodStats({ className }: MoodStatsProps) {
+  const t = useTranslation()
   const { moodStats, streakCount, recentTrend, moodRecommendation } =
     useMoodTracking()
 
@@ -54,10 +57,10 @@ export function MoodStats({ className }: MoodStatsProps) {
         <div className="text-center">
           <div className="mb-3 text-4xl">📊</div>
           <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Статистика настроения
+            {t.moodStats.title}
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Начните отмечать настроение, чтобы увидеть статистику
+            {t.moodStats.startMarking}
           </p>
         </div>
       </Card>
@@ -82,7 +85,7 @@ export function MoodStats({ className }: MoodStatsProps) {
                   {moodStats.totalEntries}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Записей
+                  {t.moodStats.entries}
                 </p>
               </div>
             </div>
@@ -101,7 +104,7 @@ export function MoodStats({ className }: MoodStatsProps) {
                   {streakCount}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Дней подряд
+                  {t.moodStats.daysInRow}
                 </p>
               </div>
             </div>
@@ -120,10 +123,11 @@ export function MoodStats({ className }: MoodStatsProps) {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  Текущая серия
+                  {t.moodStats.currentSeries}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  {moodStats.currentStreak} из {moodStats.longestStreak} дней
+                  {moodStats.currentStreak} {t.profile.of}{' '}
+                  {moodStats.longestStreak} {t.profile.days}
                 </p>
               </div>
             </div>
@@ -139,7 +143,7 @@ export function MoodStats({ className }: MoodStatsProps) {
         {chartData.length > 0 && (
           <Card padding="sm">
             <h4 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
-              Последние дни
+              {t.moodStats.lastDays}
             </h4>
             <div className="flex items-end justify-between space-x-1">
               {chartData.map((data: ChartDataPoint, index: number) => (
@@ -176,39 +180,45 @@ export function MoodStats({ className }: MoodStatsProps) {
         {topMoods.length > 0 && (
           <Card padding="sm">
             <h4 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
-              Частые настроения
+              {t.moodStats.frequentMoods}
             </h4>
             <div className="space-y-2">
-              {topMoods.map(({ mood, percentage, config }, index) => (
-                <motion.div
-                  key={mood}
-                  className="flex items-center justify-between"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <div className="flex items-center space-x-2">
-                    <MoodImage mood={mood} size={20} />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      {config.label}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="h-2 w-16 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                      <motion.div
-                        className="h-full rounded-full"
-                        style={{ backgroundColor: config.color }}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${percentage}%` }}
-                        transition={{ delay: index * 0.1 + 0.3, duration: 0.5 }}
-                      />
+              {topMoods.map(({ mood, percentage, config }, index) => {
+                const localizedConfig = getLocalizedMoodConfig(mood, t)
+                return (
+                  <motion.div
+                    key={mood}
+                    className="flex items-center justify-between"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <MoodImage mood={mood} size={20} />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        {localizedConfig.label}
+                      </span>
                     </div>
-                    <span className="w-8 text-right text-xs text-gray-600 dark:text-gray-400">
-                      {percentage}%
-                    </span>
-                  </div>
-                </motion.div>
-              ))}
+                    <div className="flex items-center space-x-2">
+                      <div className="h-2 w-16 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                        <motion.div
+                          className="h-full rounded-full"
+                          style={{ backgroundColor: config.color }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${percentage}%` }}
+                          transition={{
+                            delay: index * 0.1 + 0.3,
+                            duration: 0.5,
+                          }}
+                        />
+                      </div>
+                      <span className="w-8 text-right text-xs text-gray-600 dark:text-gray-400">
+                        {percentage}%
+                      </span>
+                    </div>
+                  </motion.div>
+                )
+              })}
             </div>
           </Card>
         )}
@@ -225,12 +235,12 @@ export function MoodStats({ className }: MoodStatsProps) {
               </div>
               <div className="flex-1">
                 <p className="mb-1 text-sm font-medium text-gray-900 dark:text-gray-100">
-                  Паттерн настроения
+                  {t.moodStats.moodPattern}
                 </p>
                 <div className="mb-2 flex items-center space-x-2">
                   <MoodImage mood={moodRecommendation.mood} size={20} />
                   <span className="text-sm text-gray-700 dark:text-gray-300">
-                    {MOOD_CONFIG[moodRecommendation.mood].label}
+                    {getLocalizedMoodConfig(moodRecommendation.mood, t).label}
                   </span>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
                     ({moodRecommendation.confidence}%)
@@ -249,10 +259,10 @@ export function MoodStats({ className }: MoodStatsProps) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                Средняя интенсивность
+                {t.moodStats.averageIntensity}
               </p>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                За все время
+                {t.moodStats.allTime}
               </p>
             </div>
             <div className="flex items-center space-x-1">

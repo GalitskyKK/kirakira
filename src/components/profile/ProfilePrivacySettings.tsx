@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { User } from '@/types'
 import { updatePrivacySettings } from '@/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ProfilePrivacySettingsProps {
   readonly user: User
@@ -85,6 +86,7 @@ function PrivacySetting({
 }
 
 export function ProfilePrivacySettings({ user }: ProfilePrivacySettingsProps) {
+  const t = useTranslation()
   const queryClient = useQueryClient()
   const [isUpdating, setIsUpdating] = useState(false)
 
@@ -125,8 +127,8 @@ export function ProfilePrivacySettings({ user }: ProfilePrivacySettingsProps) {
     <div className="space-y-5">
       <PrivacySetting
         emoji="👁️"
-        title="Показывать профиль"
-        description="Другие пользователи могут видеть ваш профиль"
+        title={t.privacy.showProfile}
+        description={t.privacy.showProfileDescription}
         enabled={safePrivacy.showProfile}
         onChange={enabled => handlePrivacyChange('showProfile', enabled)}
         disabled={isUpdating}
@@ -134,8 +136,8 @@ export function ProfilePrivacySettings({ user }: ProfilePrivacySettingsProps) {
 
       <PrivacySetting
         emoji="🌱"
-        title="Поделиться садом"
-        description="Разрешить просмотр вашего сада другим пользователям"
+        title={t.privacy.shareGarden}
+        description={t.privacy.shareGardenDescription}
         enabled={safePrivacy.shareGarden}
         onChange={enabled => handlePrivacyChange('shareGarden', enabled)}
         disabled={isUpdating}
@@ -143,19 +145,17 @@ export function ProfilePrivacySettings({ user }: ProfilePrivacySettingsProps) {
 
       <PrivacySetting
         emoji="🏆"
-        title="Показывать достижения"
-        description="Делиться вашими достижениями с друзьями"
+        title={t.privacy.showAchievements}
+        description={t.privacy.showAchievementsDescription}
         enabled={safePrivacy.shareAchievements}
-        onChange={enabled =>
-          handlePrivacyChange('shareAchievements', enabled)
-        }
+        onChange={enabled => handlePrivacyChange('shareAchievements', enabled)}
         disabled={isUpdating}
       />
 
       <PrivacySetting
         emoji="👥"
-        title="Запросы в друзья"
-        description="Разрешить другим отправлять запросы в друзья"
+        title={t.privacy.friendRequests}
+        description={t.privacy.friendRequestsDescription}
         enabled={safePrivacy.allowFriendRequests}
         onChange={enabled =>
           handlePrivacyChange('allowFriendRequests', enabled)
@@ -166,8 +166,8 @@ export function ProfilePrivacySettings({ user }: ProfilePrivacySettingsProps) {
       <div className="border-t border-neutral-200 pt-4 dark:border-neutral-700">
         <PrivacySetting
           emoji="☁️"
-          title="Синхронизация с облаком"
-          description="Сохранять данные в облаке для синхронизации между устройствами"
+          title={t.privacy.cloudSync}
+          description={t.privacy.cloudSyncDescription}
           enabled={safePrivacy.cloudSync}
           onChange={enabled => handlePrivacyChange('cloudSync', enabled)}
           disabled={isUpdating}
@@ -180,10 +180,10 @@ export function ProfilePrivacySettings({ user }: ProfilePrivacySettingsProps) {
           <div className="text-kira-500 dark:text-kira-400">ℹ️</div>
           <div className="flex-1 text-xs">
             <div className="font-medium text-kira-800 dark:text-kira-200">
-              О ваших данных
+              {t.privacy.aboutData}
             </div>
             <div className="mt-1 text-kira-700 dark:text-kira-300">
-              Данные о настроениях хранятся локально. Облачная синхронизация — только с вашего согласия.
+              {t.privacy.dataInfo}
             </div>
           </div>
         </div>

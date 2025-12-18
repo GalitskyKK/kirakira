@@ -16,7 +16,12 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { ErrorMessage } from '@/components/ui/ErrorMessage'
-import { getQuestCategoryInfo, type DailyQuest, type QuestCategory } from '@/types/dailyQuests'
+import { useTranslation } from '@/hooks/useTranslation'
+import {
+  getQuestCategoryInfo,
+  type DailyQuest,
+  type QuestCategory,
+} from '@/types/dailyQuests'
 
 interface DailyQuestListProps {
   readonly telegramId: number
@@ -27,6 +32,7 @@ export function DailyQuestList({
   telegramId,
   className = '',
 }: DailyQuestListProps) {
+  const t = useTranslation()
   const {
     data: questsData,
     isLoading,
@@ -88,10 +94,7 @@ export function DailyQuestList({
   if (error) {
     return (
       <div className={`p-4 ${className}`}>
-        <ErrorMessage
-          message="Ошибка загрузки заданий"
-          onRetry={() => refetch()}
-        />
+        <ErrorMessage message={t.quests.error} onRetry={() => refetch()} />
       </div>
     )
   }
@@ -102,13 +105,13 @@ export function DailyQuestList({
         <Card className="p-8 text-center dark:bg-gray-800">
           <div className="mb-4 text-6xl">🏆</div>
           <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
-            Нет заданий на сегодня
+            {t.quests.noQuests}
           </h3>
           <p className="mb-4 text-gray-600 dark:text-gray-400">
-            Задания появятся завтра в 00:00
+            {t.quests.comingSoon}
           </p>
           <Button onClick={() => refetch()} variant="outline">
-            Обновить
+            {t.common.refresh}
           </Button>
         </Card>
       </div>
@@ -121,7 +124,7 @@ export function DailyQuestList({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-            Ежедневные задания
+            {t.pages.quests.title}
           </h2>
           <div className="text-sm text-gray-600 dark:text-gray-400">
             {completed}/{total}
@@ -132,7 +135,7 @@ export function DailyQuestList({
         <Card className="p-3 dark:bg-gray-800">
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600 dark:text-gray-400">
-              Прогресс
+              {t.quests.progress}
             </span>
             <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
               {overallPercentage}%
@@ -159,7 +162,9 @@ export function DailyQuestList({
               <div className="flex items-center space-x-2">
                 <span className="text-xl">{categoryInfo.emoji}</span>
                 <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
-                  {categoryInfo.name}
+                  {t.quests.categories[
+                    category as keyof typeof t.quests.categories
+                  ] || categoryInfo.name}
                 </h3>
                 <span className="text-sm text-gray-500 dark:text-gray-400">
                   ({quests.length})

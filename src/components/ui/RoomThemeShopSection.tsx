@@ -8,6 +8,7 @@ import { useSpendCurrency, currencyKeys } from '@/hooks/queries'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from '@/hooks/useTranslation'
+import { getLocalizedThemeName } from '@/utils/themeLocalization'
 
 export function RoomThemeShopSection() {
   const {
@@ -111,10 +112,10 @@ export function RoomThemeShopSection() {
         currencyType,
         amount: price,
         reason: 'buy_room_theme',
-        description: `${t.themes.buy} "${theme.name}"`,
+        description: `${t.themes.buy} "${getLocalizedThemeName(theme.id, t)}"`,
         metadata: {
           themeId,
-          themeName: theme.name,
+          themeName: getLocalizedThemeName(theme.id, t),
           currencyType,
           themeType: 'room',
         },
@@ -216,7 +217,7 @@ export function RoomThemeShopSection() {
                       <div className="relative h-40 w-full bg-gray-100 dark:bg-gray-900">
                         <img
                           src={theme.previewUrl}
-                          alt={theme.name}
+                          alt={getLocalizedThemeName(theme.id, t)}
                           className="h-full w-full object-cover"
                         />
                         {isOwned && (
@@ -229,7 +230,7 @@ export function RoomThemeShopSection() {
                       <div className="p-4">
                         <div className="flex items-center justify-between">
                           <h3 className="font-semibold text-gray-900 dark:text-white">
-                            {theme.name}
+                            {getLocalizedThemeName(theme.id, t)}
                           </h3>
                           {!isOwned && (
                             <Lock className="h-5 w-5 text-gray-400" />

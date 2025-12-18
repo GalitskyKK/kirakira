@@ -13,6 +13,7 @@ import { useTelegramId } from '@/hooks/useTelegramId'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button, Card } from '@/components/ui'
 import { useTranslation } from '@/hooks/useTranslation'
+import { getLocalizedThemeName } from '@/utils/themeLocalization'
 
 // Импортируем функции для работы с локальным хранилищем
 const loadOwnedThemesFromStorage = (): string[] => {
@@ -111,7 +112,7 @@ export function ThemeShopSection() {
           : theme.priceSprouts
 
       console.log(
-        `💰 Buying theme "${theme.name}" for ${amount} ${currencyType}`
+        `💰 ${t.themes.buy} "${getLocalizedThemeName(theme.id, t)}" for ${amount} ${currencyType}`
       )
 
       const result = await spendCurrencyMutation.mutateAsync({
@@ -119,8 +120,12 @@ export function ThemeShopSection() {
         currencyType,
         amount,
         reason: 'buy_theme',
-        description: `${t.themes.buy} "${theme.name}"`,
-        metadata: { themeId, themeName: theme.name, currencyType },
+        description: `${t.themes.buy} "${getLocalizedThemeName(theme.id, t)}"`,
+        metadata: {
+          themeId,
+          themeName: getLocalizedThemeName(theme.id, t),
+          currencyType,
+        },
       })
 
       if (result.success) {
@@ -400,7 +405,7 @@ export function ThemeShopSection() {
                       <div className="p-4">
                         <div className="flex items-center justify-between">
                           <h3 className="font-semibold text-gray-900 dark:text-white">
-                            {theme.name}
+                            {getLocalizedThemeName(theme.id, t)}
                           </h3>
                           {isOwned && (
                             <Check className="h-5 w-5 text-green-500" />
@@ -441,7 +446,7 @@ export function ThemeShopSection() {
                             <div className="flex items-center gap-1.5">
                               <Leaf className="h-4 w-4 text-green-500" />
                               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {theme.priceSprouts} ростков
+                                {theme.priceSprouts} {t.currency.sproutsPlural}
                               </span>
                             </div>
                           )}

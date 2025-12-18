@@ -12,6 +12,8 @@ import { useSpendCurrency, currencyKeys } from '@/hooks/queries'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button, Card } from '@/components/ui'
+import { useTranslation } from '@/hooks/useTranslation'
+import { getLocalizedThemeName } from '@/utils/themeLocalization'
 
 // Импортируем функции для работы с локальным хранилищем
 const loadOwnedThemesFromStorage = (): string[] => {
@@ -55,6 +57,7 @@ interface ThemeShopProps {
 }
 
 export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
+  const t = useTranslation()
   const {
     themes,
     ownedThemeIds,
@@ -72,7 +75,7 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
 
   const [purchasingTheme, setPurchasingTheme] = useState<string | null>(null)
   const isProcessingRef = useRef(false) // Защита от двойных кликов
-  
+
   // Состояние для слайдера
   const [currentIndex, setCurrentIndex] = useState(0)
   const sliderRef = useRef<HTMLDivElement>(null)
@@ -141,8 +144,11 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
         currencyType: 'sprouts',
         amount: theme.priceSprouts,
         reason: 'buy_theme',
-        description: `Покупка темы "${theme.name}"`,
-        metadata: { themeId, themeName: theme.name },
+        description: `${t.themes.buy} "${getLocalizedThemeName(theme.id, t)}"`,
+        metadata: {
+          themeId,
+          themeName: getLocalizedThemeName(theme.id, t),
+        },
       })
 
       if (result.success) {
@@ -166,7 +172,7 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
         await queryClient.invalidateQueries({
           queryKey: ['themes', 'catalog'],
         })
-        
+
         // Инвалидируем валюту для полной синхронизации
         await queryClient.invalidateQueries({
           queryKey: currencyKeys.balance(telegramId),
@@ -223,54 +229,54 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
   const cardWidth = 320 // Ширина карточки темы
   const gap = 16 // Отступ между карточками
   const cardWithGap = cardWidth + gap
-  
+
   // Вычисляем offset для центрирования активной карточки
   const [containerWidth, setContainerWidth] = useState(0)
-  
+
   // Обновляем ширину контейнера при монтировании и изменении размера
   useEffect(() => {
     if (!isOpen) return
-    
+
     const updateWidth = () => {
       if (containerRef.current) {
         setContainerWidth(containerRef.current.offsetWidth)
       }
     }
-    
+
     // Небольшая задержка для того, чтобы модалка успела отрендериться
     const timeoutId = setTimeout(updateWidth, 100)
     window.addEventListener('resize', updateWidth)
-    
+
     // Используем ResizeObserver для более точного отслеживания изменений размера
     const resizeObserver = new ResizeObserver(() => {
       updateWidth()
     })
-    
+
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current)
     }
-    
+
     return () => {
       clearTimeout(timeoutId)
       window.removeEventListener('resize', updateWidth)
       resizeObserver.disconnect()
     }
   }, [isOpen])
-  
+
   // Вычисляем offset с центрированием активной карточки и учетом границ
   const offset = useMemo(() => {
     if (containerWidth === 0 || themes.length === 0) return 0
-    
+
     const totalWidth = themes.length * cardWithGap
     const centerOffset = containerWidth / 2 - cardWidth / 2
     const idealOffset = -(currentIndex * cardWithGap) + centerOffset
-    
+
     // Минимальный offset (когда первая карточка полностью видна слева)
     const minOffset = 0
-    
+
     // Максимальный offset (когда последняя карточка полностью видна справа)
     const maxOffset = -(totalWidth - cardWithGap) + (containerWidth - cardWidth)
-    
+
     // Ограничиваем offset границами
     return Math.max(maxOffset, Math.min(minOffset, idealOffset))
   }, [currentIndex, containerWidth, cardWidth, cardWithGap, themes.length])
@@ -289,7 +295,10 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
   }
 
   // Обработка свайпа
-  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+  const handleDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
     const threshold = 50
     if (info.offset.x > threshold && currentIndex > 0) {
       goToPrevious()
@@ -297,7 +306,7 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
       goToNext()
     }
   }
-  
+
   // Сбрасываем индекс при открытии модалки
   useEffect(() => {
     if (isOpen) {
@@ -419,9 +428,7 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
                           }}
                         >
                           <Card
-                            className={`cursor-pointer overflow-hidden transition-all ${
-                              'hover:shadow-lg'
-                            } ${!canBuy ? 'opacity-60' : ''}`}
+                            className={`cursor-pointer overflow-hidden transition-all ${'hover:shadow-lg'} ${!canBuy ? 'opacity-60' : ''}`}
                             onClick={() => handleSelectTheme(theme.id)}
                           >
                             {/* Theme Preview */}
@@ -459,7 +466,7 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
                             <div className="p-4">
                               <div className="flex items-center justify-between">
                                 <h3 className="font-semibold text-gray-900 dark:text-white">
-                                  {theme.name}
+                                  {getLocalizedThemeName(theme.id, t)}
                                 </h3>
                                 {isOwned && (
                                   <Check className="h-5 w-5 text-green-500" />
@@ -474,8 +481,8 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
                                   <Leaf className="h-4 w-4 text-green-500" />
                                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                     {theme.priceSprouts === 0
-                                      ? 'Бесплатно'
-                                      : `${theme.priceSprouts} ростков`}
+                                      ? t.themes.free
+                                      : `${theme.priceSprouts} ${t.currency.sproutsPlural}`}
                                   </span>
                                 </div>
                               </div>
@@ -508,7 +515,7 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
                                     {isPurchasing ? (
                                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                                     ) : (
-                                      `Купить за ${theme.priceSprouts}`
+                                      `${t.themes.buyFor} ${theme.priceSprouts}`
                                     )}
                                   </Button>
                                 ) : (
@@ -557,7 +564,8 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
               <div className="flex items-center gap-2">
                 <Leaf className="h-4 w-4 text-green-500" />
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Ваш баланс: {userCurrency?.sprouts || 0} ростков
+                  {t.transactionHistory.balance}: {userCurrency?.sprouts || 0}{' '}
+                  {t.currency.sproutsPlural}
                 </span>
               </div>
               <Button variant="outline" onClick={onClose} size="sm">

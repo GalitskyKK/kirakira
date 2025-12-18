@@ -1,24 +1,20 @@
 import { Eye, EyeOff } from 'lucide-react'
 import type { User } from '@/types'
 import { useCompanionVisibility } from '@/stores/companionStore'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface CompanionSettingsProps {
   readonly user: User
 }
 
-function getLevelRequirementText(level: number): string {
-  if (level >= 3) {
-    return 'Лумина сопровождает ваш сад'
-  }
-
-  return 'Лумина пока спит и скоро проснется'
-}
-
 export function CompanionSettings({ user }: CompanionSettingsProps) {
+  const t = useTranslation()
   const { isVisible, setVisible } = useCompanionVisibility()
   const level = user.level ?? 1
   const isUnlocked = level >= 3
-  const statusText = getLevelRequirementText(level)
+  const statusText = isUnlocked
+    ? t.companionSettings.accompanies
+    : t.companionSettings.sleeping
 
   return (
     <div className="space-y-4">
@@ -43,7 +39,7 @@ export function CompanionSettings({ user }: CompanionSettingsProps) {
           ) : (
             <EyeOff className="h-4 w-4" />
           )}
-          {isVisible ? 'Показывать' : 'Скрывать'}
+          {isVisible ? t.companionSettings.show : t.companionSettings.hide}
         </button>
       </div>
 
@@ -52,8 +48,7 @@ export function CompanionSettings({ user }: CompanionSettingsProps) {
       </div>
 
       <div className="rounded-lg bg-violet-50 px-3 py-2 text-xs text-violet-700 dark:bg-violet-900/20 dark:text-violet-300">
-        💡 После пробуждения вы сможете менять облик Лумины и открывать других
-        духов
+        💡 {t.companionSettings.willWake}
       </div>
     </div>
   )

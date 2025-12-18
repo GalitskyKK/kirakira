@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { User, MoodStats } from '@/types'
 import { calculateAchievements } from '@/utils/achievements'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ProfileAchievementsProps {
   readonly user: User
@@ -82,6 +83,7 @@ export function ProfileAchievements({
   moodStats,
   totalElements,
 }: ProfileAchievementsProps) {
+  const t = useTranslation()
   const [showAll, setShowAll] = useState(false)
 
   // Защита от undefined - создаем fallback значения для moodStats
@@ -119,7 +121,7 @@ export function ProfileAchievements({
     >
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          🏆 Достижения
+          🏆 {t.profile.achievements}
         </h2>
         <div className="rounded-full bg-garden-100 px-3 py-1 text-sm font-medium text-garden-600 dark:bg-garden-900/50 dark:text-garden-400">
           {unlockedCount}/{achievements.length}
@@ -151,7 +153,7 @@ export function ProfileAchievements({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          Посмотреть все ({achievements.length})
+          {t.profile.viewAll} ({achievements.length})
         </motion.button>
       )}
 
@@ -164,7 +166,7 @@ export function ProfileAchievements({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          Свернуть
+          {t.profile.collapse}
         </motion.button>
       )}
 
@@ -181,12 +183,15 @@ export function ProfileAchievements({
           </div>
           <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
             {unlockedCount === achievements.length
-              ? 'Все достижения разблокированы!'
-              : `Ещё ${achievements.length - unlockedCount} достижений ждут вас`}
+              ? t.profile.allUnlocked
+              : t.profile.moreAchievements.replace(
+                  '{count}',
+                  String(achievements.length - unlockedCount)
+                )}
           </div>
           {unlockedCount < achievements.length && (
             <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-              Продолжайте ухаживать за садом и отмечать настроение
+              {t.profile.continueCaring}
             </div>
           )}
         </div>

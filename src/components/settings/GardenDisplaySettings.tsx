@@ -5,9 +5,10 @@
 
 import { motion } from 'framer-motion'
 import { Sprout, Palette, Home, Lock } from 'lucide-react'
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useMemo } from 'react'
 import { useGardenClientStore } from '@/stores/gardenStore'
 import { useUpdateGardenDisplay } from '@/hooks/queries/useUserQueries'
+import { useTranslation } from '@/hooks/useTranslation'
 import type { User } from '@/types'
 import { GardenDisplayMode } from '@/types/garden'
 
@@ -20,44 +21,47 @@ interface DisplayModeOption {
   readonly comingSoon?: boolean
 }
 
-const DISPLAY_MODES: readonly DisplayModeOption[] = [
-  {
-    mode: GardenDisplayMode.GARDEN,
-    label: 'Сад',
-    description: 'Классический вид с полками и элементами',
-    icon: <Sprout className="h-5 w-5" />,
-    available: true,
-  },
-  {
-    mode: GardenDisplayMode.PALETTE,
-    label: 'Палитра',
-    description: 'Визуализация настроений',
-    icon: <Palette className="h-5 w-5" />,
-    available: true,
-  },
-  {
-    mode: GardenDisplayMode.ISOMETRIC_ROOM,
-    label: 'Комната',
-    description: 'Изометрическая 3D комната',
-    icon: <Home className="h-5 w-5" />,
-    available: true,
-  },
-  // {
-  //   mode: GardenDisplayMode.BONSAI,
-  //   label: 'Бонсай',
-  //   description: 'Дерево эмоций, растущее от ваших настроений',
-  //   icon: <TreePine className="h-5 w-5" />,
-  //   available: false,
-  //   comingSoon: true,
-  // },
-  // {
-  //   mode: GardenDisplayMode.BEDS,
-  //   label: 'Грядки',
-  //   description: 'Шесть грядок, каждая для своего настроения',
-  //   icon: <Grid3x3 className="h-5 w-5" />,
-  //   available: false,
-  //   comingSoon: true,
-  // },
+const getDisplayModes = (
+  t: ReturnType<typeof useTranslation>
+): readonly DisplayModeOption[] =>
+  [
+    {
+      mode: GardenDisplayMode.GARDEN,
+      label: t.displayMode.garden,
+      description: t.displayMode.gardenDescription,
+      icon: <Sprout className="h-5 w-5" />,
+      available: true,
+    },
+    {
+      mode: GardenDisplayMode.PALETTE,
+      label: t.displayMode.palette,
+      description: t.displayMode.paletteDescription,
+      icon: <Palette className="h-5 w-5" />,
+      available: true,
+    },
+    {
+      mode: GardenDisplayMode.ISOMETRIC_ROOM,
+      label: t.displayMode.room,
+      description: t.displayMode.roomDescription,
+      icon: <Home className="h-5 w-5" />,
+      available: true,
+    },
+    // {
+    //   mode: GardenDisplayMode.BONSAI,
+    //   label: 'Бонсай',
+    //   description: 'Дерево эмоций, растущее от ваших настроений',
+    //   icon: <TreePine className="h-5 w-5" />,
+    //   available: false,
+    //   comingSoon: true,
+    // },
+    // {
+    //   mode: GardenDisplayMode.BEDS,
+    //   label: 'Грядки',
+    //   description: 'Шесть грядок, каждая для своего настроения',
+    //   icon: <Grid3x3 className="h-5 w-5" />,
+    //   available: false,
+    //   comingSoon: true,
+    // },
   ] as const
 
 interface GardenDisplaySettingsProps {
@@ -65,8 +69,10 @@ interface GardenDisplaySettingsProps {
 }
 
 export function GardenDisplaySettings({ user }: GardenDisplaySettingsProps) {
+  const t = useTranslation()
   const { displayMode, setDisplayMode } = useGardenClientStore()
   const updateGardenDisplay = useUpdateGardenDisplay()
+  const displayModes = useMemo(() => getDisplayModes(t), [t])
 
   const serverPreferredMode = user?.preferences.garden.displayMode
 
@@ -78,7 +84,12 @@ export function GardenDisplaySettings({ user }: GardenDisplaySettingsProps) {
     ) {
       setDisplayMode(serverPreferredMode)
     }
-  }, [serverPreferredMode, displayMode, setDisplayMode, updateGardenDisplay.isPending])
+  }, [
+    serverPreferredMode,
+    displayMode,
+    setDisplayMode,
+    updateGardenDisplay.isPending,
+  ])
 
   const handleChange = useCallback(
     (mode: GardenDisplayMode) => {
@@ -99,7 +110,7 @@ export function GardenDisplaySettings({ user }: GardenDisplaySettingsProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {DISPLAY_MODES.map(option => {
+        {displayModes.map(option => {
           const isSelected = displayMode === option.mode
           const isDisabled = !option.available
 
@@ -171,7 +182,7 @@ export function GardenDisplaySettings({ user }: GardenDisplaySettingsProps) {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.1 }}
                 >
-                  Скоро
+                  {t.shop.comingSoon}
                 </motion.div>
               )}
             </motion.button>
@@ -181,9 +192,8 @@ export function GardenDisplaySettings({ user }: GardenDisplaySettingsProps) {
 
       {/* Информационное сообщение */}
       <div className="rounded-xl border border-dashed border-neutral-300/60 bg-neutral-50/70 px-4 py-3 text-sm text-neutral-700 dark:border-neutral-600/60 dark:bg-neutral-900/60 dark:text-neutral-300">
-        💡 Режим отображения влияет на то, как выглядит ваш сад на главной странице
+        {t.displayMode.info}
       </div>
     </div>
   )
 }
-

@@ -11,6 +11,7 @@ import { IsometricRoomView } from './IsometricRoomView'
 import { ElementDetails } from './ElementDetails'
 import { PaletteView } from './PaletteView'
 import { LoadingOverlay, Card } from '@/components/ui'
+import { useTranslation } from '@/hooks/useTranslation'
 import type { GardenElement as GardenElementType } from '@/types'
 import { ViewMode, GardenDisplayMode } from '@/types'
 
@@ -19,6 +20,7 @@ interface GardenViewProps {
 }
 
 export function GardenView({ className }: GardenViewProps) {
+  const t = useTranslation()
   const {
     garden,
     isLoading,
@@ -161,10 +163,10 @@ export function GardenView({ className }: GardenViewProps) {
           <div className="text-center">
             <div className="mb-4 text-6xl">🌱</div>
             <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Ваш сад пуст
+              {t.gardenActions.emptyGarden}
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
-              Отметьте свое настроение, чтобы вырастить первое растение!
+              {t.gardenActions.markMoodToGrow}
             </p>
           </div>
         </div>
@@ -189,12 +191,12 @@ export function GardenView({ className }: GardenViewProps) {
               {/* Fullscreen Header */}
               <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  Палитра Сада
+                  {t.gardenActions.palette}
                 </h2>
                 <button
                   onClick={toggleFullscreen}
                   className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700"
-                  title="Выйти из полноэкранного режима"
+                  title={t.gardenActions.exitFullscreen}
                 >
                   <Minimize2 className="h-5 w-5" />
                 </button>
@@ -241,15 +243,15 @@ export function GardenView({ className }: GardenViewProps) {
                     <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                       <span className="rounded-full bg-neutral-100 px-2 py-1 font-semibold text-neutral-800 dark:bg-neutral-800 dark:text-neutral-100">
                         {displayMode === GardenDisplayMode.PALETTE
-                          ? 'Палитра'
+                          ? t.displayMode.palette
                           : displayMode === GardenDisplayMode.ISOMETRIC_ROOM
-                            ? 'Комната'
-                            : 'Сад'}
+                            ? t.displayMode.room
+                            : t.displayMode.garden}
                       </span>
                       <span className="rounded-full bg-neutral-100 px-2 py-1 font-medium text-neutral-800 dark:bg-neutral-800 dark:text-neutral-100">
                         {displayMode === GardenDisplayMode.PALETTE
-                          ? `${moodHistory.length} настроений`
-                          : `${garden.elements.length} элементов`}
+                          ? `${moodHistory.length} ${t.moodStats.entries.toLowerCase()}`
+                          : `${garden.elements.length} ${t.garden.elements.toLowerCase()}`}
                       </span>
                     </div>
 
@@ -258,20 +260,20 @@ export function GardenView({ className }: GardenViewProps) {
                         <>
                           <div className="flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-1.5 dark:bg-blue-900/30">
                             <span className="text-sm text-blue-700 dark:text-blue-300">
-                              Перемещение: {elementBeingMoved.name}
+                              {t.gardenActions.moving}: {elementBeingMoved.name}
                             </span>
                           </div>
                           <button
                             onClick={handleConfirmMovement}
                             className="rounded-lg bg-green-100 px-3 py-1.5 text-sm font-semibold text-green-700 transition-colors hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50"
-                            title="Подтвердить перемещение"
+                            title={t.gardenActions.confirmMove}
                           >
                             ✓
                           </button>
                           <button
                             onClick={handleCancelMovement}
                             className="rounded-lg bg-red-100 px-3 py-1.5 text-sm font-semibold text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
-                            title="Отменить перемещение"
+                            title={t.gardenActions.cancelMove}
                           >
                             ✕
                           </button>
@@ -284,8 +286,8 @@ export function GardenView({ className }: GardenViewProps) {
                               className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700"
                               title={
                                 isFullscreen
-                                  ? 'Выйти из полноэкранного режима'
-                                  : 'Полноэкранный режим'
+                                  ? t.gardenActions.exitFullscreen
+                                  : t.gardenActions.fullscreen
                               }
                             >
                               {isFullscreen ? (
@@ -304,7 +306,7 @@ export function GardenView({ className }: GardenViewProps) {
                                 : 'text-gray-600 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700'
                             )}
                           >
-                            Обзор
+                            {t.gardenActions.overview}
                           </button>
                         </>
                       )}

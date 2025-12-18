@@ -19,6 +19,9 @@ export interface Translations {
     back: string
     next: string
     done: string
+    refresh: string
+    pieces: string
+    total: string
   }
 
   // Настройки
@@ -301,6 +304,9 @@ export interface Translations {
     previousRoomTheme: string
     nextRoomTheme: string
     goToTheme: string
+    buyFor: string
+    active: string
+    unavailable: string
   }
 
   // Элементы сада
@@ -397,6 +403,15 @@ export interface Translations {
     claiming: string
     claimed: string
     expired: string
+    error: string
+    noQuests: string
+    comingSoon: string
+    categories: {
+      mood: string
+      garden: string
+      social: string
+      streak: string
+    }
   }
 
   // Челленджи
@@ -439,5 +454,217 @@ export interface Translations {
     level: string
     levelShort: string
     toLevel: string
+    moodDiary: string
+    moodHistory: string
+    authRequired: string
+    somethingWentWrong: string
+    dontWorry: string
+    login: string
+    streak: string
+    start: string
+    rare: string
+    found: string
+    achievements: string
+    viewAll: string
+    collapse: string
+    allUnlocked: string
+    moreAchievements: string
+    continueCaring: string
+    entries: string
+    currentSeries: string
+    of: string
+    lastDays: string
+    frequentMoods: string
+    moodPattern: string
+    averageIntensity: string
+    allTime: string
+  }
+
+  // Профиль друга
+  friendProfile: {
+    title: string
+    back: string
+    profileUnavailable: string
+    loadingProfile: string
+    todayJoined: string
+    daysWithUs: string
+    dayWithUs: string
+    statistics: string
+    bestStreak: string
+    plants: string
+    totalDays: string
+    rareElements: string
+    achievements: string
+    privateGarden: string
+    userHidStats: string
+    privateAchievements: string
+    userHidAchievements: string
+    privacySettings: string
+    userAllowed: string
+    profileStatsAchievements: string
+    profileStats: string
+    profileAchievements: string
+    onlyProfile: string
+    inFriends: string
+    removeFromFriends: string
+    removeConfirm: string
+    removeConfirmText: string
+    remove: string
+    cancelRequest: string
+    accept: string
+    decline: string
+    requestUnavailable: string
+    addToFriends: string
+    requestSent: string
+    requestCancelled: string
+    removedFromFriends: string
+    requestUpdated: string
+    failedToSend: string
+    failedToCancel: string
+    failedToRemove: string
+    failedToProcess: string
+    noData: string
+  }
+
+  // Рейтинг
+  leaderboard: {
+    title: string
+    refresh: string
+    level: string
+    levelDescription: string
+    levelMetric: string
+    levelShort: string
+    streak: string
+    streakDescription: string
+    streakMetric: string
+    streakShort: string
+    elements: string
+    elementsDescription: string
+    elementsMetric: string
+    elementsShort: string
+    allTime: string
+    monthly: string
+    failedToLoad: string
+    tryAgain: string
+    noOneYet: string
+    beFirst: string
+    yourPosition: string
+    updated: string
+    gardenerGarden: string
+    toViewGarden: string
+    profileHidden: string
+    garden: string
+    gardenHidden: string
+  }
+
+  // Статистика настроения
+  moodStats: {
+    title: string
+    startMarking: string
+    entries: string
+    daysInRow: string
+    currentSeries: string
+    lastDays: string
+    frequentMoods: string
+    moodPattern: string
+    averageIntensity: string
+    allTime: string
+  }
+
+  // Настройки отображения
+  displayMode: {
+    garden: string
+    gardenDescription: string
+    palette: string
+    paletteDescription: string
+    room: string
+    roomDescription: string
+    shelves: string
+    shelvesDescription: string
+    info: string
+    friendViewInfo: string
+  }
+
+  // Настройки компаньона
+  companionSettings: {
+    show: string
+    hide: string
+    accompanies: string
+    sleeping: string
+    willWake: string
+    willUnlockAtLevel: string
+    verySoon: string
+    levelRemaining: string
+    levelsRemaining: string
+    levelsRemainingPlural: string
+  }
+
+  // Настройки приватности
+  privacy: {
+    showProfile: string
+    showProfileDescription: string
+    shareGarden: string
+    shareGardenDescription: string
+    showAchievements: string
+    showAchievementsDescription: string
+    friendRequests: string
+    friendRequestsDescription: string
+    cloudSync: string
+    cloudSyncDescription: string
+    aboutData: string
+    dataInfo: string
+  }
+
+  // Сад - кнопки и действия
+  gardenActions: {
+    emptyGarden: string
+    markMoodToGrow: string
+    palette: string
+    exitFullscreen: string
+    fullscreen: string
+    moving: string
+    confirmMove: string
+    cancelMove: string
+    overview: string
+  }
+
+  // Друзья
+  friends: {
+    search: string
+    noFriends: string
+    inviteFriends: string
+    sendInvite: string
+    profile: string
+    garden: string
+    was: string
+    online: string
+  }
+
+  // Темы - названия и описания
+  themeNames: {
+    light: string
+    dark: string
+    sunset: string
+    night: string
+    forest: string
+    aqua: string
+    magic: string
+    space: string
+    cyberpunk: string
+    isoRoom: string
+    autumn_room: string
+    brick_room: string
+    cyberpunk_room: string
+    zodiac_room: string
+    dark_neon_room: string
+    high_tec_room: string
+    new_year_room: string
+    paint_room: string
+    prison_room: string
+  }
+
+  // Онбординг - переключение языка
+  onboardingLanguage: {
+    selectLanguage: string
   }
 }

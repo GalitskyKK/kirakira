@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Button, Card } from '@/components/ui'
 import { useRoomTheme } from '@/hooks/useRoomTheme'
+import { useTranslation } from '@/hooks/useTranslation'
+import { getLocalizedThemeName } from '@/utils/themeLocalization'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface RoomThemeSettingsProps {
@@ -8,6 +10,7 @@ interface RoomThemeSettingsProps {
 }
 
 export function RoomThemeSettings({ className }: RoomThemeSettingsProps) {
+  const t = useTranslation()
   const {
     roomThemeId,
     roomThemes,
@@ -63,7 +66,7 @@ export function RoomThemeSettings({ className }: RoomThemeSettingsProps) {
           size="sm"
           onClick={goPrev}
           disabled={roomThemes.length <= 1}
-          aria-label="Предыдущая тема комнаты"
+          aria-label={t.themes.previousRoomTheme}
         >
           <ChevronLeft className="h-5 w-5" />
         </Button>
@@ -73,7 +76,7 @@ export function RoomThemeSettings({ className }: RoomThemeSettingsProps) {
             {currentTheme && (
               <img
                 src={currentTheme.previewUrl}
-                alt={currentTheme.name}
+                alt={getLocalizedThemeName(currentTheme.id, t)}
                 className="h-full w-full object-cover"
               />
             )}
@@ -82,20 +85,22 @@ export function RoomThemeSettings({ className }: RoomThemeSettingsProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {currentTheme?.name ?? 'Тема'}
+                  {currentTheme
+                    ? getLocalizedThemeName(currentTheme.id, t)
+                    : t.themes.select}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   {currentTheme
                     ? currentTheme.isDefault ||
                       ownedRoomThemeIds.includes(currentTheme.id)
-                      ? 'Доступно'
-                      : `${currentTheme.priceSprouts} ростков / ${currentTheme.priceGems} гемов`
+                      ? t.themes.free
+                      : `${currentTheme.priceSprouts} ${t.currency.sproutsPlural} / ${currentTheme.priceGems} ${t.currency.gemsPlural}`
                     : ''}
                 </p>
               </div>
               {currentTheme?.id === roomThemeId && (
                 <span className="text-xs font-semibold text-kira-500">
-                  Активна
+                  {t.themes.active}
                 </span>
               )}
             </div>
@@ -115,12 +120,12 @@ export function RoomThemeSettings({ className }: RoomThemeSettingsProps) {
                 onClick={() => currentTheme && setRoomTheme(currentTheme.id)}
               >
                 {currentTheme?.id === roomThemeId
-                  ? 'Выбрано'
+                  ? t.themes.use
                   : currentTheme &&
                       (currentTheme.isDefault ||
                         ownedRoomThemeIds.includes(currentTheme.id))
-                    ? 'Выбрать'
-                    : 'Недоступно'}
+                    ? t.themes.select
+                    : t.themes.unavailable}
               </Button>
             </div>
           </div>
@@ -131,7 +136,7 @@ export function RoomThemeSettings({ className }: RoomThemeSettingsProps) {
           size="sm"
           onClick={goNext}
           disabled={roomThemes.length <= 1}
-          aria-label="Следующая тема комнаты"
+          aria-label={t.themes.nextRoomTheme}
         >
           <ChevronRight className="h-5 w-5" />
         </Button>

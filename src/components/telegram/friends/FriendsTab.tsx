@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { TreePine, User } from 'lucide-react'
 import type { Friend } from '@/hooks'
 import { Button, Card, UserAvatar } from '@/components/ui'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface FriendsTabProps {
   readonly searchQuery: string
@@ -22,6 +23,7 @@ export function FriendsTab({
   onViewGarden,
   onViewProfile,
 }: FriendsTabProps) {
+  const t = useTranslation()
   return (
     <motion.div
       key="friends"
@@ -33,7 +35,7 @@ export function FriendsTab({
       <div className="relative">
         <input
           type="text"
-          placeholder="Поиск среди друзей..."
+          placeholder={t.friends.search}
           value={searchQuery}
           onChange={e => onSearchChange(e.target.value)}
           className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
@@ -46,16 +48,16 @@ export function FriendsTab({
       <div className="space-y-3">
         {filteredFriends.length === 0 ? (
           <Card className="p-6 text-center">
-            <h4 className="mb-2 font-medium">Пока нет друзей</h4>
+            <h4 className="mb-2 font-medium">{t.friends.noFriends}</h4>
             <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-              Пригласите друзей присоединиться к KiraKira!
+              {t.friends.inviteFriends}
             </p>
             <Button
               onClick={onInvite}
               size="sm"
               className="bg-blue-500 hover:bg-blue-600"
             >
-              📤 Отправить приглашение
+              {t.friends.sendInvite}
             </Button>
           </Card>
         ) : (
@@ -102,7 +104,9 @@ export function FriendsTab({
                               <span>{friend.currentStreak}</span>
                             </span>
                             {friend.lastSeen && (
-                              <span>Был(а) {friend.lastSeen}</span>
+                              <span>
+                                {t.friends.was} {friend.lastSeen}
+                              </span>
                             )}
                           </div>
                         </div>
@@ -116,11 +120,11 @@ export function FriendsTab({
                       variant="outline"
                       onClick={() => onViewProfile(friend)}
                       className="min-w-0 flex-1"
-                      title="Профиль"
+                      title={t.friends.profile}
                     >
                       <User className="h-3 w-3" />
                       <span className="ml-1 truncate text-xs sm:inline">
-                        Профиль
+                        {t.friends.profile}
                       </span>
                     </Button>
                     <Button
@@ -128,11 +132,11 @@ export function FriendsTab({
                       variant="outline"
                       onClick={() => onViewGarden(friend)}
                       className="min-w-0 flex-1"
-                      title="Просмотр сада"
+                      title={t.friends.garden}
                     >
                       <TreePine className="h-3 w-3" />
                       <span className="ml-1 truncate text-xs sm:inline">
-                        Сад
+                        {t.friends.garden}
                       </span>
                     </Button>
                     {/* <Button

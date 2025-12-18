@@ -12,6 +12,7 @@ import { useUserClientStore } from '@/hooks/index.v2'
 import { MOOD_CONFIG } from '@/types'
 import { useTranslation } from '@/hooks/useTranslation'
 import { getLocalizedMoodConfig } from '@/utils/moodLocalization'
+import { LanguageSettings } from '@/components/settings/LanguageSettings'
 
 interface OnboardingPageProps {
   onComplete: () => void
@@ -267,6 +268,16 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
             >
               {isLastStep ? t.onboarding.start : t.common.next}
             </Button>
+          </div>
+
+          {/* Language Switcher */}
+          <div className="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
+            <div className="text-center">
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                {t.onboardingLanguage.selectLanguage}
+              </p>
+              <LanguageSettings />
+            </div>
           </div>
         </Card>
       </div>

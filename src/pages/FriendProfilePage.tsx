@@ -25,6 +25,8 @@ import { useTelegramId } from '@/hooks/useTelegramId'
 import { useTelegram } from '@/hooks'
 import { useCallback, useMemo, useState } from 'react'
 import { authenticatedFetch } from '@/utils/apiClient'
+import { useTranslation } from '@/hooks/useTranslation'
+import { useLocaleStore } from '@/stores/localeStore'
 
 interface FriendProfileData {
   readonly user: DatabaseUser
@@ -41,6 +43,7 @@ interface FriendProfileData {
 export default function FriendProfilePage() {
   const { friendTelegramId } = useParams<{ friendTelegramId: string }>()
   const navigate = useNavigate()
+  const t = useTranslation()
 
   // Используем новый v2 хук с автоматической загрузкой
   const friendTelegramIdNum = friendTelegramId
@@ -112,11 +115,11 @@ export default function FriendProfilePage() {
 
   const handleAddFriend = useCallback(async () => {
     if (!profileData?.user.telegram_id || !currentUserTelegramId) {
-      showAlert?.('Не удалось отправить запрос: нет данных пользователя')
+      showAlert?.(t.friendProfile.failedToSend)
       return
     }
     if (!canSendFriendRequest) {
-      showAlert?.('Запрос уже отправлен или недоступен')
+      showAlert?.(t.friendProfile.requestUnavailable)
       return
     }
     try {
@@ -140,17 +143,17 @@ export default function FriendProfilePage() {
       }
       if (response.ok && result?.success) {
         hapticFeedback('success')
-        showAlert?.(result.data?.message ?? 'Запрос отправлен')
+        showAlert?.(result.data?.message ?? t.friendProfile.requestSent)
         if (friendTelegramIdNum) {
           await loadFriendProfile(friendTelegramIdNum)
         }
       } else {
-        showAlert?.(result?.error ?? 'Не удалось отправить запрос')
+        showAlert?.(result?.error ?? t.friendProfile.failedToSend)
         hapticFeedback('error')
       }
     } catch (sendError) {
       console.error('Failed to send friend request:', sendError)
-      showAlert?.('Не удалось отправить запрос')
+      showAlert?.(t.friendProfile.failedToSend)
       hapticFeedback('error')
     } finally {
       setIsProcessingFriendAction(false)
@@ -167,7 +170,7 @@ export default function FriendProfilePage() {
 
   const handleCancelRequest = useCallback(async () => {
     if (!profileData?.user.telegram_id || !currentUserTelegramId) {
-      showAlert?.('Не удалось отменить запрос')
+      showAlert?.(t.friendProfile.failedToCancel)
       return
     }
 
@@ -193,17 +196,17 @@ export default function FriendProfilePage() {
 
       if (response.ok && result?.success) {
         hapticFeedback('success')
-        showAlert?.(result.data?.message ?? 'Запрос отменён')
+        showAlert?.(result.data?.message ?? t.friendProfile.requestCancelled)
         if (friendTelegramIdNum) {
           await loadFriendProfile(friendTelegramIdNum)
         }
       } else {
-        showAlert?.(result?.error ?? 'Не удалось отменить запрос')
+        showAlert?.(result?.error ?? t.friendProfile.failedToCancel)
         hapticFeedback('error')
       }
     } catch (error) {
       console.error('Failed to cancel friend request:', error)
-      showAlert?.('Не удалось отменить запрос')
+      showAlert?.(t.friendProfile.failedToCancel)
       hapticFeedback('error')
     } finally {
       setIsProcessingFriendAction(false)
@@ -219,7 +222,7 @@ export default function FriendProfilePage() {
 
   const handleRemoveFriend = useCallback(async () => {
     if (!profileData?.user.telegram_id || !currentUserTelegramId) {
-      showAlert?.('Не удалось удалить из друзей')
+      showAlert?.(t.friendProfile.failedToRemove)
       return
     }
 
@@ -245,18 +248,18 @@ export default function FriendProfilePage() {
 
       if (response.ok && result?.success) {
         hapticFeedback('success')
-        showAlert?.(result.data?.message ?? 'Удалено из друзей')
+        showAlert?.(result.data?.message ?? t.friendProfile.removedFromFriends)
         setShowRemoveConfirm(false)
         if (friendTelegramIdNum) {
           await loadFriendProfile(friendTelegramIdNum)
         }
       } else {
-        showAlert?.(result?.error ?? 'Не удалось удалить из друзей')
+        showAlert?.(result?.error ?? t.friendProfile.failedToRemove)
         hapticFeedback('error')
       }
     } catch (error) {
       console.error('Failed to remove friend:', error)
-      showAlert?.('Не удалось удалить из друзей')
+      showAlert?.(t.friendProfile.failedToRemove)
       hapticFeedback('error')
     } finally {
       setIsProcessingFriendAction(false)
@@ -273,7 +276,7 @@ export default function FriendProfilePage() {
   const handleRespondRequest = useCallback(
     async (action: 'accept' | 'decline') => {
       if (!profileData?.user.telegram_id || !currentUserTelegramId) {
-        showAlert?.('Нет данных для обработки запроса')
+        showAlert?.(t.friendProfile.noData)
         return
       }
       try {
@@ -298,17 +301,17 @@ export default function FriendProfilePage() {
         }
         if (response.ok && result?.success) {
           hapticFeedback(action === 'accept' ? 'success' : 'warning')
-          showAlert?.(result.data?.message ?? 'Запрос обновлён')
+          showAlert?.(result.data?.message ?? t.friendProfile.requestUpdated)
           if (friendTelegramIdNum) {
             await loadFriendProfile(friendTelegramIdNum)
           }
         } else {
-          showAlert?.(result?.error ?? 'Не удалось обработать запрос')
+          showAlert?.(result?.error ?? t.friendProfile.failedToProcess)
           hapticFeedback('error')
         }
       } catch (respondError) {
         console.error('Failed to respond to friend request:', respondError)
-        showAlert?.('Ошибка при обработке запроса')
+        showAlert?.(t.friendProfile.failedToProcess)
         hapticFeedback('error')
       } finally {
         setIsProcessingFriendAction(false)
@@ -344,7 +347,8 @@ export default function FriendProfilePage() {
             onClick={() => setShowRemoveConfirm(true)}
             className="flex items-center gap-2 border-emerald-300 bg-emerald-50 text-emerald-700 hover:border-red-300 hover:bg-red-50 hover:text-red-600 dark:border-emerald-500/40 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:border-red-500/40 dark:hover:bg-red-900/30 dark:hover:text-red-300"
           >
-            <UserCheck className="h-4 w-4" />В друзьях
+            <UserCheck className="h-4 w-4" />
+            {t.friendProfile.inFriends}
           </Button>
 
           {/* Confirmation Modal */}
@@ -356,11 +360,12 @@ export default function FriendProfilePage() {
                 animate={{ opacity: 1, scale: 1 }}
               >
                 <h3 className="mb-2 text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                  Удалить из друзей?
+                  {t.friendProfile.removeFromFriends}
                 </h3>
                 <p className="mb-6 text-sm text-neutral-600 dark:text-neutral-400">
-                  Вы уверены, что хотите удалить{' '}
-                  {profileData?.user.first_name || 'пользователя'} из друзей?
+                  {t.friendProfile.removeConfirm}{' '}
+                  {profileData?.user.first_name || t.profile.user}{' '}
+                  {t.friendProfile.removeConfirmText}
                 </p>
                 <div className="flex gap-3">
                   <Button
@@ -369,7 +374,7 @@ export default function FriendProfilePage() {
                     onClick={() => setShowRemoveConfirm(false)}
                     className="flex-1"
                   >
-                    Отмена
+                    {t.common.cancel}
                   </Button>
                   <Button
                     variant="primary"
@@ -380,7 +385,7 @@ export default function FriendProfilePage() {
                     isLoading={isProcessingFriendAction}
                     className="flex-1 bg-red-500 hover:bg-red-600"
                   >
-                    Удалить
+                    {t.friendProfile.remove}
                   </Button>
                 </div>
               </motion.div>
@@ -402,7 +407,7 @@ export default function FriendProfilePage() {
           isLoading={isProcessingFriendAction}
         >
           <X className="h-4 w-4" />
-          Отменить запрос
+          {t.friendProfile.cancelRequest}
         </Button>
       )
     }
@@ -420,7 +425,7 @@ export default function FriendProfilePage() {
             isLoading={isProcessingFriendAction}
           >
             <Check className="h-4 w-4" />
-            Принять
+            {t.friendProfile.accept}
           </Button>
           <Button
             variant="outline"
@@ -432,7 +437,7 @@ export default function FriendProfilePage() {
             isLoading={isProcessingFriendAction}
           >
             <X className="h-4 w-4" />
-            Отклонить
+            {t.friendProfile.decline}
           </Button>
         </div>
       )
@@ -447,7 +452,7 @@ export default function FriendProfilePage() {
           className="flex cursor-not-allowed items-center gap-2 opacity-50"
         >
           <Ban className="h-4 w-4" />
-          Запрос недоступен
+          {t.friendProfile.requestUnavailable}
         </Button>
       )
     }
@@ -461,7 +466,7 @@ export default function FriendProfilePage() {
         isLoading={isProcessingFriendAction}
       >
         <UserPlus className="h-4 w-4" />
-        Добавить в друзья
+        {t.friendProfile.addToFriends}
       </Button>
     )
   }
@@ -478,7 +483,7 @@ export default function FriendProfilePage() {
         >
           <LoadingSpinner size="lg" />
           <p className="mt-4 text-gray-600 dark:text-gray-400">
-            Загружаем профиль...
+            {t.friendProfile.loadingProfile}
           </p>
         </motion.div>
       </div>
@@ -495,7 +500,7 @@ export default function FriendProfilePage() {
         >
           <div className="mb-4 text-6xl">🔒</div>
           <h1 className="mb-4 text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Профиль недоступен
+            {t.friendProfile.profileUnavailable}
           </h1>
           <p className="mb-6 text-gray-600 dark:text-gray-400">{error}</p>
           <button
@@ -503,7 +508,7 @@ export default function FriendProfilePage() {
             className="inline-flex items-center rounded-lg bg-garden-500 px-6 py-3 text-white transition-colors hover:bg-garden-600"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Назад
+            {t.friendProfile.back}
           </button>
         </motion.div>
       </div>
@@ -515,7 +520,7 @@ export default function FriendProfilePage() {
   }
 
   const { user, stats, achievements, privacy } = profileData
-  const displayName = user.first_name || user.username || 'Пользователь'
+  const displayName = user.first_name || user.username || t.profile.user
   const username = user.username ? `@${user.username}` : null
 
   // Calculate level info if we have stats
@@ -538,10 +543,10 @@ export default function FriendProfilePage() {
             className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
           >
             <ArrowLeft className="mr-2 h-5 w-5" />
-            Назад
+            {t.friendProfile.back}
           </button>
           <h1 className="font-semibold text-gray-900 dark:text-gray-100">
-            Профиль друга
+            {t.friendProfile.title}
           </h1>
           <div className="w-16" />
         </div>
@@ -593,10 +598,10 @@ export default function FriendProfilePage() {
                   <span>🗓️</span>
                   <span>
                     {daysSinceRegistration === 0
-                      ? 'Сегодня присоединился'
+                      ? t.friendProfile.todayJoined
                       : daysSinceRegistration === 1
-                        ? '1 день с нами'
-                        : `${daysSinceRegistration} дней с нами`}
+                        ? `1 ${t.friendProfile.dayWithUs}`
+                        : `${daysSinceRegistration} ${t.friendProfile.daysWithUs}`}
                   </span>
                 </div>
               </div>
@@ -617,28 +622,28 @@ export default function FriendProfilePage() {
             transition={{ delay: 0.2 }}
           >
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              📊 Статистика
+              📊 {t.friendProfile.statistics}
             </h2>
 
             <div className="grid grid-cols-2 gap-3">
               <StatCard
                 emoji="🔥"
-                label="Лучший стрик"
+                label={t.friendProfile.bestStreak}
                 value={stats.longestStreak || 0}
               />
               <StatCard
                 emoji="🌱"
-                label="Растений"
+                label={t.friendProfile.plants}
                 value={stats.totalElements || 0}
               />
               <StatCard
                 emoji="📅"
-                label="Всего дней"
+                label={t.friendProfile.totalDays}
                 value={stats.totalDays || 0}
               />
               <StatCard
                 emoji="⭐"
-                label="Редких элементов"
+                label={t.friendProfile.rareElements}
                 value={stats.rareElementsFound || 0}
               />
             </div>
@@ -652,10 +657,10 @@ export default function FriendProfilePage() {
           >
             <Lock className="mx-auto mb-3 h-8 w-8 text-gray-400" />
             <h3 className="mb-1 font-medium text-gray-600 dark:text-gray-400">
-              Приватный сад
+              {t.friendProfile.privateGarden}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Пользователь скрыл статистику своего сада
+              {t.friendProfile.userHidStats}
             </p>
           </motion.div>
         )}
@@ -670,7 +675,7 @@ export default function FriendProfilePage() {
           >
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                🏆 Достижения
+                🏆 {t.friendProfile.achievements}
               </h2>
               <div className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-600 dark:bg-blue-900/50 dark:text-blue-400">
                 {achievements.length}
@@ -696,10 +701,10 @@ export default function FriendProfilePage() {
           >
             <Users className="mx-auto mb-3 h-8 w-8 text-gray-400" />
             <h3 className="mb-1 font-medium text-gray-600 dark:text-gray-400">
-              Приватные достижения
+              {t.friendProfile.privateAchievements}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Пользователь скрыл свои достижения
+              {t.friendProfile.userHidAchievements}
             </p>
           </motion.div>
         )}
@@ -715,17 +720,17 @@ export default function FriendProfilePage() {
             <Eye className="mt-0.5 h-5 w-5 text-blue-500 dark:text-blue-400" />
             <div className="flex-1">
               <div className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                Настройки приватности
+                {t.friendProfile.privacySettings}
               </div>
               <div className="mt-1 text-xs text-blue-600 dark:text-blue-300">
-                Этот пользователь разрешил просмотр{' '}
+                {t.friendProfile.userAllowed}{' '}
                 {privacy.shareGarden && privacy.shareAchievements
-                  ? 'профиля, статистики и достижений'
+                  ? t.friendProfile.profileStatsAchievements
                   : privacy.shareGarden
-                    ? 'профиля и статистики'
+                    ? t.friendProfile.profileStats
                     : privacy.shareAchievements
-                      ? 'профиля и достижений'
-                      : 'только профиля'}
+                      ? t.friendProfile.profileAchievements
+                      : t.friendProfile.onlyProfile}
               </div>
             </div>
           </div>
@@ -766,10 +771,12 @@ interface AchievementBadgeProps {
 function AchievementBadge({ achievement, delay }: AchievementBadgeProps) {
   // 🔥 ИСПРАВЛЕНИЕ: Используем данные из join-а вместо achievement_id
   // TypeScript автоматически выведет тип из DatabaseAchievement.achievements
+  const t = useTranslation()
+  const locale = useLocaleStore(state => state.locale)
   const emoji = achievement.achievements?.emoji ?? '🏆'
   const name = achievement.achievements?.name ?? achievement.achievement_id
   const description =
-    achievement.achievements?.description ?? 'Достижение получено!'
+    achievement.achievements?.description ?? t.profile.achievements
 
   return (
     <motion.div
@@ -788,7 +795,9 @@ function AchievementBadge({ achievement, delay }: AchievementBadgeProps) {
         </div>
         {achievement.unlocked_at && (
           <div className="mt-2 text-xs text-blue-500 dark:text-blue-400">
-            {new Date(achievement.unlocked_at).toLocaleDateString('ru-RU')}
+            {new Date(achievement.unlocked_at).toLocaleDateString(
+              locale === 'en' ? 'en-US' : 'ru-RU'
+            )}
           </div>
         )}
       </div>

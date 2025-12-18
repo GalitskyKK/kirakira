@@ -7,6 +7,8 @@ import { motion, PanInfo } from 'framer-motion'
 import { useRef, useState, useEffect, useMemo } from 'react'
 import { Check, Lock, Leaf, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
+import { useTranslation } from '@/hooks/useTranslation'
+import { getLocalizedThemeName } from '@/utils/themeLocalization'
 import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { useSpendCurrency, currencyKeys } from '@/hooks/queries'
 import { useUserSync } from '@/hooks/queries/useUserQueries'
@@ -37,6 +39,7 @@ interface ThemeSettingsProps {
 }
 
 export function ThemeSettings({ className }: ThemeSettingsProps) {
+  const t = useTranslation()
   const {
     theme: currentTheme,
     themes,
@@ -79,8 +82,11 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
         currencyType: 'sprouts',
         amount: theme.priceSprouts,
         reason: 'buy_theme',
-        description: `Покупка темы "${theme.name}"`,
-        metadata: { themeId, themeName: theme.name },
+        description: `${t.themes.buy} "${getLocalizedThemeName(theme.id, t)}"`,
+        metadata: {
+          themeId,
+          themeName: getLocalizedThemeName(theme.id, t),
+        },
       })
 
       if (result.success) {
@@ -392,7 +398,7 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
                       <div className="p-4">
                         <div className="flex items-center justify-between">
                           <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
-                            {theme.name}
+                            {getLocalizedThemeName(theme.id, t)}
                           </h3>
                           <div className="flex items-center gap-1">
                             {isSelected && (
@@ -412,8 +418,8 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
                             <Leaf className="h-4 w-4 text-green-500" />
                             <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
                               {theme.priceSprouts === 0
-                                ? 'Бесплатно'
-                                : `${theme.priceSprouts} ростков`}
+                                ? t.themes.free
+                                : `${theme.priceSprouts} ${t.currency.sproutsPlural}`}
                             </span>
                           </div>
 
@@ -427,7 +433,7 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
                                 void handleBuyTheme(theme.id)
                               }}
                             >
-                              Купить
+                              {t.themes.buy}
                             </Button>
                           )}
                         </div>
@@ -464,9 +470,9 @@ export function ThemeSettings({ className }: ThemeSettingsProps) {
         <div className="flex items-center gap-2">
           <Leaf className="h-4 w-4 text-green-500" />
           <span className="text-sm text-neutral-700 dark:text-neutral-300">
-            Баланс:{' '}
+            {t.transactionHistory.balance}:{' '}
             <span className="font-semibold">{userCurrency?.sprouts || 0}</span>{' '}
-            ростков
+            {t.currency.sproutsPlural}
           </span>
         </div>
         <div className="text-xs text-neutral-500 dark:text-neutral-500">

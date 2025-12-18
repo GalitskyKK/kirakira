@@ -8,9 +8,11 @@ import { ProfileStats } from '@/components/profile/ProfileStats'
 import { ProfileAchievements } from '@/components/profile/ProfileAchievements'
 import { LoadingSpinner } from '@/components/ui'
 import { useViewerLeaderboardPosition } from '@/hooks/queries/useLeaderboardQueries'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export function ProfilePage() {
   const navigate = useNavigate()
+  const t = useTranslation()
   // ✅ Получаем данные через React Query v2 хуки
   const telegramId = useTelegramId()
   const { data: userData, isLoading: userLoading } = useUserSync(
@@ -61,17 +63,17 @@ export function ProfilePage() {
         <div className="glass-card rounded-3xl border border-neutral-200/50 p-6 text-center dark:border-neutral-700/50">
           <div className="mb-4 text-6xl">😔</div>
           <h2 className="mb-2 text-xl font-bold text-neutral-900 dark:text-neutral-100">
-            Требуется авторизация
+            {t.profile.authRequired}
           </h2>
           <p className="text-neutral-600 dark:text-neutral-400">
-            Войдите, чтобы открыть профиль и данные аккаунта
+            {t.errors.pleaseLogin}
           </p>
           <button
             type="button"
             onClick={() => navigate('/auth')}
             className="mt-4 inline-flex items-center justify-center rounded-2xl bg-kira-500 px-4 py-2 text-white transition-colors hover:bg-kira-600"
           >
-            Войти
+            {t.profile.login}
           </button>
         </div>
       </div>
@@ -85,10 +87,10 @@ export function ProfilePage() {
         <div className="glass-card rounded-3xl border border-red-200/50 bg-red-50/50 p-6 text-center dark:border-red-800/50 dark:bg-red-900/20">
           <div className="mb-4 text-6xl">🌸</div>
           <h2 className="mb-2 text-xl font-bold text-red-900 dark:text-red-200">
-            Упс! Что-то пошло не так
+            {t.profile.somethingWentWrong}
           </h2>
           <p className="text-red-700 dark:text-red-300">
-            Не переживайте, мы быстро это исправим
+            {t.profile.dontWorry}
           </p>
           <p className="mt-2 text-sm text-red-600 dark:text-red-400">
             {String(profileError)}
@@ -197,7 +199,7 @@ export function ProfilePage() {
           isLoading: leaderboardPositionLoading,
         }}
       />
-      
+
       {/* Кнопка просмотра роадмапа */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -214,15 +216,15 @@ export function ProfilePage() {
             <span className="text-2xl">📖</span>
             <div className="text-left">
               <p className="font-semibold text-gray-900 dark:text-gray-100">
-                Дневник настроений
+                {t.profile.moodDiary}
               </p>
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                История ваших эмоций
+                {t.profile.moodHistory}
               </p>
             </div>
           </div>
         </motion.button>
-      </motion.div>      
+      </motion.div>
 
       {/* Статистика */}
       <ProfileStats
@@ -238,8 +240,6 @@ export function ProfilePage() {
         moodStats={moodStats}
         totalElements={totalElements}
       />
-
-
     </motion.div>
   )
 }

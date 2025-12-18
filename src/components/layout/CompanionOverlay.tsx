@@ -9,6 +9,7 @@ import {
 } from '@/stores/companionStore'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useUserSync } from '@/hooks/index.v2'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export function CompanionOverlay() {
   const { isVisible } = useCompanionVisibility()
@@ -145,24 +146,32 @@ interface CompanionLockedPreviewProps {
   readonly levelsRemaining: number
 }
 
-function getLevelText(levelsRemaining: number): string {
-  if (levelsRemaining <= 0) {
-    return 'Совсем скоро!'
-  }
-  if (levelsRemaining === 1) {
-    return 'Остался 1 уровень'
-  }
-  if (levelsRemaining >= 2 && levelsRemaining <= 4) {
-    return `Осталось ${levelsRemaining} уровня`
-  }
-  return `Осталось ${levelsRemaining} уровней`
-}
-
 function CompanionLockedPreview({
   levelsRemaining,
 }: CompanionLockedPreviewProps) {
+  const t = useTranslation()
   const [showHint, setShowHint] = useState(true)
   const hideTimerRef = useRef<number | null>(null)
+
+  const getLevelText = (count: number): string => {
+    if (count <= 0) {
+      return t.companionSettings.verySoon
+    }
+    if (count === 1) {
+      return t.companionSettings.levelRemaining
+    }
+    if (count >= 2 && count <= 4) {
+      return t.companionSettings.levelsRemaining.replace(
+        '{count}',
+        String(count)
+      )
+    }
+    return t.companionSettings.levelsRemainingPlural.replace(
+      '{count}',
+      String(count)
+    )
+  }
+
   const remainingText = getLevelText(levelsRemaining)
 
   const scheduleHide = useCallback(() => {
@@ -197,7 +206,7 @@ function CompanionLockedPreview({
         className="pointer-events-auto relative flex h-20 w-20 cursor-pointer items-center justify-center rounded-full border border-dashed border-slate-400/50 bg-slate-200/40 shadow-inner transition hover:border-slate-400 dark:border-slate-600/50 dark:bg-slate-800/40 dark:hover:border-slate-500"
         animate={{ opacity: [0.6, 0.85, 0.6], scale: [0.98, 1.02, 0.98] }}
         transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-        aria-label="Дух откроется на 3 уровне"
+        aria-label={t.companionSettings.willUnlockAtLevel}
       >
         <motion.div
           className="absolute bottom-[-6px] h-6 w-12 rounded-full bg-slate-400/35 blur-lg dark:bg-slate-600/40"
@@ -223,7 +232,7 @@ function CompanionLockedPreview({
             className="pointer-events-none max-w-[220px] rounded-2xl bg-white/90 px-3 py-2 text-right shadow-lg backdrop-blur dark:bg-slate-900/90"
           >
             <p className="text-xs font-semibold text-slate-700 dark:text-slate-100">
-              Дух пробудится на 3 уровне
+              {t.companionSettings.willUnlockAtLevel}
             </p>
             <p className="text-[11px] text-slate-500 dark:text-slate-300">
               {remainingText}

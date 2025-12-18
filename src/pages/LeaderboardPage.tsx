@@ -14,6 +14,8 @@ import {
 } from '@/components/ui'
 import { FriendGardenView } from '@/components/garden/FriendGardenView'
 import { PageHeader } from '@/components/layout'
+import { useTranslation } from '@/hooks/useTranslation'
+import { useLocaleStore } from '@/stores/localeStore'
 import type {
   LeaderboardCategory,
   LeaderboardEntry,
@@ -31,51 +33,60 @@ interface CategoryConfig {
   readonly scoreAccessor: (entry: LeaderboardEntry) => number | undefined
 }
 
-const CATEGORY_CONFIGS: readonly CategoryConfig[] = [
+const getCategoryConfigs = (
+  t: ReturnType<typeof useTranslation>
+): readonly CategoryConfig[] => [
   {
     id: 'level',
-    label: 'Уровень',
-    description: 'Кто быстрее всех прокачивает своего садовника',
-    metricLabel: 'Уровень',
-    metricShortLabel: 'Ур.',
+    label: t.leaderboard.level,
+    description: t.leaderboard.levelDescription,
+    metricLabel: t.leaderboard.levelMetric,
+    metricShortLabel: t.leaderboard.levelShort,
     icon: <Crown className="h-4 w-4" />,
     scoreAccessor: entry => entry.stats?.level ?? entry.score,
   },
   {
     id: 'streak',
-    label: 'Стрик',
-    description: 'Самые дисциплинированные садовники',
-    metricLabel: 'Дней подряд',
-    metricShortLabel: 'Стрик',
+    label: t.leaderboard.streak,
+    description: t.leaderboard.streakDescription,
+    metricLabel: t.leaderboard.streakMetric,
+    metricShortLabel: t.leaderboard.streakShort,
     icon: <Flame className="h-4 w-4" />,
     scoreAccessor: entry => entry.stats?.current_streak ?? entry.score,
   },
   {
     id: 'elements',
-    label: 'Растений',
-    description: 'Чьи сады самые пышные и редкие',
-    metricLabel: 'Растений',
-    metricShortLabel: 'Раст.',
+    label: t.leaderboard.elements,
+    description: t.leaderboard.elementsDescription,
+    metricLabel: t.leaderboard.elementsMetric,
+    metricShortLabel: t.leaderboard.elementsShort,
     icon: <Leaf className="h-4 w-4" />,
     scoreAccessor: entry => entry.stats?.total_elements ?? entry.score,
   },
 ]
 
-const PERIOD_OPTIONS: readonly {
+const getPeriodOptions = (
+  t: ReturnType<typeof useTranslation>
+): readonly {
   readonly id: LeaderboardPeriod
   readonly label: string
-}[] = [
-  { id: 'all_time', label: 'За всё время' },
-  { id: 'monthly', label: 'За месяц' },
+}[] => [
+  { id: 'all_time', label: t.leaderboard.allTime },
+  { id: 'monthly', label: t.leaderboard.monthly },
 ]
 
 const TOP_LIMIT = 20
 
 export function LeaderboardPage() {
   const navigate = useNavigate()
+  const t = useTranslation()
+  const locale = useLocaleStore(state => state.locale)
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, telegramId != null)
   const currentUser: User | null = userData?.user ?? null
+
+  const categoryConfigs = useMemo(() => getCategoryConfigs(t), [t])
+  const periodOptions = useMemo(() => getPeriodOptions(t), [t])
 
   const [category, setCategory] = useState<LeaderboardCategory>('level')
   const [period, setPeriod] = useState<LeaderboardPeriod>('all_time')
@@ -113,19 +124,19 @@ export function LeaderboardPage() {
   }, [entries, viewerPosition])
 
   const categoryConfig = useMemo<CategoryConfig>(() => {
-    const foundConfig = CATEGORY_CONFIGS.find(config => config.id === category)
+    const foundConfig = categoryConfigs.find(config => config.id === category)
     if (foundConfig !== undefined) {
       return foundConfig
     }
-    if (CATEGORY_CONFIGS.length === 0) {
-      throw new Error('CATEGORY_CONFIGS must contain at least one entry')
+    if (categoryConfigs.length === 0) {
+      throw new Error('categoryConfigs must contain at least one entry')
     }
-    const fallbackConfig = CATEGORY_CONFIGS[0]
+    const fallbackConfig = categoryConfigs[0]
     if (fallbackConfig === undefined) {
-      throw new Error('CATEGORY_CONFIGS fallback is undefined')
+      throw new Error('categoryConfigs fallback is undefined')
     }
     return fallbackConfig
-  }, [category])
+  }, [category, categoryConfigs])
 
   const handleChangeCategory = useCallback(
     (newCategory: LeaderboardCategory) => {
@@ -187,7 +198,7 @@ export function LeaderboardPage() {
         ? firstNameRaw.trim()
         : hasUsername
           ? usernameRaw.trim()
-          : `Садовник ${entry.user.telegram_id}`
+          : `${t.profile.user} ${entry.user.telegram_id}`
       const usernameLabel =
         hasUsername && typeof usernameRaw === 'string'
           ? `@${usernameRaw.trim()}`
@@ -265,7 +276,7 @@ export function LeaderboardPage() {
               </div>
               {isProfileHidden ? (
                 <div className="mt-1 text-xs text-amber-500 dark:text-amber-300">
-                  Профиль скрыт
+                  {t.leaderboard.profileHidden}
                 </div>
               ) : null}
             </div>
@@ -281,11 +292,11 @@ export function LeaderboardPage() {
                   }}
                   disabled={!canViewGarden}
                 >
-                  Сад
+                  {t.leaderboard.garden}
                 </Button>
               ) : (
                 <span className="rounded-lg bg-neutral-100 px-2 py-1 text-xs text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
-                  Сад скрыт
+                  {t.leaderboard.gardenHidden}
                 </span>
               )}
             </div>
@@ -299,7 +310,7 @@ export function LeaderboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-kira-50 via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
       <PageHeader
-        title="Рейтинг"
+        title={t.leaderboard.title}
         icon={<Trophy className="h-5 w-5" />}
         actions={
           <Button
@@ -310,7 +321,7 @@ export function LeaderboardPage() {
             }}
             isLoading={isFetching && !isLoading}
             className="p-2"
-            aria-label="Обновить"
+            aria-label={t.leaderboard.refresh}
           >
             <RefreshCw className="h-4 w-4" />
           </Button>
@@ -326,106 +337,109 @@ export function LeaderboardPage() {
       >
         <div className="glass-card rounded-3xl border border-neutral-200/60 bg-white/80 p-4 shadow-xl dark:border-neutral-700/60 dark:bg-neutral-900/70">
           <div className="flex flex-wrap gap-2">
-          {CATEGORY_CONFIGS.map(config => (
-            <button
-              key={config.id}
-              onClick={() => handleChangeCategory(config.id)}
-              className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-medium transition-all ${
-                config.id === category
-                  ? 'bg-gradient-to-r from-kira-500 to-garden-500 text-white shadow-md'
-                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
-              }`}
-              type="button"
-            >
-              {config.icon}
-              <span className="max-w-[78px] truncate">{config.label}</span>
-            </button>
-          ))}
-        </div>
+            {categoryConfigs.map(config => (
+              <button
+                key={config.id}
+                onClick={() => handleChangeCategory(config.id)}
+                className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-medium transition-all ${
+                  config.id === category
+                    ? 'bg-gradient-to-r from-kira-500 to-garden-500 text-white shadow-md'
+                    : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
+                }`}
+                type="button"
+              >
+                {config.icon}
+                <span className="max-w-[78px] truncate">{config.label}</span>
+              </button>
+            ))}
+          </div>
 
-        <div className="mt-3 flex gap-1.5">
-          {PERIOD_OPTIONS.map(option => (
-            <button
-              key={option.id}
-              onClick={() => handleChangePeriod(option.id)}
-              className={`rounded-xl px-3 py-1 text-[11px] font-semibold transition ${
-                option.id === period
-                  ? 'bg-kira-500/90 text-white shadow'
-                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
-              }`}
-              type="button"
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+          <div className="mt-3 flex gap-1.5">
+            {periodOptions.map(option => (
+              <button
+                key={option.id}
+                onClick={() => handleChangePeriod(option.id)}
+                className={`rounded-xl px-3 py-1 text-[11px] font-semibold transition ${
+                  option.id === period
+                    ? 'bg-kira-500/90 text-white shadow'
+                    : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700'
+                }`}
+                type="button"
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-4">
-        {isLoading ? (
-          <div className="flex min-h-[240px] items-center justify-center rounded-3xl border border-neutral-200/60 bg-white/70 dark:border-neutral-700/60 dark:bg-neutral-900/60">
-            <LoadingSpinner size="lg" />
-          </div>
-        ) : error ? (
-          <div className="rounded-3xl border border-red-200/60 bg-red-50/80 p-6 text-center dark:border-red-700/60 dark:bg-red-900/30">
-            <div className="text-lg font-semibold text-red-700 dark:text-red-200">
-              Не удалось загрузить рейтинг
+          {isLoading ? (
+            <div className="flex min-h-[240px] items-center justify-center rounded-3xl border border-neutral-200/60 bg-white/70 dark:border-neutral-700/60 dark:bg-neutral-900/60">
+              <LoadingSpinner size="lg" />
             </div>
-            <div className="mt-2 text-sm text-red-600 dark:text-red-300">
-              {error.message}
+          ) : error ? (
+            <div className="rounded-3xl border border-red-200/60 bg-red-50/80 p-6 text-center dark:border-red-700/60 dark:bg-red-900/30">
+              <div className="text-lg font-semibold text-red-700 dark:text-red-200">
+                {t.leaderboard.failedToLoad}
+              </div>
+              <div className="mt-2 text-sm text-red-600 dark:text-red-300">
+                {error.message}
+              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="mt-4"
+                onClick={() => {
+                  void refetch()
+                }}
+              >
+                {t.leaderboard.tryAgain}
+              </Button>
             </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="mt-4"
-              onClick={() => {
-                void refetch()
-              }}
-            >
-              Попробовать снова
-            </Button>
-          </div>
-        ) : entries.length === 0 ? (
-          <div className="rounded-3xl border border-neutral-200/60 bg-white/70 p-6 text-center dark:border-neutral-700/60 dark:bg-neutral-900/60">
-            <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-100">
-              Пока никто не попал в этот рейтинг
+          ) : entries.length === 0 ? (
+            <div className="rounded-3xl border border-neutral-200/60 bg-white/70 p-6 text-center dark:border-neutral-700/60 dark:bg-neutral-900/60">
+              <div className="text-lg font-semibold text-neutral-800 dark:text-neutral-100">
+                {t.leaderboard.noOneYet}
+              </div>
+              <div className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+                {t.leaderboard.beFirst}
+              </div>
             </div>
-            <div className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-              Будь первым садовником, который сюда попадёт!
+          ) : (
+            <div className="space-y-3">
+              {entries.map(entry => renderEntry(entry, entry.rank <= 3))}
             </div>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {entries.map(entry => renderEntry(entry, entry.rank <= 3))}
-          </div>
-        )}
+          )}
 
-        {!isViewerInList && viewerPosition != null && (
-          <div className="mt-6 space-y-2">
-            <div className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-              Твоя позиция
+          {!isViewerInList && viewerPosition != null && (
+            <div className="mt-6 space-y-2">
+              <div className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                {t.leaderboard.yourPosition}
+              </div>
+              {renderEntry(
+                {
+                  ...viewerPosition,
+                  category,
+                  period,
+                },
+                false
+              )}
             </div>
-            {renderEntry(
-              {
-                ...viewerPosition,
-                category,
-                period,
-              },
-              false
-            )}
-          </div>
-        )}
+          )}
         </div>
 
         {leaderboardData?.timestamp != null ? (
           <div className="text-center text-xs text-neutral-500 dark:text-neutral-400">
-            Обновлено:{' '}
-            {new Date(leaderboardData.timestamp).toLocaleString('ru-RU', {
-              day: 'numeric',
-              month: 'long',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
+            {t.leaderboard.updated}:{' '}
+            {new Date(leaderboardData.timestamp).toLocaleString(
+              locale === 'en' ? 'en-US' : 'ru-RU',
+              {
+                day: 'numeric',
+                month: 'long',
+                hour: '2-digit',
+                minute: '2-digit',
+              }
+            )}
           </div>
         ) : null}
 
@@ -433,7 +447,7 @@ export function LeaderboardPage() {
           isOpen={isGardenModalOpen}
           onClose={closeGardenModal}
           size="xl"
-          title="Сад садовника"
+          title={t.leaderboard.gardenerGarden}
         >
           <ModalBody className="bg-gradient-to-br from-kira-50 to-garden-50 dark:from-neutral-900 dark:to-neutral-800">
             {gardenFriendId != null && currentUser != null ? (
@@ -444,7 +458,7 @@ export function LeaderboardPage() {
               />
             ) : (
               <div className="p-6 text-center text-sm text-neutral-600 dark:text-neutral-300">
-                Чтобы посмотреть чужой сад, авторизуйся в системе.
+                {t.leaderboard.toViewGarden}
               </div>
             )}
           </ModalBody>
