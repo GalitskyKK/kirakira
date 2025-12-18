@@ -1,19 +1,21 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { Toast } from './Toast'
 
 export function UpdatePrompt() {
   const [showToast, setShowToast] = useState(false)
+  const intervalRef = useRef<number | undefined>(undefined)
+  const focusHandlerRef = useRef<(() => void) | undefined>(undefined)
 
   const {
-    offlineReady: [offlineReady, setOfflineReady],
-    needRefresh: [needRefresh, setNeedRefresh],
+    offlineReady: [offlineReady],
+    needRefresh: [needRefresh],
     updateServiceWorker,
   } = useRegisterSW({
     onRegisteredSW(_swUrl, registration) {
       // Проверяем обновления каждые 30 минут
       if (registration) {
-        setInterval(
+        intervalRef.current = window.setInterval(
           () => {
             void registration.update()
           },
@@ -21,15 +23,20 @@ export function UpdatePrompt() {
         ) // 30 минут
 
         // Также проверяем при фокусе окна
-        const handleFocus = () => {
+        focusHandlerRef.current = () => {
           void registration.update()
         }
 
-        window.addEventListener('focus', handleFocus)
+        window.addEventListener('focus', focusHandlerRef.current)
 
-        // Очистка слушателя при размонтировании
+        // Очистка слушателя и интервала при размонтировании
         return () => {
-          window.removeEventListener('focus', handleFocus)
+          if (intervalRef.current !== undefined) {
+            clearInterval(intervalRef.current)
+          }
+          if (focusHandlerRef.current) {
+            window.removeEventListener('focus', focusHandlerRef.current)
+          }
         }
       }
 
@@ -40,22 +47,14 @@ export function UpdatePrompt() {
     },
   })
 
+  // Показываем тост сразу при появлении needRefresh
   useEffect(() => {
     if (needRefresh) {
       setShowToast(true)
-
-      // Автоматически показываем уведомление через 2 секунды
-      const timer = setTimeout(() => {
-        if (!showToast) {
-          setShowToast(true)
-        }
-      }, 2000)
-
-      return () => clearTimeout(timer)
+    } else {
+      setShowToast(false)
     }
-
-    return undefined
-  }, [needRefresh, showToast])
+  }, [needRefresh])
 
   useEffect(() => {
     if (offlineReady) {
@@ -91,8 +90,8 @@ export function UpdatePrompt() {
 
   const handleClose = () => {
     setShowToast(false)
-    setNeedRefresh(false)
-    setOfflineReady(false)
+    // Не сбрасываем needRefresh через сеттер, чтобы не конфликтовать с useRegisterSW
+    // Пользователь может закрыть тост, но обновление все равно будет доступно
   }
 
   // Toast для обновления
