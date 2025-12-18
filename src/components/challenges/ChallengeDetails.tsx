@@ -25,6 +25,7 @@ import {
   useClaimChallengeReward,
 } from '@/hooks/queries/useChallengeQueries'
 import { useChallengeRewardStore } from '@/stores/challengeRewardStore'
+import { useTranslation } from '@/hooks/useTranslation'
 import { ChallengeLeaderboard } from './ChallengeLeaderboard'
 import { ChallengeRewardModal } from './ChallengeRewardModal'
 
@@ -37,6 +38,7 @@ export function ChallengeDetails({
   challengeId,
   onBack,
 }: ChallengeDetailsProps) {
+  const t = useTranslation()
   const { hapticFeedback, showAlert } = useTelegram()
 
   // Получаем данные пользователя через React Query
@@ -485,12 +487,12 @@ export function ChallengeDetails({
                 {claimRewardMutation.isPending ? (
                   <>
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
-                    Получение...
+                    {t.challenges.claiming}
                   </>
                 ) : (
                   <>
                     <Gift className="mr-2 h-4 w-4" />
-                    Получить награду
+                    {t.challenges.claimReward}
                   </>
                 )}
               </Button>

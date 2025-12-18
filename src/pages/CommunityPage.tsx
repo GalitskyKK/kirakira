@@ -2,9 +2,11 @@ import { TelegramCommunity } from '@/components/telegram'
 import { useGardenState, useMoodTracking } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { Card } from '@/components/ui'
+import { useTranslation } from '@/hooks/useTranslation'
 import { motion } from 'framer-motion'
 
 export function CommunityPage() {
+  const t = useTranslation()
   const { garden } = useGardenState()
   const { moodHistory } = useMoodTracking()
   const telegramId = useTelegramId()
@@ -21,17 +23,17 @@ export function CommunityPage() {
           >
             <div className="text-5xl">🔒</div>
             <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-              Требуется авторизация
+              {t.pages.community.authRequired}
             </h2>
             <p className="text-neutral-600 dark:text-neutral-400">
-              Войдите, чтобы увидеть друзей и сообщество
+              {t.pages.community.loginToView}
             </p>
             <button
               type="button"
               onClick={() => (window.location.href = '/auth')}
               className="mt-2 inline-flex items-center justify-center rounded-2xl bg-kira-500 px-4 py-2 text-white transition-colors hover:bg-kira-600"
             >
-              Войти
+              {t.pages.community.login}
             </button>
           </motion.div>
         </Card>

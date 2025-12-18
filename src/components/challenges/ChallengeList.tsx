@@ -331,7 +331,7 @@ export function ChallengeList({ garden: _garden }: ChallengeListProps) {
                       <Gift className="mr-1 h-3 w-3" />
                       <span className="text-xs">
                         {claimRewardMutation.isPending
-                          ? 'Получение...'
+                          ? t.challenges.claiming
                           : t.challenges.claimReward}
                       </span>
                     </Button>

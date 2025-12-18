@@ -11,6 +11,7 @@ import { useTelegram } from '@/hooks'
 import { useQuestIntegration } from '@/hooks/useQuestIntegration'
 import { useDailyQuests } from '@/hooks/queries/useDailyQuestQueries'
 import { useFriendGardenTheme } from '@/hooks/useFriendGardenTheme'
+import { useTranslation } from '@/hooks/useTranslation'
 import type {
   User,
   GardenElement,
@@ -92,6 +93,7 @@ export function FriendGardenView({
   currentUser,
   onBack,
 }: FriendGardenViewProps) {
+  const t = useTranslation()
   const { hapticFeedback, showAlert } = useTelegram()
   const { updateQuestsWithValidation } = useQuestIntegration({
     onQuestUpdated: () => undefined,
@@ -143,7 +145,8 @@ export function FriendGardenView({
         `/api/garden?action=view-friend-garden&viewerTelegramId=${currentUser.telegramId}&friendTelegramId=${friendTelegramId}`
       )
 
-      const result = (await response.json()) as StandardApiResponse<FriendGardenData>
+      const result =
+        (await response.json()) as StandardApiResponse<FriendGardenData>
 
       if (!response.ok || !result.success || !result.data) {
         // Преобразуем английские ошибки в русские user-friendly сообщения
@@ -372,14 +375,14 @@ export function FriendGardenView({
       <div className="flex items-center justify-between">
         <Button onClick={onBack} variant="outline" size="sm">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Назад
+          {t.pages.community.friendGarden.back}
         </Button>
         <div className="text-center">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Сад пользователя
+            {t.pages.community.friendGarden.title}
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Только для просмотра
+            {t.pages.community.friendGarden.viewOnly}
           </p>
         </div>
         <div className="w-20"></div> {/* Spacer для центровки заголовка */}

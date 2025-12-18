@@ -406,6 +406,19 @@ export interface Translations {
       grown: string
       days: string
     }
+    community: {
+      title: string
+      friends: string
+      telegramOnly: string
+      authRequired: string
+      loginToView: string
+      login: string
+      friendGarden: {
+        back: string
+        title: string
+        viewOnly: string
+      }
+    }
   }
 
   // Квесты
@@ -450,6 +463,7 @@ export interface Translations {
     experience: string
     reward: string
     claimReward: string
+    claiming: string
     error: string
     daysLeft: string
     hoursLeft: string
@@ -461,6 +475,55 @@ export interface Translations {
     currentState: string
     moodOfDay: string
     futureUpdate: string
+    name: string
+    description: string
+    ariaLabel: string
+    thankYou: string
+    rewardEarned: string
+    questProgress: string
+    rareDiscovery: string
+    emotions: {
+      neutral: {
+        label: string
+        description: string
+      }
+      joy: {
+        label: string
+        description: string
+      }
+      calm: {
+        label: string
+        description: string
+      }
+      sadness: {
+        label: string
+        description: string
+      }
+      anger: {
+        label: string
+        description: string
+      }
+      stress: {
+        label: string
+        description: string
+      }
+      anxiety: {
+        label: string
+        description: string
+      }
+      celebration: {
+        label: string
+        description: string
+      }
+    }
+    moodMessages: {
+      joy: readonly string[]
+      calm: readonly string[]
+      sadness: readonly string[]
+      stress: readonly string[]
+      anger: readonly string[]
+      anxiety: readonly string[]
+    }
   }
 
   // Профиль

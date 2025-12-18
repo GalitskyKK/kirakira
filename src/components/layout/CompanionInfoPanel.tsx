@@ -1,5 +1,4 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { getCompanionDefinition } from '@/data/companions'
 import {
   useCompanionStore,
   useCompanionInfoPanel,
@@ -7,6 +6,11 @@ import {
 import { MOOD_CONFIG } from '@/types'
 import { useTranslation } from '@/hooks/useTranslation'
 import { getLocalizedMoodConfig } from '@/utils/moodLocalization'
+import {
+  getLocalizedCompanionName,
+  getLocalizedCompanionDescription,
+  getLocalizedCompanionEmotion,
+} from '@/utils/companionLocalization'
 
 export function CompanionInfoPanel() {
   const { isInfoOpen, setInfoOpen } = useCompanionInfoPanel()
@@ -15,8 +19,7 @@ export function CompanionInfoPanel() {
   const lastMood = useCompanionStore(state => state.lastMood)
   const t = useTranslation()
 
-  const definition = getCompanionDefinition(activeCompanionId)
-  const emotionVisual = definition.emotions[currentEmotion]
+  const localizedEmotion = getLocalizedCompanionEmotion(currentEmotion, t)
 
   return (
     <AnimatePresence>
@@ -48,7 +51,7 @@ export function CompanionInfoPanel() {
                     {t.companion.spirit}
                   </p>
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                    {definition.name}
+                    {getLocalizedCompanionName(activeCompanionId, t)}
                   </h3>
                 </div>
                 <button
@@ -61,7 +64,7 @@ export function CompanionInfoPanel() {
               </div>
 
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                {definition.description}
+                {getLocalizedCompanionDescription(activeCompanionId, t)}
               </p>
 
               <div className="mt-3 rounded-xl bg-gradient-to-r from-indigo-100/70 via-white/40 to-indigo-50/60 p-3 shadow-inner dark:from-indigo-500/15 dark:via-slate-900/60 dark:to-indigo-400/10">
@@ -69,10 +72,10 @@ export function CompanionInfoPanel() {
                   {t.companion.currentState}
                 </p>
                 <p className="text-sm font-medium text-slate-800 dark:text-slate-100">
-                  {emotionVisual.label}
+                  {localizedEmotion.label}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-300">
-                  {emotionVisual.description}
+                  {localizedEmotion.description}
                 </p>
                 {lastMood && (
                   <p className="mt-2 text-xs text-slate-500 dark:text-slate-300">

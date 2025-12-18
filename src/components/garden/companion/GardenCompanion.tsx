@@ -7,11 +7,9 @@ import {
 } from 'framer-motion'
 import { clsx } from 'clsx'
 import { useCompanionStore } from '@/stores/companionStore'
-import {
-  getCompanionDefinition,
-  COMPANION_MOOD_MESSAGES,
-} from '@/data/companions'
+import { getCompanionDefinition } from '@/data/companions'
 import { useCompanionController } from '@/hooks/useCompanionController'
+import { useTranslation } from '@/hooks/useTranslation'
 import type {
   CompanionAmbientAnimation,
   CompanionEmotionVisual,
@@ -228,6 +226,7 @@ function useCompanionVisual(): CompanionEmotionVisual | null {
 }
 
 export function GardenCompanion({ className }: GardenCompanionProps) {
+  const t = useTranslation()
   useCompanionController()
 
   const isVisible = useCompanionStore(state => state.isVisible)
@@ -294,11 +293,11 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
 
     const moodMessage = (() => {
       if (!lastMood) {
-        return 'Спасибо, что поделился!'
+        return t.companion.thankYou
       }
-      const options = COMPANION_MOOD_MESSAGES[lastMood] ?? []
+      const options = t.companion.moodMessages[lastMood] ?? []
       if (options.length === 0) {
-        return 'Спасибо, что поделился!'
+        return t.companion.thankYou
       }
       const randomIndex = Math.floor(Math.random() * options.length)
       return options[randomIndex] ?? options[0]
@@ -400,7 +399,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.25, ease: 'easeOut', delay: 0.1 }}
             >
-              Награда получена!
+              {t.companion.rewardEarned}
             </motion.div>
           </motion.div>
         )
@@ -445,7 +444,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
               exit={{ opacity: 0, y: 8 }}
               transition={{ duration: 0.25, ease: 'easeOut', delay: 0.1 }}
             >
-              Прогресс по заданиям!
+              {t.companion.questProgress}
             </motion.div>
           </motion.div>
         )
@@ -470,7 +469,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
               exit={{ opacity: 0, scale: 0.8 }}
               transition={{ duration: 0.3, ease: 'easeOut', delay: 0.1 }}
             >
-              Магия редкого открытия!
+              {t.companion.rareDiscovery}
             </motion.div>
           </motion.div>
         )
@@ -483,6 +482,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
     visual?.accentColor,
     lastMood,
     position,
+    t,
   ])
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -617,7 +617,7 @@ export function GardenCompanion({ className }: GardenCompanionProps) {
           )}
           role="button"
           tabIndex={0}
-          aria-label="Лумина, дух сада"
+          aria-label={t.companion.ariaLabel}
           aria-expanded={isInfoOpen}
           drag
           dragMomentum={false}

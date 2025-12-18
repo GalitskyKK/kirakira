@@ -387,6 +387,19 @@ export const en: Translations = {
       grown: '✅ Grown',
       days: 'days',
     },
+    community: {
+      title: 'Community',
+      friends: 'Friends',
+      telegramOnly: 'Social features are only available in Telegram Mini App',
+      authRequired: 'Authorization Required',
+      loginToView: 'Log in to see friends and community',
+      login: 'Log In',
+      friendGarden: {
+        back: 'Back',
+        title: "User's Garden",
+        viewOnly: 'View Only',
+      },
+    },
   },
 
   quests: {
@@ -429,6 +442,7 @@ export const en: Translations = {
     experience: 'experience',
     reward: 'Reward',
     claimReward: 'Claim Reward',
+    claiming: 'Claiming...',
     error: 'An error occurred',
     daysLeft: 'days',
     hoursLeft: 'hrs',
@@ -440,6 +454,87 @@ export const en: Translations = {
     moodOfDay: 'Mood of Day:',
     futureUpdate:
       "✨ In future updates, you will be able to change Lumina's appearance and unlock a pet collection.",
+    name: 'Lumina',
+    description:
+      'A little spirit of light that reflects the mood of the garden and gently guides the gardener.',
+    ariaLabel: 'Lumina, garden spirit',
+    thankYou: 'Thanks for sharing!',
+    rewardEarned: 'Reward Earned!',
+    questProgress: 'Quest Progress!',
+    rareDiscovery: 'Rare Discovery Magic!',
+    emotions: {
+      neutral: {
+        label: 'Calm Glow',
+        description: 'Lumina floats calmly, flickering with soft light.',
+      },
+      joy: {
+        label: 'Radiant Joy',
+        description:
+          'Lumina shines with warm light and leaves a starry trail behind.',
+      },
+      calm: {
+        label: 'Soft Harmony',
+        description:
+          'The glow becomes cool, and movements become slow and even.',
+      },
+      sadness: {
+        label: 'Quiet Sadness',
+        description:
+          'The form stretches downward, and colors become cooler and softer.',
+      },
+      anger: {
+        label: 'Flash of Anger',
+        description:
+          'The contours become sharper, and the light shimmers with ruby flashes.',
+      },
+      stress: {
+        label: 'Wave of Tension',
+        description:
+          'Lumina flickers unsteadily, as if gathering itself from fragments of light.',
+      },
+      anxiety: {
+        label: 'Anxious Waiting',
+        description:
+          'The light becomes dimmer, and the tail leaves a trembling trail behind.',
+      },
+      celebration: {
+        label: 'Constellation of Wonders',
+        description:
+          'Lumina flashes like a constellation, spiraling into joy and illuminating the garden.',
+      },
+    },
+    moodMessages: {
+      joy: [
+        'I feel the garden sparkling with you! ✨',
+        'So much light today — keep sharing joy!',
+        'Your smile makes the petals brighter, thank you!',
+      ],
+      calm: [
+        'What peace, I could listen to your garden forever.',
+        'Let us just float together and maintain this balance.',
+        'Your calm is like a gentle breeze, stay in it.',
+      ],
+      sadness: [
+        'I am here, we can sit quietly and wait for dawn.',
+        'Let me cover you with soft light, you are not alone.',
+        'Sadness is rain before flowering, I will keep the warmth.',
+      ],
+      stress: [
+        'Let us take a deep breath together, the garden whispers "take your time".',
+        'I remind the wind to be kinder to you, rest a little.',
+        'Everything will work out — step by step, I shine nearby.',
+      ],
+      anger: [
+        'I will direct the fire into strength, and you breathe deeper.',
+        'Let the sparks of anger turn into flowers of courage.',
+        'I am here to soften the flashes and support you.',
+      ],
+      anxiety: [
+        'Let us take a pause and look at the stars together.',
+        'I breathe nearby, we can go slowly-slowly.',
+        'Let us find a quiet corner of the garden and just listen to it.',
+      ],
+    },
   },
 
   profile: {
