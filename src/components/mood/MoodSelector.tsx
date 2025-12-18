@@ -6,6 +6,8 @@ import { Button, Card } from '@/components/ui'
 import { MOOD_CONFIG } from '@/types/mood'
 import { MoodImage } from './MoodImage'
 import { useAnimationConfig } from '@/hooks'
+import { useTranslation } from '@/hooks/useTranslation'
+import { getLocalizedMoodConfig } from '@/utils/moodLocalization'
 import type { MoodType, MoodIntensity } from '@/types'
 
 interface MoodSelectorProps {
@@ -28,7 +30,8 @@ export const MoodSelector = memo(function MoodSelector({
 }: MoodSelectorProps) {
   const { canCheckinToday, todaysMood } = useMoodTracking()
   const { transition } = useAnimationConfig()
-  
+  const t = useTranslation()
+
   const [selectedMood, setSelectedMood] = useState<MoodType | null>(
     initialMood ?? todaysMood?.mood ?? null
   )
@@ -59,7 +62,10 @@ export const MoodSelector = memo(function MoodSelector({
     else if (step === 'intensity') setStep('mood')
   }, [step])
 
-  const isAlreadyCheckedIn = useMemo(() => !canCheckinToday(), [canCheckinToday])
+  const isAlreadyCheckedIn = useMemo(
+    () => !canCheckinToday(),
+    [canCheckinToday]
+  )
 
   // Если уже отметили настроение, показываем информацию о нём
   if (
@@ -67,8 +73,12 @@ export const MoodSelector = memo(function MoodSelector({
     todaysMood?.mood &&
     todaysMood.mood in MOOD_CONFIG
   ) {
-    const moodConfig = MOOD_CONFIG[todaysMood.mood]
-    const intensityLabels = ['Слабо', 'Умеренно', 'Сильно']
+    const moodConfig = getLocalizedMoodConfig(todaysMood.mood, t)
+    const intensityLabels = [
+      t.mood.intensity.low,
+      t.mood.intensity.medium,
+      t.mood.intensity.high,
+    ]
 
     return (
       <Card className={className} padding="lg">
@@ -76,10 +86,10 @@ export const MoodSelector = memo(function MoodSelector({
           <div className="mb-4">
             <MoodImage mood={todaysMood.mood} size={96} className="mb-3" />
             <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
-              Настроение отмечено
+              {t.mood.alreadyCheckedIn}
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
-              Сегодня вы уже отметили своё настроение
+              {t.mood.alreadyCheckedIn}
             </p>
           </div>
 
@@ -106,7 +116,7 @@ export const MoodSelector = memo(function MoodSelector({
           </div>
 
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Возвращайтесь завтра и вырасти новое растение !
+            {t.mood.returnTomorrowToGrow}
           </p>
         </div>
       </Card>
@@ -149,15 +159,15 @@ export const MoodSelector = memo(function MoodSelector({
             transition={transition}
           >
             <h3 className="mb-4 text-center text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Как дела?
+              {t.mood.howAreYouToday}
             </h3>
             <p className="mb-4 text-center text-sm text-gray-600 dark:text-gray-400">
-              Выберите, что лучше всего описывает ваше настроение
+              {t.commonPhrases.selectMoodDescription}
             </p>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {(Object.keys(MOOD_CONFIG) as MoodType[]).map(mood => {
                 if (!(mood in MOOD_CONFIG)) return null
-                const config = MOOD_CONFIG[mood]
+                const config = getLocalizedMoodConfig(mood, t)
 
                 return (
                   <motion.button
@@ -222,11 +232,15 @@ export const MoodSelector = memo(function MoodSelector({
             transition={transition}
           >
             <h3 className="mb-4 text-center text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Насколько сильно?
+              {t.mood.howStrong}
             </h3>
             <div className="space-y-3">
               {([1, 2, 3] as MoodIntensity[]).map(intensity => {
-                const labels = ['Слабо', 'Умеренно', 'Сильно']
+                const labels = [
+                  t.mood.intensity.low,
+                  t.mood.intensity.medium,
+                  t.mood.intensity.high,
+                ]
                 return (
                   <motion.button
                     key={intensity}

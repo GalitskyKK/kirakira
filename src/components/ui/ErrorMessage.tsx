@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { AlertCircle, RefreshCw } from 'lucide-react'
 import { Button } from './Button'
 import { clsx } from 'clsx'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ErrorMessageProps {
   readonly message: string
@@ -20,13 +21,15 @@ interface ErrorMessageProps {
 
 export function ErrorMessage({
   message,
-  title = 'Ошибка',
+  title,
   onRetry,
   showRetry = true,
   className = '',
   variant = 'error',
   size = 'md',
 }: ErrorMessageProps) {
+  const t = useTranslation()
+  const defaultTitle = title ?? t.errors.generic
   const variantClasses = {
     error:
       'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-200',
@@ -63,7 +66,7 @@ export function ErrorMessage({
         <AlertCircle className={clsx('mt-0.5 flex-shrink-0', iconSize[size])} />
 
         <div className="min-w-0 flex-1">
-          <h3 className="mb-1 font-semibold">{title}</h3>
+          <h3 className="mb-1 font-semibold">{defaultTitle}</h3>
           <p className="text-sm opacity-90">{message}</p>
 
           {showRetry && onRetry && (
@@ -75,7 +78,7 @@ export function ErrorMessage({
                 className="text-xs"
               >
                 <RefreshCw className="mr-1 h-3 w-3" />
-                Попробовать снова
+                {t.common.confirm}
               </Button>
             </div>
           )}

@@ -12,12 +12,16 @@ import {
 } from '@/hooks'
 import { formatDate } from '@/utils/dateHelpers'
 import { Navigate } from 'react-router-dom'
+import { useTranslation } from '@/hooks/useTranslation'
+import { useLocaleStore } from '@/stores/localeStore'
 
 export function HomePage() {
   const { garden: _garden, gardenStats } = useGardenState()
   const { todaysMood, streakCount } = useMoodTracking()
   const { canUnlock, getMilestoneInfo } = useElementGeneration()
   const { transition } = useAnimationConfig()
+  const t = useTranslation()
+  const locale = useLocaleStore(state => state.locale)
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== 'undefined'
       ? window.matchMedia('(max-width: 767px)').matches
@@ -62,10 +66,10 @@ export function HomePage() {
             <TextTyping className="" />
           </motion.div>
           <p className="text-lg text-neutral-600 dark:text-neutral-400">
-            Ваш цифровой сад эмоций
+            {t.garden.yourDigitalGarden}
           </p>
           <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-500">
-            {formatDate(new Date(), 'EEEE, dd MMMM yyyy', 'ru')}
+            {formatDate(new Date(), 'EEEE, dd MMMM yyyy', locale)}
           </p>
         </motion.div>
 
@@ -87,7 +91,7 @@ export function HomePage() {
                   {gardenStats.totalElements}
                 </div>
                 <div className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
-                  Растений
+                  {t.garden.plants}
                 </div>
               </Card>
 
@@ -96,7 +100,7 @@ export function HomePage() {
                   {streakCount}
                 </div>
                 <div className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
-                  Дней подряд
+                  {t.garden.daysInRow}
                 </div>
               </Card>
             </div>

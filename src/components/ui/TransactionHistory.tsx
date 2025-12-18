@@ -11,7 +11,9 @@ import type { CurrencyTransaction } from '@/types/currency'
 import { SingleCurrencyDisplay } from './CurrencyDisplay'
 import { ArrowUp, ArrowDown, Clock, Filter } from 'lucide-react'
 import { format } from 'date-fns'
-import { ru } from 'date-fns/locale'
+import { ru, enUS } from 'date-fns/locale'
+import { useTranslation } from '@/hooks/useTranslation'
+import { useLocaleStore } from '@/stores/localeStore'
 
 interface TransactionHistoryProps {
   readonly telegramId: number
@@ -27,6 +29,10 @@ export function TransactionHistory({
   limit = 50,
   showFilters = true,
 }: TransactionHistoryProps): JSX.Element {
+  const t = useTranslation()
+  const locale = useLocaleStore(state => state.locale)
+  const dateLocale = locale === 'en' ? enUS : ru
+
   // Используем React Query для получения данных
   const { data: transactionsData, isLoading } = useCurrencyTransactions(
     telegramId,
@@ -69,10 +75,10 @@ export function TransactionHistory({
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <Clock size={48} className="mb-4 text-gray-300 dark:text-gray-600" />
         <p className="text-gray-500 dark:text-gray-400">
-          История транзакций пока пуста
+          {t.transactionHistory.empty}
         </p>
         <p className="text-sm text-gray-400 dark:text-gray-500">
-          Начните зарабатывать валюту!
+          {t.transactionHistory.emptyDescription}
         </p>
       </div>
     )
@@ -91,19 +97,19 @@ export function TransactionHistory({
               active={filter === 'all'}
               onClick={() => setFilter('all')}
             >
-              Все
+              {t.transactionHistory.all}
             </FilterButton>
             <FilterButton
               active={filter === 'earn'}
               onClick={() => setFilter('earn')}
             >
-              Заработано
+              {t.transactionHistory.earned}
             </FilterButton>
             <FilterButton
               active={filter === 'spend'}
               onClick={() => setFilter('spend')}
             >
-              Потрачено
+              {t.transactionHistory.spent}
             </FilterButton>
           </div>
 
@@ -113,13 +119,13 @@ export function TransactionHistory({
               active={currencyFilter === 'all'}
               onClick={() => setCurrencyFilter('all')}
             >
-              Все
+              {t.transactionHistory.all}
             </FilterButton>
             <FilterButton
               active={currencyFilter === 'sprouts'}
               onClick={() => setCurrencyFilter('sprouts')}
             >
-              Ростки
+              {t.transactionHistory.all}
             </FilterButton>
             <FilterButton
               active={currencyFilter === 'gems'}
@@ -139,7 +145,13 @@ export function TransactionHistory({
           </p>
         ) : (
           filteredTransactions.map((tx, index) => (
-            <TransactionItem key={tx.id} transaction={tx} index={index} />
+            <TransactionItem
+              key={tx.id}
+              transaction={tx}
+              index={index}
+              t={t}
+              dateLocale={dateLocale}
+            />
           ))
         )}
       </div>
@@ -153,11 +165,15 @@ export function TransactionHistory({
 interface TransactionItemProps {
   readonly transaction: CurrencyTransaction
   readonly index: number
+  readonly t: ReturnType<typeof useTranslation>
+  readonly dateLocale: typeof ru | typeof enUS
 }
 
 function TransactionItem({
   transaction,
   index,
+  t,
+  dateLocale,
 }: TransactionItemProps): JSX.Element {
   const isEarn = transaction.transactionType === 'earn'
   const Icon = isEarn ? ArrowUp : ArrowDown
@@ -181,11 +197,11 @@ function TransactionItem({
         <div className="flex flex-col">
           <span className="text-sm font-medium text-gray-800 dark:text-gray-100">
             {transaction.description ||
-              formatReason(transaction.reason as string)}
+              formatReason(transaction.reason as string, t)}
           </span>
           <span className="text-xs text-gray-500 dark:text-gray-400">
             {format(new Date(transaction.createdAt), 'dd MMM yyyy, HH:mm', {
-              locale: ru,
+              locale: dateLocale,
             })}
           </span>
         </div>
@@ -214,7 +230,8 @@ function TransactionItem({
 
         {/* Баланс после транзакции */}
         <span className="text-xs text-gray-400 dark:text-gray-500">
-          Баланс: {(transaction.balanceAfter ?? 0).toLocaleString()}
+          {t.transactionHistory.balance}{' '}
+          {(transaction.balanceAfter ?? 0).toLocaleString()}
         </span>
       </div>
     </motion.div>
@@ -252,50 +269,53 @@ function FilterButton({
 /**
  * Форматирование причины транзакции для отображения
  */
-function formatReason(reason: string): string {
+function formatReason(
+  reason: string,
+  t: ReturnType<typeof useTranslation>
+): string {
   const reasonMap: Record<string, string> = {
     // Ежедневные действия
-    daily_mood: 'Запись настроения',
-    daily_login: 'Ежедневный вход',
-    first_mood_of_day: 'Первая запись за день',
+    daily_mood: t.transactions.dailyMood,
+    daily_login: t.transactions.dailyLogin,
+    first_mood_of_day: t.transactions.firstMoodOfDay,
 
     // Стрики
-    streak_3_days: 'Стрик 3 дня',
-    streak_7_days: 'Стрик 7 дней',
-    streak_14_days: 'Стрик 14 дней',
-    streak_30_days: 'Стрик 30 дней',
-    streak_100_days: 'Стрик 100 дней',
-    streak_365_days: 'Стрик год!',
+    streak_3_days: t.transactions.streak3Days,
+    streak_7_days: t.transactions.streak7Days,
+    streak_14_days: t.transactions.streak14Days,
+    streak_30_days: t.transactions.streak30Days,
+    streak_100_days: t.transactions.streak100Days,
+    streak_365_days: t.transactions.streak365Days,
 
     // Прогрессия
-    level_up: 'Повышение уровня',
-    achievement_unlock: 'Достижение',
-    rare_achievement: 'Редкое достижение',
+    level_up: t.transactions.levelUp,
+    achievement_unlock: t.transactions.achievementUnlock,
+    rare_achievement: t.transactions.rareAchievement,
 
     // Элементы
-    element_common: 'Обычный элемент',
-    element_uncommon: 'Необычный элемент',
-    element_rare: 'Редкий элемент',
-    element_epic: 'Эпический элемент',
-    element_legendary: 'Легендарный элемент',
+    element_common: t.transactions.elementCommon,
+    element_uncommon: t.transactions.elementUncommon,
+    element_rare: t.transactions.elementRare,
+    element_epic: t.transactions.elementEpic,
+    element_legendary: t.transactions.elementLegendary,
 
     // Социальное
-    friend_visit_garden: 'Посещение сада',
-    visit_friend_garden: 'Посетил друга', // Removed complex quest
-    like_friend_garden: 'Лайк саду', // Removed complex quest
-    receive_like: 'Получен лайк', // Removed complex quest
-    share_garden: 'Поделился садом', // Removed complex quest
+    friend_visit_garden: t.transactions.friendVisitGarden,
+    visit_friend_garden: t.transactions.visitFriendGarden,
+    like_friend_garden: t.transactions.likeFriendGarden,
+    receive_like: t.transactions.receiveLike,
+    share_garden: t.transactions.shareGarden,
 
     // Челленджи
-    complete_daily_quest: 'Дневное задание',
-    complete_weekly_challenge: 'Недельный челлендж',
-    complete_monthly_challenge: 'Месячный челлендж',
+    complete_daily_quest: t.transactions.completeDailyQuest,
+    complete_weekly_challenge: t.transactions.completeWeeklyChallenge,
+    complete_monthly_challenge: t.transactions.completeMonthlyChallenge,
 
     // Покупки
-    extra_room: 'Покупка комнаты',
-    upgrade_to_rare: 'Улучшение до Rare',
-    upgrade_to_epic: 'Улучшение до Epic',
-    upgrade_to_legendary: 'Улучшение до Legendary',
+    extra_room: t.transactions.extraRoom,
+    upgrade_to_rare: t.transactions.upgradeToRare,
+    upgrade_to_epic: t.transactions.upgradeToEpic,
+    upgrade_to_legendary: t.transactions.upgradeToLegendary,
   }
 
   return reasonMap[reason] || reason
@@ -313,6 +333,10 @@ export function CompactTransactionHistory({
   telegramId,
   onSeeAll,
 }: CompactTransactionHistoryProps): JSX.Element {
+  const t = useTranslation()
+  const locale = useLocaleStore(state => state.locale)
+  const dateLocale = locale === 'en' ? enUS : ru
+
   // Используем React Query для получения данных
   const { data: transactionsData, isLoading } = useCurrencyTransactions(
     telegramId,
@@ -340,7 +364,13 @@ export function CompactTransactionHistory({
   return (
     <div className="space-y-2">
       {transactions.slice(0, 5).map((tx, index) => (
-        <TransactionItem key={tx.id} transaction={tx} index={index} />
+        <TransactionItem
+          key={tx.id}
+          transaction={tx}
+          index={index}
+          t={t}
+          dateLocale={dateLocale}
+        />
       ))}
 
       {transactions.length > 5 && onSeeAll && (

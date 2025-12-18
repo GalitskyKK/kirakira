@@ -11,6 +11,7 @@ import { useDailyQuests } from '@/hooks/queries/useDailyQuestQueries'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useGardenClientStore } from '@/stores/gardenStore'
 import { useAnimationConfig } from '@/hooks'
+import { useTranslation } from '@/hooks/useTranslation'
 import { GardenDisplayMode } from '@/types'
 import type { MoodType, MoodIntensity, MoodEntry, GardenElement } from '@/types'
 
@@ -24,6 +25,7 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
   const [unlockedElement, setUnlockedElement] = useState<GardenElement | null>(
     null
   )
+  const t = useTranslation()
 
   const {
     canCheckinToday,
@@ -51,7 +53,7 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
   })
 
   const [showSuccess, setShowSuccess] = useState(false)
-  
+
   // Оптимизация анимаций
   const { transition, spring, enableComplexEffects } = useAnimationConfig()
 
@@ -371,14 +373,15 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
         <div className="text-center">
           <Clock size={48} className="mx-auto mb-4 text-gray-400" />
           <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-            До следующей отметки
+            {t.mood.timeUntilNext}
           </h3>
           <p className="mb-4 text-gray-600 dark:text-gray-400">
-            {timeUntilNextCheckin.hours}ч {timeUntilNextCheckin.minutes}м
+            {timeUntilNextCheckin.hours}
+            {t.mood.hours} {timeUntilNextCheckin.minutes}
+            {t.mood.minutes}
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Возвращайтесь завтра, чтобы отметить настроение и вырастить новое
-            растение
+            {t.mood.returnTomorrowToGrow}
           </p>
         </div>
       </Card>
@@ -410,9 +413,7 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
         >
           <LoadingSpinner size="md" />
           <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-            {moodLoading || isSubmitting
-              ? 'Сохранение...'
-              : 'Выращивание растения...'}
+            {moodLoading || isSubmitting ? t.mood.saving : t.mood.growingPlant}
           </span>
         </motion.div>
       )}

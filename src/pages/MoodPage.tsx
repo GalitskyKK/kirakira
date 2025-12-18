@@ -14,12 +14,14 @@ import { useCurrencySync } from '@/hooks/useCurrencySync'
 import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export function MoodPage() {
   const navigate = useNavigate()
   const { garden, gardenStats } = useGardenState()
   const { canCheckinToday } = useMoodTracking()
   const { transition } = useAnimationConfig()
+  const t = useTranslation()
 
   // Получаем данные пользователя через React Query
   const telegramId = useTelegramId()
@@ -64,7 +66,9 @@ export function MoodPage() {
             <TextTyping className="" />
           </motion.div>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            {!canCheckinToday() ? 'Настроение отмечено' : 'Как дела сегодня?'}
+            {!canCheckinToday()
+              ? t.mood.alreadyCheckedIn
+              : t.mood.howAreYouToday}
           </p>
 
           {/* Currency Display + Streak Freezes - общий контейнер - modern glass */}

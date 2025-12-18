@@ -12,6 +12,7 @@ import { RoomThemeShopSection } from './RoomThemeShopSection'
 import { FreezeShopSection } from './FreezeShopSection'
 import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { useCurrencySync } from '@/hooks/useCurrencySync'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export interface ShopProps {
   readonly isOpen: boolean
@@ -28,11 +29,7 @@ interface TabConfig {
   readonly badge?: number
 }
 
-const SHOP_TABS: readonly TabConfig[] = [
-  { id: 'themes', label: 'Темы', icon: Palette },
-  { id: 'freezes', label: 'Заморозки', icon: Snowflake },
-  // { id: 'upgrades', label: 'Улучшения', icon: Sparkles }, // TODO: В будущем
-] as const
+// SHOP_TABS теперь создается динамически в компоненте
 
 interface ShopContentProps {
   readonly activeTab: ShopTab
@@ -48,6 +45,13 @@ export function ShopContent({
   variant = 'modal',
 }: ShopContentProps) {
   const { userCurrency } = useCurrencyClientStore()
+  const t = useTranslation()
+
+  const SHOP_TABS: readonly TabConfig[] = [
+    { id: 'themes', label: t.shop.themes, icon: Palette },
+    { id: 'freezes', label: t.shop.freezes, icon: Snowflake },
+    // { id: 'upgrades', label: t.shop.upgrades, icon: Sparkles }, // TODO: В будущем
+  ] as const
 
   const containerClasses =
     variant === 'modal'
@@ -60,7 +64,7 @@ export function ShopContent({
       <div className="flex-shrink-0 border-b border-gray-200 p-4 dark:border-gray-700">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
-            🛒 Магазин
+            {t.shop.title}
           </h2>
 
           <div className="flex items-center gap-3">
@@ -85,7 +89,7 @@ export function ShopContent({
               <button
                 onClick={onClose}
                 className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-                aria-label="Закрыть магазин"
+                aria-label={t.shop.closeShop}
               >
                 <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
               </button>
@@ -149,13 +153,13 @@ export function ShopContent({
               <div className="space-y-8">
                 <div>
                   <h3 className="px-4 text-lg font-semibold text-gray-900 dark:text-white">
-                    Темы сада
+                    {t.shop.gardenThemes}
                   </h3>
                   <ThemeShopSection />
                 </div>
                 <div>
                   <h3 className="px-4 text-lg font-semibold text-gray-900 dark:text-white">
-                    Темы комнаты
+                    {t.shop.roomThemes}
                   </h3>
                   <RoomThemeShopSection />
                 </div>
@@ -187,10 +191,10 @@ export function ShopContent({
               <div className="text-center">
                 <Gem className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" />
                 <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">
-                  Скоро появится
+                  {t.shop.comingSoon}
                 </h3>
                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                  Улучшения для элементов сада в разработке
+                  {t.shop.comingSoonDescription}
                 </p>
               </div>
             </motion.div>
