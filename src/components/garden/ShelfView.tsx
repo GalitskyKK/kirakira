@@ -160,7 +160,7 @@ export function ShelfView({
   const containerRef = useRef<HTMLDivElement>(null)
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="shelf-container relative min-h-[650px] w-full overflow-visible sm:min-h-[700px] lg:min-h-[750px]"
       style={{
@@ -516,9 +516,7 @@ export function ShelfView({
 
         {/* Empty state - скрываем при перемещении элемент */}
         {elements.length === 0 && !isElementMoving && (
-          <div
-            className="absolute inset-0 flex items-center justify-center"
-          >
+          <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
               <motion.div
                 className="mb-6 text-8xl"
@@ -547,9 +545,7 @@ export function ShelfView({
 
         {/* Подсказка при перемещении в пустую комнату */}
         {elements.length === 0 && isElementMoving && (
-          <div
-            className="pointer-events-none absolute inset-0 flex items-center justify-center"
-          >
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="rounded-2xl bg-blue-50/90 px-8 py-6 text-center shadow-xl backdrop-blur-sm">
               <div className="mb-3 text-6xl">📦</div>
               <h3 className="mb-2 text-lg font-semibold text-blue-900">
@@ -561,7 +557,6 @@ export function ShelfView({
             </div>
           </div>
         )}
-
       </div>
     </div>
   )

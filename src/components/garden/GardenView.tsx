@@ -17,9 +17,10 @@ import { ViewMode, GardenDisplayMode } from '@/types'
 
 interface GardenViewProps {
   className?: string
+  compact?: boolean
 }
 
-export function GardenView({ className }: GardenViewProps) {
+export function GardenView({ className, compact = false }: GardenViewProps) {
   const t = useTranslation()
   const {
     garden,
@@ -213,7 +214,10 @@ export function GardenView({ className }: GardenViewProps) {
       )}
 
       <LoadingOverlay isLoading={isLoading}>
-        <Card className={clsx('min-h-[500px]', className)} padding="none">
+        <Card
+          className={clsx(compact ? 'h-[75vh]' : 'min-h-[500px]', className)}
+          padding="none"
+        >
           <AnimatePresence mode="wait">
             {viewMode === ViewMode.DETAIL && selectedElement ? (
               <motion.div
@@ -238,7 +242,12 @@ export function GardenView({ className }: GardenViewProps) {
                 className="h-full"
               >
                 {/* Compact controls */}
-                <div className="border-b border-gray-200 px-4 py-3">
+                <div
+                  className={clsx(
+                    'border-b border-gray-200 px-4',
+                    compact ? 'py-2' : 'py-3'
+                  )}
+                >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                       <span className="rounded-full bg-neutral-100 px-2 py-1 font-semibold text-neutral-800 dark:bg-neutral-800 dark:text-neutral-100">
@@ -318,9 +327,19 @@ export function GardenView({ className }: GardenViewProps) {
                 <div
                   className={clsx(
                     displayMode === GardenDisplayMode.PALETTE
-                      ? 'flex min-h-[70vh] items-center justify-center p-2 sm:p-4 lg:p-6'
-                      : 'p-2 sm:p-4 lg:p-6'
+                      ? 'flex items-center justify-center p-2 sm:p-4 lg:p-6'
+                      : 'p-2 sm:p-4 lg:p-6',
+                    compact && 'overflow-hidden'
                   )}
+                  style={
+                    compact
+                      ? {
+                          height: '100vh',
+                          transform: 'scale(0.75)',
+                          transformOrigin: 'top center',
+                        }
+                      : undefined
+                  }
                 >
                   <AnimatePresence mode="wait">
                     {displayMode === GardenDisplayMode.PALETTE ? (
@@ -341,7 +360,17 @@ export function GardenView({ className }: GardenViewProps) {
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.3 }}
-                        className="h-full min-h-[600px]"
+                        className={clsx(
+                          compact ? 'h-[75vh]' : 'h-full min-h-[600px]'
+                        )}
+                        style={
+                          compact
+                            ? {
+                                transform: 'scale(0.75)',
+                                transformOrigin: 'top center',
+                              }
+                            : {}
+                        }
                       >
                         <IsometricRoomView
                           elements={garden.elements}
@@ -362,7 +391,15 @@ export function GardenView({ className }: GardenViewProps) {
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.3 }}
-                        className="h-full"
+                        className={clsx(compact ? 'h-[75vh]' : 'h-full')}
+                        style={
+                          compact
+                            ? {
+                                transform: 'scale(0.75)',
+                                transformOrigin: 'top center',
+                              }
+                            : {}
+                        }
                       >
                         <GardenRoomManager
                           elements={garden.elements}

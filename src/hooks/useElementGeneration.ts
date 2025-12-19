@@ -9,6 +9,8 @@ import {
 } from '@/utils/elementGeneration'
 import { getDaysSinceRegistration } from '@/utils/dateHelpers'
 import type { GardenElement, MoodType, Position2D } from '@/types'
+import { SPROUT_REWARDS, GEM_REWARDS } from '@/types/currency'
+import { EXPERIENCE_REWARDS } from '@/utils/achievements'
 
 /**
  * Hook for element generation logic and preview
@@ -177,10 +179,26 @@ export function useElementGeneration() {
   // Get milestone information
   const getMilestoneInfo = useMemo(() => {
     const milestones = [
-      { day: 7, title: 'Первая неделя', reward: 'Редкий элемент' },
-      { day: 30, title: 'Первый месяц', reward: 'Эпический элемент' },
-      { day: 100, title: 'Сто дней', reward: 'Легендарный элемент' },
-      { day: 365, title: 'Год в саду', reward: 'Уникальный элемент' },
+      {
+        day: 7,
+        title: 'Первая неделя',
+        reward: `${SPROUT_REWARDS.streak_7_days.amount}🌿 + ${GEM_REWARDS.weekly_streak.amount}💎 + ${EXPERIENCE_REWARDS.STREAK_MILESTONE_7} XP`,
+      },
+      {
+        day: 30,
+        title: 'Первый месяц',
+        reward: `${SPROUT_REWARDS.streak_30_days.amount}🌿 + ${GEM_REWARDS.monthly_streak.amount}💎 + ${EXPERIENCE_REWARDS.STREAK_MILESTONE_30} XP`,
+      },
+      {
+        day: 100,
+        title: 'Сто дней',
+        reward: `${SPROUT_REWARDS.streak_100_days.amount}🌿 + ${EXPERIENCE_REWARDS.STREAK_MILESTONE_100} XP`,
+      },
+      {
+        day: 365,
+        title: 'Год в саду',
+        reward: `${SPROUT_REWARDS.streak_365_days.amount}🌿`,
+      },
     ]
 
     const currentDay = daysSinceRegistration

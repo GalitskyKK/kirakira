@@ -68,6 +68,11 @@ const MobileLayout = lazyWithRetry(() =>
     default: module.MobileLayout,
   }))
 )
+const DesktopLayout = lazyWithRetry(() =>
+  import('@/components/layout/DesktopLayout').then(module => ({
+    default: module.DesktopLayout,
+  }))
+)
 
 // Динамический импорт dev страниц только в DEV режиме
 const ShowcasePage = import.meta.env.DEV
@@ -555,7 +560,19 @@ function App() {
           {/* AnimatePresence только если не включен режим уменьшения анимаций */}
           {shouldReduceMotion ? (
             <Routes>
-              <Route path="/" element={withSuspense(<HomePage />)} />
+              <Route path="/desktop" element={withSuspense(<DesktopLayout />)}>
+                <Route index element={withSuspense(<HomePage />)} />
+                <Route path="profile" element={withSuspense(<ProfilePage />)} />
+                <Route
+                  path="challenges"
+                  element={withSuspense(<TasksPage />)}
+                />
+                <Route
+                  path="friends"
+                  element={withSuspense(<CommunityPage />)}
+                />
+              </Route>
+              <Route path="/" element={<Navigate to="/desktop" replace />} />
               <Route path="/mobile" element={withSuspense(<MobileLayout />)}>
                 <Route index element={withSuspense(<MoodPage />)} />
                 <Route path="garden" element={withSuspense(<GardenPage />)} />
@@ -636,19 +653,67 @@ function App() {
             <AnimatePresence mode="wait">
               <Routes>
                 <Route
-                  path="/"
-                  element={
-                    <motion.div
-                      key="home"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={routeTransition}
-                    >
-                      {withSuspense(<HomePage />)}
-                    </motion.div>
-                  }
-                />
+                  path="/desktop"
+                  element={withSuspense(<DesktopLayout />)}
+                >
+                  <Route
+                    index
+                    element={
+                      <motion.div
+                        key="home"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={routeTransition}
+                      >
+                        {withSuspense(<HomePage />)}
+                      </motion.div>
+                    }
+                  />
+                  <Route
+                    path="profile"
+                    element={
+                      <motion.div
+                        key="desktop-profile"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={routeTransition}
+                      >
+                        {withSuspense(<ProfilePage />)}
+                      </motion.div>
+                    }
+                  />
+                  <Route
+                    path="challenges"
+                    element={
+                      <motion.div
+                        key="desktop-challenges"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={routeTransition}
+                      >
+                        {withSuspense(<TasksPage />)}
+                      </motion.div>
+                    }
+                  />
+                  <Route
+                    path="friends"
+                    element={
+                      <motion.div
+                        key="desktop-friends"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={routeTransition}
+                      >
+                        {withSuspense(<CommunityPage />)}
+                      </motion.div>
+                    }
+                  />
+                </Route>
+                <Route path="/" element={<Navigate to="/desktop" replace />} />
                 <Route path="/mobile" element={withSuspense(<MobileLayout />)}>
                   <Route index element={withSuspense(<MoodPage />)} />
                   <Route path="garden" element={withSuspense(<GardenPage />)} />

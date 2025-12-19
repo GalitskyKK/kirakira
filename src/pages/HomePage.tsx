@@ -171,7 +171,7 @@ export function HomePage() {
             animate={{ opacity: 1, x: 0 }}
             transition={transition}
           >
-            <GardenView />
+            <GardenView compact />
           </motion.div>
         </div>
 
