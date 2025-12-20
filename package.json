@@ -1,7 +1,7 @@
 {
   "name": "kirakira",
   "private": true,
-  "version": "1.5.0",
+  "version": "2.0.0",
   "type": "module",
   "description": "A meditative PWA where your daily emotions bloom into a unique digital garden",
   "keywords": [
