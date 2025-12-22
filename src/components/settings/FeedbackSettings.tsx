@@ -21,7 +21,7 @@ export function FeedbackSettings() {
 
     // Предустановленный текст сообщения
     const messageText = encodeURIComponent(
-      'Здравствуйте! У меня вопрос/проблема с KiraKira:'
+      'Привет! У меня вопрос/проблема с KiraKira:'
     )
 
     // Используем HTTPS ссылку - работает везде
