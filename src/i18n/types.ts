@@ -51,6 +51,10 @@ export interface Translations {
     logoutDescription: string
     language: string
     languageDescription: string
+    feedback: string
+    feedbackDescription: string
+    sendFeedback: string
+    openTelegramChat: string
   }
 
   // Магазин

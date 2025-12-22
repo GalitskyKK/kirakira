@@ -46,6 +46,10 @@ export const ru: Translations = {
     logoutDescription: 'Очистим токен браузера и вернём на экран входа.',
     language: 'Язык',
     languageDescription: 'Выберите язык интерфейса',
+    feedback: 'Обратная связь',
+    feedbackDescription: 'Сообщите об ошибках или предложите улучшения',
+    sendFeedback: 'Написать разработчику',
+    openTelegramChat: 'Откроется чат в Telegram',
   },
 
   shop: {

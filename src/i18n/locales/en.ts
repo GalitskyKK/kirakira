@@ -47,6 +47,10 @@ export const en: Translations = {
       'We will clear the browser token and return to the login screen.',
     language: 'Language',
     languageDescription: 'Choose interface language',
+    feedback: 'Feedback',
+    feedbackDescription: 'Report bugs or suggest improvements',
+    sendFeedback: 'Contact Developer',
+    openTelegramChat: 'Telegram chat will open',
   },
 
   shop: {

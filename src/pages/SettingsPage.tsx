@@ -9,6 +9,7 @@ import {
   Sprout,
   LogOut,
   Languages,
+  MessageCircle,
 } from 'lucide-react'
 import { useUserSync, useUserClientStore } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
@@ -19,6 +20,7 @@ import { CompanionSettings } from '@/components/settings/CompanionSettings'
 import { GardenDisplaySettings } from '@/components/settings/GardenDisplaySettings'
 import { FriendGardenDisplaySettings } from '@/components/settings/FriendGardenDisplaySettings'
 import { LanguageSettings } from '@/components/settings/LanguageSettings'
+import { FeedbackSettings } from '@/components/settings/FeedbackSettings'
 import { SettingsSection } from '@/components/settings/SettingsSection'
 import { PageHeader } from '@/components/layout'
 import { useUserContext } from '@/contexts/UserContext'
@@ -139,6 +141,16 @@ export function SettingsPage() {
           delay={0.2}
         >
           <ProfilePrivacySettings user={currentUser} />
+        </SettingsSection>
+
+        {/* Обратная связь */}
+        <SettingsSection
+          title={t.settings.feedback}
+          description={t.settings.feedbackDescription}
+          icon={<MessageCircle className="h-5 w-5" />}
+          delay={0.22}
+        >
+          <FeedbackSettings />
         </SettingsSection>
 
         {!isTelegramEnv && (
