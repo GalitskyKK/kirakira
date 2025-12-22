@@ -41,7 +41,41 @@ export async function getDailyQuests(
     throw new Error(response.error || 'Ошибка при получении заданий')
   }
 
-  return response.data
+  // 🔧 ИСПРАВЛЕНИЕ: Корректируем статус квестов на клиенте с учетом локального времени
+  // Это необходимо, так как cleanup_expired_daily_quests проверяет истечение по UTC,
+  // а на клиенте нужно проверять по локальному времени пользователя
+  const correctedData = {
+    ...response.data,
+    quests: response.data.quests.map(quest => {
+      const expiresAt =
+        quest.expiresAt instanceof Date
+          ? quest.expiresAt
+          : new Date(quest.expiresAt)
+      const now = new Date()
+      const isExpiredByTime = now > expiresAt
+
+      // Если квест помечен как expired в БД, но по локальному времени еще не истек
+      if (quest.status === 'expired' && !isExpiredByTime) {
+        // Восстанавливаем статус в зависимости от прогресса
+        if (quest.currentProgress >= quest.targetValue) {
+          return { ...quest, status: 'completed' as const }
+        }
+        return { ...quest, status: 'active' as const }
+      }
+
+      // Если квест активен или выполнен, но по локальному времени истек
+      if (
+        (quest.status === 'active' || quest.status === 'completed') &&
+        isExpiredByTime
+      ) {
+        return { ...quest, status: 'expired' as const }
+      }
+
+      return quest
+    }),
+  }
+
+  return correctedData
 }
 
 /**

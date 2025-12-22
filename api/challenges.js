@@ -1232,22 +1232,6 @@ async function handleDailyQuests(req, res) {
 
     const supabase = await getSupabaseClient(req.auth?.jwt)
 
-    // Очищаем истекшие квесты и auto-claim награды
-    const { data: cleanupResult } = await supabase.rpc(
-      'cleanup_expired_daily_quests',
-      {
-        p_telegram_id: parseInt(telegramId),
-      }
-    )
-
-    // 💎 Получаем квест "7 дней стрика" (он не истекает)
-    const { data: streakGemQuest } = await supabase
-      .from('daily_quests')
-      .select('*')
-      .eq('telegram_id', parseInt(telegramId))
-      .eq('quest_type', 'streak_gem_quest')
-      .maybeSingle()
-
     // 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ (TZ):
     // Квесты хранят generated_at как timestamptz (UTC). Если фильтровать по строке 'YYYY-MM-DD',
     // то для UTC+ зон "полночь" будет смещена и квесты за локальный день не попадут в выборку.
@@ -1257,8 +1241,8 @@ async function handleDailyQuests(req, res) {
     // - tzOffsetMinutes (Date#getTimezoneOffset; напр. -300 для UTC+5)
     const { localDate, tzOffsetMinutes } = req.query
 
-    const isYmd = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s)
-    const parseOffset = (v) => {
+    const isYmd = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s)
+    const parseOffset = v => {
       const n = Number.parseInt(String(v), 10)
       if (!Number.isFinite(n)) return null
       // sanity: [-14h, +14h] в минутах
@@ -1282,13 +1266,17 @@ async function handleDailyQuests(req, res) {
     }
 
     const offsetMin = parseOffset(tzOffsetMinutes)
-    const ymdToUtcMs = (ymd) => {
+    const ymdToUtcMs = ymd => {
       const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd)
       if (!m) return null
       const year = Number(m[1])
       const month = Number(m[2])
       const day = Number(m[3])
-      if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+      if (
+        !Number.isFinite(year) ||
+        !Number.isFinite(month) ||
+        !Number.isFinite(day)
+      ) {
         return null
       }
       return Date.UTC(year, month - 1, day, 0, 0, 0, 0)
@@ -1344,6 +1332,24 @@ async function handleDailyQuests(req, res) {
         error: 'Ошибка при получении ежедневных заданий',
       })
     }
+
+    // 🔧 ИСПРАВЛЕНИЕ: Очищаем истекшие квесты ПОСЛЕ получения квестов для текущего дня
+    // Это позволяет cleanup_expired_daily_quests обрабатывать только квесты текущего дня пользователя
+    // и избежать проблем с часовыми поясами, когда квесты помечаются как expired раньше времени
+    const { data: cleanupResult } = await supabase.rpc(
+      'cleanup_expired_daily_quests',
+      {
+        p_telegram_id: parseInt(telegramId),
+      }
+    )
+
+    // 💎 Получаем квест "7 дней стрика" (он не истекает)
+    const { data: streakGemQuest } = await supabase
+      .from('daily_quests')
+      .select('*')
+      .eq('telegram_id', parseInt(telegramId))
+      .eq('quest_type', 'streak_gem_quest')
+      .maybeSingle()
 
     // Если нет квестов на сегодня, генерируем новые
     if (!quests || quests.length === 0) {
@@ -1458,25 +1464,54 @@ async function handleDailyQuests(req, res) {
     }
 
     // Форматируем существующие квесты и добавляем streak gem quest
-    const formattedQuests = (quests || []).map(quest => ({
-      id: quest.id,
-      telegramId: quest.telegram_id,
-      questType: quest.quest_type,
-      questCategory: quest.quest_category,
-      targetValue: quest.target_value,
-      currentProgress: quest.current_progress,
-      status: quest.status,
-      rewards: quest.rewards,
-      generatedAt: new Date(quest.generated_at).toISOString(),
-      expiresAt: new Date(quest.expires_at).toISOString(),
-      completedAt: quest.completed_at
-        ? new Date(quest.completed_at).toISOString()
-        : undefined,
-      claimedAt: quest.claimed_at
-        ? new Date(quest.claimed_at).toISOString()
-        : undefined,
-      metadata: quest.metadata,
-    }))
+    // 🔧 ИСПРАВЛЕНИЕ: Корректируем статус квестов с учетом локального времени пользователя
+    // Это необходимо, так как cleanup_expired_daily_quests проверяет истечение по UTC,
+    // а нужно проверять по локальному времени пользователя
+    const now = new Date()
+    const formattedQuests = (quests || []).map(quest => {
+      const expiresAt = new Date(quest.expires_at)
+      const isExpiredByTime = now > expiresAt
+      let status = quest.status
+
+      // Если квест помечен как expired в БД, но по локальному времени еще не истек
+      if (quest.status === 'expired' && !isExpiredByTime) {
+        // Восстанавливаем статус в зависимости от прогресса
+        if (quest.current_progress >= quest.target_value) {
+          status = 'completed'
+        } else {
+          status = 'active'
+        }
+      }
+
+      // Если квест активен или выполнен, но по локальному времени истек
+      if (
+        (quest.status === 'active' || quest.status === 'completed') &&
+        isExpiredByTime &&
+        quest.status !== 'claimed' // Не меняем статус claimed квестов
+      ) {
+        status = 'expired'
+      }
+
+      return {
+        id: quest.id,
+        telegramId: quest.telegram_id,
+        questType: quest.quest_type,
+        questCategory: quest.quest_category,
+        targetValue: quest.target_value,
+        currentProgress: quest.current_progress,
+        status,
+        rewards: quest.rewards,
+        generatedAt: new Date(quest.generated_at).toISOString(),
+        expiresAt: expiresAt.toISOString(),
+        completedAt: quest.completed_at
+          ? new Date(quest.completed_at).toISOString()
+          : undefined,
+        claimedAt: quest.claimed_at
+          ? new Date(quest.claimed_at).toISOString()
+          : undefined,
+        metadata: quest.metadata,
+      }
+    })
 
     // Добавляем квест "7 дней стрика" если он есть
     if (streakGemQuest) {
