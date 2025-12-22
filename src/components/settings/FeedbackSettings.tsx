@@ -10,7 +10,7 @@ import { useTelegram } from '@/hooks/useTelegram'
 import { useTranslation } from '@/hooks/useTranslation'
 
 export function FeedbackSettings() {
-  const { hapticFeedback } = useTelegram()
+  const { hapticFeedback, isTelegramEnv } = useTelegram()
   const t = useTranslation()
 
   const handleOpenFeedback = useCallback(() => {
@@ -19,20 +19,23 @@ export function FeedbackSettings() {
     // Telegram username разработчика
     const developerUsername = 'NMGKK'
 
-    // Используем deep link для открытия чата в Telegram
-    // tg://resolve?domain=username - открывает чат с пользователем
-    const telegramLink = `tg://resolve?domain=${developerUsername}`
+    // Предустановленный текст сообщения
+    const messageText = encodeURIComponent(
+      'Здравствуйте! У меня вопрос/проблема с KiraKira:'
+    )
 
-    // В Telegram Mini App deep links работают через window.location
-    // В браузере также можно использовать window.open
-    try {
-      // Пытаемся открыть через location (работает в Telegram)
+    // Используем HTTPS ссылку - работает везде
+    // В Telegram Mini App откроется в Telegram, в браузере - в новой вкладке
+    const telegramLink = `https://t.me/${developerUsername}?text=${messageText}`
+
+    // В Mini App используем location.href для перехода в Telegram
+    // В браузере открываем в новой вкладке
+    if (isTelegramEnv) {
       window.location.href = telegramLink
-    } catch (error) {
-      // Fallback: открываем в новой вкладке
-      window.open(telegramLink, '_blank')
+    } else {
+      window.open(telegramLink, '_blank', 'noopener,noreferrer')
     }
-  }, [hapticFeedback])
+  }, [hapticFeedback, isTelegramEnv])
 
   return (
     <div className="space-y-3">
@@ -52,4 +55,3 @@ export function FeedbackSettings() {
     </div>
   )
 }
-
