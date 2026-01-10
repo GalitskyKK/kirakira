@@ -1296,37 +1296,98 @@ async function handleDailyQuests(req, res) {
       }
     }
 
-    // Получаем текущие квесты (кроме streak_gem_quest, который обрабатывается отдельно)
-    let questsQuery = supabase
+    // 🔧 ИСПРАВЛЕНИЕ: Получаем квесты для сегодня и вчера (если еще не истекли)
+    // Это необходимо для случая с автозаморозкой, когда квесты могут быть сгенерированы для вчерашнего дня
+    let quests = []
+    let questsError = null
+
+    // Сначала проверяем сегодняшний день
+    let todayQuestsQuery = supabase
       .from('daily_quests')
       .select('*')
       .eq('telegram_id', parseInt(telegramId))
-      .neq('quest_type', 'streak_gem_quest') // Исключаем повторяемый квест
+      .neq('quest_type', 'streak_gem_quest')
       .order('generated_at', { ascending: true })
 
     if (dayStartUtcIso && dayEndUtcIso) {
-      questsQuery = questsQuery
+      todayQuestsQuery = todayQuestsQuery
         .gte('generated_at', dayStartUtcIso)
         .lt('generated_at', dayEndUtcIso)
-      console.log(`🕒 Daily quests UTC window:`, {
+      console.log(`🕒 Daily quests UTC window (today):`, {
         todayStr,
         tzOffsetMinutes: offsetMin,
         dayStartUtcIso,
         dayEndUtcIso,
       })
     } else {
-      // Fallback: старое поведение (может быть неверным для TZ пользователя)
-      questsQuery = questsQuery.gte('generated_at', todayStr)
+      todayQuestsQuery = todayQuestsQuery.gte('generated_at', todayStr)
       console.warn(`⚠️ Daily quests fallback window (may be TZ-incorrect):`, {
         todayStr,
         tzOffsetMinutes,
       })
     }
 
-    const { data: quests, error: questsError } = await questsQuery
+    const { data: todayQuests, error: todayQuestsError } = await todayQuestsQuery
+
+    if (todayQuestsError) {
+      console.error('Daily quests fetch error (today):', todayQuestsError)
+      questsError = todayQuestsError
+    } else if (todayQuests && todayQuests.length > 0) {
+      quests = todayQuests
+    } else {
+      // Если квестов на сегодня нет, проверяем вчерашний день
+      // (важно для случая с автозаморозкой)
+      const yesterdayMs = ymdToUtcMs(todayStr) - 24 * 60 * 60 * 1000
+      const yesterdayStr = yesterdayMs != null
+        ? new Date(yesterdayMs).toISOString().split('T')[0]
+        : null
+
+      if (yesterdayStr && offsetMin != null) {
+        const yesterdayUtcMidnightMs = ymdToUtcMs(yesterdayStr)
+        if (yesterdayUtcMidnightMs != null) {
+          const yesterdayStartMs = yesterdayUtcMidnightMs + offsetMin * 60 * 1000
+          const yesterdayEndMs = yesterdayStartMs + 24 * 60 * 60 * 1000
+          const yesterdayStartUtcIso = new Date(yesterdayStartMs).toISOString()
+          const yesterdayEndUtcIso = new Date(yesterdayEndMs).toISOString()
+
+          const { data: yesterdayQuests, error: yesterdayQuestsError } =
+            await supabase
+              .from('daily_quests')
+              .select('*')
+              .eq('telegram_id', parseInt(telegramId))
+              .neq('quest_type', 'streak_gem_quest')
+              .gte('generated_at', yesterdayStartUtcIso)
+              .lt('generated_at', yesterdayEndUtcIso)
+              .order('generated_at', { ascending: true })
+
+          if (yesterdayQuestsError) {
+            console.warn('Daily quests fetch error (yesterday):', yesterdayQuestsError)
+          } else if (yesterdayQuests && yesterdayQuests.length > 0) {
+            // Фильтруем только те квесты, которые еще не истекли по локальному времени
+            const now = new Date()
+            const validYesterdayQuests = yesterdayQuests.filter(quest => {
+              const expiresAt = new Date(quest.expires_at)
+              const isNotExpired = expiresAt > now
+              const isNotExpiredStatus = quest.status !== 'expired'
+              return isNotExpired && isNotExpiredStatus
+            })
+
+            if (validYesterdayQuests.length > 0) {
+              console.log(
+                `📅 Found ${validYesterdayQuests.length} valid quests from yesterday (freeze case). Total yesterday quests: ${yesterdayQuests.length}`
+              )
+              quests = validYesterdayQuests
+            } else {
+              console.log(
+                `📅 No valid quests from yesterday (all expired or already marked as expired). Total yesterday quests: ${yesterdayQuests.length}`
+              )
+            }
+          }
+        }
+      }
+    }
 
     if (questsError) {
-      console.error('Daily quests fetch error:', questsError)
       return res.status(500).json({
         success: false,
         error: 'Ошибка при получении ежедневных заданий',
@@ -1351,35 +1412,91 @@ async function handleDailyQuests(req, res) {
       .eq('quest_type', 'streak_gem_quest')
       .maybeSingle()
 
-    // Если нет квестов на сегодня, генерируем новые
+    // Если нет квестов на сегодня и вчера, генерируем новые
     if (!quests || quests.length === 0) {
-      console.log('🎯 No quests for today, generating new ones...')
+      console.log('🎯 No quests for today or yesterday, generating new ones...')
 
-      // Получаем уровень пользователя
-      const { data: user, error: userError } = await supabase
-        .from('users')
-        .select('level')
-        .eq('telegram_id', parseInt(telegramId))
-        .single()
+      // 🔧 ЗАЩИТА ОТ ДУБЛЕЙ: Проверяем, что квестов на сегодня действительно нет
+      // (на случай race condition при параллельных запросах)
+      let existingQuestsCheck = null
+      if (dayStartUtcIso && dayEndUtcIso) {
+        const { data: checkData } = await supabase
+          .from('daily_quests')
+          .select('id')
+          .eq('telegram_id', parseInt(telegramId))
+          .neq('quest_type', 'streak_gem_quest')
+          .in('status', ['active', 'completed', 'claimed'])
+          .gte('generated_at', dayStartUtcIso)
+          .lt('generated_at', dayEndUtcIso)
 
-      if (userError) {
-        console.error('User fetch error:', userError)
-        return res.status(500).json({
-          success: false,
-          error: 'Ошибка при получении данных пользователя',
-        })
+        existingQuestsCheck = checkData
+      } else {
+        const { data: checkData } = await supabase
+          .from('daily_quests')
+          .select('id')
+          .eq('telegram_id', parseInt(telegramId))
+          .neq('quest_type', 'streak_gem_quest')
+          .in('status', ['active', 'completed', 'claimed'])
+          .gte('generated_at', todayStr)
+
+        existingQuestsCheck = checkData
       }
 
-      const userLevel = user?.level || 1
+      if (existingQuestsCheck && existingQuestsCheck.length > 0) {
+        console.log(
+          `⚠️ Found ${existingQuestsCheck.length} existing active quests for today, skipping generation to avoid duplicates`
+        )
+        // Перезапрашиваем квесты с правильными фильтрами
+        let recheckQuery = supabase
+          .from('daily_quests')
+          .select('*')
+          .eq('telegram_id', parseInt(telegramId))
+          .neq('quest_type', 'streak_gem_quest')
+          .in('status', ['active', 'completed', 'claimed'])
+          .order('generated_at', { ascending: true })
 
-      // Генерируем новые квесты
-      const { data: newQuests, error: generateError } = await supabase.rpc(
-        'generate_daily_quests',
-        {
-          p_telegram_id: parseInt(telegramId),
-          p_user_level: userLevel,
+        if (dayStartUtcIso && dayEndUtcIso) {
+          recheckQuery = recheckQuery
+            .gte('generated_at', dayStartUtcIso)
+            .lt('generated_at', dayEndUtcIso)
+        } else {
+          recheckQuery = recheckQuery.gte('generated_at', todayStr)
         }
-      )
+
+        const { data: recheckQuests } = await recheckQuery
+
+        if (recheckQuests && recheckQuests.length > 0) {
+          quests = recheckQuests
+        }
+      }
+
+      // Если все еще нет квестов, генерируем новые
+      if (!quests || quests.length === 0) {
+        // Получаем уровень пользователя
+        const { data: user, error: userError } = await supabase
+          .from('users')
+          .select('level')
+          .eq('telegram_id', parseInt(telegramId))
+          .single()
+
+        if (userError) {
+          console.error('User fetch error:', userError)
+          return res.status(500).json({
+            success: false,
+            error: 'Ошибка при получении данных пользователя',
+          })
+        }
+
+        const userLevel = user?.level || 1
+
+        // Генерируем новые квесты
+        const { data: newQuests, error: generateError } = await supabase.rpc(
+          'generate_daily_quests',
+          {
+            p_telegram_id: parseInt(telegramId),
+            p_user_level: userLevel,
+          }
+        )
 
       if (generateError) {
         console.error('Quest generation error:', generateError)
