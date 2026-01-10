@@ -1416,62 +1416,40 @@ async function handleDailyQuests(req, res) {
     if (!quests || quests.length === 0) {
       console.log('🎯 No quests for today or yesterday, generating new ones...')
 
-      // 🔧 ЗАЩИТА ОТ ДУБЛЕЙ: Проверяем, что квестов на сегодня действительно нет
-      // (на случай race condition при параллельных запросах)
-      let existingQuestsCheck = null
+      // 🔧 ЗАЩИТА ОТ ДУБЛЕЙ: если параллельный запрос уже создал квесты на СЕГОДНЯ — вернем их
+      let existingTodayQuestsQuery = supabase
+        .from('daily_quests')
+        .select('*')
+        .eq('telegram_id', parseInt(telegramId))
+        .neq('quest_type', 'streak_gem_quest')
+        .order('generated_at', { ascending: true })
+
       if (dayStartUtcIso && dayEndUtcIso) {
-        const { data: checkData } = await supabase
-          .from('daily_quests')
-          .select('id')
-          .eq('telegram_id', parseInt(telegramId))
-          .neq('quest_type', 'streak_gem_quest')
-          .in('status', ['active', 'completed', 'claimed'])
+        existingTodayQuestsQuery = existingTodayQuestsQuery
           .gte('generated_at', dayStartUtcIso)
           .lt('generated_at', dayEndUtcIso)
-
-        existingQuestsCheck = checkData
       } else {
-        const { data: checkData } = await supabase
-          .from('daily_quests')
-          .select('id')
-          .eq('telegram_id', parseInt(telegramId))
-          .neq('quest_type', 'streak_gem_quest')
-          .in('status', ['active', 'completed', 'claimed'])
-          .gte('generated_at', todayStr)
-
-        existingQuestsCheck = checkData
-      }
-
-      if (existingQuestsCheck && existingQuestsCheck.length > 0) {
-        console.log(
-          `⚠️ Found ${existingQuestsCheck.length} existing active quests for today, skipping generation to avoid duplicates`
+        existingTodayQuestsQuery = existingTodayQuestsQuery.gte(
+          'generated_at',
+          todayStr
         )
-        // Перезапрашиваем квесты с правильными фильтрами
-        let recheckQuery = supabase
-          .from('daily_quests')
-          .select('*')
-          .eq('telegram_id', parseInt(telegramId))
-          .neq('quest_type', 'streak_gem_quest')
-          .in('status', ['active', 'completed', 'claimed'])
-          .order('generated_at', { ascending: true })
-
-        if (dayStartUtcIso && dayEndUtcIso) {
-          recheckQuery = recheckQuery
-            .gte('generated_at', dayStartUtcIso)
-            .lt('generated_at', dayEndUtcIso)
-        } else {
-          recheckQuery = recheckQuery.gte('generated_at', todayStr)
-        }
-
-        const { data: recheckQuests } = await recheckQuery
-
-        if (recheckQuests && recheckQuests.length > 0) {
-          quests = recheckQuests
-        }
       }
 
-      // Если все еще нет квестов, генерируем новые
-      if (!quests || quests.length === 0) {
+      const {
+        data: existingTodayQuests,
+        error: existingTodayQuestsError,
+      } = await existingTodayQuestsQuery
+
+      if (
+        !existingTodayQuestsError &&
+        existingTodayQuests &&
+        existingTodayQuests.length > 0
+      ) {
+        console.log(
+          `⚠️ Found ${existingTodayQuests.length} existing quests for today, skipping generation`
+        )
+        quests = existingTodayQuests
+      } else {
         // Получаем уровень пользователя
         const { data: user, error: userError } = await supabase
           .from('users')
@@ -1498,86 +1476,87 @@ async function handleDailyQuests(req, res) {
           }
         )
 
-      if (generateError) {
-        console.error('Quest generation error:', generateError)
+        if (generateError) {
+          console.error('Quest generation error:', generateError)
 
-        // Проверяем, является ли ошибка связанной с target_value
-        if (
-          generateError.code === '23514' &&
-          generateError.message.includes('daily_quests_target_value_check')
-        ) {
-          console.error(
-            '❌ Quest generation failed due to invalid target_value constraint'
-          )
+          // Проверяем, является ли ошибка связанной с target_value
+          if (
+            generateError.code === '23514' &&
+            generateError.message.includes('daily_quests_target_value_check')
+          ) {
+            console.error(
+              '❌ Quest generation failed due to invalid target_value constraint'
+            )
+            return res.status(500).json({
+              success: false,
+              error:
+                'Ошибка генерации заданий: некорректное значение target_value. Обратитесь к администратору.',
+            })
+          }
+
           return res.status(500).json({
             success: false,
-            error:
-              'Ошибка генерации заданий: некорректное значение target_value. Обратитесь к администратору.',
+            error: 'Ошибка при генерации заданий',
           })
         }
 
-        return res.status(500).json({
-          success: false,
-          error: 'Ошибка при генерации заданий',
+        // Форматируем новые квесты
+        const formattedQuests = (newQuests || []).map(quest => ({
+          id: quest.id,
+          telegramId: quest.telegram_id,
+          questType: quest.quest_type,
+          questCategory: quest.quest_category,
+          targetValue: quest.target_value,
+          currentProgress: quest.current_progress,
+          status: quest.status,
+          rewards: quest.rewards,
+          generatedAt: new Date(quest.generated_at).toISOString(),
+          expiresAt: new Date(quest.expires_at).toISOString(),
+          completedAt: quest.completed_at
+            ? new Date(quest.completed_at).toISOString()
+            : undefined,
+          claimedAt: quest.claimed_at
+            ? new Date(quest.claimed_at).toISOString()
+            : undefined,
+          metadata: quest.metadata,
+        }))
+
+        // Получаем статистику
+        const { data: stats } = await supabase.rpc('get_daily_quests_stats', {
+          p_telegram_id: parseInt(telegramId),
         })
-      }
 
-      // Форматируем новые квесты
-      const formattedQuests = (newQuests || []).map(quest => ({
-        id: quest.id,
-        telegramId: quest.telegram_id,
-        questType: quest.quest_type,
-        questCategory: quest.quest_category,
-        targetValue: quest.target_value,
-        currentProgress: quest.current_progress,
-        status: quest.status,
-        rewards: quest.rewards,
-        generatedAt: new Date(quest.generated_at).toISOString(),
-        expiresAt: new Date(quest.expires_at).toISOString(),
-        completedAt: quest.completed_at
-          ? new Date(quest.completed_at).toISOString()
-          : undefined,
-        claimedAt: quest.claimed_at
-          ? new Date(quest.claimed_at).toISOString()
-          : undefined,
-        metadata: quest.metadata,
-      }))
-
-      // Получаем статистику
-      const { data: stats } = await supabase.rpc('get_daily_quests_stats', {
-        p_telegram_id: parseInt(telegramId),
-      })
-
-      return res.status(200).json({
-        success: true,
-        data: {
-          quests: formattedQuests,
-          completedToday: stats?.completed_quests || 0,
-          totalToday: stats?.total_quests || 0,
-          canClaimBonus: (stats?.completed_quests || 0) >= 3,
-          bonusRewards:
-            (stats?.completed_quests || 0) >= 3
-              ? {
-                  sprouts: 50 + ((stats?.completed_quests || 0) - 3) * 25,
-                  gems: (stats?.completed_quests || 0) >= 5 ? 1 : 0,
-                  experience: 25 + ((stats?.completed_quests || 0) - 3) * 25,
-                  description: `Бонус за ${stats?.completed_quests || 0} квестов!`,
-                }
-              : undefined,
-          stats: {
-            activeQuests: stats?.active_quests || 0,
-            completedQuests: stats?.completed_quests || 0,
-            claimedQuests: stats?.claimed_quests || 0,
-            totalQuests: stats?.total_quests || 0,
-            completionRate: stats?.completion_rate || 0,
-            totalRewards: stats?.total_rewards || {
-              sprouts: 0,
-              gems: 0,
-              experience: 0,
+        return res.status(200).json({
+          success: true,
+          data: {
+            quests: formattedQuests,
+            completedToday: stats?.completed_quests || 0,
+            totalToday: stats?.total_quests || 0,
+            canClaimBonus: (stats?.completed_quests || 0) >= 3,
+            bonusRewards:
+              (stats?.completed_quests || 0) >= 3
+                ? {
+                    sprouts: 50 + ((stats?.completed_quests || 0) - 3) * 25,
+                    gems: (stats?.completed_quests || 0) >= 5 ? 1 : 0,
+                    experience: 25 + ((stats?.completed_quests || 0) - 3) * 25,
+                    description: `Бонус за ${stats?.completed_quests || 0} квестов!`,
+                  }
+                : undefined,
+            stats: {
+              activeQuests: stats?.active_quests || 0,
+              completedQuests: stats?.completed_quests || 0,
+              claimedQuests: stats?.claimed_quests || 0,
+              totalQuests: stats?.total_quests || 0,
+              completionRate: stats?.completion_rate || 0,
+              totalRewards: stats?.total_rewards || {
+                sprouts: 0,
+                gems: 0,
+                experience: 0,
+              },
             },
           },
-        },
-      })
+        })
+      }
     }
 
     // Форматируем существующие квесты и добавляем streak gem quest
@@ -1610,23 +1589,23 @@ async function handleDailyQuests(req, res) {
       }
 
       return {
-        id: quest.id,
-        telegramId: quest.telegram_id,
-        questType: quest.quest_type,
-        questCategory: quest.quest_category,
-        targetValue: quest.target_value,
-        currentProgress: quest.current_progress,
+      id: quest.id,
+      telegramId: quest.telegram_id,
+      questType: quest.quest_type,
+      questCategory: quest.quest_category,
+      targetValue: quest.target_value,
+      currentProgress: quest.current_progress,
         status,
-        rewards: quest.rewards,
-        generatedAt: new Date(quest.generated_at).toISOString(),
+      rewards: quest.rewards,
+      generatedAt: new Date(quest.generated_at).toISOString(),
         expiresAt: expiresAt.toISOString(),
-        completedAt: quest.completed_at
-          ? new Date(quest.completed_at).toISOString()
-          : undefined,
-        claimedAt: quest.claimed_at
-          ? new Date(quest.claimed_at).toISOString()
-          : undefined,
-        metadata: quest.metadata,
+      completedAt: quest.completed_at
+        ? new Date(quest.completed_at).toISOString()
+        : undefined,
+      claimedAt: quest.claimed_at
+        ? new Date(quest.claimed_at).toISOString()
+        : undefined,
+      metadata: quest.metadata,
       }
     })
 
