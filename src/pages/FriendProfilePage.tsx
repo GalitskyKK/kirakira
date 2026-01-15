@@ -66,22 +66,23 @@ export default function FriendProfilePage() {
   }, [friendTelegramId, navigate])
 
   // Конвертируем данные в нужный формат
-  const profileData: FriendProfileData | null = friendProfile
-    ? {
-        user: friendProfile.user,
-        stats: friendProfile.stats,
-        achievements: friendProfile.achievements,
-        privacy: {
-          showProfile:
-            friendProfile.user.privacy_settings?.['showProfile'] ?? true,
-          shareGarden:
-            friendProfile.user.privacy_settings?.['shareGarden'] ?? true,
-          shareAchievements:
-            friendProfile.user.privacy_settings?.['shareAchievements'] ?? true,
-        },
-        relationship: friendProfile.relationship,
-      }
-    : null
+  const profileData: FriendProfileData | null = useMemo(() => {
+    if (!friendProfile) return null
+    return {
+      user: friendProfile.user,
+      stats: friendProfile.stats,
+      achievements: friendProfile.achievements,
+      privacy: {
+        showProfile:
+          friendProfile.user.privacy_settings?.['showProfile'] ?? true,
+        shareGarden:
+          friendProfile.user.privacy_settings?.['shareGarden'] ?? true,
+        shareAchievements:
+          friendProfile.user.privacy_settings?.['shareAchievements'] ?? true,
+      },
+      relationship: friendProfile.relationship,
+    }
+  }, [friendProfile])
 
   // Упрощенная логика определения статуса дружбы
   const relationshipStatus = useMemo(() => {
@@ -524,14 +525,16 @@ export default function FriendProfilePage() {
   const username = user.username ? `@${user.username}` : null
 
   // Calculate level info if we have stats
-  const currentLevel =
-    GARDENER_LEVELS.find(l => l.level === user.level) || GARDENER_LEVELS[0]!
+  const fallbackLevel = (() => {
+    const first = GARDENER_LEVELS[0]
+    if (!first) {
+      throw new Error('GARDENER_LEVELS is empty')
+    }
+    return first
+  })()
 
-  // Подсчет дней с регистрации
-  const daysSinceRegistration = Math.floor(
-    (Date.now() - new Date(user.registration_date).getTime()) /
-      (1000 * 60 * 60 * 24)
-  )
+  const currentLevel =
+    GARDENER_LEVELS.find(l => l.level === user.level) ?? fallbackLevel
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-kira-50 via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
@@ -590,20 +593,6 @@ export default function FriendProfilePage() {
                 <span className="ml-2 rounded-full bg-white/20 px-2 py-0.5 text-xs">
                   Ур. {currentLevel.level}
                 </span>
-              </div>
-
-              {/* Quick Stats */}
-              <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
-                <div className="flex items-center space-x-1">
-                  <span>🗓️</span>
-                  <span>
-                    {daysSinceRegistration === 0
-                      ? t.friendProfile.todayJoined
-                      : daysSinceRegistration === 1
-                        ? `1 ${t.friendProfile.dayWithUs}`
-                        : `${daysSinceRegistration} ${t.friendProfile.daysWithUs}`}
-                  </span>
-                </div>
               </div>
 
               {friendshipActionElement !== null && (

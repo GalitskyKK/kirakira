@@ -195,11 +195,23 @@ async function calculateUserStats(user) {
         ).length
       : 0
 
-    // Дни с регистрации
-    const registrationDate = user.created_at || user.registration_date
-    const daysSinceRegistration = registrationDate
+    // Дни с регистрации (дни с приложением)
+    // Важно: registration_date — это бизнес-дата регистрации.
+    // created_at может отличаться (миграции/импорт), поэтому используем более раннюю из дат.
+    const rawRegistrationTs = user.registration_date || null
+    const rawCreatedTs = user.created_at || null
+    const effectiveRegistrationTs = (() => {
+      if (rawRegistrationTs && rawCreatedTs) {
+        const regMs = new Date(rawRegistrationTs).getTime()
+        const createdMs = new Date(rawCreatedTs).getTime()
+        return regMs <= createdMs ? rawRegistrationTs : rawCreatedTs
+      }
+      return rawRegistrationTs || rawCreatedTs
+    })()
+
+    const daysSinceRegistration = effectiveRegistrationTs
       ? Math.floor(
-          (Date.now() - new Date(registrationDate).getTime()) /
+          (Date.now() - new Date(effectiveRegistrationTs).getTime()) /
             (1000 * 60 * 60 * 24)
         )
       : 0
@@ -211,10 +223,8 @@ async function calculateUserStats(user) {
       longestStreak, // Из БД (строка 157)
       totalElements: userStats?.total_elements || gardenElements?.length || 0,
       rareElementsFound: userStats?.rare_elements_found || rareElementsCount,
-      totalDays: Math.max(
-        userStats?.total_days || 0,
-        daysSinceRegistration + 1
-      ),
+      // "Всего дней" = дни с момента регистрации (инклюзивно)
+      totalDays: Math.max(1, daysSinceRegistration + 1),
       gardensShared: userStats?.gardens_shared || 0,
       experience: userStats?.experience || 0,
       level: userStats?.level || 1,
@@ -223,8 +233,8 @@ async function calculateUserStats(user) {
     // 🔍 ОТЛАДКА: Показываем откуда берутся данные
     console.log('📊 Stats Sources [V3]:', {
       telegramId: user.telegram_id,
-      registrationDate: registrationDate
-        ? new Date(registrationDate).toISOString().split('T')[0]
+      registrationDate: effectiveRegistrationTs
+        ? new Date(effectiveRegistrationTs).toISOString().split('T')[0]
         : 'unknown',
       dbStats: {
         total_days: userStats?.total_days,
@@ -240,7 +250,7 @@ async function calculateUserStats(user) {
       },
       finalStats,
       streakSource: 'DB only (no recalculation)',
-      totalDaysLogic: `Math.max(${userStats?.total_days || 0}, ${daysSinceRegistration + 1}) = ${Math.max(userStats?.total_days || 0, daysSinceRegistration + 1)}`,
+      totalDaysLogic: `Math.max(1, ${daysSinceRegistration + 1}) = ${Math.max(1, daysSinceRegistration + 1)}`,
     })
 
     return finalStats

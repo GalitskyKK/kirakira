@@ -146,7 +146,19 @@ export function ProfilePage() {
     stats: {
       currentStreak: apiUser?.current_streak ?? 0,
       longestStreak: apiUser?.longest_streak ?? 0,
-      totalDays: apiUser?.total_days ?? 0,
+      // "Всего дней" = дни с момента регистрации (инклюзивно), а не активные дни из users.total_days
+      totalDays:
+        profileData?.stats?.totalDays ??
+        Math.max(
+          1,
+          Math.floor(
+            (Date.now() -
+              (apiUser?.registration_date != null
+                ? new Date(apiUser.registration_date).getTime()
+                : (currentUser?.registrationDate ?? new Date()).getTime())) /
+              (1000 * 60 * 60 * 24)
+          ) + 1
+        ),
       rareElementsFound: apiUser?.rare_elements_found ?? 0,
       gardensShared: apiUser?.gardens_shared ?? 0,
       totalElements: totalElements,

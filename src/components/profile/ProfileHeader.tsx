@@ -48,7 +48,6 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({
   user,
-  stats,
   leaderboardPosition,
 }: ProfileHeaderProps) {
   const navigate = useNavigate()
@@ -88,24 +87,6 @@ export function ProfileHeader({
 
   // Рассчитываем информацию об уровне
   const levelInfo = calculateLevelProgress(experience)
-
-  // 🔥 ИСПРАВЛЕНИЕ: Используем данные с сервера для подсчета дней
-  // Приоритет: серверные данные > локальный расчет > fallback
-  const daysSinceRegistration = (() => {
-    // Если есть статистика с сервера - используем её
-    if (stats?.totalDays != null && stats.totalDays > 0) {
-      return stats.totalDays
-    }
-
-    // Fallback: локальный расчет
-    const registrationDate = new Date(user.registrationDate)
-    const calculated = Math.floor(
-      (Date.now() - registrationDate.getTime()) / (1000 * 60 * 60 * 24)
-    )
-
-    // +1 потому что день регистрации тоже считается
-    return Math.max(1, calculated + 1)
-  })()
 
   const leaderboardLabel = (() => {
     if (leaderboardPosition?.isLoading) {
@@ -198,18 +179,6 @@ export function ProfileHeader({
             <div className="inline-flex items-center rounded-full border border-garden-200/70 bg-white/80 px-3 py-1 text-xs font-semibold text-garden-600 shadow-sm backdrop-blur dark:border-garden-400/30 dark:bg-garden-900/40 dark:text-garden-100">
               <Trophy className="mr-1 h-3.5 w-3.5" />
               <span>{leaderboardLabel}</span>
-            </div>
-
-            {/* Quick Stats */}
-            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-              <span>🗓️</span>
-              <span className="ml-1">
-                {daysSinceRegistration === 0
-                  ? t.profile.today
-                  : daysSinceRegistration === 1
-                    ? `1 ${t.profile.day}`
-                    : `${daysSinceRegistration} ${t.profile.days}`}
-              </span>
             </div>
           </div>
 
