@@ -14,7 +14,6 @@ import {
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useChallengeMoodIntegration } from '@/hooks/useChallengeIntegration'
-import { useQuestIntegration } from '@/hooks/useQuestIntegration'
 import { useUserClientStore } from '@/stores/userStore'
 import type { MoodType, MoodIntensity, MoodEntry, MoodStats } from '@/types'
 import { getMoodDisplayProps, getRecommendedMood } from '@/utils/moodMapping'
@@ -50,9 +49,6 @@ export function useMoodTracking() {
 
   const addMoodMutation = useAddMoodEntry()
   const { onMoodEntryAdded } = useChallengeMoodIntegration()
-  const { questActions } = useQuestIntegration({
-    onQuestUpdated: () => undefined,
-  })
 
   // Проверка возможности отметки настроения
   const { canCheckin, todaysMood: serverTodaysMood } = useCanCheckinToday(
@@ -245,21 +241,6 @@ export function useMoodTracking() {
           // Успешная награда обрабатывается без дополнительного логирования
         }
 
-        // 🎯 Обновляем прогресс daily quests
-        if (telegramId !== undefined) {
-          try {
-            // Обновляем квесты настроения
-            await questActions.recordMood(mood, !!note)
-
-            // Обновляем квесты стриков (если это первая запись за день)
-            if (isFirstToday) {
-              await questActions.maintainStreak(1)
-            }
-          } catch (questError) {
-            console.error('❌ Failed to update quest progress:', questError)
-          }
-        }
-
         // 🏆 Обновляем прогресс челенджей
         try {
           await onMoodEntryAdded()
@@ -282,8 +263,6 @@ export function useMoodTracking() {
       guestModeEnabled,
       addMoodMutation,
       moodHistory,
-      questActions,
-      telegramId,
       todaysMood,
       onMoodEntryAdded,
     ]

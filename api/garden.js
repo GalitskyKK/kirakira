@@ -139,6 +139,73 @@ async function handleAddElement(req, res) {
       unlockDateStr = `${todayYear}-${todayMonth}-${todayDay}`
     }
 
+    // ✅ ИДЕМПОТЕНТНОСТЬ: не создаем 2 элемента "за один локальный день"
+    // Клиент отправляет unlockDate с offset'ом (например 2026-01-15T11:23:12+05:00).
+    // Мы используем этот offset, чтобы корректно вычислить UTC-окно локального дня пользователя
+    // и проверить существующий элемент в БД.
+    const getUtcDayWindowFromClientUnlockDate = s => {
+      if (typeof s !== 'string') return null
+      const ymdMatch = /^(\d{4}-\d{2}-\d{2})/.exec(s)
+      const ymd = ymdMatch?.[1]
+      if (!ymd) return null
+
+      let offset = 'Z'
+      const offsetMatch = /([+-]\d{2}:\d{2})$/.exec(s)
+      if (offsetMatch?.[1]) {
+        offset = offsetMatch[1]
+      } else if (s.endsWith('Z')) {
+        offset = 'Z'
+      }
+
+      const start = new Date(`${ymd}T00:00:00${offset}`)
+      if (Number.isNaN(start.getTime())) return null
+      const end = new Date(start.getTime() + 24 * 60 * 60 * 1000)
+      return {
+        startIso: start.toISOString(),
+        endIso: end.toISOString(),
+        ymd,
+        offset,
+      }
+    }
+
+    const dayWindow = getUtcDayWindowFromClientUnlockDate(unlockDateStr)
+    if (dayWindow) {
+      const { data: existingElement, error: existingError } = await supabase
+        .from('garden_elements')
+        .select('id, unlock_date')
+        .eq('telegram_id', telegramId)
+        .gte('unlock_date', dayWindow.startIso)
+        .lt('unlock_date', dayWindow.endIso)
+        .order('unlock_date', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (existingError) {
+        console.warn(
+          '⚠️ Failed to check existing element for day:',
+          existingError
+        )
+      } else if (existingElement?.id) {
+        console.log(
+          '♻️ Element already exists for this local day, returning existing:',
+          {
+            telegramId,
+            day: dayWindow.ymd,
+            existingId: existingElement.id,
+          }
+        )
+        return res.status(200).json({
+          success: true,
+          data: {
+            id: existingElement.id,
+            saved: true,
+            storage: 'supabase',
+            message: 'Garden element already exists for this day',
+          },
+        })
+      }
+    }
+
     const insertData = {
       telegram_id: telegramId,
       element_type: element.type,
@@ -172,6 +239,41 @@ async function handleAddElement(req, res) {
       .single()
 
     if (error) {
+      // ✅ ИДЕМПОТЕНТНОСТЬ (race): если параллельный запрос успел вставить — вернем существующий
+      const errorCode = error.code || error?.details || error?.message
+      const isDuplicate =
+        error.code === '23505' ||
+        String(errorCode).toLowerCase().includes('duplicate') ||
+        String(errorCode).toLowerCase().includes('unique')
+
+      if (isDuplicate && dayWindow) {
+        console.warn(
+          '⚠️ Duplicate insert detected, fetching existing element:',
+          error
+        )
+        const { data: existingAfterRace } = await supabase
+          .from('garden_elements')
+          .select('id, unlock_date')
+          .eq('telegram_id', telegramId)
+          .gte('unlock_date', dayWindow.startIso)
+          .lt('unlock_date', dayWindow.endIso)
+          .order('unlock_date', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (existingAfterRace?.id) {
+          return res.status(200).json({
+            success: true,
+            data: {
+              id: existingAfterRace.id,
+              saved: true,
+              storage: 'supabase',
+              message: 'Garden element already exists for this day (race)',
+            },
+          })
+        }
+      }
+
       console.error('Supabase garden element insert failed:', error)
       return res.status(500).json({
         success: false,
