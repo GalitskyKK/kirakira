@@ -35,4 +35,7 @@ jobs:
           local-dir: ./dist/
           # Куда лить на сервере. Ставим ./ потому что аккаунт уже привязан к папке сайта
           server-dir: ./
-          dangerous-clean-slate: true
+          # Важно: НЕ удаляем старые файлы при деплое.
+          # Иначе пользователи со старым index.html будут получать 404 на page-*.js чанки
+          # после деплоя (особенно при lazy import).
+          dangerous-clean-slate: false

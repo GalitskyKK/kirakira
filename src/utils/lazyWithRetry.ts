@@ -11,6 +11,32 @@ interface RetryOptions {
   onRetry?: (attempt: number, error: Error) => void
 }
 
+const CHUNK_RELOAD_SESSION_KEY = 'kirakira:chunk-load-reload:v1'
+
+function isLikelyChunkLoadError(message: string): boolean {
+  const normalized = message.toLowerCase()
+  return (
+    normalized.includes('failed to fetch dynamically imported module') ||
+    normalized.includes('importing a module script failed') ||
+    normalized.includes('module load failed') ||
+    normalized.includes('loading chunk') ||
+    // встречается в некоторых браузерах/окружениях
+    (normalized.includes('failed to fetch') && normalized.includes('.js'))
+  )
+}
+
+function reloadOnceToRecoverFromStaleAssets(): boolean {
+  try {
+    if (sessionStorage.getItem(CHUNK_RELOAD_SESSION_KEY) === '1') return false
+    sessionStorage.setItem(CHUNK_RELOAD_SESSION_KEY, '1')
+    window.location.reload()
+    return true
+  } catch {
+    // Если sessionStorage недоступен, не пытаемся агрессивно перезагружать
+    return false
+  }
+}
+
 /**
  * Создает lazy компонент с автоматическим retry при ошибках загрузки
  * Поддерживает как default export, так и named export
@@ -43,6 +69,18 @@ export function lazyWithRetry<T extends React.ComponentType<any>>(
             `❌ Failed to load module after ${maxRetries + 1} attempts:`,
             lastError
           )
+
+          // Частый кейс для Vite/Vercel/PWA: приложение осталось на старом shell,
+          // а чанки уже поменялись (hash), поэтому динамический import падает.
+          // Перезагружаем страницу ОДИН раз за сессию, чтобы получить свежий index.html.
+          if (isLikelyChunkLoadError(lastError.message)) {
+            const reloading = reloadOnceToRecoverFromStaleAssets()
+            if (reloading) {
+              // Держим Suspense в ожидании, пока идет reload.
+              await new Promise<void>(() => undefined)
+            }
+          }
+
           throw lastError
         }
 
