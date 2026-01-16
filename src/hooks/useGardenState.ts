@@ -78,6 +78,8 @@ export function useGardenState() {
     selectElement,
     setCurrentRoomIndex,
     clearSelection,
+    setLastChangedRoomIndex,
+    highlightElement,
   } = useGardenClientStore()
 
   // 🔧 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Объединенное состояние с приоритетом серверным данным
@@ -319,6 +321,13 @@ export function useGardenState() {
         })
 
         if (result) {
+          const changedRoomIndex = Math.floor(
+            result.element.position.y / SHELVES_PER_ROOM
+          )
+          setLastChangedRoomIndex(changedRoomIndex)
+          // Подсвечиваем новый элемент на ограниченное время (мягко, без бейджей)
+          highlightElement(result.element.id, 90_000)
+
           // 💰 Начисляем валюту за получение элемента
           await awardElementSprouts(
             currentUser.telegramId,
@@ -396,7 +405,13 @@ export function useGardenState() {
         return null
       }
     },
-    [currentUser, currentGarden, addElementMutation]
+    [
+      currentUser,
+      currentGarden,
+      addElementMutation,
+      highlightElement,
+      setLastChangedRoomIndex,
+    ]
   )
 
   // Безопасное перемещение элемента
@@ -525,13 +540,24 @@ export function useGardenState() {
           position: newPosition,
         })
 
+        if (success) {
+          const changedRoomIndex = Math.floor(newPosition.y / SHELVES_PER_ROOM)
+          setLastChangedRoomIndex(changedRoomIndex)
+        }
+
         return success
       } catch (error) {
         console.error('❌ Failed to move element:', error)
         return false
       }
     },
-    [currentUser, currentGarden, resolveTotalRooms, updatePositionMutation]
+    [
+      currentUser,
+      currentGarden,
+      resolveTotalRooms,
+      setLastChangedRoomIndex,
+      updatePositionMutation,
+    ]
   )
 
   // Проверка возможности разблокировки сегодня

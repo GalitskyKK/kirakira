@@ -13,6 +13,7 @@ interface ShelfElementProps {
   isSelected?: boolean
   isDragged?: boolean
   isBeingMoved?: boolean // Элемент выбран для перемещения
+  isHighlighted?: boolean
   viewMode: ViewMode
   elementWidth: number
   elementSpacing: number
@@ -28,6 +29,7 @@ export const ShelfElement = memo(function ShelfElement({
   isSelected = false,
   isDragged = false,
   isBeingMoved = false,
+  isHighlighted = false,
   viewMode,
   elementWidth,
   elementSpacing,
@@ -198,6 +200,7 @@ export const ShelfElement = memo(function ShelfElement({
         isDragged && 'z-30',
         isBeingMoved &&
           'pointer-events-none z-40 scale-110 ring-2 ring-blue-400 ring-opacity-60',
+        isHighlighted && !isSelected && !isBeingMoved && 'z-30',
         absoluteX !== undefined ? 'absolute' : 'relative' // АБСОЛЮТНОЕ или ОТНОСИТЕЛЬНОЕ позиционирование
       )}
       style={{
@@ -238,7 +241,9 @@ export const ShelfElement = memo(function ShelfElement({
         opacity: 1,
         filter: isSelected
           ? `brightness(1.15) drop-shadow(0 6px 20px ${moodConfig.color}35)`
-          : 'brightness(1) drop-shadow(0 3px 10px rgba(0,0,0,0.12))',
+          : isHighlighted
+            ? `brightness(1.05) drop-shadow(0 0 16px ${moodConfig.color}55) drop-shadow(0 3px 10px rgba(0,0,0,0.12))`
+            : 'brightness(1) drop-shadow(0 3px 10px rgba(0,0,0,0.12))',
       }}
       whileHover={{
         scale: 1.01,

@@ -19,6 +19,9 @@ interface GardenClientState {
   readonly displayMode: GardenDisplayMode
   readonly selectedElement: GardenElement | null
   readonly currentRoomIndex: number
+  readonly lastChangedRoomIndex: number | null
+  readonly highlightedElementId: string | null
+  readonly highlightedElementUntilMs: number | null
   readonly isLoading: boolean
   readonly error: string | null
 
@@ -27,6 +30,9 @@ interface GardenClientState {
   setDisplayMode: (mode: GardenDisplayMode) => void
   selectElement: (element: GardenElement | null) => void
   setCurrentRoomIndex: (roomIndex: number) => void
+  setLastChangedRoomIndex: (roomIndex: number | null) => void
+  highlightElement: (elementId: string, durationMs: number) => void
+  clearHighlight: () => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
 
@@ -63,6 +69,31 @@ const saveDisplayModeToStorage = (mode: GardenDisplayMode): void => {
   }
 }
 
+const loadLastChangedRoomIndexFromStorage = (): number | null => {
+  try {
+    const stored = localStorage.getItem('garden_last_changed_room_index')
+    if (!stored) {
+      return null
+    }
+    const parsed = Number(stored)
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+const saveLastChangedRoomIndexToStorage = (roomIndex: number | null): void => {
+  try {
+    if (roomIndex === null) {
+      localStorage.removeItem('garden_last_changed_room_index')
+      return
+    }
+    localStorage.setItem('garden_last_changed_room_index', String(roomIndex))
+  } catch {
+    // Игнорируем ошибки
+  }
+}
+
 export const useGardenClientStore = create<GardenClientState>()(
   subscribeWithSelector(set => ({
     // Начальное состояние
@@ -70,6 +101,9 @@ export const useGardenClientStore = create<GardenClientState>()(
     displayMode: loadDisplayModeFromStorage(),
     selectedElement: null,
     currentRoomIndex: 0,
+    lastChangedRoomIndex: loadLastChangedRoomIndexFromStorage(),
+    highlightedElementId: null,
+    highlightedElementUntilMs: null,
     isLoading: false,
     error: null,
 
@@ -89,6 +123,25 @@ export const useGardenClientStore = create<GardenClientState>()(
 
     setCurrentRoomIndex: (roomIndex: number) => {
       set({ currentRoomIndex: roomIndex })
+    },
+
+    setLastChangedRoomIndex: (roomIndex: number | null) => {
+      saveLastChangedRoomIndexToStorage(roomIndex)
+      set({ lastChangedRoomIndex: roomIndex })
+    },
+
+    highlightElement: (elementId: string, durationMs: number) => {
+      const safeDurationMs =
+        Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 0
+      const untilMs = Date.now() + safeDurationMs
+      set({
+        highlightedElementId: elementId,
+        highlightedElementUntilMs: safeDurationMs > 0 ? untilMs : null,
+      })
+    },
+
+    clearHighlight: () => {
+      set({ highlightedElementId: null, highlightedElementUntilMs: null })
     },
 
     setLoading: (loading: boolean) => {

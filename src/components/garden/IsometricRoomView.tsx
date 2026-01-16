@@ -9,13 +9,14 @@
 import { useMemo, useRef } from 'react'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
 import { useRoomTheme } from '@/hooks/useRoomTheme'
-import { useGardenRooms } from '@/hooks'
+import { useGardenRooms } from '@/hooks/useGardenRooms'
 import { ParticleCanvas } from './ParticleCanvas'
 import { PlantRenderer } from './plants/PlantRenderer'
 import { RoomNavigator } from './RoomNavigator'
 import { useTranslation } from '@/hooks/useTranslation'
 import type { GardenElement, ViewMode } from '@/types'
 import type { GardenTheme } from '@/hooks/useGardenTheme'
+import { useGardenClientStore } from '@/stores/gardenStore'
 
 // --- КОНСТАНТЫ ГЕОМЕТРИИ ---
 const TILE_SIZE = 24
@@ -132,10 +133,14 @@ export function IsometricRoomView({
   const { roomTheme } = useRoomTheme()
   const theme = friendTheme ?? defaultTheme
   const containerRef = useRef<HTMLDivElement>(null)
+  const highlightedElementId = useGardenClientStore(
+    state => state.highlightedElementId
+  )
 
   const { currentRoom, navigation } = useGardenRooms({
     elements,
     currentRoomIndex,
+    includeEmptyRoom: !!elementBeingMoved,
   })
 
   // Рассчитываем позиции
@@ -226,6 +231,7 @@ export function IsometricRoomView({
                 const { x, y, z } = element.renderCoords
                 const screenPos = toIso(x, y, z)
                 const isSelected = selectedElement?.id === element.id
+                const isHighlighted = highlightedElementId === element.id
 
                 return (
                   <foreignObject
@@ -254,7 +260,9 @@ export function IsometricRoomView({
                             'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.27)',
                           filter: isSelected
                             ? 'drop-shadow(0 0 15px rgba(255,255,255,0.8))'
-                            : 'drop-shadow(0 5px 10px rgba(0,0,0,0.1))',
+                            : isHighlighted
+                              ? 'drop-shadow(0 0 14px rgba(255,255,255,0.45)) drop-shadow(0 5px 10px rgba(0,0,0,0.1))'
+                              : 'drop-shadow(0 5px 10px rgba(0,0,0,0.1))',
                         }}
                       >
                         <PlantRenderer

@@ -1,12 +1,13 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence, PanInfo } from 'framer-motion'
-import { useGardenRooms } from '@/hooks'
+import { useGardenRooms } from '@/hooks/useGardenRooms'
 import { ShelfView } from './ShelfView'
 import { RoomNavigator } from './RoomNavigator'
 import { useTranslation } from '@/hooks/useTranslation'
 import type { GardenElement, ViewMode } from '@/types'
 import { ROOM_TRANSITION_DURATION, SHELVES_PER_ROOM } from '@/types'
 import type { GardenTheme } from '@/hooks/useGardenTheme'
+import { useGardenClientStore } from '@/stores/gardenStore'
 
 interface GardenRoomManagerProps {
   readonly elements: readonly GardenElement[]
@@ -47,25 +48,36 @@ export function GardenRoomManager({
   friendTheme,
 }: GardenRoomManagerProps) {
   const t = useTranslation()
+  const highlightedElementId = useGardenClientStore(
+    state => state.highlightedElementId
+  )
   // Используем хук для управления комнатами
-  const { rooms, currentRoom, navigation } = useGardenRooms({
+  const { rooms, currentRoom, navigation, effectiveRoomIndex } = useGardenRooms({
     elements,
     currentRoomIndex,
+    includeEmptyRoom: !!elementBeingMoved,
   })
+
+  // Если комнаты "сжались" (например, скрыли буферную), нормализуем индекс
+  useEffect(() => {
+    if (effectiveRoomIndex !== currentRoomIndex) {
+      onRoomChange(effectiveRoomIndex)
+    }
+  }, [currentRoomIndex, effectiveRoomIndex, onRoomChange])
 
   /**
    * Обработчик навигации между комнатами
    */
   const handleNavigate = useCallback(
     (direction: 'prev' | 'next') => {
-      const newIndex =
-        direction === 'prev' ? currentRoomIndex - 1 : currentRoomIndex + 1
+      const baseIndex = navigation.currentRoomIndex
+      const newIndex = direction === 'prev' ? baseIndex - 1 : baseIndex + 1
 
       if (newIndex >= 0 && newIndex < rooms.length) {
         onRoomChange(newIndex)
       }
     },
-    [currentRoomIndex, rooms.length, onRoomChange]
+    [navigation.currentRoomIndex, rooms.length, onRoomChange]
   )
 
   /**
@@ -108,10 +120,10 @@ export function GardenRoomManager({
       ...element,
       position: {
         x: element.position.x,
-        y: element.position.y - currentRoomIndex * SHELVES_PER_ROOM,
+        y: element.position.y - navigation.currentRoomIndex * SHELVES_PER_ROOM,
       },
     }))
-  }, [currentRoom, currentRoomIndex])
+  }, [currentRoom, navigation.currentRoomIndex])
 
   /**
    * Обработчик клика по слоту - преобразует локальные координаты в глобальные
@@ -120,13 +132,13 @@ export function GardenRoomManager({
     (localShelfIndex: number, position: number) => {
       // Преобразуем локальный индекс полки в глобальный
       const globalShelfIndex =
-        localShelfIndex + currentRoomIndex * SHELVES_PER_ROOM
+        localShelfIndex + navigation.currentRoomIndex * SHELVES_PER_ROOM
 
       if (onSlotClick) {
         onSlotClick(globalShelfIndex, position)
       }
     },
-    [currentRoomIndex, onSlotClick]
+    [navigation.currentRoomIndex, onSlotClick]
   )
 
   // Анимация перехода между комнатами
@@ -164,7 +176,7 @@ export function GardenRoomManager({
       <div className="relative min-h-[650px] w-full overflow-hidden rounded-2xl sm:min-h-[700px] lg:min-h-[750px]">
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
-            key={currentRoomIndex}
+            key={navigation.currentRoomIndex}
             custom={direction}
             variants={slideVariants}
             initial="enter"
@@ -193,6 +205,7 @@ export function GardenRoomManager({
               elementBeingMoved={elementBeingMoved ?? null}
               viewMode={viewMode}
               friendTheme={friendTheme ?? null}
+              highlightedElementId={highlightedElementId}
               {...(onElementClick ? { onElementClick } : {})}
               {...(onElementLongPress ? { onElementLongPress } : {})}
               {...(onSlotClick ? { onSlotClick: handleSlotClick } : {})}

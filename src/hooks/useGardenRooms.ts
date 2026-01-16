@@ -6,12 +6,14 @@ import { useTranslation } from '@/hooks/useTranslation'
 interface UseGardenRoomsParams {
   readonly elements: readonly GardenElement[]
   readonly currentRoomIndex: number
+  readonly includeEmptyRoom?: boolean
 }
 
 interface UseGardenRoomsResult {
   readonly rooms: readonly GardenRoom[]
   readonly currentRoom: GardenRoom | null
   readonly navigation: RoomNavigationState
+  readonly effectiveRoomIndex: number
   readonly getRoomForElement: (element: GardenElement) => number
   readonly getElementsInRoom: (roomIndex: number) => readonly GardenElement[]
   readonly isRoomFull: (roomIndex: number) => boolean
@@ -31,6 +33,7 @@ interface UseGardenRoomsResult {
 export function useGardenRooms({
   elements,
   currentRoomIndex,
+  includeEmptyRoom = false,
 }: UseGardenRoomsParams): UseGardenRoomsResult {
   const t = useTranslation()
 
@@ -113,8 +116,9 @@ export function useGardenRooms({
     }, 0)
 
     // Создаём массив комнат (от 0 до maxRoomIndex + 1)
-    // +1 чтобы всегда была пустая комната для новых элементов
-    const totalRooms = maxRoomIndex + 2
+    // +1 комната (maxRoomIndex + 1) всегда существует, а "пустая буферная" показывается
+    // только когда это нужно (например, при перемещении элемента между комнатами).
+    const totalRooms = includeEmptyRoom ? maxRoomIndex + 2 : maxRoomIndex + 1
 
     return Array.from({ length: totalRooms }, (_, roomIndex) => {
       const roomElements = getElementsInRoom(roomIndex)
@@ -134,26 +138,37 @@ export function useGardenRooms({
   /**
    * Получает текущую комнату
    */
+  const effectiveRoomIndex = useMemo(() => {
+    if (rooms.length === 0) {
+      return 0
+    }
+    if (currentRoomIndex < 0) {
+      return 0
+    }
+    return Math.min(currentRoomIndex, rooms.length - 1)
+  }, [currentRoomIndex, rooms.length])
+
   const currentRoom = useMemo<GardenRoom | null>(() => {
-    return rooms[currentRoomIndex] ?? null
-  }, [rooms, currentRoomIndex])
+    return rooms[effectiveRoomIndex] ?? null
+  }, [rooms, effectiveRoomIndex])
 
   /**
    * Состояние навигации
    */
   const navigation = useMemo<RoomNavigationState>(() => {
     return {
-      currentRoomIndex,
+      currentRoomIndex: effectiveRoomIndex,
       totalRooms: rooms.length,
-      canNavigatePrev: currentRoomIndex > 0,
-      canNavigateNext: currentRoomIndex < rooms.length - 1,
+      canNavigatePrev: effectiveRoomIndex > 0,
+      canNavigateNext: effectiveRoomIndex < rooms.length - 1,
     }
-  }, [currentRoomIndex, rooms.length])
+  }, [effectiveRoomIndex, rooms.length])
 
   return {
     rooms,
     currentRoom,
     navigation,
+    effectiveRoomIndex,
     getRoomForElement,
     getElementsInRoom,
     isRoomFull,

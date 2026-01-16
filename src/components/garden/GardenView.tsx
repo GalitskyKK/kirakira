@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { clsx } from 'clsx'
@@ -10,7 +10,7 @@ import { GardenRoomManager } from './GardenRoomManager'
 import { IsometricRoomView } from './IsometricRoomView'
 import { ElementDetails } from './ElementDetails'
 import { PaletteView } from './PaletteView'
-import { LoadingOverlay, Card } from '@/components/ui'
+import { LoadingOverlay, Card, Toast } from '@/components/ui'
 import { useTranslation } from '@/hooks/useTranslation'
 import type { GardenElement as GardenElementType } from '@/types'
 import { ViewMode, GardenDisplayMode } from '@/types'
@@ -34,13 +34,87 @@ export function GardenView({ className, compact = false }: GardenViewProps) {
     moveElementSafely,
   } = useGardenState()
 
-  const { displayMode } = useGardenClientStore()
+  const displayMode = useGardenClientStore(state => state.displayMode)
+  const lastChangedRoomIndex = useGardenClientStore(
+    state => state.lastChangedRoomIndex
+  )
+  const highlightedElementId = useGardenClientStore(
+    state => state.highlightedElementId
+  )
+  const highlightedElementUntilMs = useGardenClientStore(
+    state => state.highlightedElementUntilMs
+  )
+  const clearHighlight = useGardenClientStore(state => state.clearHighlight)
   const { moodHistory } = useMoodTracking()
 
   const [draggedElement] = useState<GardenElementType | null>(null)
   const [elementBeingMoved, setElementBeingMoved] =
     useState<GardenElementType | null>(null) // Элемент для перемещения
   const [isFullscreen, setIsFullscreen] = useState(false) // Полноэкранный режим палетки
+  const [showNewElementToast, setShowNewElementToast] = useState(false)
+  const didRestoreRoomRef = useRef(false)
+
+  // При входе в сад: открываем комнату, где были изменения
+  useEffect(() => {
+    if (!garden) {
+      return
+    }
+    if (didRestoreRoomRef.current) {
+      return
+    }
+
+    const maxRoomIndex =
+      garden.elements.length > 0
+        ? garden.elements.reduce((max, el) => {
+            const roomIndex = Math.floor(el.position.y / 4)
+            return roomIndex > max ? roomIndex : max
+          }, 0)
+        : 0
+
+    const targetRoomIndex =
+      lastChangedRoomIndex !== null
+        ? Math.min(lastChangedRoomIndex, maxRoomIndex)
+        : 0
+
+    // Устанавливаем комнату один раз на входе (не ломаем ручную навигацию)
+    setCurrentRoomIndex(targetRoomIndex)
+    didRestoreRoomRef.current = true
+
+    // Ненавязчивый тост только если есть актуальная подсветка
+    if (highlightedElementId && highlightedElementUntilMs) {
+      if (highlightedElementUntilMs > Date.now()) {
+        setShowNewElementToast(true)
+      }
+    }
+  }, [
+    garden,
+    highlightedElementId,
+    highlightedElementUntilMs,
+    lastChangedRoomIndex,
+    setCurrentRoomIndex,
+  ])
+
+  // Авто-очистка подсветки по таймеру
+  useEffect(() => {
+    if (!highlightedElementId || !highlightedElementUntilMs) {
+      return
+    }
+
+    const now = Date.now()
+    if (highlightedElementUntilMs <= now) {
+      clearHighlight()
+      return
+    }
+
+    const timeoutMs = highlightedElementUntilMs - now
+    const timer = window.setTimeout(() => {
+      clearHighlight()
+    }, timeoutMs)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [clearHighlight, highlightedElementId, highlightedElementUntilMs])
 
   const handleElementClick = useCallback(
     (element: GardenElementType) => {
@@ -177,6 +251,13 @@ export function GardenView({ className, compact = false }: GardenViewProps) {
 
   return (
     <>
+      <Toast
+        message="Добавлен новый элемент"
+        type="info"
+        duration={2400}
+        onClose={() => setShowNewElementToast(false)}
+        isVisible={showNewElementToast}
+      />
       {/* Fullscreen Palette Overlay - Rendered via Portal to document.body */}
       {createPortal(
         <AnimatePresence>

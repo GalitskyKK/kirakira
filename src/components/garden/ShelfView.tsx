@@ -14,6 +14,7 @@ interface ShelfViewProps {
   draggedElement?: GardenElementType | null
   elementBeingMoved?: GardenElementType | null // Элемент в режиме перемещения
   viewMode: ViewMode
+  highlightedElementId?: string | null
   onElementClick?: (element: GardenElementType) => void
   onElementLongPress?: (element: GardenElementType) => void // Долгое нажатие
   onSlotClick?: (shelfIndex: number, position: number) => void // Клик по слоту
@@ -37,6 +38,7 @@ export function ShelfView({
   draggedElement,
   elementBeingMoved,
   viewMode,
+  highlightedElementId,
   onElementClick,
   onElementLongPress,
   onSlotClick,
@@ -447,6 +449,10 @@ export function ShelfView({
                               }
                               isBeingMoved={
                                 elementBeingMoved?.id ===
+                                elementInSlot.element.id
+                              }
+                              isHighlighted={
+                                highlightedElementId ===
                                 elementInSlot.element.id
                               }
                               viewMode={viewMode}
