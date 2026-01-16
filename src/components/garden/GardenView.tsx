@@ -45,6 +45,7 @@ export function GardenView({ className, compact = false }: GardenViewProps) {
     state => state.highlightedElementUntilMs
   )
   const clearHighlight = useGardenClientStore(state => state.clearHighlight)
+  const highlightElement = useGardenClientStore(state => state.highlightElement)
   const { moodHistory } = useMoodTracking()
 
   const [draggedElement] = useState<GardenElementType | null>(null)
@@ -73,15 +74,32 @@ export function GardenView({ className, compact = false }: GardenViewProps) {
     const targetRoomIndex =
       lastChangedRoomIndex !== null
         ? Math.min(lastChangedRoomIndex, maxRoomIndex)
-        : 0
+        : maxRoomIndex
 
     // Устанавливаем комнату один раз на входе (не ломаем ручную навигацию)
     setCurrentRoomIndex(targetRoomIndex)
     didRestoreRoomRef.current = true
+
+    // Если подсветки нет (например, на другом устройстве), подсвечиваем последний элемент,
+    // но только если он достаточно "свежий" (чтобы не подсвечивать старое при каждом входе).
+    if (garden.elements.length > 0 && highlightedElementId === null) {
+      const newest = garden.elements.reduce((latest, el) => {
+        return el.unlockDate.getTime() > latest.unlockDate.getTime() ? el : latest
+      }, garden.elements[0]!)
+
+      const ageMs = Date.now() - newest.unlockDate.getTime()
+      const MAX_HIGHLIGHT_AGE_MS = 2 * 60 * 60 * 1000 // 2 часа
+
+      if (ageMs >= 0 && ageMs <= MAX_HIGHLIGHT_AGE_MS) {
+        highlightElement(newest.id, 10 * 60 * 1000) // 10 минут на поиск
+      }
+    }
   }, [
     garden,
+    highlightElement,
     lastChangedRoomIndex,
     setCurrentRoomIndex,
+    highlightedElementId,
   ])
 
   // Авто-очистка подсветки по таймеру

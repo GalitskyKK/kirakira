@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
 import { PlantRenderer } from './plants'
 import type { GardenElement as GardenElementType } from '@/types'
-import { RarityLevel, ViewMode } from '@/types'
+import { RarityLevel, SeasonalVariant, ViewMode } from '@/types'
 import { MOOD_CONFIG } from '@/types/mood'
 
 interface ShelfElementProps {
@@ -201,7 +201,10 @@ export const ShelfElement = memo(function ShelfElement({
         isDragged && 'z-30',
         isBeingMoved &&
           'pointer-events-none z-40 scale-110 ring-2 ring-blue-400 ring-opacity-60',
-        isHighlighted && !isSelected && !isBeingMoved && 'z-30',
+        isHighlighted &&
+          !isSelected &&
+          !isBeingMoved &&
+          'z-30 scale-[1.06] ring-2 ring-blue-400/80 bg-blue-50/20 dark:bg-blue-900/10',
         absoluteX !== undefined ? 'absolute' : 'relative' // АБСОЛЮТНОЕ или ОТНОСИТЕЛЬНОЕ позиционирование
       )}
       style={{
@@ -264,8 +267,10 @@ export const ShelfElement = memo(function ShelfElement({
           className="pointer-events-none absolute inset-0"
           style={{
             borderRadius: 18,
-            boxShadow: `0 0 0 2px ${moodConfig.color}66, 0 0 28px ${moodConfig.color}55`,
-            background: `radial-gradient(circle at 50% 40%, ${moodConfig.color}26 0%, transparent 62%)`,
+            boxShadow:
+              '0 0 0 2px rgba(59,130,246,0.55), 0 0 34px rgba(59,130,246,0.40)',
+            background:
+              'radial-gradient(circle at 50% 40%, rgba(59,130,246,0.18) 0%, transparent 62%)',
           }}
         />
       )}
@@ -408,7 +413,7 @@ export const ShelfElement = memo(function ShelfElement({
       )}
 
       {/* Seasonal decorations */}
-      {element.seasonalVariant === 'winter' && (
+      {element.seasonalVariant === SeasonalVariant.WINTER && (
         <motion.div
           className="seasonal-decoration pointer-events-none absolute -top-4 left-1/2 -translate-x-1/2 text-sm"
           animate={{
@@ -422,7 +427,7 @@ export const ShelfElement = memo(function ShelfElement({
         </motion.div>
       )}
 
-      {element.seasonalVariant === 'autumn' && (
+      {element.seasonalVariant === SeasonalVariant.AUTUMN && (
         <motion.div
           className="seasonal-decoration pointer-events-none absolute -top-3 right-2 text-sm"
           animate={{
