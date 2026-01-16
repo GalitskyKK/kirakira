@@ -59,8 +59,8 @@ const DEFAULT_PREFERENCES: UserPreferences = {
     soundEffects: false,
     hapticFeedback: true,
     seasonalThemes: true,
-    displayMode: GardenDisplayMode.GARDEN,
-    friendViewMode: GardenDisplayMode.GARDEN,
+    displayMode: GardenDisplayMode.ISOMETRIC_ROOM,
+    friendViewMode: GardenDisplayMode.ISOMETRIC_ROOM,
   },
 }
 

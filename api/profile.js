@@ -136,6 +136,10 @@ async function ensureUser(telegramId, userData = {}) {
       // registration_date будет равна created_at (автоматически в БД)
       experience: 0,
       level: 1,
+      // ✅ ДЕФОЛТНЫЙ ВИД САДА ДЛЯ НОВЫХ ПОЛЬЗОВАТЕЛЕЙ
+      // Важно: выставляем явно при создании, чтобы не зависеть от дефолта в БД.
+      garden_display_mode: 'isometric_room',
+      friend_garden_display: 'isometric_room',
     })
     .select()
     .single()

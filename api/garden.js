@@ -67,23 +67,54 @@ async function handleAddElement(req, res) {
     if (telegramUserData) {
       console.log(`👤 Ensuring user exists with data:`, telegramUserData)
 
-      const { error: userError } = await supabase.from('users').upsert(
-        {
-          telegram_id: telegramId,
-          user_id: telegramUserData.userId || `user_${telegramId}`,
-          username: telegramUserData.username || null,
-          first_name: telegramUserData.firstName || null,
-          last_name: telegramUserData.lastName || null,
-          language_code: telegramUserData.languageCode || 'ru',
-          photo_url: telegramUserData.photoUrl || null,
-          // registration_date будет равна created_at (автоматически в БД)
-          last_visit_date: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: 'telegram_id',
-        }
-      )
+      const nowIso = new Date().toISOString()
+
+      const { data: existingUser, error: fetchUserError } = await supabase
+        .from('users')
+        .select('telegram_id')
+        .eq('telegram_id', telegramId)
+        .maybeSingle()
+
+      if (fetchUserError) {
+        console.error('Failed to check existing user:', fetchUserError)
+      }
+
+      const baseUserPayload = {
+        telegram_id: telegramId,
+        user_id: telegramUserData.userId || `user_${telegramId}`,
+        username: telegramUserData.username || null,
+        first_name: telegramUserData.firstName || null,
+        last_name: telegramUserData.lastName || null,
+        language_code: telegramUserData.languageCode || 'ru',
+        photo_url: telegramUserData.photoUrl || null,
+        // registration_date будет равна created_at (автоматически в БД)
+        last_visit_date: nowIso,
+        updated_at: nowIso,
+      }
+
+      // ⚠️ Не обновляем primary key (telegram_id) через update
+      const updateUserPayload = {
+        user_id: baseUserPayload.user_id,
+        username: baseUserPayload.username,
+        first_name: baseUserPayload.first_name,
+        last_name: baseUserPayload.last_name,
+        language_code: baseUserPayload.language_code,
+        photo_url: baseUserPayload.photo_url,
+        last_visit_date: baseUserPayload.last_visit_date,
+        updated_at: baseUserPayload.updated_at,
+      }
+
+      const { error: userError } = existingUser
+        ? await supabase
+            .from('users')
+            .update(updateUserPayload)
+            .eq('telegram_id', telegramId)
+        : await supabase.from('users').insert({
+            ...baseUserPayload,
+            // ✅ ДЕФОЛТНЫЙ ВИД САДА ДЛЯ НОВЫХ ПОЛЬЗОВАТЕЛЕЙ
+            garden_display_mode: 'isometric_room',
+            friend_garden_display: 'isometric_room',
+          })
 
       if (userError) {
         console.error('Auto user creation error:', userError)
@@ -710,7 +741,8 @@ async function handleViewFriendGarden(req, res) {
           gardenCreated: friendStats?.created_at || null,
           gardenTheme: ownerSettings.garden_theme || 'light', // Добавляем тему сада друга
           roomTheme: ownerSettings.room_theme || 'isoRoom',
-          friendGardenDisplay: ownerSettings.friend_garden_display || 'garden',
+          friendGardenDisplay:
+            ownerSettings.friend_garden_display || 'isometric_room',
         },
         gardenElements: gardenElements.map(element => ({
           id: element.id,

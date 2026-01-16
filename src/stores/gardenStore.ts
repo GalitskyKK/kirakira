@@ -57,7 +57,7 @@ const loadDisplayModeFromStorage = (): GardenDisplayMode => {
   } catch {
     // Игнорируем ошибки
   }
-  return GardenDisplayMode.GARDEN
+  return GardenDisplayMode.ISOMETRIC_ROOM
 }
 
 // Сохранение displayMode в localStorage

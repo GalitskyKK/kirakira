@@ -95,25 +95,55 @@ async function handleRecord(req, res) {
     if (userDataToUse) {
       console.log(`👤 Ensuring user exists with data:`, userDataToUse)
 
-      const { error: userError } = await supabase.from('users').upsert(
-        {
-          telegram_id: telegramUserId,
-          user_id: userDataToUse.userId || `tg_${telegramUserId}`,
-          username: userDataToUse.username || null,
-          first_name:
-            userDataToUse.firstName || userDataToUse.first_name || null,
-          last_name: userDataToUse.lastName || userDataToUse.last_name || null,
-          language_code:
-            userDataToUse.languageCode || userDataToUse.language_code || 'ru',
-          photo_url: userDataToUse.photoUrl || userDataToUse.photo_url || null,
-          // registration_date будет равна created_at (автоматически в БД)
-          last_visit_date: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: 'telegram_id',
-        }
-      )
+      const nowIso = new Date().toISOString()
+
+      const { data: existingUser, error: fetchUserError } = await supabase
+        .from('users')
+        .select('telegram_id')
+        .eq('telegram_id', telegramUserId)
+        .maybeSingle()
+
+      if (fetchUserError) {
+        console.error('Failed to check existing user:', fetchUserError)
+      }
+
+      const baseUserPayload = {
+        telegram_id: telegramUserId,
+        user_id: userDataToUse.userId || `tg_${telegramUserId}`,
+        username: userDataToUse.username || null,
+        first_name: userDataToUse.firstName || userDataToUse.first_name || null,
+        last_name: userDataToUse.lastName || userDataToUse.last_name || null,
+        language_code:
+          userDataToUse.languageCode || userDataToUse.language_code || 'ru',
+        photo_url: userDataToUse.photoUrl || userDataToUse.photo_url || null,
+        // registration_date будет равна created_at (автоматически в БД)
+        last_visit_date: nowIso,
+        updated_at: nowIso,
+      }
+
+      // ⚠️ Не обновляем primary key (telegram_id) через update
+      const updateUserPayload = {
+        user_id: baseUserPayload.user_id,
+        username: baseUserPayload.username,
+        first_name: baseUserPayload.first_name,
+        last_name: baseUserPayload.last_name,
+        language_code: baseUserPayload.language_code,
+        photo_url: baseUserPayload.photo_url,
+        last_visit_date: baseUserPayload.last_visit_date,
+        updated_at: baseUserPayload.updated_at,
+      }
+
+      const { error: userError } = existingUser
+        ? await supabase
+            .from('users')
+            .update(updateUserPayload)
+            .eq('telegram_id', telegramUserId)
+        : await supabase.from('users').insert({
+            ...baseUserPayload,
+            // ✅ ДЕФОЛТНЫЙ ВИД САДА ДЛЯ НОВЫХ ПОЛЬЗОВАТЕЛЕЙ
+            garden_display_mode: 'isometric_room',
+            friend_garden_display: 'isometric_room',
+          })
 
       if (userError) {
         console.error('Auto user creation error:', userError)
@@ -132,7 +162,10 @@ async function handleRecord(req, res) {
     // 2) иначе, если date выглядит как ISO (YYYY-MM-DDT...) — берем первые 10 символов
     // 3) иначе fallback на старую логику сервера (может быть неверной для TZ пользователя)
     let formattedDate = null
-    if (typeof localDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(localDate)) {
+    if (
+      typeof localDate === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(localDate)
+    ) {
       formattedDate = localDate
     } else if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(date)) {
       formattedDate = date.slice(0, 10)
@@ -213,7 +246,9 @@ async function handleRecord(req, res) {
           // Парсим как локальные даты для корректного расчета
           const lastCheckinDate = new Date(lastCheckinStr + 'T00:00:00')
           const todayDate = new Date(todayStr + 'T00:00:00')
-          diffDays = Math.floor((todayDate - lastCheckinDate) / (1000 * 60 * 60 * 24))
+          diffDays = Math.floor(
+            (todayDate - lastCheckinDate) / (1000 * 60 * 60 * 24)
+          )
         } else {
           diffDays = 0 // Та же дата
         }
@@ -809,7 +844,9 @@ async function updateStreakGemQuest(
 
     const newStatus = newProgress >= targetValue ? 'completed' : 'active'
     const progressedAfterClaim =
-      claimedAtDateStr && lastProgressDate && lastProgressDate > claimedAtDateStr
+      claimedAtDateStr &&
+      lastProgressDate &&
+      lastProgressDate > claimedAtDateStr
 
     const shouldResetClaim =
       (existingQuest.claimed_at || existingQuest.completed_at) &&
