@@ -16,7 +16,6 @@ import { RoomNavigator } from './RoomNavigator'
 import { useTranslation } from '@/hooks/useTranslation'
 import type { GardenElement, ViewMode } from '@/types'
 import type { GardenTheme } from '@/hooks/useGardenTheme'
-import { useGardenClientStore } from '@/stores/gardenStore'
 
 // --- КОНСТАНТЫ ГЕОМЕТРИИ ---
 const TILE_SIZE = 24
@@ -116,6 +115,7 @@ interface IsometricRoomViewProps {
   readonly onSlotClick?: (shelfIndex: number, position: number) => void
   readonly friendTheme?: GardenTheme | null
   readonly roomThemeIdOverride?: string
+  readonly highlightedElementId?: string | null
 }
 
 export function IsometricRoomView({
@@ -128,14 +128,12 @@ export function IsometricRoomView({
   onElementLongPress,
   friendTheme,
   roomThemeIdOverride,
+  highlightedElementId,
 }: IsometricRoomViewProps) {
   const { theme: defaultTheme } = useGardenTheme()
   const { roomTheme } = useRoomTheme()
   const theme = friendTheme ?? defaultTheme
   const containerRef = useRef<HTMLDivElement>(null)
-  const highlightedElementId = useGardenClientStore(
-    state => state.highlightedElementId
-  )
 
   const { currentRoom, navigation } = useGardenRooms({
     elements,
@@ -255,13 +253,15 @@ export function IsometricRoomView({
                         style={{
                           transform: isSelected
                             ? 'scale(1.15) translateY(-8px)'
-                            : 'scale(1)',
+                            : isHighlighted
+                              ? 'scale(1.06)'
+                              : 'scale(1)',
                           transition:
                             'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.27)',
                           filter: isSelected
                             ? 'drop-shadow(0 0 15px rgba(255,255,255,0.8))'
                             : isHighlighted
-                              ? 'drop-shadow(0 0 14px rgba(255,255,255,0.45)) drop-shadow(0 5px 10px rgba(0,0,0,0.1))'
+                              ? `drop-shadow(0 0 22px ${element.color}AA) drop-shadow(0 0 10px rgba(255,255,255,0.35)) drop-shadow(0 5px 10px rgba(0,0,0,0.1))`
                               : 'drop-shadow(0 5px 10px rgba(0,0,0,0.1))',
                         }}
                       >

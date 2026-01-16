@@ -2,7 +2,8 @@ import { memo, useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
 import { PlantRenderer } from './plants'
-import type { GardenElement as GardenElementType, ViewMode } from '@/types'
+import type { GardenElement as GardenElementType } from '@/types'
+import { RarityLevel, ViewMode } from '@/types'
 import { MOOD_CONFIG } from '@/types/mood'
 
 interface ShelfElementProps {
@@ -82,15 +83,15 @@ export const ShelfElement = memo(function ShelfElement({
   // Calculate object size based on rarity and screen size (увеличенные размеры)
   const baseSize = isMobile ? 50 : 65 // Увеличенный базовый размер
   const rarityBonus =
-    element.rarity === 'rare'
+    element.rarity === RarityLevel.RARE
       ? isMobile
         ? 12
         : 15
-      : element.rarity === 'epic'
+      : element.rarity === RarityLevel.EPIC
         ? isMobile
           ? 20
           : 25
-        : element.rarity === 'legendary'
+        : element.rarity === RarityLevel.LEGENDARY
           ? isMobile
             ? 25
             : 35
@@ -128,7 +129,7 @@ export const ShelfElement = memo(function ShelfElement({
     touchStartTimeRef.current = Date.now()
 
     // Долгое нажатие работает в любом режиме (кроме детального просмотра)
-    if (onLongPress && viewMode !== 'detail') {
+    if (onLongPress && viewMode !== ViewMode.DETAIL) {
       longPressTimerRef.current = setTimeout(() => {
         // Проверяем, что таймер не был отменен
         if (longPressTimerRef.current) {
@@ -228,7 +229,7 @@ export const ShelfElement = memo(function ShelfElement({
       onTouchEnd={handleTouchEnd} // Умная обработка touchEnd
       onContextMenu={e => {
         // Предотвращаем контекстное меню на долгое нажатие
-        if (onLongPress && viewMode !== 'detail') {
+        if (onLongPress && viewMode !== ViewMode.DETAIL) {
           e.preventDefault()
         }
       }}
@@ -242,7 +243,7 @@ export const ShelfElement = memo(function ShelfElement({
         filter: isSelected
           ? `brightness(1.15) drop-shadow(0 6px 20px ${moodConfig.color}35)`
           : isHighlighted
-            ? `brightness(1.05) drop-shadow(0 0 16px ${moodConfig.color}55) drop-shadow(0 3px 10px rgba(0,0,0,0.12))`
+            ? `brightness(1.12) saturate(1.15) drop-shadow(0 0 26px ${moodConfig.color}88) drop-shadow(0 3px 10px rgba(0,0,0,0.12))`
             : 'brightness(1) drop-shadow(0 3px 10px rgba(0,0,0,0.12))',
       }}
       whileHover={{
@@ -257,6 +258,18 @@ export const ShelfElement = memo(function ShelfElement({
         delay: position * 0.02, // Уменьшена задержка
       }}
     >
+      {/* Highlight aura (NEW element) */}
+      {isHighlighted && !isSelected && !isBeingMoved && (
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            borderRadius: 18,
+            boxShadow: `0 0 0 2px ${moodConfig.color}66, 0 0 28px ${moodConfig.color}55`,
+            background: `radial-gradient(circle at 50% 40%, ${moodConfig.color}26 0%, transparent 62%)`,
+          }}
+        />
+      )}
+
       {/* Main object container - centered in flex container */}
       <motion.div
         className="object-container relative flex items-center justify-center"
@@ -349,7 +362,8 @@ export const ShelfElement = memo(function ShelfElement({
       )}
 
       {/* Magical effects for rare items */}
-      {(element.rarity === 'epic' || element.rarity === 'legendary') && (
+      {(element.rarity === RarityLevel.EPIC ||
+        element.rarity === RarityLevel.LEGENDARY) && (
         <motion.div
           className="magical-effects pointer-events-none absolute inset-0"
           initial={{ opacity: 0 }}
@@ -358,9 +372,11 @@ export const ShelfElement = memo(function ShelfElement({
         >
           {/* Floating sparkles around object */}
           {Array.from(
-            { length: element.rarity === 'legendary' ? 6 : 3 },
+            { length: element.rarity === RarityLevel.LEGENDARY ? 6 : 3 },
             (_, i) => {
-              const angle = (i * 360) / (element.rarity === 'legendary' ? 6 : 3)
+              const divisor =
+                element.rarity === RarityLevel.LEGENDARY ? 6 : 3
+              const safeAngle = (i * 360) / divisor
               const radius = objectSize * 0.6
               return (
                 <motion.div
@@ -373,8 +389,8 @@ export const ShelfElement = memo(function ShelfElement({
                     height: '4px',
                   }}
                   animate={{
-                    x: Math.cos((angle * Math.PI) / 180) * radius,
-                    y: Math.sin((angle * Math.PI) / 180) * radius * 0.5,
+                    x: Math.cos((safeAngle * Math.PI) / 180) * radius,
+                    y: Math.sin((safeAngle * Math.PI) / 180) * radius * 0.5,
                     opacity: [0.2, 0.6, 0.2],
                   }}
                   transition={{
@@ -436,7 +452,7 @@ export const ShelfElement = memo(function ShelfElement({
           <div className="rounded-lg bg-gray-900 px-3 py-2 text-xs text-white shadow-lg backdrop-blur-sm">
             <div className="font-semibold">{element.name}</div>
             <div className="text-gray-300">{moodConfig.label}</div>
-            {element.rarity !== 'common' && (
+            {element.rarity !== RarityLevel.COMMON && (
               <div className="text-yellow-300">
                 ⭐ {rarityLabels[element.rarity] ?? element.rarity}
               </div>

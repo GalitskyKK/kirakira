@@ -10,7 +10,7 @@ import { GardenRoomManager } from './GardenRoomManager'
 import { IsometricRoomView } from './IsometricRoomView'
 import { ElementDetails } from './ElementDetails'
 import { PaletteView } from './PaletteView'
-import { LoadingOverlay, Card, Toast } from '@/components/ui'
+import { LoadingOverlay, Card } from '@/components/ui'
 import { useTranslation } from '@/hooks/useTranslation'
 import type { GardenElement as GardenElementType } from '@/types'
 import { ViewMode, GardenDisplayMode } from '@/types'
@@ -51,7 +51,6 @@ export function GardenView({ className, compact = false }: GardenViewProps) {
   const [elementBeingMoved, setElementBeingMoved] =
     useState<GardenElementType | null>(null) // Элемент для перемещения
   const [isFullscreen, setIsFullscreen] = useState(false) // Полноэкранный режим палетки
-  const [showNewElementToast, setShowNewElementToast] = useState(false)
   const didRestoreRoomRef = useRef(false)
 
   // При входе в сад: открываем комнату, где были изменения
@@ -79,17 +78,8 @@ export function GardenView({ className, compact = false }: GardenViewProps) {
     // Устанавливаем комнату один раз на входе (не ломаем ручную навигацию)
     setCurrentRoomIndex(targetRoomIndex)
     didRestoreRoomRef.current = true
-
-    // Ненавязчивый тост только если есть актуальная подсветка
-    if (highlightedElementId && highlightedElementUntilMs) {
-      if (highlightedElementUntilMs > Date.now()) {
-        setShowNewElementToast(true)
-      }
-    }
   }, [
     garden,
-    highlightedElementId,
-    highlightedElementUntilMs,
     lastChangedRoomIndex,
     setCurrentRoomIndex,
   ])
@@ -251,13 +241,6 @@ export function GardenView({ className, compact = false }: GardenViewProps) {
 
   return (
     <>
-      <Toast
-        message="Добавлен новый элемент"
-        type="info"
-        duration={2400}
-        onClose={() => setShowNewElementToast(false)}
-        isVisible={showNewElementToast}
-      />
       {/* Fullscreen Palette Overlay - Rendered via Portal to document.body */}
       {createPortal(
         <AnimatePresence>
@@ -463,6 +446,7 @@ export function GardenView({ className, compact = false }: GardenViewProps) {
                           onElementClick={handleElementClick}
                           onElementLongPress={handleElementLongPress}
                           onSlotClick={handleSlotClick}
+                          highlightedElementId={highlightedElementId}
                         />
                       </motion.div>
                     ) : (
