@@ -4,17 +4,15 @@ import { MoodCheckin } from '@/components/mood'
 import {
   CurrencyDisplay,
   StreakFreezeIndicator,
-  StreakFreezeModal,
   TextTyping,
 } from '@/components/ui'
 import { useGardenState, useMoodTracking } from '@/hooks/index.v2'
 import { useAnimationConfig } from '@/hooks'
-import { useStreakFreeze } from '@/hooks/useStreakFreeze'
 import { useCurrencySync } from '@/hooks/useCurrencySync'
-import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useTranslation } from '@/hooks/useTranslation'
+import { getMaxStreakFreezes } from '@/utils/levelsData'
 
 export function MoodPage() {
   const navigate = useNavigate()
@@ -30,25 +28,12 @@ export function MoodPage() {
 
   // ✅ Автоматически загружаем и синхронизируем валюту через React Query
   useCurrencySync()
-  // Получаем валюту из v2 store (синхронизируется через useCurrencySync)
-  const { userCurrency } = useCurrencyClientStore()
+  const maxStreakFreezes = getMaxStreakFreezes(currentUser?.level ?? 1)
 
   const openShop = (tab: 'themes' | 'freezes' = 'themes') => {
     const tabSuffix = tab === 'themes' ? '' : `?tab=${tab}`
     navigate(`/mobile/shop${tabSuffix}`)
   }
-
-  // 🧊 Заморозки стрика
-  const {
-    freezeData,
-    missedDays,
-    showModal,
-    isLoading: freezeLoading,
-    autoUsedMessage,
-    useFreeze,
-    resetStreak,
-    closeModal,
-  } = useStreakFreeze()
 
   // ✅ Валюта автоматически загружается через useCurrencyBalance() выше
 
@@ -87,33 +72,21 @@ export function MoodPage() {
               </div>
 
               {/* Разделитель */}
-              {freezeData && (
+              {currentUser?.stats && (
                 <div className="h-6 w-px bg-neutral-300 dark:bg-neutral-600" />
               )}
 
               {/* 🧊 Заморозки стрика */}
-              {freezeData && (
+              {currentUser?.stats && (
                 <StreakFreezeIndicator
-                  manual={freezeData.manual}
-                  auto={freezeData.auto}
-                  max={freezeData.max}
+                  manual={currentUser.stats.streakFreezes}
+                  auto={currentUser.stats.autoFreezes}
+                  max={maxStreakFreezes}
                   showBorder={false}
                 />
               )}
             </div>
           </div>
-
-          {/* Сообщение об авто-использовании заморозки */}
-          {autoUsedMessage != null && autoUsedMessage.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mt-2 text-center text-xs text-cyan-400"
-            >
-              {autoUsedMessage}
-            </motion.div>
-          )}
         </div>
 
         {/* Mood Check-in */}
@@ -223,32 +196,6 @@ export function MoodPage() {
           </button>
         </div>
 
-        {/* 🧊 Модалка заморозки стрика */}
-        {freezeData && (
-          <StreakFreezeModal
-            isOpen={showModal}
-            onClose={closeModal}
-            missedDays={missedDays}
-            currentStreak={currentUser?.stats.currentStreak ?? 0}
-            availableFreezes={{
-              manual: freezeData.manual,
-              auto: freezeData.auto,
-            }}
-            onUseFreeze={useFreeze}
-            onResetStreak={resetStreak as (() => Promise<void>) | undefined}
-            onBuyFreeze={() => {
-              closeModal()
-              openShop('freezes')
-            }}
-            isLoading={freezeLoading}
-            {...(userCurrency && {
-              userCurrency: {
-                sprouts: userCurrency.sprouts,
-                gems: userCurrency.gems,
-              },
-            })}
-          />
-        )}
       </div>
     </>
   )

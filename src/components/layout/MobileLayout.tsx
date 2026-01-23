@@ -1,12 +1,14 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { MobileTabNavigation } from './MobileTabNavigation'
 import { TelegramStatus, StreakFreezeModal } from '@/components/ui'
 import { useStreakFreeze } from '@/hooks/useStreakFreeze'
 import { useCurrencySync } from '@/hooks/useCurrencySync'
 import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
+import { useCurrencyClientStore } from '@/stores/currencyStore'
 
 export function MobileLayout() {
+  const navigate = useNavigate()
   // Получаем данные пользователя через React Query
   const telegramId = useTelegramId()
   const { data: userData } = useUserSync(telegramId, !!telegramId)
@@ -14,6 +16,12 @@ export function MobileLayout() {
 
   // ✅ Автоматически загружаем и синхронизируем валюту через React Query
   useCurrencySync()
+  const { userCurrency } = useCurrencyClientStore()
+
+  const openShop = (tab: 'themes' | 'freezes' = 'themes') => {
+    const tabSuffix = tab === 'themes' ? '' : `?tab=${tab}`
+    navigate(`/mobile/shop${tabSuffix}`)
+  }
 
   // 🧊 Заморозки стрика
   const {
@@ -57,7 +65,17 @@ export function MobileLayout() {
           }}
           onUseFreeze={useFreeze}
           onResetStreak={resetStreak as (() => Promise<void>) | undefined}
+          onBuyFreeze={() => {
+            closeModal()
+            openShop('freezes')
+          }}
           isLoading={freezeLoading}
+          {...(userCurrency && {
+            userCurrency: {
+              sprouts: userCurrency.sprouts,
+              gems: userCurrency.gems,
+            },
+          })}
         />
       )}
     </div>
