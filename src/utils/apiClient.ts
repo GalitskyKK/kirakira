@@ -194,7 +194,7 @@ function isTelegramEnv(): boolean {
  */
 export function createAuthHeaders(
   additionalHeaders: Record<string, string> = {}
-): HeadersInit {
+): Record<string, string> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...additionalHeaders,
@@ -237,8 +237,7 @@ export async function authenticatedFetch(
     headers,
   })
 
-  const authHeader =
-    typeof headers === 'object' && headers ? headers['Authorization'] : undefined
+  const authHeader = headers['Authorization']
   const usedJwt = typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
 
   if (response.status === 401 && usedJwt) {
