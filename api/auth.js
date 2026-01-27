@@ -4,7 +4,7 @@
  * Валидирует данные от виджета и возвращает JWT токен для дальнейшей работы
  */
 
-import { validateTelegramLoginWidget } from './_auth.js'
+import { authenticateJWT, validateTelegramLoginWidget } from './_auth.js'
 import { generateSupabaseJWT } from './_jwt.js'
 
 export default async function handler(req, res) {
@@ -36,12 +36,50 @@ export default async function handler(req, res) {
     return res.status(200).end()
   }
 
+  const action = req.query?.action || 'login'
+
   // Только POST запросы
   if (req.method !== 'POST') {
     return res.status(405).json({
       success: false,
       error: 'Method not allowed',
       message: 'Only POST requests are allowed',
+    })
+  }
+
+  if (action === 'refresh') {
+    const authHeader = req.headers.authorization || req.headers.Authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+        message: 'Missing or invalid Authorization header',
+      })
+    }
+
+    const token = authHeader.replace('Bearer ', '')
+    const auth = await authenticateJWT(token)
+
+    if (!auth.authorized || !auth.telegramId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+        message: 'Invalid or expired token',
+      })
+    }
+
+    const jwt = generateSupabaseJWT(auth.telegramId, {
+      firstName: auth.userData?.firstName,
+      lastName: auth.userData?.lastName,
+      username: auth.userData?.username,
+    })
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        token: jwt,
+        telegramId: auth.telegramId,
+      },
     })
   }
 

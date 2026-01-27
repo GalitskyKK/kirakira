@@ -1,6 +1,11 @@
-import { createContext, useContext, ReactNode, useMemo } from 'react'
+import { createContext, useContext, ReactNode, useMemo, useEffect, useState } from 'react'
 import { useTelegram } from '@/hooks'
-import { getTelegramIdFromJWT } from '@/utils/apiClient'
+import {
+  AUTH_RESET_EVENT,
+  JWT_STORAGE_KEY,
+  getTelegramIdFromJWT,
+  refreshJWTTokenIfNeeded,
+} from '@/utils/apiClient'
 
 interface UserContextType {
   telegramId: number | undefined
@@ -15,6 +20,41 @@ interface UserProviderProps {
 
 export function UserProvider({ children }: UserProviderProps) {
   const { user: telegramUser } = useTelegram()
+  const [jwtTelegramId, setJwtTelegramId] = useState<number | undefined>(() => {
+    const id = getTelegramIdFromJWT()
+    return id ?? undefined
+  })
+
+  useEffect(() => {
+    const refreshJwtId = () => {
+      const id = getTelegramIdFromJWT()
+      setJwtTelegramId(id ?? undefined)
+    }
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === JWT_STORAGE_KEY) {
+        refreshJwtId()
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', handleStorage)
+      window.addEventListener(AUTH_RESET_EVENT, refreshJwtId)
+    }
+
+    void refreshJWTTokenIfNeeded()
+    const intervalId = window.setInterval(() => {
+      void refreshJWTTokenIfNeeded()
+    }, 1000 * 60 * 60 * 6)
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('storage', handleStorage)
+        window.removeEventListener(AUTH_RESET_EVENT, refreshJwtId)
+      }
+      window.clearInterval(intervalId)
+    }
+  }, [])
 
   // Определяем, является ли среда реальным Telegram Mini App (а не расширение)
   const isTelegramEnv = useMemo(() => {
@@ -35,9 +75,8 @@ export function UserProvider({ children }: UserProviderProps) {
     }
 
     // Если в браузере - пытаемся получить из JWT токена
-    const jwtTelegramId = getTelegramIdFromJWT()
     return jwtTelegramId ?? undefined
-  }, [telegramUser?.telegramId])
+  }, [telegramUser?.telegramId, jwtTelegramId])
 
   const value: UserContextType = {
     telegramId,

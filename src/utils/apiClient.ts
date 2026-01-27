@@ -4,7 +4,15 @@
  * Поддерживает как Telegram Mini App (initData), так и браузерную версию (JWT токен)
  */
 
-const JWT_STORAGE_KEY = 'kirakira_auth_token'
+export const JWT_STORAGE_KEY = 'kirakira_auth_token'
+export const AUTH_RESET_EVENT = 'kirakira:auth-reset'
+const JWT_REFRESH_THRESHOLD_SECONDS = 60 * 60 * 24
+
+interface JwtPayload {
+  readonly telegram_id?: number
+  readonly exp?: number
+  readonly iat?: number
+}
 
 /**
  * Получает JWT токен из localStorage
@@ -56,7 +64,7 @@ export function clearJWTToken(): void {
  * Декодирует JWT токен и возвращает payload (без валидации подписи)
  * Используется только для получения telegramId на клиенте
  */
-export function decodeJWT(token: string): { telegram_id?: number } | null {
+export function decodeJWT(token: string): JwtPayload | null {
   try {
     const parts = token.split('.')
     if (parts.length !== 3 || !parts[1]) {
@@ -70,7 +78,7 @@ export function decodeJWT(token: string): { telegram_id?: number } | null {
     )
 
     if (payload && typeof payload === 'object') {
-      return payload as { telegram_id?: number }
+      return payload as JwtPayload
     }
 
     return null
@@ -91,6 +99,68 @@ export function getTelegramIdFromJWT(): number | null {
 
   const payload = decodeJWT(token)
   return payload?.telegram_id ?? null
+}
+
+function getJWTExpirySeconds(): number | null {
+  const token = getJWTToken()
+  if (!token) {
+    return null
+  }
+
+  const payload = decodeJWT(token)
+  return payload?.exp ?? null
+}
+
+interface RefreshTokenResponse {
+  readonly success: boolean
+  readonly data?: {
+    readonly token?: string
+  }
+}
+
+export async function refreshJWTTokenIfNeeded(): Promise<boolean> {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  const token = getJWTToken()
+  const exp = getJWTExpirySeconds()
+  if (!token || !exp) {
+    return false
+  }
+
+  const now = Math.floor(Date.now() / 1000)
+  const secondsLeft = exp - now
+  if (secondsLeft > JWT_REFRESH_THRESHOLD_SECONDS) {
+    return false
+  }
+
+  const response = await fetch('/api/auth?action=refresh', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (response.status === 401) {
+    clearJWTToken()
+    window.dispatchEvent(new Event(AUTH_RESET_EVENT))
+    return false
+  }
+
+  if (!response.ok) {
+    return false
+  }
+
+  const result = (await response.json()) as RefreshTokenResponse
+  if (!result.success || !result.data?.token) {
+    return false
+  }
+
+  setJWTToken(result.data.token)
+  window.dispatchEvent(new Event(AUTH_RESET_EVENT))
+  return true
 }
 
 /**
@@ -162,10 +232,23 @@ export async function authenticatedFetch(
     options.headers as Record<string, string> | undefined
   )
 
-  return fetch(url, {
+  const response = await fetch(url, {
     ...options,
     headers,
   })
+
+  const authHeader =
+    typeof headers === 'object' && headers ? headers['Authorization'] : undefined
+  const usedJwt = typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
+
+  if (response.status === 401 && usedJwt) {
+    clearJWTToken()
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event(AUTH_RESET_EVENT))
+    }
+  }
+
+  return response
 }
 
 async function parseJson<T>(response: Response): Promise<T> {

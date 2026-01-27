@@ -37,7 +37,7 @@ export function generateSupabaseJWT(telegramId, userData = {}) {
 
   // Создаем payload для JWT
   const now = Math.floor(Date.now() / 1000)
-  const expiresIn = 60 * 60 * 24 // 24 часа
+  const expiresIn = 60 * 60 * 24 * 7 // 7 дней
 
   const payload = {
     // Стандартные claims
