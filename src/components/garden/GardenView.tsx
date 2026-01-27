@@ -416,9 +416,9 @@ export function GardenView({ className, compact = false }: GardenViewProps) {
                   style={
                     compact
                       ? {
-                          height: '100vh',
-                          transform: 'scale(0.75)',
-                          transformOrigin: 'top center',
+                          height: '',
+                          transform: '',
+                          transformOrigin: '',
                         }
                       : undefined
                   }
@@ -443,7 +443,7 @@ export function GardenView({ className, compact = false }: GardenViewProps) {
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.3 }}
                         className={clsx(
-                          compact ? 'h-[75vh]' : 'h-full min-h-[600px]'
+                          compact ? '' : 'h-full min-h-[600px]'
                         )}
                         style={
                           compact
