@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { clsx } from 'clsx'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Leaf, Heart, Users, User, Trophy } from 'lucide-react'
+import { Leaf, Users, User, Trophy, Home } from 'lucide-react'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useDailyQuests } from '@/hooks/queries/useDailyQuestQueries'
 import { useChallengeList } from '@/hooks/queries/useChallengeQueries'
@@ -21,7 +21,7 @@ const TABS: Tab[] = [
   {
     id: 'mood',
     path: '/mobile',
-    icon: <Heart className="h-5 w-5" />,
+    icon: <Home className="h-5 w-5" />,
   },
   {
     id: 'garden',
