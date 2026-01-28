@@ -12,7 +12,7 @@ KiraKira is a calm, mobile-first mood companion where every daily check-in plant
 - Watch your garden evolve with seasonal looks and rarity tiers that reward gentle consistency.
 - Keep a lightweight streak and reward system that encourages reflection without pressure.
 - Use it anywhere: installs as a PWA, works offline after first load, touch-friendly by default.
-- Connect through the Telegram Mini App for theme alignment and optional cloud sync; premium elements are available via Telegram Stars.
+- Connect through the Telegram Mini App for theme alignment and optional cloud sync.
 
 ## How it works
 
