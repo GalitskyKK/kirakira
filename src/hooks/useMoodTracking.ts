@@ -16,7 +16,10 @@ import { useTelegramId } from '@/hooks/useTelegramId'
 import { useChallengeMoodIntegration } from '@/hooks/useChallengeIntegration'
 import { useUserClientStore } from '@/stores/userStore'
 import type { MoodType, MoodIntensity, MoodEntry, MoodStats } from '@/types'
-import { getMoodDisplayProps, getRecommendedMood } from '@/utils/moodMapping'
+import {
+  getMoodDisplayProps,
+  getRecommendedMoodWithOptions,
+} from '@/utils/moodMapping'
 import {
   getLocalDateString,
   getLocalDateTimeString,
@@ -25,6 +28,8 @@ import {
 import { calculateMoodStats } from '@/utils/moodMapping'
 import { loadMoodHistory, saveMoodHistory } from '@/utils/storage'
 import { awardMoodRewards } from '@/utils/currencyRewards'
+import { useTranslation } from '@/hooks/useTranslation'
+import { getLocalizedMoodConfig } from '@/utils/moodLocalization'
 
 /**
  * Хук для отслеживания настроения
@@ -37,6 +42,7 @@ export function useMoodTracking() {
   const userId = currentUser?.id
   const { isGuestModeEnabled } = useUserClientStore()
   const guestModeEnabled = isGuestModeEnabled === true
+  const t = useTranslation()
   const [localVersion, setLocalVersion] = useState(0)
 
   // Серверное состояние через React Query
@@ -138,8 +144,13 @@ export function useMoodTracking() {
 
   // Рекомендация настроения на основе паттернов
   const moodRecommendation = useMemo(() => {
-    return getRecommendedMood(recentTrend)
-  }, [recentTrend])
+    return getRecommendedMoodWithOptions(recentTrend, {
+      reasonPrefix: t.moodStats.mostCommonRecent,
+      noDataReason: t.moodStats.recommendationNoData,
+      noPatternReason: t.moodStats.recommendationNoPattern,
+      getMoodLabel: mood => getLocalizedMoodConfig(mood, t).label,
+    })
+  }, [recentTrend, t])
 
   // Отметка настроения за сегодня
   const checkInToday = useCallback(

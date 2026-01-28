@@ -244,30 +244,58 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
           </AnimatePresence>
 
           {/* Navigation */}
-          <div className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-gray-200 pt-6 dark:border-gray-700 sm:mt-8 sm:flex-row sm:gap-4">
-            <Button
-              variant="outline"
-              onClick={handleBack}
-              disabled={currentStep === 0}
-              leftIcon={<ChevronLeft size={16} />}
-              className="w-full sm:w-auto"
-            >
-              {t.common.back}
-            </Button>
+          <div className="mt-6 border-t border-gray-200 pt-6 dark:border-gray-700 sm:mt-8">
+            <div className="flex w-full items-center justify-between sm:hidden">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBack}
+                disabled={currentStep === 0}
+                className="h-10 w-10 p-0"
+                aria-label={t.common.back}
+              >
+                <ChevronLeft size={18} />
+              </Button>
 
-            <div className="w-full text-center text-sm text-gray-500 dark:text-gray-400 sm:w-auto">
-              {currentStep + 1} {t.onboarding.of} {ONBOARDING_STEPS.length}
+              <div className="text-center text-sm text-gray-500 dark:text-gray-400">
+                {currentStep + 1} {t.onboarding.of} {ONBOARDING_STEPS.length}
+              </div>
+
+              <Button
+                size="sm"
+                onClick={handleNext}
+                className="h-10 w-10 p-0"
+                aria-label={isLastStep ? t.onboarding.start : t.common.next}
+              >
+                {isLastStep ? <Sparkles size={18} /> : <ChevronRight size={18} />}
+              </Button>
             </div>
 
-            <Button
-              onClick={handleNext}
-              rightIcon={
-                isLastStep ? <Sparkles size={16} /> : <ChevronRight size={16} />
-              }
-              className="w-full sm:w-auto"
-            >
-              {isLastStep ? t.onboarding.start : t.common.next}
-            </Button>
+            <div className="hidden w-full items-center justify-between gap-4 sm:flex">
+              <Button
+                variant="outline"
+                onClick={handleBack}
+                disabled={currentStep === 0}
+                leftIcon={<ChevronLeft size={16} />}
+                className="w-full sm:w-auto"
+              >
+                {t.common.back}
+              </Button>
+
+              <div className="w-full text-center text-sm text-gray-500 dark:text-gray-400 sm:w-auto">
+                {currentStep + 1} {t.onboarding.of} {ONBOARDING_STEPS.length}
+              </div>
+
+              <Button
+                onClick={handleNext}
+                rightIcon={
+                  isLastStep ? <Sparkles size={16} /> : <ChevronRight size={16} />
+                }
+                className="w-full sm:w-auto"
+              >
+                {isLastStep ? t.onboarding.start : t.common.next}
+              </Button>
+            </div>
           </div>
 
           {/* Language Switcher */}

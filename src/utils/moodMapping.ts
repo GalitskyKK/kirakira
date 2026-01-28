@@ -316,11 +316,36 @@ export function getRecommendedMood(recentHistory: readonly MoodEntry[]): {
   confidence: number
   reason: string
 } {
+  return getRecommendedMoodWithOptions(recentHistory)
+}
+
+interface RecommendedMoodOptions {
+  readonly reasonPrefix?: string
+  readonly noDataReason?: string
+  readonly noPatternReason?: string
+  readonly getMoodLabel?: (mood: MoodType) => string
+}
+
+export function getRecommendedMoodWithOptions(
+  recentHistory: readonly MoodEntry[],
+  options: RecommendedMoodOptions = {}
+): {
+  mood: MoodType | null
+  confidence: number
+  reason: string
+} {
+  const {
+    reasonPrefix = 'Чаще всего за последние дни',
+    noDataReason = 'Недостаточно данных для рекомендации',
+    noPatternReason = 'Не удалось определить паттерн',
+    getMoodLabel = mood => MOOD_CONFIG[mood].label,
+  } = options
+
   if (recentHistory.length === 0) {
     return {
       mood: null,
       confidence: 0,
-      reason: 'Недостаточно данных для рекомендации',
+      reason: noDataReason,
     }
   }
 
@@ -335,7 +360,7 @@ export function getRecommendedMood(recentHistory: readonly MoodEntry[]): {
     return {
       mood: null,
       confidence: 0,
-      reason: 'Не удалось определить паттерн',
+      reason: noPatternReason,
     }
   }
 
@@ -344,7 +369,7 @@ export function getRecommendedMood(recentHistory: readonly MoodEntry[]): {
   return {
     mood: mostCommon,
     confidence,
-    reason: `Чаще всего за последние дни: ${MOOD_CONFIG[mostCommon].label}`,
+    reason: `${reasonPrefix}: ${getMoodLabel(mostCommon)}`,
   }
 }
 

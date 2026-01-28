@@ -128,7 +128,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           <span className="mr-2 flex-shrink-0">{leftIcon}</span>
         )}
 
-        <span className="truncate">{children as React.ReactNode}</span>
+        <span className="truncate flex flex-row">{children as React.ReactNode}</span>
 
         {rightIcon && <span className="ml-2 flex-shrink-0">{rightIcon}</span>}
       </motion.button>

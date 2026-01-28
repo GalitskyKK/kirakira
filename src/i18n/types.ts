@@ -725,6 +725,9 @@ export interface Translations {
     lastDays: string
     frequentMoods: string
     moodPattern: string
+    mostCommonRecent: string
+    recommendationNoData: string
+    recommendationNoPattern: string
     averageIntensity: string
     allTime: string
   }

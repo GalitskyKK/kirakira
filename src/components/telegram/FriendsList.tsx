@@ -424,7 +424,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
                 {tab.label}
               </span>
               {tab.count !== undefined && tab.count > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white sm:h-5 sm:w-5">
+                <span className="ml-1 inline-flex min-w-[20px] items-center justify-center rounded-full bg-kira-100 px-1.5 text-[10px] font-semibold text-kira-700 dark:bg-kira-900/40 dark:text-kira-200 sm:text-xs">
                   {tab.count > 9 ? '9+' : tab.count}
                 </span>
               )}
