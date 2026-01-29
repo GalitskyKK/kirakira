@@ -858,6 +858,8 @@ export interface Translations {
       outgoing: string
       sent: string
       waiting: string
+      cancelRequest: string
+      cancelFailed: string
       noRequests: string
       useReferralCodes: string
     }

@@ -866,6 +866,8 @@ export const en: Translations = {
       outgoing: 'Outgoing Requests',
       sent: 'Request Sent',
       waiting: 'Waiting',
+      cancelRequest: 'Cancel',
+      cancelFailed: 'Failed to cancel request',
       noRequests: 'No Requests',
       useReferralCodes: 'Use referral codes to find friends',
     },

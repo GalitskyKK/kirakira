@@ -208,11 +208,35 @@ export function useFriendsData(telegramId?: number) {
     onSuccess: invalidateFriends,
   })
 
+  const cancelRequest = useMutation({
+    mutationFn: async (addresseeTelegramId: number) => {
+      if (!telegramId) throw new Error('telegramId is required')
+      const response = await authenticatedFetch(
+        '/api/friends?action=cancel-request',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            telegramId,
+            addresseeTelegramId,
+          }),
+        }
+      )
+      const result = (await response.json()) as FriendActionResponse
+      if (!result.success || !result.data) {
+        throw new Error(result.error ?? 'Ошибка отмены запроса')
+      }
+      return result.data.message
+    },
+    onSuccess: invalidateFriends,
+  })
+
   return {
     friendsQuery,
     searchByReferral,
     searchGlobal,
     sendFriendRequest,
     respondRequest,
+    cancelRequest,
   }
 }

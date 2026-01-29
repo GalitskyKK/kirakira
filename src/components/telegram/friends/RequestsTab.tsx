@@ -9,12 +9,16 @@ interface RequestsTabProps {
   readonly incomingRequests: readonly FriendRequest[]
   readonly outgoingRequests: readonly FriendRequest[]
   readonly onRespond: (telegramId: number, action: 'accept' | 'decline') => void
+  readonly onCancelOutgoing: (telegramId: number, requestId: string) => void
+  readonly cancellingRequestId: string | null
 }
 
 export function RequestsTab({
   incomingRequests,
   outgoingRequests,
   onRespond,
+  onCancelOutgoing,
+  cancellingRequestId,
 }: RequestsTabProps) {
   const t = useTranslation()
   const locale = useLocaleStore(state => state.locale)
@@ -151,11 +155,30 @@ export function RequestsTab({
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2 text-orange-600">
-                      <Clock className="h-4 w-4" />
-                      <span className="text-sm">
-                        {t.friends.requests.waiting}
-                      </span>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          onCancelOutgoing(
+                            request.telegramId,
+                            request.requestId
+                          )
+                        }
+                        isLoading={cancellingRequestId === request.requestId}
+                        className="border-red-200 text-red-600 hover:bg-red-50"
+                      >
+                        <XCircle className="h-3 w-3" />
+                        <span className="ml-1 text-xs">
+                          {t.friends.requests.cancelRequest}
+                        </span>
+                      </Button>
+                      <div className="flex items-center space-x-2 text-orange-600">
+                        <Clock className="h-4 w-4" />
+                        <span className="text-sm">
+                          {t.friends.requests.waiting}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </Card>

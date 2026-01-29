@@ -869,6 +869,8 @@ export const ru: Translations = {
       outgoing: 'Исходящие запросы',
       sent: 'Запрос отправлен',
       waiting: 'Ожидание',
+      cancelRequest: 'Отменить',
+      cancelFailed: 'Не удалось отменить запрос',
       noRequests: 'Нет запросов',
       useReferralCodes: 'Используйте реферальные коды, чтобы найти друзей',
     },

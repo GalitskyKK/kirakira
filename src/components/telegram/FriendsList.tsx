@@ -35,6 +35,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
     searchGlobal,
     sendFriendRequest,
     respondRequest,
+    cancelRequest,
   } = useFriendsData(currentUser?.telegramId)
   const [searchQuery, setSearchQuery] = useState('')
   const [referralSearchQuery, setReferralSearchQuery] = useState('')
@@ -43,6 +44,9 @@ export function FriendsList({ currentUser }: FriendsListProps) {
   const [requestStatusMessage, setRequestStatusMessage] = useState<
     string | null
   >(null)
+  const [cancellingRequestId, setCancellingRequestId] = useState<string | null>(
+    null
+  )
 
   // Глобальный поиск пользователей
   const [globalSearchQuery, setGlobalSearchQuery] = useState('')
@@ -265,6 +269,35 @@ export function FriendsList({ currentUser }: FriendsListProps) {
     ]
   )
 
+  const handleCancelOutgoingRequest = useCallback(
+    async (addresseeTelegramId: number, requestId: string) => {
+      if (!currentUser?.telegramId || currentUser.telegramId === 0) return
+
+      try {
+        setCancellingRequestId(requestId)
+        hapticFeedback('medium')
+        const message = await cancelRequest.mutateAsync(addresseeTelegramId)
+        openRequestStatusModal(message)
+      } catch (error) {
+        console.error('Cancel request error:', error)
+        openRequestStatusModal(
+          error instanceof Error
+            ? error.message
+            : t.friends.requests.cancelFailed
+        )
+      } finally {
+        setCancellingRequestId(null)
+      }
+    },
+    [
+      currentUser?.telegramId,
+      hapticFeedback,
+      openRequestStatusModal,
+      cancelRequest,
+      t,
+    ]
+  )
+
   // Пригласить друзей через Telegram
   const handleInviteSpecificFriend = useCallback(() => {
     if (!webApp) return
@@ -477,6 +510,8 @@ export function FriendsList({ currentUser }: FriendsListProps) {
             incomingRequests={incomingRequests}
             outgoingRequests={outgoingRequests}
             onRespond={handleRespondToRequest}
+            onCancelOutgoing={handleCancelOutgoingRequest}
+            cancellingRequestId={cancellingRequestId}
           />
         )}
 
