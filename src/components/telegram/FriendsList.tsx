@@ -9,7 +9,7 @@ import {
   useFriendsData,
 } from '@/hooks'
 import { FriendGardenView } from '@/components/garden'
-import { Card } from '@/components/ui'
+import { Button, Card, Modal, ModalBody, ModalFooter } from '@/components/ui'
 import { useTranslation } from '@/hooks/useTranslation'
 import type { User } from '@/types'
 import type { FriendApiSearchUser } from '@/types/api'
@@ -40,6 +40,9 @@ export function FriendsList({ currentUser }: FriendsListProps) {
   const [referralSearchQuery, setReferralSearchQuery] = useState('')
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null)
   const [isSearching, setIsSearching] = useState(false)
+  const [requestStatusMessage, setRequestStatusMessage] = useState<
+    string | null
+  >(null)
 
   // Глобальный поиск пользователей
   const [globalSearchQuery, setGlobalSearchQuery] = useState('')
@@ -58,6 +61,14 @@ export function FriendsList({ currentUser }: FriendsListProps) {
   const [viewingFriendGarden, setViewingFriendGarden] = useState<number | null>(
     null
   )
+
+  const openRequestStatusModal = useCallback((message: string) => {
+    setRequestStatusMessage(message)
+  }, [])
+
+  const closeRequestStatusModal = useCallback(() => {
+    setRequestStatusMessage(null)
+  }, [])
 
   const friends = friendsQuery.data?.friends ?? []
   const incomingRequests = friendsQuery.data?.incomingRequests ?? []
@@ -207,17 +218,23 @@ export function FriendsList({ currentUser }: FriendsListProps) {
       try {
         hapticFeedback('medium')
         const message = await sendFriendRequest.mutateAsync(targetTelegramId)
-        showAlert(message)
+        openRequestStatusModal(message)
         setSearchResult(null)
         setReferralSearchQuery('')
       } catch (error) {
         console.error('Send request error:', error)
-        showAlert(
+        openRequestStatusModal(
           error instanceof Error ? error.message : t.friends.connectionError
         )
       }
     },
-    [currentUser?.telegramId, hapticFeedback, showAlert, sendFriendRequest, t]
+    [
+      currentUser?.telegramId,
+      hapticFeedback,
+      openRequestStatusModal,
+      sendFriendRequest,
+      t,
+    ]
   )
 
   // Ответить на запрос дружбы
@@ -231,15 +248,21 @@ export function FriendsList({ currentUser }: FriendsListProps) {
           requesterTelegramId,
           action,
         })
-        showAlert(message)
+        openRequestStatusModal(message)
       } catch (error) {
         console.error('Respond to request error:', error)
-        showAlert(
+        openRequestStatusModal(
           error instanceof Error ? error.message : t.friends.connectionError
         )
       }
     },
-    [currentUser?.telegramId, hapticFeedback, showAlert, respondRequest, t]
+    [
+      currentUser?.telegramId,
+      hapticFeedback,
+      openRequestStatusModal,
+      respondRequest,
+      t,
+    ]
   )
 
   // Пригласить друзей через Telegram
@@ -491,6 +514,23 @@ export function FriendsList({ currentUser }: FriendsListProps) {
           />
         )}
       </AnimatePresence>
+
+      <Modal
+        isOpen={requestStatusMessage !== null}
+        onClose={closeRequestStatusModal}
+        size="sm"
+      >
+        <ModalBody className="text-center">
+          <p className="text-sm text-neutral-700 dark:text-neutral-200">
+            {requestStatusMessage ?? ''}
+          </p>
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="primary" size="sm" onClick={closeRequestStatusModal}>
+            {t.common.close}
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   )
 }

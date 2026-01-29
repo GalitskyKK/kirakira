@@ -12,7 +12,14 @@ import {
   Check,
   X,
 } from 'lucide-react'
-import { LoadingSpinner, UserAvatar, Button } from '@/components/ui'
+import {
+  Button,
+  LoadingSpinner,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  UserAvatar,
+} from '@/components/ui'
 import { useFriendProfileData } from '@/hooks/useProfile'
 import { GARDENER_LEVELS } from '@/utils/achievements'
 import type {
@@ -57,6 +64,17 @@ export default function FriendProfilePage() {
   const [isProcessingFriendAction, setIsProcessingFriendAction] =
     useState(false)
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
+  const [requestStatusMessage, setRequestStatusMessage] = useState<
+    string | null
+  >(null)
+
+  const openRequestStatusModal = useCallback((message: string) => {
+    setRequestStatusMessage(message)
+  }, [])
+
+  const closeRequestStatusModal = useCallback(() => {
+    setRequestStatusMessage(null)
+  }, [])
 
   useEffect(() => {
     if (!friendTelegramId) {
@@ -116,11 +134,11 @@ export default function FriendProfilePage() {
 
   const handleAddFriend = useCallback(async () => {
     if (!profileData?.user.telegram_id || !currentUserTelegramId) {
-      showAlert?.(t.friendProfile.failedToSend)
+      openRequestStatusModal(t.friendProfile.failedToSend)
       return
     }
     if (!canSendFriendRequest) {
-      showAlert?.(t.friendProfile.requestUnavailable)
+      openRequestStatusModal(t.friendProfile.requestUnavailable)
       return
     }
     try {
@@ -144,17 +162,19 @@ export default function FriendProfilePage() {
       }
       if (response.ok && result?.success) {
         hapticFeedback('success')
-        showAlert?.(result.data?.message ?? t.friendProfile.requestSent)
+        openRequestStatusModal(
+          result.data?.message ?? t.friendProfile.requestSent
+        )
         if (friendTelegramIdNum) {
           await loadFriendProfile(friendTelegramIdNum)
         }
       } else {
-        showAlert?.(result?.error ?? t.friendProfile.failedToSend)
+        openRequestStatusModal(result?.error ?? t.friendProfile.failedToSend)
         hapticFeedback('error')
       }
     } catch (sendError) {
       console.error('Failed to send friend request:', sendError)
-      showAlert?.(t.friendProfile.failedToSend)
+      openRequestStatusModal(t.friendProfile.failedToSend)
       hapticFeedback('error')
     } finally {
       setIsProcessingFriendAction(false)
@@ -165,13 +185,13 @@ export default function FriendProfilePage() {
     hapticFeedback,
     loadFriendProfile,
     profileData?.user.telegram_id,
-    showAlert,
+    openRequestStatusModal,
     canSendFriendRequest,
   ])
 
   const handleCancelRequest = useCallback(async () => {
     if (!profileData?.user.telegram_id || !currentUserTelegramId) {
-      showAlert?.(t.friendProfile.failedToCancel)
+      openRequestStatusModal(t.friendProfile.failedToCancel)
       return
     }
 
@@ -197,17 +217,19 @@ export default function FriendProfilePage() {
 
       if (response.ok && result?.success) {
         hapticFeedback('success')
-        showAlert?.(result.data?.message ?? t.friendProfile.requestCancelled)
+        openRequestStatusModal(
+          result.data?.message ?? t.friendProfile.requestCancelled
+        )
         if (friendTelegramIdNum) {
           await loadFriendProfile(friendTelegramIdNum)
         }
       } else {
-        showAlert?.(result?.error ?? t.friendProfile.failedToCancel)
+        openRequestStatusModal(result?.error ?? t.friendProfile.failedToCancel)
         hapticFeedback('error')
       }
     } catch (error) {
       console.error('Failed to cancel friend request:', error)
-      showAlert?.(t.friendProfile.failedToCancel)
+      openRequestStatusModal(t.friendProfile.failedToCancel)
       hapticFeedback('error')
     } finally {
       setIsProcessingFriendAction(false)
@@ -218,7 +240,7 @@ export default function FriendProfilePage() {
     hapticFeedback,
     loadFriendProfile,
     profileData?.user.telegram_id,
-    showAlert,
+    openRequestStatusModal,
   ])
 
   const handleRemoveFriend = useCallback(async () => {
@@ -277,7 +299,7 @@ export default function FriendProfilePage() {
   const handleRespondRequest = useCallback(
     async (action: 'accept' | 'decline') => {
       if (!profileData?.user.telegram_id || !currentUserTelegramId) {
-        showAlert?.(t.friendProfile.noData)
+        openRequestStatusModal(t.friendProfile.noData)
         return
       }
       try {
@@ -302,17 +324,21 @@ export default function FriendProfilePage() {
         }
         if (response.ok && result?.success) {
           hapticFeedback(action === 'accept' ? 'success' : 'warning')
-          showAlert?.(result.data?.message ?? t.friendProfile.requestUpdated)
+          openRequestStatusModal(
+            result.data?.message ?? t.friendProfile.requestUpdated
+          )
           if (friendTelegramIdNum) {
             await loadFriendProfile(friendTelegramIdNum)
           }
         } else {
-          showAlert?.(result?.error ?? t.friendProfile.failedToProcess)
+          openRequestStatusModal(
+            result?.error ?? t.friendProfile.failedToProcess
+          )
           hapticFeedback('error')
         }
       } catch (respondError) {
         console.error('Failed to respond to friend request:', respondError)
-        showAlert?.(t.friendProfile.failedToProcess)
+        openRequestStatusModal(t.friendProfile.failedToProcess)
         hapticFeedback('error')
       } finally {
         setIsProcessingFriendAction(false)
@@ -324,7 +350,7 @@ export default function FriendProfilePage() {
       hapticFeedback,
       loadFriendProfile,
       profileData?.user.telegram_id,
-      showAlert,
+      openRequestStatusModal,
     ]
   )
 
@@ -725,6 +751,23 @@ export default function FriendProfilePage() {
           </div>
         </motion.div>
       </div>
+
+      <Modal
+        isOpen={requestStatusMessage !== null}
+        onClose={closeRequestStatusModal}
+        size="sm"
+      >
+        <ModalBody className="text-center">
+          <p className="text-sm text-neutral-700 dark:text-neutral-200">
+            {requestStatusMessage ?? ''}
+          </p>
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="primary" size="sm" onClick={closeRequestStatusModal}>
+            {t.common.close}
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   )
 }
