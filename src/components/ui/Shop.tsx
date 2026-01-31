@@ -7,7 +7,6 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Palette, Snowflake, Gem, Leaf } from 'lucide-react'
 
-import { ThemeShopSection } from './ThemeShopSection'
 import { RoomThemeShopSection } from './RoomThemeShopSection'
 import { FreezeShopSection } from './FreezeShopSection'
 import { useCurrencyClientStore } from '@/stores/currencyStore'
@@ -151,12 +150,6 @@ export function ShopContent({
               transition={{ duration: 0.2 }}
             >
               <div className="space-y-8">
-                <div>
-                  <h3 className="px-4 text-lg font-semibold text-gray-900 dark:text-white">
-                    {t.shop.gardenThemes}
-                  </h3>
-                  <ThemeShopSection />
-                </div>
                 <div>
                   <h3 className="px-4 text-lg font-semibold text-gray-900 dark:text-white">
                     {t.shop.roomThemes}

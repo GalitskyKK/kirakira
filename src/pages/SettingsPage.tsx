@@ -14,7 +14,6 @@ import {
 import { useUserSync, useUserClientStore } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { ProfilePrivacySettings } from '@/components/profile/ProfilePrivacySettings'
-import { ThemeSettings } from '@/components/settings/ThemeSettings'
 import { RoomThemeSettings } from '@/components/settings/RoomThemeSettings'
 import { CompanionSettings } from '@/components/settings/CompanionSettings'
 import { GardenDisplaySettings } from '@/components/settings/GardenDisplaySettings'
@@ -83,16 +82,6 @@ export function SettingsPage() {
           delay={0}
         >
           <LanguageSettings />
-        </SettingsSection>
-
-        {/* Внешний вид */}
-        <SettingsSection
-          title={t.settings.appearance}
-          description={t.settings.appearanceDescription}
-          icon={<Palette className="h-5 w-5" />}
-          delay={0.02}
-        >
-          <ThemeSettings />
         </SettingsSection>
 
         <SettingsSection
