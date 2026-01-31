@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Sprout, Palette, Home } from 'lucide-react'
+import { Palette, Home } from 'lucide-react'
 import { GardenDisplayMode, type User } from '@/types'
 import { useUpdateFriendGardenDisplay } from '@/hooks/queries/useUserQueries'
 import { useTelegram } from '@/hooks/useTelegram'
@@ -21,12 +21,6 @@ const getOptions = (
   t: ReturnType<typeof useTranslation>
 ): readonly DisplayModeOption[] =>
   [
-    {
-      mode: GardenDisplayMode.GARDEN,
-      label: t.displayMode.shelves,
-      description: t.displayMode.shelvesDescription,
-      icon: <Sprout className="h-5 w-5" />,
-    },
     {
       mode: GardenDisplayMode.ISOMETRIC_ROOM,
       label: t.displayMode.room,
@@ -50,10 +44,14 @@ export function FriendGardenDisplaySettings({
   const { mutateAsync, isPending } = useUpdateFriendGardenDisplay()
   const options = useMemo(() => getOptions(t), [t])
 
-  const preferredMode = useMemo(
-    () => user.preferences.garden.friendViewMode ?? GardenDisplayMode.GARDEN,
-    [user.preferences.garden.friendViewMode]
-  )
+  const preferredMode = useMemo(() => {
+    const stored =
+      user.preferences.garden.friendViewMode ??
+      GardenDisplayMode.ISOMETRIC_ROOM
+    return stored === GardenDisplayMode.GARDEN
+      ? GardenDisplayMode.ISOMETRIC_ROOM
+      : stored
+  }, [user.preferences.garden.friendViewMode])
   const [selectedMode, setSelectedMode] =
     useState<GardenDisplayMode>(preferredMode)
 
@@ -82,7 +80,7 @@ export function FriendGardenDisplaySettings({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {options.map(option => {
           const isSelected = selectedMode === option.mode
 

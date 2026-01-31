@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useLocaleStore } from '@/stores/localeStore'
 import type { MoodEntry } from '@/types/mood'
 import { MOOD_CONFIG } from '@/types/mood'
 import { MoodImage } from './MoodImage'
@@ -28,6 +29,7 @@ function generateStickerStyle(entryId: string) {
 
 export function MoodSticker({ entry, index }: MoodStickerProps) {
   const t = useTranslation()
+  const locale = useLocaleStore(state => state.locale)
   const moodConfig = MOOD_CONFIG[entry.mood]
   const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -39,8 +41,8 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
 
   // Форматируем дату - показываем день недели (Пн, Вт, и т.д.)
   const dayOfWeek = useMemo(() => {
-    return formatDate(entry.date, 'EEE', 'ru')
-  }, [entry.date])
+    return formatDate(entry.date, 'EEE', locale)
+  }, [entry.date, locale])
 
   return (
     <>
@@ -130,7 +132,7 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
                       {moodConfig.label}
                     </h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {formatDate(entry.date, 'EEEE, dd MMMM yyyy', 'ru')}
+                      {formatDate(entry.date, 'EEEE, dd MMMM yyyy', locale)}
                     </p>
                   </div>
                 </div>
@@ -169,7 +171,7 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
                   {/* Комментарий */}
                   <div>
                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                      Комментарий
+                      {t.pages.mood.diaryComment}
                     </p>
                     {entry.note != null && entry.note.trim().length > 0 ? (
                       <p className="mt-1 text-base leading-relaxed text-gray-700 dark:text-gray-300">
@@ -177,7 +179,7 @@ export function MoodSticker({ entry, index }: MoodStickerProps) {
                       </p>
                     ) : (
                       <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">
-                        Нет комментария
+                        {t.pages.mood.diaryNoComment}
                       </p>
                     )}
                   </div>

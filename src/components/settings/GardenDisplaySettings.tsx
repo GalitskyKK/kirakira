@@ -4,7 +4,7 @@
  */
 
 import { motion } from 'framer-motion'
-import { Sprout, Palette, Home, Lock } from 'lucide-react'
+import { Palette, Home, Lock } from 'lucide-react'
 import { useEffect, useCallback, useMemo } from 'react'
 import { useGardenClientStore } from '@/stores/gardenStore'
 import { useUpdateGardenDisplay } from '@/hooks/queries/useUserQueries'
@@ -25,13 +25,13 @@ const getDisplayModes = (
   t: ReturnType<typeof useTranslation>
 ): readonly DisplayModeOption[] =>
   [
-    {
-      mode: GardenDisplayMode.GARDEN,
-      label: t.displayMode.garden,
-      description: t.displayMode.gardenDescription,
-      icon: <Sprout className="h-5 w-5" />,
-      available: true,
-    },
+    // {
+    //   mode: GardenDisplayMode.GARDEN,
+    //   label: t.displayMode.garden,
+    //   description: t.displayMode.gardenDescription,
+    //   icon: <Sprout className="h-5 w-5" />,
+    //   available: true,
+    // },
     {
       mode: GardenDisplayMode.PALETTE,
       label: t.displayMode.palette,

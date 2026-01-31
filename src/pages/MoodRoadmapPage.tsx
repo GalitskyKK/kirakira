@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { BookOpen } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useMoodTracking } from '@/hooks/useMoodTracking'
+import { useTranslation } from '@/hooks/useTranslation'
 import { Card } from '@/components/ui'
 import { LoadingSpinner } from '@/components/ui'
 import { PageHeader } from '@/components/layout'
@@ -12,6 +13,7 @@ import { groupMoodEntriesByWeek } from '@/utils/weekGrouping'
 export function MoodRoadmapPage() {
   const navigate = useNavigate()
   const { moodHistory, isLoading } = useMoodTracking()
+  const t = useTranslation()
 
   // Группируем записи по неделям (уже в обратном порядке - от новых к старым)
   const weekGroups = groupMoodEntriesByWeek(moodHistory)
@@ -51,7 +53,7 @@ export function MoodRoadmapPage() {
         transition={{ duration: 0.3 }}
       >
         <PageHeader
-          title="Дневник настроений"
+          title={t.profile.moodDiary}
           icon={<BookOpen className="h-5 w-5" />}
           onBack={() => navigate('/mobile/profile')}
         />
@@ -59,10 +61,10 @@ export function MoodRoadmapPage() {
           <Card padding="lg" className="text-center">
             <div className="mb-4 text-6xl">🌱</div>
             <h2 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
-              Пока нет записей
+              {t.pages.mood.diaryEmptyTitle}
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              Начните отмечать настроение, чтобы увидеть свой дневник
+              {t.pages.mood.diaryEmptyDescription}
             </p>
           </Card>
         </div>
@@ -79,7 +81,7 @@ export function MoodRoadmapPage() {
       transition={{ duration: 0.3 }}
     >
       <PageHeader
-        title="Дневник настроений"
+        title={t.profile.moodDiary}
         icon={<BookOpen className="h-5 w-5" />}
         onBack={() => navigate('/mobile/profile')}
       />
@@ -114,10 +116,10 @@ export function MoodRoadmapPage() {
             <Card padding="md" className="glass-card">
               <div className="text-center">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Всего недель:{' '}
+                  {t.pages.mood.diaryTotalWeeks}:{' '}
                   <span className="font-semibold">{weekGroups.length}</span>
                   {' • '}
-                  Всего записей:{' '}
+                  {t.pages.mood.diaryTotalEntries}:{' '}
                   <span className="font-semibold">{moodHistory.length}</span>
                 </p>
               </div>

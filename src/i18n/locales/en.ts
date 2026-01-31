@@ -413,6 +413,13 @@ export const en: Translations = {
       readyToGrow: '🌱 Ready to Grow',
       grown: '✅ Grown',
       days: 'days',
+      diaryEmptyTitle: 'No entries yet',
+      diaryEmptyDescription: 'Start marking your mood to see your diary',
+      diaryEmptyWeek: 'No entries for this week',
+      diaryTotalWeeks: 'Total weeks',
+      diaryTotalEntries: 'Total entries',
+      diaryComment: 'Comment',
+      diaryNoComment: 'No comment',
     },
     community: {
       title: 'Community',

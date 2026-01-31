@@ -433,6 +433,13 @@ export interface Translations {
       readyToGrow: string
       grown: string
       days: string
+      diaryEmptyTitle: string
+      diaryEmptyDescription: string
+      diaryEmptyWeek: string
+      diaryTotalWeeks: string
+      diaryTotalEntries: string
+      diaryComment: string
+      diaryNoComment: string
     }
     community: {
       title: string

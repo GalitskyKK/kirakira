@@ -44,6 +44,11 @@ interface GardenClientState {
 // STORE
 // ============================================
 
+const normalizeDisplayMode = (mode: GardenDisplayMode): GardenDisplayMode =>
+  mode === GardenDisplayMode.GARDEN
+    ? GardenDisplayMode.ISOMETRIC_ROOM
+    : mode
+
 // Загрузка displayMode из localStorage
 const loadDisplayModeFromStorage = (): GardenDisplayMode => {
   try {
@@ -51,7 +56,7 @@ const loadDisplayModeFromStorage = (): GardenDisplayMode => {
     if (stored) {
       const mode = stored as GardenDisplayMode
       if (Object.values(GardenDisplayMode).includes(mode)) {
-        return mode
+        return normalizeDisplayMode(mode)
       }
     }
   } catch {
@@ -113,8 +118,9 @@ export const useGardenClientStore = create<GardenClientState>()(
     },
 
     setDisplayMode: (mode: GardenDisplayMode) => {
-      saveDisplayModeToStorage(mode)
-      set({ displayMode: mode })
+      const normalized = normalizeDisplayMode(mode)
+      saveDisplayModeToStorage(normalized)
+      set({ displayMode: normalized })
     },
 
     selectElement: (element: GardenElement | null) => {

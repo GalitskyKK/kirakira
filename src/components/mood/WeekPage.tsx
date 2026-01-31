@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useLocaleStore } from '@/stores/localeStore'
 import type { MoodEntry } from '@/types/mood'
 import { formatDate } from '@/utils/dateHelpers'
 import { endOfWeek, getDay } from 'date-fns'
@@ -38,6 +39,7 @@ export function WeekPage({
   canGoNext,
 }: WeekPageProps) {
   const t = useTranslation()
+  const locale = useLocaleStore(state => state.locale)
   const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 })
 
   // Группируем записи по дням недели (1 = понедельник, 7 = воскресенье)
@@ -113,8 +115,8 @@ export function WeekPage({
       {/* Заголовок недели */}
       <div className="mb-3 flex-shrink-0 px-4 pt-4 text-center sm:mb-4 sm:px-6 sm:pt-6">
         <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200 sm:text-lg">
-          {formatDate(weekStart, 'dd MMMM', 'ru')} —{' '}
-          {formatDate(weekEnd, 'dd MMMM yyyy', 'ru')}
+          {formatDate(weekStart, 'dd MMMM', locale)} —{' '}
+          {formatDate(weekEnd, 'dd MMMM yyyy', locale)}
         </h3>
       </div>
 
@@ -124,7 +126,7 @@ export function WeekPage({
         {entries.length === 0 ? (
           <div className="flex min-h-[300px] items-center justify-center">
             <p className="text-sm text-gray-400 dark:text-gray-500">
-              Нет записей за эту неделю
+              {t.pages.mood.diaryEmptyWeek}
             </p>
           </div>
         ) : (

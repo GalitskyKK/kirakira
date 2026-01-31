@@ -117,7 +117,7 @@ export function FriendGardenView({
   // Состояние для управления комнатами сада друга
   const [currentRoomIndex, setCurrentRoomIndex] = useState(0)
   const [displayMode, setDisplayMode] = useState<GardenDisplayMode>(
-    GardenDisplayMode.GARDEN
+    GardenDisplayMode.ISOMETRIC_ROOM
   )
 
   // Обработчик изменения комнаты
@@ -213,7 +213,12 @@ export function FriendGardenView({
 
   useEffect(() => {
     if (friendGarden?.friendInfo.friendGardenDisplay) {
-      setDisplayMode(friendGarden.friendInfo.friendGardenDisplay)
+      setDisplayMode(
+        friendGarden.friendInfo.friendGardenDisplay ===
+          GardenDisplayMode.GARDEN
+          ? GardenDisplayMode.ISOMETRIC_ROOM
+          : friendGarden.friendInfo.friendGardenDisplay
+      )
     }
   }, [friendGarden?.friendInfo.friendGardenDisplay])
 
@@ -281,7 +286,7 @@ export function FriendGardenView({
 
   useEffect(() => {
     if (displayMode === GardenDisplayMode.PALETTE && !canRenderPalette) {
-      setDisplayMode(GardenDisplayMode.GARDEN)
+      setDisplayMode(GardenDisplayMode.ISOMETRIC_ROOM)
     }
   }, [displayMode, canRenderPalette])
 
