@@ -33,9 +33,6 @@ export const en: Translations = {
     roomThemeDescription: 'Choose a theme for the isometric room',
     displayMode: 'Display Mode',
     displayModeDescription: 'Choose how to visualize your garden',
-    friendGardenDisplay: 'How Friends See My Garden',
-    friendGardenDisplayDescription:
-      'Choose the view that others will see when viewing your garden',
     companion: 'Lumina — Garden Spirit',
     companionDescription: 'Settings for your living companion',
     privacy: 'Privacy',
@@ -757,9 +754,7 @@ export const en: Translations = {
     roomDescription: 'Isometric 3D room',
     shelves: 'Shelves',
     shelvesDescription: 'Classic garden view',
-    info: '💡 Display mode affects how your garden looks on the home page',
-    friendViewInfo:
-      'This choice determines how others will see your garden. If there is no data for the selected view (e.g., empty palette), we will show classic shelves.',
+    info: '💡 Display mode affects how your garden looks for you and how friends see it.',
   },
 
   companionSettings: {

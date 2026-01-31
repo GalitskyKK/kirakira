@@ -10,7 +10,6 @@ import {
   updateUserPhoto,
   addUserExperience,
   clearUserData,
-  updateFriendGardenDisplay,
   updateGardenDisplay,
 } from '@/api'
 import type { UserSyncResponse } from '@/api/userService'
@@ -172,32 +171,7 @@ export function useUpdateUserPhoto() {
 }
 
 /**
- * Хук для обновления приоритетного вида сада друзей
- */
-export function useUpdateFriendGardenDisplay() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({
-      telegramId,
-      displayMode,
-    }: {
-      telegramId: number
-      displayMode: GardenDisplayMode
-    }) => updateFriendGardenDisplay(telegramId, displayMode),
-    onSuccess: (_result, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: userKeys.sync(variables.telegramId),
-      })
-    },
-    onError: error => {
-      console.error('❌ Failed to update friend garden display:', error)
-    },
-  })
-}
-
-/**
- * Хук для обновления базового режима отображения сада
+ * Хук для обновления режима отображения сада (для себя и для друзей — один режим)
  */
 export function useUpdateGardenDisplay() {
   const queryClient = useQueryClient()

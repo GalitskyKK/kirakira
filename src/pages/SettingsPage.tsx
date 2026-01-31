@@ -17,7 +17,6 @@ import { ProfilePrivacySettings } from '@/components/profile/ProfilePrivacySetti
 import { RoomThemeSettings } from '@/components/settings/RoomThemeSettings'
 import { CompanionSettings } from '@/components/settings/CompanionSettings'
 import { GardenDisplaySettings } from '@/components/settings/GardenDisplaySettings'
-import { FriendGardenDisplaySettings } from '@/components/settings/FriendGardenDisplaySettings'
 import { LanguageSettings } from '@/components/settings/LanguageSettings'
 import { FeedbackSettings } from '@/components/settings/FeedbackSettings'
 import { SettingsSection } from '@/components/settings/SettingsSection'
@@ -101,15 +100,6 @@ export function SettingsPage() {
           delay={0.05}
         >
           <GardenDisplaySettings user={currentUser} />
-        </SettingsSection>
-
-        <SettingsSection
-          title={t.settings.friendGardenDisplay}
-          description={t.settings.friendGardenDisplayDescription}
-          icon={<Sprout className="h-5 w-5" />}
-          delay={0.07}
-        >
-          <FriendGardenDisplaySettings user={currentUser} />
         </SettingsSection>
 
         {/* Игровые настройки */}

@@ -39,8 +39,6 @@ export interface Translations {
     roomThemeDescription: string
     displayMode: string
     displayModeDescription: string
-    friendGardenDisplay: string
-    friendGardenDisplayDescription: string
     companion: string
     companionDescription: string
     privacy: string
@@ -750,7 +748,6 @@ export interface Translations {
     shelves: string
     shelvesDescription: string
     info: string
-    friendViewInfo: string
   }
 
   // Настройки компаньона

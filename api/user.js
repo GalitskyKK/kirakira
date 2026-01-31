@@ -1225,10 +1225,11 @@ async function handleUpdateGardenDisplay(req, res) {
       .from('users')
       .update({
         garden_display_mode: gardenDisplayMode,
+        friend_garden_display: gardenDisplayMode,
         updated_at: new Date().toISOString(),
       })
       .eq('telegram_id', telegramId)
-      .select('garden_display_mode')
+      .select('garden_display_mode, friend_garden_display')
       .single()
 
     if (error) {

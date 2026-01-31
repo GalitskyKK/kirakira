@@ -120,9 +120,9 @@ export function convertServerUserToClient(
         displayMode: isValidDisplayMode(serverUser.garden_display_mode)
           ? serverUser.garden_display_mode
           : DEFAULT_PREFERENCES.garden.displayMode,
-        friendViewMode: isValidDisplayMode(serverUser.friend_garden_display)
-          ? serverUser.friend_garden_display
-          : DEFAULT_PREFERENCES.garden.friendViewMode,
+        friendViewMode: isValidDisplayMode(serverUser.garden_display_mode)
+          ? serverUser.garden_display_mode
+          : DEFAULT_PREFERENCES.garden.displayMode,
       },
       privacy: {
         ...DEFAULT_PREFERENCES.privacy,
@@ -310,54 +310,7 @@ export async function updateUserPhoto(
 }
 
 /**
- * Обновляет приоритетный вид сада при просмотре друзей
- */
-export async function updateFriendGardenDisplay(
-  telegramId: number,
-  displayMode: GardenDisplayMode
-): Promise<{
-  success: boolean
-  data?: { friendGardenDisplay: GardenDisplayMode }
-  error?: string
-}> {
-  try {
-    const response = await authenticatedFetch(
-      `/api/user?action=update-friend-garden-display&telegramId=${telegramId}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          friendGardenDisplay: displayMode,
-        }),
-      }
-    )
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to update friend garden display: ${response.status}`
-      )
-    }
-
-    const result = (await response.json()) as StandardApiResponse<{
-      friendGardenDisplay: GardenDisplayMode
-    }>
-
-    return {
-      success: result.success,
-      ...(result.data && { data: result.data }),
-      ...(result.error && { error: result.error }),
-    }
-  } catch (error) {
-    console.error('Failed to update friend garden display:', error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }
-  }
-}
-
-/**
- * Обновляет режим отображения сада пользователя
+ * Обновляет режим отображения сада пользователя (для себя и для друзей — один режим)
  */
 export async function updateGardenDisplay(
   telegramId: number,
