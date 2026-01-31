@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
+import { FREEZE_SHOP_CONFIG } from '@/types/streakFreeze'
 import { Button } from './Button'
 import { useTranslation } from '@/hooks/useTranslation'
 
@@ -44,9 +45,8 @@ export function StreakFreezeModal({
   const hasAuto = availableFreezes.auto > 0
   const canRecover = missedDays <= 7
 
-  // Проверяем, хватает ли денег на покупку заморозки
-  // Стоимость: 500 sprouts за ручную, 1000 за авто
-  const manualFreezeCost = 500
+  // Проверяем, хватает ли денег на покупку заморозки (из общего конфига)
+  const manualFreezeCost = FREEZE_SHOP_CONFIG.manual.sprouts ?? 0
   const canAffordManualFreeze =
     userCurrency && userCurrency.sprouts >= manualFreezeCost * missedDays
   const showBuyButton = !hasEnoughManual && !hasAuto && canAffordManualFreeze
