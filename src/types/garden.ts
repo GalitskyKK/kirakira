@@ -160,12 +160,13 @@ export interface UpgradeResult {
 
 /**
  * Стоимость улучшения для каждой редкости (в ростках)
+ * common→uncommon 300, uncommon→rare 900, rare→epic 2400, epic→legendary 6000
  */
 export const UPGRADE_COSTS: Record<RarityLevel, number> = {
-  [RarityLevel.COMMON]: 100,
-  [RarityLevel.UNCOMMON]: 300,
-  [RarityLevel.RARE]: 800,
-  [RarityLevel.EPIC]: 2000,
+  [RarityLevel.COMMON]: 300,
+  [RarityLevel.UNCOMMON]: 900,
+  [RarityLevel.RARE]: 2400,
+  [RarityLevel.EPIC]: 6000,
   [RarityLevel.LEGENDARY]: 0, // Нельзя улучшить legendary
 }
 

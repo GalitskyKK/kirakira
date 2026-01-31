@@ -349,11 +349,11 @@ export const SHOP_COSTS: Record<CurrencySpendReason, ShopItemCost> = {
   // auto_streak_freeze: { gems: 10 },
   mood_reroll: { sprouts: 75 },
 
-  // Улучшение элементов
-  upgrade_to_uncommon: { sprouts: 100 },
-  upgrade_to_rare: { sprouts: 300 },
-  upgrade_to_epic: { sprouts: 800 },
-  upgrade_to_legendary: { sprouts: 2000 },
+  // Улучшение элементов (стоимость в ростках)
+  upgrade_to_uncommon: { sprouts: 300 },
+  upgrade_to_rare: { sprouts: 900 },
+  upgrade_to_epic: { sprouts: 2400 },
+  upgrade_to_legendary: { sprouts: 6000 },
   instant_upgrade_rare: { gems: 10 },
   instant_upgrade_epic: { gems: 25 },
   instant_upgrade_legendary: { gems: 60 },
