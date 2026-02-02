@@ -114,6 +114,39 @@ async function getActiveUsers() {
 }
 
 /**
+ * Получает пользователей с уже отмеченным настроением на дату
+ */
+async function getUsersWithMoodOnDate(telegramIds, dateString) {
+  if (!telegramIds || telegramIds.length === 0) {
+    return new Set()
+  }
+
+  try {
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    )
+
+    const { data, error } = await supabase
+      .from('mood_entries')
+      .select('telegram_id')
+      .in('telegram_id', telegramIds)
+      .eq('mood_date', dateString)
+
+    if (error) {
+      console.error('❌ Failed to fetch mood entries for date:', error)
+      return new Set()
+    }
+
+    return new Set((data || []).map(entry => entry.telegram_id))
+  } catch (error) {
+    console.error('❌ Error fetching mood entries for date:', error)
+    return new Set()
+  }
+}
+
+/**
  * Проверяет отметил ли пользователь настроение сегодня
  */
 async function checkMoodToday(telegramUserId, todayDateString) {
@@ -151,9 +184,14 @@ async function checkMoodToday(telegramUserId, todayDateString) {
  */
 async function getUserMoodStats(telegramUserId) {
   try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 1500)
+
     const response = await fetch(
-      `${MINI_APP_URL}/api/profile?action=get_profile&telegramId=${telegramUserId}`
+      `${MINI_APP_URL}/api/profile?action=get_profile&telegramId=${telegramUserId}`,
+      { signal: controller.signal }
     )
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
       return null
@@ -231,9 +269,7 @@ function createQuickActionsKeyboard() {
 /**
  * УВЕДОМЛЕНИЕ: Ежедневное напоминание об отметке настроения
  */
-async function sendDailyMoodReminder(user, todayDateString) {
-  const hasMoodToday = await checkMoodToday(user.telegram_id, todayDateString)
-
+async function sendDailyMoodReminder(user, todayDateString, hasMoodToday) {
   if (hasMoodToday) {
     console.log(`✅ User ${user.telegram_id} already marked mood today`)
     return false
@@ -451,6 +487,14 @@ async function processNotifications() {
     return { message: 'No active users' }
   }
 
+  const telegramIds = users
+    .map(user => user.telegram_id)
+    .filter(telegramId => telegramId)
+  const usersWithMoodToday = await getUsersWithMoodOnDate(
+    telegramIds,
+    todayDateStr
+  )
+
   const results = {
     processed: 0,
     dailyReminders: 0,
@@ -463,11 +507,12 @@ async function processNotifications() {
   // 🎯 ОПТИМИЗИРОВАННАЯ ЛОГИКА ДЛЯ HOBBY ПЛАНА VERCEL
   // За один запуск в день отправляем ВСЕ релевантные уведомления
 
-  for (const user of users) {
+  const processUser = async user => {
     try {
       results.processed++
       let sent = false
       let notificationType = ''
+      const hasMoodToday = usersWithMoodToday.has(user.telegram_id)
 
       // Проверяем неактивность (высший приоритет)
       if (user.last_visit_date && !sent) {
@@ -511,7 +556,11 @@ async function processNotifications() {
 
       // Ежедневное напоминание (самый низкий приоритет)
       if (!sent) {
-        const reminderSent = await sendDailyMoodReminder(user, todayDateStr)
+        const reminderSent = await sendDailyMoodReminder(
+          user,
+          todayDateStr,
+          hasMoodToday
+        )
         if (reminderSent) {
           results.dailyReminders++
           sent = true
@@ -525,14 +574,27 @@ async function processNotifications() {
           `📤 Sent ${notificationType} to ${user.telegram_id} (${user.first_name})`
         )
       }
-
-      // Небольшая задержка между пользователями чтобы не спамить Telegram API
-      await new Promise(resolve => setTimeout(resolve, 150))
     } catch (error) {
       console.error(`❌ Error processing user ${user.telegram_id}:`, error)
       results.errors++
     }
   }
+
+  const runWithConcurrency = async (items, limit, handler) => {
+    let index = 0
+    const workers = Array.from({ length: limit }, async () => {
+      while (index < items.length) {
+        const currentIndex = index
+        index += 1
+        await handler(items[currentIndex])
+      }
+    })
+    await Promise.all(workers)
+  }
+
+  // Ограничиваем параллелизм, чтобы уложиться в лимиты Telegram и Vercel
+  const CONCURRENCY_LIMIT = 5
+  await runWithConcurrency(users, CONCURRENCY_LIMIT, processUser)
 
   console.log('✅ Notification processing completed:', results)
 
