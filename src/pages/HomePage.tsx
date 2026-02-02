@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Sprout, TrendingUp, Calendar } from 'lucide-react'
 import { GardenView } from '@/components/garden'
 import { MoodCheckin, MoodStats } from '@/components/mood'
-import { Card, TextTyping } from '@/components/ui'
+import { Card, TextTyping, PageHint } from '@/components/ui'
 import {
   useGardenState,
   useMoodTracking,
@@ -14,6 +14,7 @@ import { formatDate } from '@/utils/dateHelpers'
 import { Navigate } from 'react-router-dom'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useLocaleStore } from '@/stores/localeStore'
+import { PAGE_HINT_IDS, hasSeenPageHint } from '@/utils/storage'
 
 export function HomePage() {
   const { garden: _garden, gardenStats } = useGardenState()
@@ -29,6 +30,16 @@ export function HomePage() {
   )
 
   const milestoneInfo = getMilestoneInfo
+  const [hintVersion, setHintVersion] = useState(0)
+
+  const activeHintId = useMemo(() => {
+    const candidates = [
+      PAGE_HINT_IDS.mood,
+      PAGE_HINT_IDS.garden,
+      PAGE_HINT_IDS.stats,
+    ]
+    return candidates.find(id => !hasSeenPageHint(id)) ?? null
+  }, [hintVersion])
 
   // Отслеживаем изменение медиа-запроса без навигации по роуту
   useEffect(() => {
@@ -50,6 +61,37 @@ export function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-kira-50 via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
       <div className="container mx-auto max-w-7xl px-4 py-6">
+        {activeHintId === PAGE_HINT_IDS.mood && (
+          <PageHint
+            id={PAGE_HINT_IDS.mood}
+            title={t.hints.mood.title}
+            description={t.hints.mood.description}
+            actionLabel={t.hints.dismiss}
+            targetSelector='[data-hint-target="desktop-mood-checkin"]'
+            onDismiss={() => setHintVersion(prev => prev + 1)}
+          />
+        )}
+        {activeHintId === PAGE_HINT_IDS.garden && (
+          <PageHint
+            id={PAGE_HINT_IDS.garden}
+            title={t.hints.garden.title}
+            description={t.hints.garden.description}
+            actionLabel={t.hints.dismiss}
+            targetSelector='[data-hint-target="garden-elements"]'
+            onDismiss={() => setHintVersion(prev => prev + 1)}
+          />
+        )}
+        {activeHintId === PAGE_HINT_IDS.stats && (
+          <PageHint
+            id={PAGE_HINT_IDS.stats}
+            title={t.hints.stats.title}
+            description={t.hints.stats.description}
+            actionLabel={t.hints.dismiss}
+            targetSelector='[data-hint-target="desktop-stats"]'
+            onDismiss={() => setHintVersion(prev => prev + 1)}
+          />
+        )}
+
         {/* Header - оптимизировано */}
         <motion.div
           className="mb-8 text-center"
@@ -82,7 +124,9 @@ export function HomePage() {
             animate={{ opacity: 1, x: 0 }}
             transition={transition}
           >
-            <MoodCheckin className="mb-6" />
+            <div data-hint-target="desktop-mood-checkin">
+              <MoodCheckin className="mb-6" />
+            </div>
 
             {/* Quick Stats */}
             <div className="mb-6 grid grid-cols-2 gap-3">
@@ -184,7 +228,7 @@ export function HomePage() {
         >
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Mood Statistics */}
-            <div>
+            <div data-hint-target="desktop-stats">
               <h2 className="mb-4 flex items-center space-x-2 text-xl font-semibold text-neutral-900 dark:text-neutral-100">
                 <TrendingUp
                   size={24}

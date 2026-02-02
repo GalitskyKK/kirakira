@@ -3,6 +3,8 @@ import { BarChart3 } from 'lucide-react'
 import { MoodStats } from '@/components/mood'
 import { PageHeader } from '@/components/layout'
 import { useTranslation } from '@/hooks/useTranslation'
+import { PageHint } from '@/components/ui'
+import { PAGE_HINT_IDS } from '@/utils/storage'
 
 export function StatsPage() {
   const t = useTranslation()
@@ -19,7 +21,17 @@ export function StatsPage() {
       />
 
       <div className="p-4 pb-24">
-        <MoodStats />
+        <PageHint
+          id={PAGE_HINT_IDS.stats}
+          title={t.hints.stats.title}
+          description={t.hints.stats.description}
+          actionLabel={t.hints.dismiss}
+          targetSelector='[data-hint-target="stats-content"]'
+          className="mb-4"
+        />
+        <div data-hint-target="stats-content">
+          <MoodStats />
+        </div>
       </div>
     </motion.div>
   )

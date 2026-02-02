@@ -5,6 +5,7 @@ import {
   CurrencyDisplay,
   StreakFreezeIndicator,
   TextTyping,
+  PageHint,
 } from '@/components/ui'
 import { useGardenState, useMoodTracking } from '@/hooks/index.v2'
 import { useAnimationConfig } from '@/hooks'
@@ -13,6 +14,7 @@ import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useTranslation } from '@/hooks/useTranslation'
 import { getMaxStreakFreezes } from '@/utils/levelsData'
+import { PAGE_HINT_IDS } from '@/utils/storage'
 
 export function MoodPage() {
   const navigate = useNavigate()
@@ -40,6 +42,13 @@ export function MoodPage() {
   return (
     <>
       <div className="space-y-6">
+        <PageHint
+          id={PAGE_HINT_IDS.mood}
+          title={t.hints.mood.title}
+          description={t.hints.mood.description}
+          actionLabel={t.hints.dismiss}
+          targetSelector='[data-hint-target="mood-checkin"]'
+        />
         {/* Quick Status - serene minimalism */}
         <div className="text-center">
           <motion.div
@@ -90,7 +99,9 @@ export function MoodPage() {
         </div>
 
         {/* Mood Check-in */}
-        <MoodCheckin />
+        <div data-hint-target="mood-checkin">
+          <MoodCheckin />
+        </div>
 
         {/* Quick Stats Cards - soft pastels - оптимизировано */}
         <div className="grid grid-cols-2 gap-3">
@@ -195,7 +206,6 @@ export function MoodPage() {
             </div>
           </button>
         </div>
-
       </div>
     </>
   )

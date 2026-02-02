@@ -4,6 +4,8 @@ import { useGardenState } from '@/hooks/index.v2'
 import { useGardenClientStore } from '@/stores/gardenStore'
 import { GardenDisplayMode } from '@/types'
 import { useTranslation } from '@/hooks/useTranslation'
+import { PageHint } from '@/components/ui'
+import { PAGE_HINT_IDS } from '@/utils/storage'
 
 export function GardenPage() {
   const { garden } = useGardenState()
@@ -31,6 +33,13 @@ export function GardenPage() {
 
   return (
     <div className="space-y-4">
+      <PageHint
+        id={PAGE_HINT_IDS.garden}
+        title={t.hints.garden.title}
+        description={t.hints.garden.description}
+        actionLabel={t.hints.dismiss}
+        targetSelector='[data-hint-target="garden-elements"]'
+      />
       <div className="glass-card flex min-h-[56px] items-center justify-between rounded-2xl px-4 py-3">
         <div className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-200">
           <headerConfig.Icon className="h-4 w-4 text-kira-500" />

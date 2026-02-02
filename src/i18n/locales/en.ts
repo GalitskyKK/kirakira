@@ -180,6 +180,27 @@ export const en: Translations = {
       overTime:
         'Over time, your garden will become a unique reflection of your emotional journey',
     },
+    displayModes: {
+      title: 'Garden Modes',
+      description: 'Choose how to view your progress',
+      content:
+        'Classic garden, isometric room, and mood palette show your journey in different ways.',
+      paletteNote: 'The palette is built only from mood check-ins and is free.',
+    },
+    shopAndCurrency: {
+      title: 'Sprouts and Gems',
+      description: 'Currency for customization',
+      content: 'Sprouts and gems unlock themes, rooms, and element upgrades.',
+      sproutsNote: 'Sprouts are the main currency for daily actions.',
+      gemsNote: 'Gems are a rare currency for special themes and effects.',
+    },
+    progress: {
+      title: 'Progress and XP',
+      description: 'Visible growth over time',
+      content:
+        'Experience increases your level and shows how consistently you care for yourself.',
+      levelsNote: 'New levels unlock more content and goals.',
+    },
     ready: {
       title: 'Ready to Start?',
       description: 'Your garden awaits its first plant',
@@ -931,6 +952,10 @@ export const en: Translations = {
     new_year_room: 'New Year',
     paint_room: 'Paint',
     prison_room: 'Cell',
+    white_default_room: 'White Room',
+    blue_default_room: 'Blue Room',
+    dark_blue_default_room: 'Dark Blue Room',
+    orange_default_room: 'Orange Room',
   },
 
   onboardingLanguage: {
@@ -939,5 +964,28 @@ export const en: Translations = {
 
   commonPhrases: {
     selectMoodDescription: 'Choose what best describes your mood',
+  },
+
+  hints: {
+    mood: {
+      title: 'Daily check-in',
+      description:
+        'Mark your mood — the garden grows and you earn sprouts and XP.',
+    },
+    garden: {
+      title: 'Garden elements',
+      description:
+        'Tap a plant to see details and hold to move it. Room and palette show the garden differently.',
+    },
+    shop: {
+      title: 'Garden customization',
+      description: 'Spend sprouts and gems on themes, rooms, and upgrades.',
+    },
+    stats: {
+      title: 'Mood statistics',
+      description:
+        'See trends, frequent emotions, and your progress over time.',
+    },
+    dismiss: 'Got it',
   },
 }

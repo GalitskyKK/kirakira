@@ -2,7 +2,13 @@
  * Local storage utilities with type safety and error handling
  */
 
-import type { Garden, MoodEntry, User, CompanionSelection, CompanionPosition } from '@/types'
+import type {
+  Garden,
+  MoodEntry,
+  User,
+  CompanionSelection,
+  CompanionPosition,
+} from '@/types'
 
 // Storage keys
 export const STORAGE_KEYS = {
@@ -15,7 +21,17 @@ export const STORAGE_KEYS = {
   COMPANION: 'kirakira_companion',
   COMPANION_POSITION: 'kirakira_companion_position',
   GUEST_MODE: 'kirakira_guest_mode',
+  PAGE_HINTS: 'kirakira_page_hints_seen',
 } as const
+
+export const PAGE_HINT_IDS = {
+  mood: 'mood',
+  garden: 'garden',
+  shop: 'shop',
+  stats: 'stats',
+} as const
+
+export type PageHintId = (typeof PAGE_HINT_IDS)[keyof typeof PAGE_HINT_IDS]
 
 const GUEST_DATA_KEYS = [
   STORAGE_KEYS.USER,
@@ -135,7 +151,7 @@ const storage = new SafeStorage()
 export function saveUser(user: User): boolean {
   const serialized = safeJsonStringify(user)
   if (serialized === null) return false
-  
+
   try {
     storage.setItem(STORAGE_KEYS.USER, serialized)
     return true
@@ -150,11 +166,16 @@ export function saveUser(user: User): boolean {
 export function loadUser(): User | null {
   const stored = storage.getItem(STORAGE_KEYS.USER)
   if (stored === null) return null
-  
+
   const user = safeJsonParse<User | null>(stored, null)
-  
+
   // Validate user object structure
-  if (user && typeof user === 'object' && 'id' in user && 'registrationDate' in user) {
+  if (
+    user &&
+    typeof user === 'object' &&
+    'id' in user &&
+    'registrationDate' in user
+  ) {
     // Convert date strings back to Date objects
     return {
       ...user,
@@ -166,7 +187,7 @@ export function loadUser(): User | null {
       },
     }
   }
-  
+
   return null
 }
 
@@ -176,7 +197,7 @@ export function loadUser(): User | null {
 export function saveGarden(garden: Garden): boolean {
   const serialized = safeJsonStringify(garden)
   if (serialized === null) return false
-  
+
   try {
     storage.setItem(STORAGE_KEYS.GARDEN, serialized)
     return true
@@ -191,10 +212,15 @@ export function saveGarden(garden: Garden): boolean {
 export function loadGarden(): Garden | null {
   const stored = storage.getItem(STORAGE_KEYS.GARDEN)
   if (stored === null) return null
-  
+
   const garden = safeJsonParse<Garden | null>(stored, null)
-  
-  if (garden && typeof garden === 'object' && 'id' in garden && 'elements' in garden) {
+
+  if (
+    garden &&
+    typeof garden === 'object' &&
+    'id' in garden &&
+    'elements' in garden
+  ) {
     // Convert date strings back to Date objects
     return {
       ...garden,
@@ -206,7 +232,7 @@ export function loadGarden(): Garden | null {
       })),
     }
   }
-  
+
   return null
 }
 
@@ -216,7 +242,7 @@ export function loadGarden(): Garden | null {
 export function saveMoodHistory(moodHistory: readonly MoodEntry[]): boolean {
   const serialized = safeJsonStringify(moodHistory)
   if (serialized === null) return false
-  
+
   try {
     storage.setItem(STORAGE_KEYS.MOOD_HISTORY, serialized)
     return true
@@ -231,9 +257,9 @@ export function saveMoodHistory(moodHistory: readonly MoodEntry[]): boolean {
 export function loadMoodHistory(): readonly MoodEntry[] {
   const stored = storage.getItem(STORAGE_KEYS.MOOD_HISTORY)
   if (stored === null) return []
-  
+
   const history = safeJsonParse<MoodEntry[]>(stored, [])
-  
+
   // Convert date strings back to Date objects
   return history.map(entry => ({
     ...entry,
@@ -293,7 +319,9 @@ export function loadGuestBundle(): GuestBundle {
   const garden = loadGarden()
   const moodHistory = loadMoodHistory()
   const preferencesRaw = storage.getItem(STORAGE_KEYS.PREFERENCES)
-  const preferences = preferencesRaw ? safeJsonParse(preferencesRaw, null) : null
+  const preferences = preferencesRaw
+    ? safeJsonParse(preferencesRaw, null)
+    : null
   const lastVisit = getLastVisit()
   const companion = loadCompanionSelection()
   const companionPosition = loadCompanionPosition()
@@ -322,7 +350,7 @@ export function saveLastVisit(date: Date = new Date()): void {
 export function getLastVisit(): Date | null {
   const stored = storage.getItem(STORAGE_KEYS.LAST_VISIT)
   if (stored === null) return null
-  
+
   try {
     return new Date(stored)
   } catch {
@@ -366,7 +394,11 @@ export function loadCompanionSelection(): CompanionSelection | null {
   }
 
   const selection = safeJsonParse<CompanionSelection | null>(stored, null)
-  if (selection && typeof selection === 'object' && 'activeCompanionId' in selection) {
+  if (
+    selection &&
+    typeof selection === 'object' &&
+    'activeCompanionId' in selection
+  ) {
     return selection
   }
 
@@ -423,7 +455,7 @@ export function getStorageInfo(): {
   if (typeof window === 'undefined' || !window.localStorage) {
     return { available: false, used: 0, remaining: 0 }
   }
-  
+
   try {
     let used = 0
     Object.values(STORAGE_KEYS).forEach(key => {
@@ -432,11 +464,11 @@ export function getStorageInfo(): {
         used += item.length
       }
     })
-    
+
     // Estimate remaining space (5MB typical limit)
     const estimatedLimit = 5 * 1024 * 1024 // 5MB in bytes
     const remaining = Math.max(0, estimatedLimit - used)
-    
+
     return {
       available: true,
       used,
@@ -445,4 +477,30 @@ export function getStorageInfo(): {
   } catch {
     return { available: false, used: 0, remaining: 0 }
   }
+}
+
+const pageHintIdSet = new Set<string>(Object.values(PAGE_HINT_IDS))
+
+export function loadPageHintsSeen(): readonly PageHintId[] {
+  const stored = storage.getItem(STORAGE_KEYS.PAGE_HINTS)
+  if (stored === null) return []
+  const parsed = safeJsonParse<unknown>(stored, null)
+  if (!Array.isArray(parsed)) return []
+  return parsed.filter(
+    (value): value is PageHintId =>
+      typeof value === 'string' && pageHintIdSet.has(value)
+  )
+}
+
+export function hasSeenPageHint(id: PageHintId): boolean {
+  return loadPageHintsSeen().includes(id)
+}
+
+export function markPageHintSeen(id: PageHintId): void {
+  const existing = loadPageHintsSeen()
+  if (existing.includes(id)) return
+  const next = [...existing, id]
+  const serialized = safeJsonStringify(next)
+  if (serialized === null) return
+  storage.setItem(STORAGE_KEYS.PAGE_HINTS, serialized)
 }

@@ -84,7 +84,9 @@ export function GardenView({ className, compact = false }: GardenViewProps) {
     // но только если он достаточно "свежий" (чтобы не подсвечивать старое при каждом входе).
     if (garden.elements.length > 0 && highlightedElementId === null) {
       const newest = garden.elements.reduce((latest, el) => {
-        return el.unlockDate.getTime() > latest.unlockDate.getTime() ? el : latest
+        return el.unlockDate.getTime() > latest.unlockDate.getTime()
+          ? el
+          : latest
       }, garden.elements[0]!)
 
       const ageMs = Date.now() - newest.unlockDate.getTime()
@@ -413,6 +415,7 @@ export function GardenView({ className, compact = false }: GardenViewProps) {
                       : 'p-2 sm:p-4 lg:p-6',
                     compact && 'overflow-hidden'
                   )}
+                  data-hint-target="garden-elements"
                   style={
                     compact
                       ? {
@@ -442,9 +445,7 @@ export function GardenView({ className, compact = false }: GardenViewProps) {
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={{ duration: 0.3 }}
-                        className={clsx(
-                          compact ? '' : 'h-full min-h-[600px]'
-                        )}
+                        className={clsx(compact ? '' : 'h-full min-h-[600px]')}
                         style={
                           compact
                             ? {

@@ -9,7 +9,7 @@ import {
 } from '@/utils/elementGeneration'
 import { getDaysSinceRegistration } from '@/utils/dateHelpers'
 import type { GardenElement, MoodType, Position2D } from '@/types'
-import { SPROUT_REWARDS, GEM_REWARDS } from '@/types/currency'
+import { SPROUT_REWARDS } from '@/types/currency'
 import { EXPERIENCE_REWARDS } from '@/utils/achievements'
 
 /**
@@ -182,12 +182,12 @@ export function useElementGeneration() {
       {
         day: 7,
         title: 'Первая неделя',
-        reward: `${SPROUT_REWARDS.streak_7_days.amount}🌿 + ${GEM_REWARDS.weekly_streak.amount}💎 + ${EXPERIENCE_REWARDS.STREAK_MILESTONE_7} XP`,
+        reward: `${SPROUT_REWARDS.streak_7_days.amount}🌿 + ${EXPERIENCE_REWARDS.STREAK_MILESTONE_7} XP`,
       },
       {
         day: 30,
         title: 'Первый месяц',
-        reward: `${SPROUT_REWARDS.streak_30_days.amount}🌿 + ${GEM_REWARDS.monthly_streak.amount}💎 + ${EXPERIENCE_REWARDS.STREAK_MILESTONE_30} XP`,
+        reward: `${SPROUT_REWARDS.streak_30_days.amount}🌿 + ${EXPERIENCE_REWARDS.STREAK_MILESTONE_30} XP`,
       },
       {
         day: 100,

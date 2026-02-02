@@ -188,6 +188,25 @@ export interface Translations {
       content: string
       overTime: string
     }
+    displayModes: {
+      title: string
+      description: string
+      content: string
+      paletteNote: string
+    }
+    shopAndCurrency: {
+      title: string
+      description: string
+      content: string
+      sproutsNote: string
+      gemsNote: string
+    }
+    progress: {
+      title: string
+      description: string
+      content: string
+      levelsNote: string
+    }
     ready: {
       title: string
       description: string
@@ -249,6 +268,27 @@ export interface Translations {
   // Общие фразы
   commonPhrases: {
     selectMoodDescription: string
+  }
+
+  // Подсказки по страницам
+  hints: {
+    mood: {
+      title: string
+      description: string
+    }
+    garden: {
+      title: string
+      description: string
+    }
+    shop: {
+      title: string
+      description: string
+    }
+    stats: {
+      title: string
+      description: string
+    }
+    dismiss: string
   }
 
   // Валюта
@@ -925,6 +965,10 @@ export interface Translations {
     new_year_room: string
     paint_room: string
     prison_room: string
+    white_default_room: string
+    blue_default_room: string
+    dark_blue_default_room: string
+    orange_default_room: string
   }
 
   // Онбординг - переключение языка

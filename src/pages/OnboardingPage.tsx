@@ -6,6 +6,11 @@ import {
   Sparkles,
   Heart,
   Sprout,
+  Palette,
+  Home,
+  Leaf,
+  Gem,
+  BarChart3,
 } from 'lucide-react'
 import { Button, Card } from '@/components/ui'
 import { useUserClientStore } from '@/hooks/index.v2'
@@ -121,6 +126,82 @@ function getOnboardingSteps(t: ReturnType<typeof useTranslation>) {
           </div>
           <p className="text-center text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
             {t.onboarding.gardenGrowth.overTime}
+          </p>
+        </div>
+      ),
+    },
+    {
+      id: 'display-modes',
+      title: t.onboarding.displayModes.title,
+      description: t.onboarding.displayModes.description,
+      icon: '🧭',
+      content: (
+        <div className="space-y-4">
+          <p className="text-center text-sm leading-relaxed text-gray-600 dark:text-gray-300 sm:text-base">
+            {t.onboarding.displayModes.content}
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl bg-gray-50 p-3 text-center dark:bg-gray-800">
+              <Home className="mx-auto mb-1 h-6 w-6 text-blue-500" />
+              <p className="text-xs text-gray-600 dark:text-gray-300">
+                {t.pages.garden.isometric}
+              </p>
+            </div>
+            <div className="rounded-xl bg-gray-50 p-3 text-center dark:bg-gray-800">
+              <Palette className="mx-auto mb-1 h-6 w-6 text-purple-500" />
+              <p className="text-xs text-gray-600 dark:text-gray-300">
+                {t.pages.garden.palette}
+              </p>
+            </div>
+          </div>
+          {/* <p className="text-center text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
+            {t.onboarding.displayModes.paletteNote}
+          </p> */}
+        </div>
+      ),
+    },
+    {
+      id: 'shop-and-currency',
+      title: t.onboarding.shopAndCurrency.title,
+      description: t.onboarding.shopAndCurrency.description,
+      icon: '🛍️',
+      content: (
+        <div className="space-y-4">
+          <p className="text-center text-sm leading-relaxed text-gray-600 dark:text-gray-300 sm:text-base">
+            {t.onboarding.shopAndCurrency.content}
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl bg-gray-50 p-3 text-center dark:bg-gray-800">
+              <Leaf className="mx-auto mb-1 h-6 w-6 text-green-500" />
+              <p className="text-xs text-gray-600 dark:text-gray-300">
+                {t.onboarding.shopAndCurrency.sproutsNote}
+              </p>
+            </div>
+            <div className="rounded-xl bg-gray-50 p-3 text-center dark:bg-gray-800">
+              <Gem className="mx-auto mb-1 h-6 w-6 text-purple-500" />
+              <p className="text-xs text-gray-600 dark:text-gray-300">
+                {t.onboarding.shopAndCurrency.gemsNote}
+              </p>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: 'progress',
+      title: t.onboarding.progress.title,
+      description: t.onboarding.progress.description,
+      icon: '📈',
+      content: (
+        <div className="space-y-4 text-center">
+          <div className="mb-4 flex justify-center">
+            <BarChart3 size={48} className="text-indigo-500" />
+          </div>
+          <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300 sm:text-base">
+            {t.onboarding.progress.content}
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
+            {t.onboarding.progress.levelsNote}
           </p>
         </div>
       ),
@@ -267,7 +348,11 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
                 className="h-10 w-10 p-0"
                 aria-label={isLastStep ? t.onboarding.start : t.common.next}
               >
-                {isLastStep ? <Sparkles size={18} /> : <ChevronRight size={18} />}
+                {isLastStep ? (
+                  <Sparkles size={18} />
+                ) : (
+                  <ChevronRight size={18} />
+                )}
               </Button>
             </div>
 
@@ -289,7 +374,11 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
               <Button
                 onClick={handleNext}
                 rightIcon={
-                  isLastStep ? <Sparkles size={16} /> : <ChevronRight size={16} />
+                  isLastStep ? (
+                    <Sparkles size={16} />
+                  ) : (
+                    <ChevronRight size={16} />
+                  )
                 }
                 className="w-full sm:w-auto"
               >

@@ -6,6 +6,8 @@ import { PageHeader } from '@/components/layout'
 import { ShopContent, type ShopTab } from '@/components/ui/Shop'
 import { useCurrencySync } from '@/hooks/useCurrencySync'
 import { useTranslation } from '@/hooks/useTranslation'
+import { PageHint } from '@/components/ui'
+import { PAGE_HINT_IDS } from '@/utils/storage'
 
 const TAB_PARAM_KEY = 'tab'
 
@@ -54,11 +56,21 @@ export function ShopPage() {
       />
 
       <div className="p-4 pb-24">
-        <ShopContent
-          variant="page"
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
+        <PageHint
+          id={PAGE_HINT_IDS.shop}
+          title={t.hints.shop.title}
+          description={t.hints.shop.description}
+          actionLabel={t.hints.dismiss}
+          targetSelector='[data-hint-target="shop-content"]'
+          className="mb-4"
         />
+        <div data-hint-target="shop-content">
+          <ShopContent
+            variant="page"
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
+        </div>
       </div>
     </motion.div>
   )
