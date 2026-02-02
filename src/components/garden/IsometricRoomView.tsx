@@ -39,6 +39,7 @@ const ROOM_ASSETS: Record<string, string> = {
   new_year_room: '/isoRoom/new-year_room.webp',
   paint_room: '/isoRoom/paint_room.webp',
   prison_room: '/isoRoom/prison_room.webp',
+  old_wood_room: '/isoRoom/old_wood_room.webp',
 }
 
 // Позиции слотов для размещения элементов

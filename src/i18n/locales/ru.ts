@@ -963,6 +963,7 @@ export const ru: Translations = {
     blue_default_room: 'Синяя комната',
     dark_blue_default_room: 'Тёмно-синяя комната',
     orange_default_room: 'Оранжевая комната',
+    old_wood_room: 'Старая древесина',
   },
 
   onboardingLanguage: {

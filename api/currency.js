@@ -157,6 +157,14 @@ const ROOM_THEMES = [
     previewUrl: '/isoRoom/orange_default_room.webp',
   },
   {
+    id: 'old_wood_room',
+    name: 'Старая древесина',
+    priceSprouts: 3000,
+    priceGems: 2,
+    isDefault: false,
+    previewUrl: '/isoRoom/old_wood_room.webp',
+  },
+  {
     id: 'prison_room',
     name: 'Камера',
     priceSprouts: 3000,

@@ -956,6 +956,7 @@ export const en: Translations = {
     blue_default_room: 'Blue Room',
     dark_blue_default_room: 'Dark Blue Room',
     orange_default_room: 'Orange Room',
+    old_wood_room: 'Old Wood Room',
   },
 
   onboardingLanguage: {

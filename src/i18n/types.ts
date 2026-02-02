@@ -969,6 +969,7 @@ export interface Translations {
     blue_default_room: string
     dark_blue_default_room: string
     orange_default_room: string
+    old_wood_room: string
   }
 
   // Онбординг - переключение языка
