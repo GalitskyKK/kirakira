@@ -3,24 +3,27 @@ import { motion } from 'framer-motion'
 import { Sprout, TrendingUp, Calendar } from 'lucide-react'
 import { GardenView } from '@/components/garden'
 import { MoodCheckin, MoodStats } from '@/components/mood'
-import { Card, TextTyping, PageHint } from '@/components/ui'
+import { Card, CurrencyDisplay, TextTyping, PageHint } from '@/components/ui'
 import {
   useGardenState,
   useMoodTracking,
   useElementGeneration,
   useAnimationConfig,
+  useCurrencySync,
 } from '@/hooks'
 import { formatDate } from '@/utils/dateHelpers'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useLocaleStore } from '@/stores/localeStore'
 import { PAGE_HINT_IDS, hasSeenPageHint } from '@/utils/storage'
 
 export function HomePage() {
+  const navigate = useNavigate()
   const { garden: _garden, gardenStats } = useGardenState()
   const { todaysMood, streakCount } = useMoodTracking()
   const { canUnlock, getMilestoneInfo } = useElementGeneration()
   const { transition } = useAnimationConfig()
+  useCurrencySync()
   const t = useTranslation()
   const locale = useLocaleStore(state => state.locale)
   const [isMobile, setIsMobile] = useState(() =>
@@ -57,6 +60,10 @@ export function HomePage() {
     return <Navigate to="/mobile" replace />
   }
 
+  const openShop = () => {
+    navigate('/mobile/shop')
+  }
+
   // Desktop layout
   return (
     <div className="min-h-screen bg-gradient-to-br from-kira-50 via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
@@ -91,6 +98,18 @@ export function HomePage() {
             onDismiss={() => setHintVersion(prev => prev + 1)}
           />
         )}
+
+        <div className="mb-4 flex items-center justify-end">
+          <button
+            type="button"
+            onClick={openShop}
+            title="Открыть магазин"
+            aria-label="Открыть магазин"
+            className="rounded-lg bg-gradient-to-r from-green-500/10 to-purple-500/10 px-3 py-1.5 transition-colors hover:from-green-500/20 hover:to-purple-500/20"
+          >
+            <CurrencyDisplay size="md" variant="compact" showBorder={false} />
+          </button>
+        </div>
 
         {/* Header - оптимизировано */}
         <motion.div
