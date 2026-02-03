@@ -449,7 +449,12 @@ async function handleUseStreakFreeze(req, res) {
   }
 
   try {
-    const { telegramId, freezeType = 'manual', missedDays = 1, localDate = null } = req.body
+    const {
+      telegramId,
+      freezeType = 'manual',
+      missedDays = 1,
+      localDate = null,
+    } = req.body
 
     if (!telegramId) {
       return res
@@ -507,19 +512,23 @@ async function handleUseStreakFreeze(req, res) {
     // 🔥 СИНХРОНИЗАЦИЯ (TZ):
     // "Вчера" должно считаться от локального дня пользователя, а не от времени сервера.
     // Клиент передает localDate=YYYY-MM-DD.
-    const ymdToUtcMs = (ymd) => {
+    const ymdToUtcMs = ymd => {
       const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd)
       if (!m) return null
       const year = Number(m[1])
       const month = Number(m[2])
       const day = Number(m[3])
-      if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+      if (
+        !Number.isFinite(year) ||
+        !Number.isFinite(month) ||
+        !Number.isFinite(day)
+      ) {
         return null
       }
       return Date.UTC(year, month - 1, day, 0, 0, 0, 0)
     }
 
-    const utcMsToYmd = (ms) => {
+    const utcMsToYmd = ms => {
       const d = new Date(ms)
       const y = d.getUTCFullYear()
       const m = String(d.getUTCMonth() + 1).padStart(2, '0')
@@ -528,9 +537,13 @@ async function handleUseStreakFreeze(req, res) {
     }
 
     let yesterdayStr = null
-    if (typeof localDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(localDate)) {
+    if (
+      typeof localDate === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(localDate)
+    ) {
       const todayMs = ymdToUtcMs(localDate)
-      yesterdayStr = todayMs != null ? utcMsToYmd(todayMs - 24 * 60 * 60 * 1000) : null
+      yesterdayStr =
+        todayMs != null ? utcMsToYmd(todayMs - 24 * 60 * 60 * 1000) : null
     }
 
     if (!yesterdayStr) {
@@ -624,19 +637,23 @@ async function handleResetStreak(req, res) {
     console.log(`🔄 Resetting streak for user ${telegramId}`)
 
     // 🔥 СИНХРОНИЗАЦИЯ (TZ): "Вчера" считаем от localDate пользователя.
-    const ymdToUtcMs = (ymd) => {
+    const ymdToUtcMs = ymd => {
       const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd)
       if (!m) return null
       const year = Number(m[1])
       const month = Number(m[2])
       const day = Number(m[3])
-      if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+      if (
+        !Number.isFinite(year) ||
+        !Number.isFinite(month) ||
+        !Number.isFinite(day)
+      ) {
         return null
       }
       return Date.UTC(year, month - 1, day, 0, 0, 0, 0)
     }
 
-    const utcMsToYmd = (ms) => {
+    const utcMsToYmd = ms => {
       const d = new Date(ms)
       const y = d.getUTCFullYear()
       const m = String(d.getUTCMonth() + 1).padStart(2, '0')
@@ -645,7 +662,10 @@ async function handleResetStreak(req, res) {
     }
 
     let yesterdayFormatted = null
-    if (typeof localDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(localDate)) {
+    if (
+      typeof localDate === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(localDate)
+    ) {
       const todayMs = ymdToUtcMs(localDate)
       yesterdayFormatted =
         todayMs != null ? utcMsToYmd(todayMs - 24 * 60 * 60 * 1000) : null
@@ -1066,15 +1086,20 @@ async function handleUpdateRoomTheme(req, res) {
 
     const validThemes = [
       'isoRoom',
-      'autumn_room',
-      'brick_room',
-      'cyberpunk_room',
-      'zodiac_room',
-      'dark_neon_room',
-      'high_tec_room',
-      'new_year_room',
-      'paint_room',
+      'white_default_room',
+      'blue_default_room',
+      'dark_blue_default_room',
+      'orange_default_room',
+      'old_wood_room',
       'prison_room',
+      'brick_room',
+      'autumn_room',
+      'paint_room',
+      'zodiac_room',
+      'new_year_room',
+      'cyberpunk_room',
+      'high_tec_room',
+      'dark_neon_room',
     ]
 
     if (!validThemes.includes(roomTheme)) {
@@ -1290,7 +1315,10 @@ async function handleCheckStreak(req, res) {
     // Клиент передает localDate=YYYY-MM-DD.
     const { localDate } = req.query
     let todayFormatted
-    if (typeof localDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(localDate)) {
+    if (
+      typeof localDate === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(localDate)
+    ) {
       todayFormatted = localDate
     } else {
       // Fallback: локальная дата сервера (может быть неверной для пользователя!)
@@ -1304,13 +1332,17 @@ async function handleCheckStreak(req, res) {
       )
     }
 
-    const ymdToUtcMs = (ymd) => {
+    const ymdToUtcMs = ymd => {
       const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd)
       if (!m) return null
       const year = Number(m[1])
       const month = Number(m[2])
       const day = Number(m[3])
-      if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+      if (
+        !Number.isFinite(year) ||
+        !Number.isFinite(month) ||
+        !Number.isFinite(day)
+      ) {
         return null
       }
       return Date.UTC(year, month - 1, day, 0, 0, 0, 0)
