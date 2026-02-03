@@ -211,6 +211,35 @@ function App() {
     }
   }, [isTelegramEnv, colorScheme])
 
+  // В Telegram WebApp отключаем Service Worker, чтобы избежать 404 на чанки
+  useEffect(() => {
+    if (!isTelegramEnv || !('serviceWorker' in navigator)) return
+
+    const unregisterAndClearCaches = async (): Promise<void> => {
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations()
+        await Promise.all(
+          registrations.map(registration => registration.unregister())
+        )
+      } catch {
+        console.warn('Не удалось удалить Service Worker в Telegram WebApp')
+      }
+
+      if ('caches' in window) {
+        try {
+          const cacheNames = await caches.keys()
+          await Promise.all(
+            cacheNames.map(cacheName => caches.delete(cacheName))
+          )
+        } catch {
+          console.warn('Не удалось очистить Cache Storage в Telegram WebApp')
+        }
+      }
+    }
+
+    void unregisterAndClearCaches()
+  }, [isTelegramEnv])
+
   // ✅ ЛОГИРОВАНИЕ ПОСЛЕ ВСЕХ ХУКОВ
   // 🚨 ПОКАЗАТЬ ДИАГНОСТИКУ ПРИ ПРОБЛЕМАХ В TELEGRAM (после всех хуков)
   if (forceDiagnostic || (isTelegramEnv && urlParams.get('debug') === '1')) {
@@ -909,8 +938,8 @@ function App() {
 
         <CompanionOverlay />
 
-        {/* PWA Update Prompt - глобально доступен */}
-        <UpdatePrompt />
+        {/* PWA Update Prompt - отключен для Telegram WebApp */}
+        {!isTelegramEnv && <UpdatePrompt />}
       </div>
     </UserProvider>
   )

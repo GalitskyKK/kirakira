@@ -19,7 +19,9 @@ export default defineConfig({
       devOptions: {
         enabled: true, // Для тестирования
       },
-      injectRegister: 'auto', // Автоматическая инъекция регистрации SW
+      // Регистрируем SW вручную через virtual:pwa-register,
+      // чтобы можно было отключить его в Telegram WebApp.
+      injectRegister: null,
       manifest: {
         name: 'KiraKira - Digital Emotional Garden',
         short_name: 'KiraKira',
