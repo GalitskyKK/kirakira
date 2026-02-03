@@ -973,6 +973,11 @@ export const en: Translations = {
       description:
         'Mark your mood — the garden grows and you earn sprouts and XP.',
     },
+    currency: {
+      title: 'Garden currency',
+      description:
+        'Sprouts and gems are used for purchases. Tap the balance to open the shop.',
+    },
     garden: {
       title: 'Garden elements',
       description:

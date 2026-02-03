@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { MoodCheckin } from '@/components/mood'
@@ -14,7 +15,7 @@ import { useUserSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useTranslation } from '@/hooks/useTranslation'
 import { getMaxStreakFreezes } from '@/utils/levelsData'
-import { PAGE_HINT_IDS } from '@/utils/storage'
+import { PAGE_HINT_IDS, hasSeenPageHint } from '@/utils/storage'
 
 export function MoodPage() {
   const navigate = useNavigate()
@@ -22,6 +23,12 @@ export function MoodPage() {
   const { canCheckinToday } = useMoodTracking()
   const { transition } = useAnimationConfig()
   const t = useTranslation()
+  const [hintVersion, setHintVersion] = useState(0)
+
+  const activeHintId = useMemo(() => {
+    const candidates = [PAGE_HINT_IDS.mood, PAGE_HINT_IDS.currency]
+    return candidates.find(id => !hasSeenPageHint(id)) ?? null
+  }, [hintVersion])
 
   // Получаем данные пользователя через React Query
   const telegramId = useTelegramId()
@@ -42,13 +49,26 @@ export function MoodPage() {
   return (
     <>
       <div className="space-y-6">
-        <PageHint
-          id={PAGE_HINT_IDS.mood}
-          title={t.hints.mood.title}
-          description={t.hints.mood.description}
-          actionLabel={t.hints.dismiss}
-          targetSelector='[data-hint-target="mood-checkin"]'
-        />
+        {activeHintId === PAGE_HINT_IDS.mood && (
+          <PageHint
+            id={PAGE_HINT_IDS.mood}
+            title={t.hints.mood.title}
+            description={t.hints.mood.description}
+            actionLabel={t.hints.dismiss}
+            targetSelector='[data-hint-target="mood-checkin"]'
+            onDismiss={() => setHintVersion(prev => prev + 1)}
+          />
+        )}
+        {activeHintId === PAGE_HINT_IDS.currency && (
+          <PageHint
+            id={PAGE_HINT_IDS.currency}
+            title={t.hints.currency.title}
+            description={t.hints.currency.description}
+            actionLabel={t.hints.dismiss}
+            targetSelector='[data-hint-target="currency-balance"]'
+            onDismiss={() => setHintVersion(prev => prev + 1)}
+          />
+        )}
         {/* Quick Status - serene minimalism */}
         <div className="text-center">
           <motion.div
@@ -69,6 +89,7 @@ export function MoodPage() {
           <div className="mt-4 flex items-center justify-center">
             <div className="glass-card flex items-center gap-3 rounded-2xl px-4 py-2 text-sm">
               <div
+                data-hint-target="currency-balance"
                 className="dark:hover:bg-kira-950/30 cursor-pointer rounded-xl px-2 py-1 transition-all hover:bg-kira-50"
                 onClick={() => openShop('themes')}
               >

@@ -26,6 +26,7 @@ export const STORAGE_KEYS = {
 
 export const PAGE_HINT_IDS = {
   mood: 'mood',
+  currency: 'currency',
   garden: 'garden',
   shop: 'shop',
   stats: 'stats',

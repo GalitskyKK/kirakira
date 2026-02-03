@@ -276,6 +276,10 @@ export interface Translations {
       title: string
       description: string
     }
+    currency: {
+      title: string
+      description: string
+    }
     garden: {
       title: string
       description: string
