@@ -3,7 +3,13 @@ import { motion } from 'framer-motion'
 import { Sprout, TrendingUp, Calendar } from 'lucide-react'
 import { GardenView } from '@/components/garden'
 import { MoodCheckin, MoodStats } from '@/components/mood'
-import { Card, CurrencyDisplay, TextTyping, PageHint } from '@/components/ui'
+import {
+  Card,
+  CurrencyDisplay,
+  TextTyping,
+  PageHint,
+  StreakFreezeIndicator,
+} from '@/components/ui'
 import {
   useGardenState,
   useMoodTracking,
@@ -16,6 +22,9 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useLocaleStore } from '@/stores/localeStore'
 import { PAGE_HINT_IDS, hasSeenPageHint } from '@/utils/storage'
+import { useTelegramId } from '@/hooks/useTelegramId'
+import { useUserSync } from '@/hooks/index.v2'
+import { getMaxStreakFreezes } from '@/utils/levelsData'
 
 export function HomePage() {
   const navigate = useNavigate()
@@ -26,6 +35,10 @@ export function HomePage() {
   useCurrencySync()
   const t = useTranslation()
   const locale = useLocaleStore(state => state.locale)
+  const telegramId = useTelegramId()
+  const { data: userData } = useUserSync(telegramId, !!telegramId)
+  const currentUser = userData?.user
+  const maxStreakFreezes = getMaxStreakFreezes(currentUser?.level ?? 1)
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== 'undefined'
       ? window.matchMedia('(max-width: 767px)').matches
@@ -100,15 +113,29 @@ export function HomePage() {
         )}
 
         <div className="mb-4 flex items-center justify-end">
-          <button
-            type="button"
-            onClick={openShop}
-            title="Открыть магазин"
-            aria-label="Открыть магазин"
-            className="rounded-lg bg-gradient-to-r from-green-500/10 to-purple-500/10 px-3 py-1.5 transition-colors hover:from-green-500/20 hover:to-purple-500/20"
-          >
-            <CurrencyDisplay size="md" variant="compact" showBorder={false} />
-          </button>
+          <div className="flex items-center gap-3 rounded-2xl bg-white/70 px-3 py-1.5 shadow-sm backdrop-blur dark:bg-neutral-900/70">
+            <button
+              type="button"
+              onClick={openShop}
+              title="Открыть магазин"
+              aria-label="Открыть магазин"
+              className="rounded-lg bg-gradient-to-r from-green-500/10 to-purple-500/10 px-3 py-1.5 transition-colors hover:from-green-500/20 hover:to-purple-500/20"
+            >
+              <CurrencyDisplay size="md" variant="compact" showBorder={false} />
+            </button>
+
+            {currentUser?.stats && (
+              <>
+                <div className="h-6 w-px bg-neutral-300 dark:bg-neutral-600" />
+                <StreakFreezeIndicator
+                  manual={currentUser.stats.streakFreezes}
+                  auto={currentUser.stats.autoFreezes}
+                  max={maxStreakFreezes}
+                  showBorder={false}
+                />
+              </>
+            )}
+          </div>
         </div>
 
         {/* Header - оптимизировано */}
