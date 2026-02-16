@@ -93,6 +93,9 @@ export interface Translations {
     notePlaceholder: string
     update: string
     intensityLabel: string
+    thankYou: string
+    moodRecorded: string
+    newPlant: string
   }
 
   // Обновления приложения

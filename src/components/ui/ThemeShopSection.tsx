@@ -13,6 +13,7 @@ import { useTelegramId } from '@/hooks/useTelegramId'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button, Card } from '@/components/ui'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useHorizontalSwipeCapture } from '@/hooks/useHorizontalSwipeCapture'
 import { getLocalizedThemeName } from '@/utils/themeLocalization'
 
 // Импортируем функции для работы с локальным хранилищем
@@ -73,6 +74,7 @@ export function ThemeShopSection() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const sliderRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const { ref: swipeCaptureRef } = useHorizontalSwipeCapture(containerRef)
 
   const handleBuyTheme = async (
     themeId: string,
@@ -321,11 +323,11 @@ export function ThemeShopSection() {
             </>
           )}
 
-          {/* Контейнер слайдера */}
+          {/* Контейнер слайдера — swipeCaptureRef блокирует vertical scroll на iOS/Telegram */}
           <div
-            ref={containerRef}
+            ref={swipeCaptureRef}
             className="relative overflow-hidden"
-            style={{ touchAction: 'pan-x' }}
+            style={{ touchAction: 'pan-x', overscrollBehavior: 'contain' }}
           >
             <motion.div
               ref={sliderRef}

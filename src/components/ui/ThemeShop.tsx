@@ -7,6 +7,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { motion, AnimatePresence, PanInfo } from 'framer-motion'
 import { X, Check, Lock, Leaf, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useGardenTheme } from '@/hooks/useGardenTheme'
+import { useHorizontalSwipeCapture } from '@/hooks/useHorizontalSwipeCapture'
 import { useCurrencyClientStore } from '@/stores/currencyStore'
 import { useSpendCurrency, currencyKeys } from '@/hooks/queries'
 import { useTelegramId } from '@/hooks/useTelegramId'
@@ -80,6 +81,7 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const sliderRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const { ref: swipeCaptureRef } = useHorizontalSwipeCapture(containerRef)
 
   // Блокируем скролл при открытии модалки
   useEffect(() => {
@@ -381,11 +383,11 @@ export function ThemeShop({ isOpen, onClose }: ThemeShopProps) {
                   </>
                 )}
 
-                {/* Контейнер слайдера */}
+                {/* Контейнер слайдера — swipeCaptureRef блокирует vertical scroll на iOS/Telegram */}
                 <div
-                  ref={containerRef}
+                  ref={swipeCaptureRef}
                   className="relative overflow-hidden"
-                  style={{ touchAction: 'pan-x' }}
+                  style={{ touchAction: 'pan-x', overscrollBehavior: 'contain' }}
                 >
                   <motion.div
                     ref={sliderRef}

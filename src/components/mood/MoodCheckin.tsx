@@ -238,11 +238,11 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
             </motion.div>
 
             <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
-              Спасибо за отметку!
+              {t.mood.thankYou}
             </h3>
 
             <p className="mb-4 text-gray-600 dark:text-gray-400">
-              Ваше настроение записано
+              {t.mood.moodRecorded}
             </p>
 
             {/* Показываем информацию о палитре в режиме палитры */}
@@ -393,7 +393,7 @@ export function MoodCheckin({ onMoodSubmit, className }: MoodCheckinProps) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={transition}
                   >
-                    Новое растение!
+                    {t.mood.newPlant}
                   </motion.span>
                   <Sparkles size={24} className="text-garden-600" />
                 </motion.div>

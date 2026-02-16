@@ -8,6 +8,7 @@ import { useSpendCurrency, currencyKeys } from '@/hooks/queries'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useHorizontalSwipeCapture } from '@/hooks/useHorizontalSwipeCapture'
 import { getLocalizedThemeName } from '@/utils/themeLocalization'
 
 export function RoomThemeShopSection() {
@@ -31,6 +32,7 @@ export function RoomThemeShopSection() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const sliderRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const { ref: swipeCaptureRef } = useHorizontalSwipeCapture(containerRef)
 
   const cardWidth = 320
   const [containerWidth, setContainerWidth] = useState(() => {
@@ -172,9 +174,9 @@ export function RoomThemeShopSection() {
           )}
 
           <div
-            ref={containerRef}
+            ref={swipeCaptureRef}
             className="relative overflow-hidden"
-            style={{ touchAction: 'pan-x' }}
+            style={{ touchAction: 'pan-x', overscrollBehavior: 'contain' }}
           >
             <motion.div
               ref={sliderRef}

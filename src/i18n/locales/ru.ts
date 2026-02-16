@@ -85,6 +85,9 @@ export const ru: Translations = {
     notePlaceholder: 'Что вы чувствуете сегодня?',
     update: 'Обновить',
     intensityLabel: 'Интенсивность',
+    thankYou: 'Спасибо за отметку!',
+    moodRecorded: 'Ваше настроение записано',
+    newPlant: 'Новое растение!',
   },
 
   update: {

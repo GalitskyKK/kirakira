@@ -86,6 +86,9 @@ export const en: Translations = {
     notePlaceholder: 'What are you feeling today?',
     update: 'Update',
     intensityLabel: 'Intensity',
+    thankYou: 'Thank you for checking in!',
+    moodRecorded: 'Your mood has been recorded',
+    newPlant: 'New plant!',
   },
 
   update: {
