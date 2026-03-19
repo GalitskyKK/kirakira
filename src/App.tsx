@@ -1,4 +1,4 @@
-import { useEffect, useMemo, Suspense, useCallback } from 'react'
+import { useEffect, useMemo, useState, Suspense, useCallback } from 'react'
 import {
   BrowserRouter as Router,
   Routes,
@@ -97,6 +97,7 @@ import { useTelegram, useTelegramTheme, useAppInitialization } from '@/hooks'
 import { InitializationStage } from '@/types/initialization'
 import { getTelegramIdFromJWT } from '@/utils/apiClient'
 import { hasGuestData, clearGuestData, loadGuestBundle } from '@/utils/storage'
+import { telegramStorage } from '@/utils/telegramStorage'
 import { importGuestData } from '@/api'
 
 interface AppInitState {
@@ -141,6 +142,9 @@ function App() {
     isGuestModeEnabled,
     isLoading: userStoreLoading,
   } = useUserClientStore()
+
+  // В Telegram при пустом localStorage (например, открытие с кнопки «ОТКРЫТЬ») сначала проверяем Cloud Storage
+  const [onboardingCloudCheckDone, setOnboardingCloudCheckDone] = useState(false)
 
   // Telegram интеграция
   const {
@@ -210,6 +214,32 @@ function App() {
       document.documentElement.classList.toggle('dark', colorScheme === 'dark')
     }
   }, [isTelegramEnv, colorScheme])
+
+  // Проверка онбординга из Telegram Cloud Storage (только когда локально «не пройден» — избегаем повторного онбординга при открытии с кнопки «ОТКРЫТЬ»)
+  useEffect(() => {
+    if (!isTelegramEnv || hasCompletedOnboarding || onboardingCloudCheckDone) return
+    let cancelled = false
+    const ONBOARDING_CLOUD_CHECK_TIMEOUT_MS = 3000
+
+    const run = async (): Promise<void> => {
+      telegramStorage.initialize()
+      const completed = await Promise.race([
+        telegramStorage.isOnboardingCompleted(),
+        new Promise<boolean>(resolve =>
+          setTimeout(() => resolve(false), ONBOARDING_CLOUD_CHECK_TIMEOUT_MS)
+        ),
+      ])
+      if (cancelled) return
+      if (completed) {
+        useUserClientStore.getState().completeOnboarding()
+      }
+      setOnboardingCloudCheckDone(true)
+    }
+    void run()
+    return () => {
+      cancelled = true
+    }
+  }, [isTelegramEnv, hasCompletedOnboarding, onboardingCloudCheckDone])
 
   // В Telegram WebApp отключаем Service Worker, чтобы избежать 404 на чанки
   useEffect(() => {
@@ -296,8 +326,10 @@ function App() {
     window.history.replaceState(null, '', '/')
   }, [])
 
-  // Show loading state during initialization
-  if (initState.isLoading) {
+  // Show loading state during initialization или пока проверяем онбординг в Cloud (Telegram, кнопка «ОТКРЫТЬ»)
+  const isResolvingOnboardingFromCloud =
+    isTelegramEnv && !hasCompletedOnboarding && !onboardingCloudCheckDone
+  if (initState.isLoading || isResolvingOnboardingFromCloud) {
     // 🔍 ОТЛАДКА ЭКРАНА ЗАГРУЗКИ (только в dev режиме)
     const bgClass = isTelegramEnv
       ? 'bg-[var(--tg-bg-color,#ffffff)]'
