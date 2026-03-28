@@ -364,7 +364,8 @@ function App() {
 
     const { disableGuestMode } = useUserClientStore.getState()
     disableGuestMode()
-    window.location.reload()
+    // reload() оставляет URL /auth → после входа снова matчится Route /auth и показывается форма
+    window.location.replace(`${window.location.origin}/`)
   }, [actualTelegramId, telegramUser?.telegramId])
 
   const handleSkipAuth = useCallback(() => {
