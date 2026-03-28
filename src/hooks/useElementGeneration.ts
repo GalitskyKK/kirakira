@@ -13,7 +13,7 @@ import { SPROUT_REWARDS } from '@/types/currency'
 import { EXPERIENCE_REWARDS } from '@/utils/achievements'
 
 /**
- * Hook for element generation logic and preview
+ * Hook for element generation logic and preview w
  */
 export function useElementGeneration() {
   // Получаем данные через React Query
