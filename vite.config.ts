@@ -8,6 +8,9 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const apiProxyTarget =
     env.VITE_API_PROXY_TARGET || 'https://kirakiragarden.ru'
+  /** Полный URL проекта Supabase (только dev). См. комментарий у server.proxy ниже. */
+  const supabaseDevProxyTarget = env.SUPABASE_DEV_PROXY_TARGET?.trim() ?? ''
+  const supabaseDevProxyPath = '/__kirakira_supabase'
 
   // В логах Vercel (Build): видит ли Vite VITE_* в момент сборки (значения не печатаем)
   if (mode === 'production') {
@@ -162,6 +165,24 @@ export default defineConfig(({ mode }) => {
         changeOrigin: true,
         secure: true,
       },
+      // Dev: если браузер режет прямой доступ к *.supabase.co (CORS/null, блокировка сети),
+      // в .env.local задайте:
+      //   SUPABASE_DEV_PROXY_TARGET=https://ВАШПРОЕКТ.supabase.co
+      //   VITE_SUPABASE_URL=http://localhost:3000/__kirakira_supabase
+      // (порт как в server.port). Anon key без изменений.
+      ...(mode === 'development' && supabaseDevProxyTarget !== ''
+        ? {
+            [supabaseDevProxyPath]: {
+              target: supabaseDevProxyTarget,
+              changeOrigin: true,
+              secure: true,
+              rewrite: path =>
+                path.startsWith(supabaseDevProxyPath)
+                  ? path.slice(supabaseDevProxyPath.length) || '/'
+                  : path,
+            },
+          }
+        : {}),
     },
   },
   }
