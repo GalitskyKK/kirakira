@@ -92,11 +92,8 @@ const FriendProfilePage = lazyWithRetry(
   () => import('@/pages/FriendProfilePage')
 )
 const LeaderboardPage = lazyWithRetry(() => import('@/pages/LeaderboardPage'))
-const AccountRecoveryPage = lazyWithRetry(() =>
-  import('@/pages/AccountRecoveryPage').then(module => ({
-    default: module.AccountRecoveryPage,
-  }))
-)
+// Не lazy: отдельный чанк page-AccountRecoveryPage давал TDZ после минификации (WebView / браузер)
+import { AccountRecoveryPage } from '@/pages/AccountRecoveryPage'
 import { TelegramDiagnostic } from '@/components/TelegramDiagnostic'
 import { useTelegram, useTelegramTheme, useAppInitialization } from '@/hooks'
 import { InitializationStage } from '@/types/initialization'
@@ -758,10 +755,7 @@ function App() {
                 path="/leaderboard"
                 element={withSuspense(<LeaderboardPage />)}
               />
-              <Route
-                path="/recovery"
-                element={withSuspense(<AccountRecoveryPage />)}
-              />
+              <Route path="/recovery" element={<AccountRecoveryPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           ) : (
@@ -1026,7 +1020,7 @@ function App() {
                       exit={{ opacity: 0 }}
                       transition={routeTransition}
                     >
-                      {withSuspense(<AccountRecoveryPage />)}
+                      <AccountRecoveryPage />
                     </motion.div>
                   }
                 />
