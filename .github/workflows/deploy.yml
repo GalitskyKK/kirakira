@@ -22,7 +22,12 @@ jobs:
       - name: Install Dependencies 🔧
         run: npm ci
 
+      # Vite вшивает VITE_* из process.env на момент сборки. Secrets/Variables нужно явно пробросить в env шага.
+      # Значения: Actions → Secrets (рекомендуется для ключа) или Variables — тогда подставится через vars.*
       - name: Build 🏗️
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || vars.VITE_SUPABASE_ANON_KEY }}
         run: npm run build
 
       - name: FTP Deploy 🚀
