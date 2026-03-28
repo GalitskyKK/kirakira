@@ -1,9 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { Shield } from 'lucide-react'
-import { PageHeader } from '@/components/layout'
-import { Card } from '@/components/ui'
+import { ArrowLeft, Shield } from 'lucide-react'
 import {
   AUTH_RESET_EVENT,
   setJWTToken,
@@ -12,8 +10,10 @@ import {
   confirmAccountRecoveryCode,
   requestAccountRecoveryCode,
 } from '@/utils/accountRecoveryApi'
-import { syncUserFromSupabase } from '@/api/userService'
 import { isSupabaseBrowserConfigured } from '@/utils/supabaseViteEnv'
+
+const recoveryCardClass =
+  'rounded-2xl border border-neutral-200 bg-white p-4 transition-all dark:border-neutral-700 dark:bg-neutral-900'
 
 export function AccountRecoveryPage() {
   const navigate = useNavigate()
@@ -52,6 +52,7 @@ export function AccountRecoveryPage() {
       )
       setJWTToken(token)
       window.dispatchEvent(new Event(AUTH_RESET_EVENT))
+      const { syncUserFromSupabase } = await import('@/api/userService')
       await syncUserFromSupabase(telegramId)
       await queryClient.invalidateQueries({ queryKey: ['user'] })
       navigate('/', { replace: true })
@@ -64,14 +65,33 @@ export function AccountRecoveryPage() {
     }
   }, [code, navigate, queryClient])
 
+  const shellWithPadding =
+    'min-h-screen bg-gradient-to-br from-kira-50 via-garden-50 to-neutral-50 p-4 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900'
+  const shellMain =
+    'min-h-screen bg-gradient-to-br from-kira-50 via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900'
+
+  const headerClass =
+    'glass-card sticky top-0 z-10 border-b border-neutral-200/50 shadow-sm backdrop-blur-md dark:border-neutral-700/50'
+
   if (!isSupabaseBrowserConfigured()) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-kira-50 via-garden-50 to-neutral-50 p-4 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
-        <PageHeader
-          title="Восстановление"
-          icon={<Shield className="h-5 w-5" />}
-          onBack={() => navigate(-1)}
-        />
+      <div className={shellWithPadding}>
+        <header className={headerClass}>
+          <div className="flex min-h-[56px] items-center gap-2 px-4 py-3">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="flex-shrink-0 rounded-lg p-1.5 text-neutral-600 transition-colors hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-700"
+              aria-label="Назад"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <Shield className="h-5 w-5 flex-shrink-0 text-neutral-600 dark:text-neutral-400" />
+            <h1 className="truncate text-lg font-bold text-neutral-900 dark:text-neutral-100">
+              Восстановление
+            </h1>
+          </div>
+        </header>
         <p className="mt-4 text-sm text-neutral-600 dark:text-neutral-400">
           Вход по почте не настроен на этом окружении.
         </p>
@@ -80,24 +100,35 @@ export function AccountRecoveryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-kira-50 via-garden-50 to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
-      <PageHeader
-        title="Восстановление аккаунта"
-        icon={<Shield className="h-5 w-5" />}
-        onBack={() => navigate(-1)}
-      />
+    <div className={shellMain}>
+      <header className={headerClass}>
+        <div className="flex min-h-[56px] items-center gap-2 px-4 py-3">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex-shrink-0 rounded-lg p-1.5 text-neutral-600 transition-colors hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-700"
+            aria-label="Назад"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <Shield className="h-5 w-5 flex-shrink-0 text-neutral-600 dark:text-neutral-400" />
+          <h1 className="truncate text-lg font-bold text-neutral-900 dark:text-neutral-100">
+            Восстановление аккаунта
+          </h1>
+        </div>
+      </header>
 
       <div className="space-y-4 p-4 pb-24">
-        <Card className="p-4">
+        <div className={recoveryCardClass}>
           <p className="text-sm text-neutral-600 dark:text-neutral-400">
             Доступно только если вы вошли по почте и на новом профиле ещё нет
             записей настроений и элементов сада. Код придёт в Telegram
             (уведомление можно прочитать без открытия приложения).
           </p>
-        </Card>
+        </div>
 
         {step === 'username' ? (
-          <Card className="space-y-4 p-4">
+          <div className={`${recoveryCardClass} space-y-4`}>
             <div>
               <label
                 htmlFor="recovery-username"
@@ -127,9 +158,9 @@ export function AccountRecoveryPage() {
             >
               {loading ? 'Отправка…' : 'Получить код в Telegram'}
             </button>
-          </Card>
+          </div>
         ) : (
-          <Card className="space-y-4 p-4">
+          <div className={`${recoveryCardClass} space-y-4`}>
             {info ? (
               <p className="text-sm text-emerald-700 dark:text-emerald-300">
                 {info}
@@ -180,7 +211,7 @@ export function AccountRecoveryPage() {
             >
               Запросить код заново
             </button>
-          </Card>
+          </div>
         )}
       </div>
     </div>

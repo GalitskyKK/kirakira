@@ -145,6 +145,10 @@ export default defineConfig(({ mode }) => {
           const normalized = id.replace(/\\/g, '/')
           if (normalized.includes('node_modules')) return 'vendor'
           if (normalized.includes('/src/pages/')) {
+            // Отдельный чанк давал TDZ в проде (минификация + порядок модулей)
+            if (normalized.includes('AccountRecoveryPage')) {
+              return undefined
+            }
             const name = path.basename(normalized, path.extname(normalized))
             return `page-${name}`
           }
