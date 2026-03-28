@@ -36,7 +36,18 @@ export default async function handler(req, res) {
     return res.status(200).end()
   }
 
-  const action = req.query?.action || 'login'
+  // action в query (норма) или в JSON-теле — если прокси/CDN обрезал ?action=
+  const action =
+    (typeof req.query?.action === 'string' && req.query.action.length > 0
+      ? req.query.action
+      : null) ||
+    (req.body &&
+    typeof req.body === 'object' &&
+    typeof req.body.action === 'string' &&
+    req.body.action.length > 0
+      ? req.body.action
+      : null) ||
+    'login'
 
   // Только POST запросы
   if (req.method !== 'POST') {
@@ -81,6 +92,82 @@ export default async function handler(req, res) {
         telegramId: auth.telegramId,
       },
     })
+  }
+
+  if (action === 'supabase_exchange') {
+    try {
+      const accessToken =
+        typeof req.body?.accessToken === 'string'
+          ? req.body.accessToken
+          : typeof req.body?.access_token === 'string'
+            ? req.body.access_token
+            : null
+
+      if (!accessToken) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing accessToken',
+          message: 'Supabase session access_token is required',
+        })
+      }
+
+      const { exchangeSupabaseAccessTokenForKirakiraJWT } = await import(
+        './_supabaseAuthExchange.js'
+      )
+      const { token, telegramId } =
+        await exchangeSupabaseAccessTokenForKirakiraJWT(accessToken)
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          token,
+          telegramId,
+        },
+      })
+    } catch (exchangeError) {
+      const message =
+        exchangeError instanceof Error
+          ? exchangeError.message
+          : 'Exchange failed'
+      if (message === 'INVALID_SUPABASE_TOKEN') {
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid token',
+          message: 'Invalid or unsupported Supabase access token',
+        })
+      }
+      console.error('❌ supabase_exchange:', exchangeError)
+      return res.status(500).json({
+        success: false,
+        error: 'Exchange failed',
+        message,
+      })
+    }
+  }
+
+  if (action === 'recovery_request' || action === 'recovery_confirm') {
+    const authHeader = req.headers.authorization || req.headers.Authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+        message: 'Missing or invalid Authorization header',
+      })
+    }
+
+    const token = authHeader.replace('Bearer ', '')
+    const auth = await authenticateJWT(token)
+
+    const { recoveryRequestHandler, recoveryConfirmHandler } = await import(
+      './_telegramRecovery.js'
+    )
+
+    const result =
+      action === 'recovery_request'
+        ? await recoveryRequestHandler(auth, req.body)
+        : await recoveryConfirmHandler(auth, req.body)
+
+    return res.status(result.status).json(result.body)
   }
 
   try {

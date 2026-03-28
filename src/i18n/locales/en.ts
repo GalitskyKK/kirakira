@@ -42,6 +42,10 @@ export const en: Translations = {
     logout: 'Log Out',
     logoutDescription:
       'We will clear the browser token and return to the login screen.',
+    recoveryTitle: 'Progress from Telegram',
+    recoveryDescription:
+      'If you signed in with email as a new user, you can restore your old account using your Telegram username and a code from the bot.',
+    recoveryOpen: 'Open recovery',
     language: 'Language',
     languageDescription: 'Choose interface language',
     feedback: 'Feedback',

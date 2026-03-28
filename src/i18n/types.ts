@@ -47,6 +47,9 @@ export interface Translations {
     accountDescription: string
     logout: string
     logoutDescription: string
+    recoveryTitle: string
+    recoveryDescription: string
+    recoveryOpen: string
     language: string
     languageDescription: string
     feedback: string

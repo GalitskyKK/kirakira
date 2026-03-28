@@ -6,6 +6,7 @@ import type {
   TelegramEventType,
 } from '@/types/telegram'
 import { authenticatedFetch } from '@/utils/apiClient'
+import { isDevWebOnlyMode } from '@/utils/devWebOnly'
 import { useUpdateQuestProgress } from '@/hooks/queries/useDailyQuestQueries'
 
 /**
@@ -23,6 +24,11 @@ export function useTelegram() {
 
   // Инициализация Telegram WebApp
   useEffect(() => {
+    if (isDevWebOnlyMode()) {
+      setIsReady(true)
+      return undefined
+    }
+
     const initTelegramWebApp = () => {
       if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
         const tg = window.Telegram.WebApp

@@ -92,13 +92,31 @@ const FriendProfilePage = lazyWithRetry(
   () => import('@/pages/FriendProfilePage')
 )
 const LeaderboardPage = lazyWithRetry(() => import('@/pages/LeaderboardPage'))
+const AccountRecoveryPage = lazyWithRetry(() =>
+  import('@/pages/AccountRecoveryPage').then(module => ({
+    default: module.AccountRecoveryPage,
+  }))
+)
 import { TelegramDiagnostic } from '@/components/TelegramDiagnostic'
 import { useTelegram, useTelegramTheme, useAppInitialization } from '@/hooks'
 import { InitializationStage } from '@/types/initialization'
-import { getTelegramIdFromJWT } from '@/utils/apiClient'
+import {
+  AUTH_RESET_EVENT,
+  getTelegramIdFromJWT,
+  setJWTToken,
+} from '@/utils/apiClient'
+import { exchangeSupabaseAccessTokenForKirakiraJwt } from '@/utils/kirakiraAuthExchange'
+import {
+  getSupabaseBrowserClient,
+  isSupabaseBrowserConfigured,
+} from '@/lib/supabaseBrowserClient'
 import { hasGuestData, clearGuestData, loadGuestBundle } from '@/utils/storage'
 import { telegramStorage } from '@/utils/telegramStorage'
 import { importGuestData } from '@/api'
+import {
+  isDevWebOnlyMode,
+  syncDevWebOnlyFromUrl,
+} from '@/utils/devWebOnly'
 
 interface AppInitState {
   stage: InitializationStage
@@ -113,6 +131,7 @@ interface AppInitState {
 
 function App() {
   const isDevelopment = import.meta.env.DEV
+  syncDevWebOnlyFromUrl()
   const shouldReduceMotion = useReducedMotion()
   const fallback = <LoadingSpinner />
   const { displayMode, setDisplayMode } = useGardenClientStore()
@@ -130,11 +149,13 @@ function App() {
 
   // Определяем Telegram окружение: проверяем не только наличие WebApp, но и initData
   // Это важно, так как в браузере может быть определен window.Telegram через расширения
-  const isTelegramEnv = !!(
-    window.Telegram?.WebApp &&
-    (window.Telegram.WebApp.initData ||
-      window.Telegram.WebApp.initDataUnsafe?.user)
-  )
+  const isTelegramEnv =
+    !isDevWebOnlyMode() &&
+    !!(
+      window.Telegram?.WebApp &&
+      (window.Telegram.WebApp.initData ||
+        window.Telegram.WebApp.initDataUnsafe?.user)
+    )
 
   // ✅ ВСЕ ХУКИ ДОЛЖНЫ БЫТЬ ВЫЗВАНЫ ДО ЛЮБОГО УСЛОВНОГО ВОЗВРАТА
   const {
@@ -240,6 +261,37 @@ function App() {
       cancelled = true
     }
   }, [isTelegramEnv, hasCompletedOnboarding, onboardingCloudCheckDone])
+
+  // После подтверждения email Supabase кладёт сессию в URL/hash — обмениваем на Kirakira JWT
+  useEffect(() => {
+    if (isTelegramEnv || !isSupabaseBrowserConfigured()) return
+
+    let cancelled = false
+    const run = async (): Promise<void> => {
+      try {
+        const supabase = getSupabaseBrowserClient()
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        if (cancelled || !session?.access_token) return
+        if (getTelegramIdFromJWT() != null) return
+
+        const { token } = await exchangeSupabaseAccessTokenForKirakiraJwt(
+          session.access_token
+        )
+        if (cancelled) return
+        setJWTToken(token)
+        window.dispatchEvent(new Event(AUTH_RESET_EVENT))
+        await supabase.auth.signOut()
+      } catch {
+        // Нет миграции БД, просроченный hash и т.д. — пользователь войдёт вручную
+      }
+    }
+    void run()
+    return () => {
+      cancelled = true
+    }
+  }, [isTelegramEnv])
 
   // В Telegram WebApp отключаем Service Worker, чтобы избежать 404 на чанки
   useEffect(() => {
@@ -708,6 +760,10 @@ function App() {
                 path="/leaderboard"
                 element={withSuspense(<LeaderboardPage />)}
               />
+              <Route
+                path="/recovery"
+                element={withSuspense(<AccountRecoveryPage />)}
+              />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           ) : (
@@ -959,6 +1015,20 @@ function App() {
                       transition={routeTransition}
                     >
                       {withSuspense(<LeaderboardPage />)}
+                    </motion.div>
+                  }
+                />
+                <Route
+                  path="/recovery"
+                  element={
+                    <motion.div
+                      key="recovery"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={routeTransition}
+                    >
+                      {withSuspense(<AccountRecoveryPage />)}
                     </motion.div>
                   }
                 />

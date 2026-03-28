@@ -41,6 +41,10 @@ export const ru: Translations = {
     accountDescription: 'Управление входом в браузере',
     logout: 'Выйти из аккаунта',
     logoutDescription: 'Очистим токен браузера и вернём на экран входа.',
+    recoveryTitle: 'Прогресс из Telegram',
+    recoveryDescription:
+      'Если вы вошли по почте как новый пользователь, можно вернуть старый аккаунт по Telegram username и коду из бота.',
+    recoveryOpen: 'Открыть восстановление',
     language: 'Язык',
     languageDescription: 'Выберите язык интерфейса',
     feedback: 'Обратная связь',

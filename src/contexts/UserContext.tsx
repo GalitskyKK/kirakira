@@ -6,6 +6,7 @@ import {
   getTelegramIdFromJWT,
   refreshJWTTokenIfNeeded,
 } from '@/utils/apiClient'
+import { isDevWebOnlyMode } from '@/utils/devWebOnly'
 
 interface UserContextType {
   telegramId: number | undefined
@@ -58,6 +59,7 @@ export function UserProvider({ children }: UserProviderProps) {
 
   // Определяем, является ли среда реальным Telegram Mini App (а не расширение)
   const isTelegramEnv = useMemo(() => {
+    if (isDevWebOnlyMode()) return false
     if (typeof window === 'undefined') return false
     const webApp = window.Telegram?.WebApp
     if (!webApp) return false

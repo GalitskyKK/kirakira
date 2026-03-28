@@ -1,10 +1,15 @@
-import { defineConfig, splitVendorChunkPlugin } from 'vite'
+import { defineConfig, loadEnv, splitVendorChunkPlugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const apiProxyTarget =
+    env.VITE_API_PROXY_TARGET || 'https://kirakiragarden.ru'
+
+  return {
   plugins: [
     react(),
     splitVendorChunkPlugin(),
@@ -138,5 +143,13 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
+    proxy: {
+      '/api': {
+        target: apiProxyTarget,
+        changeOrigin: true,
+        secure: true,
+      },
+    },
   },
+  }
 })

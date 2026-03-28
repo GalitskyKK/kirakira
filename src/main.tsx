@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { ensureTelegramWebAppSdk } from '@/utils/loadTelegramWebAppSdk'
 import './styles/index.css'
 
 // 🔧 НАСТРОЙКА REACT QUERY
@@ -43,12 +44,23 @@ if (!rootElement) {
 // Create root and render app
 const root = ReactDOM.createRoot(rootElement)
 
-root.render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
-    </ErrorBoundary>
-  </React.StrictMode>
-)
+function renderApp(): void {
+  root.render(
+    <React.StrictMode>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <App />
+        </QueryClientProvider>
+      </ErrorBoundary>
+    </React.StrictMode>
+  )
+}
+
+void ensureTelegramWebAppSdk()
+  .then(() => {
+    renderApp()
+  })
+  .catch(error => {
+    console.warn('Telegram WebApp SDK:', error)
+    renderApp()
+  })

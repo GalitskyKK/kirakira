@@ -5,7 +5,7 @@ import { TelegramLoginWidget } from './TelegramLoginWidget'
 import { useTelegram } from '@/hooks'
 import { useUserClientStore } from '@/hooks/index.v2'
 import { syncUserFromSupabase } from '@/api'
-import { setJWTToken } from '@/utils/apiClient'
+import { AUTH_RESET_EVENT, setJWTToken } from '@/utils/apiClient'
 import { Card } from '@/components/ui'
 
 interface TelegramUser {
@@ -83,6 +83,7 @@ export function TelegramAuth({
 
             // Сохраняем JWT токен в localStorage
             setJWTToken(authResult.data.token)
+            window.dispatchEvent(new Event(AUTH_RESET_EVENT))
 
             // Синхронизируем пользователя с сервером через API
             await syncUserFromSupabase(telegramData.id)

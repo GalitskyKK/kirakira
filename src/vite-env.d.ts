@@ -2,6 +2,8 @@
 /// <reference types="vite-plugin-pwa/client" />
 
 interface ImportMetaEnv {
+  /** Прокси /api в dev (vite.config); по умолчанию https://kirakiragarden.ru */
+  readonly VITE_API_PROXY_TARGET?: string
   readonly VITE_SUPABASE_URL?: string
   readonly VITE_SUPABASE_ANON_KEY?: string
   readonly VITE_APP_TITLE?: string

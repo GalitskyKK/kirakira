@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useQueryClient } from '@tanstack/react-query'
 import {
@@ -10,6 +11,7 @@ import {
   LogOut,
   Languages,
   MessageCircle,
+  Shield,
 } from 'lucide-react'
 import { useUserSync, useUserClientStore } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
@@ -23,6 +25,10 @@ import { SettingsSection } from '@/components/settings/SettingsSection'
 import { PageHeader } from '@/components/layout'
 import { useUserContext } from '@/contexts/UserContext'
 import { clearJWTToken } from '@/utils/apiClient'
+import {
+  getSupabaseBrowserClient,
+  isSupabaseBrowserConfigured,
+} from '@/lib/supabaseBrowserClient'
 import { clearAllData, clearGuestData } from '@/utils/storage'
 import { useTranslation } from '@/hooks/useTranslation'
 
@@ -40,6 +46,9 @@ export function SettingsPage() {
     clearAllData()
     clearGuestData()
     clearJWTToken()
+    if (isSupabaseBrowserConfigured()) {
+      void getSupabaseBrowserClient().auth.signOut()
+    }
     queryClient.clear()
     window.location.replace('/auth')
   }, [disableGuestMode, queryClient])
@@ -131,6 +140,22 @@ export function SettingsPage() {
         >
           <FeedbackSettings />
         </SettingsSection>
+
+        {!isTelegramEnv && isSupabaseBrowserConfigured() && (
+          <SettingsSection
+            title={t.settings.recoveryTitle}
+            description={t.settings.recoveryDescription}
+            icon={<Shield className="h-5 w-5" />}
+            delay={0.24}
+          >
+            <Link
+              to="/recovery"
+              className="block w-full rounded-2xl bg-neutral-100 px-4 py-3 text-center text-sm font-medium text-neutral-900 transition-colors hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
+            >
+              {t.settings.recoveryOpen}
+            </Link>
+          </SettingsSection>
+        )}
 
         {!isTelegramEnv && (
           <SettingsSection

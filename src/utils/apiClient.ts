@@ -1,7 +1,7 @@
 /**
- * 🔐 API Client с автоматической аутентификацией Telegram
- * Добавляет Authorization header во все запросы к API
- * Поддерживает как Telegram Mini App (initData), так и браузерную версию (JWT токен)
+ * 🔐 API Client: Authorization для запросов к API
+ * — Telegram Mini App: заголовок tma + initData
+ * — Браузер: Bearer Kirakira JWT (после Telegram Login Widget или обмена Supabase session)
  */
 
 export const JWT_STORAGE_KEY = 'kirakira_auth_token'
@@ -12,6 +12,13 @@ interface JwtPayload {
   readonly telegram_id?: number
   readonly exp?: number
   readonly iat?: number
+}
+
+/**
+ * Получает JWT токен из localStorage (Kirakira / RLS)
+ */
+export function getKirakiraJwtToken(): string | null {
+  return getJWTToken()
 }
 
 /**
@@ -141,6 +148,7 @@ export async function refreshJWTTokenIfNeeded(): Promise<boolean> {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
+    body: JSON.stringify({ action: 'refresh' }),
   })
 
   if (response.status === 401) {
