@@ -12,8 +12,8 @@ import {
   confirmAccountRecoveryCode,
   requestAccountRecoveryCode,
 } from '@/utils/accountRecoveryApi'
-import { syncUserFromSupabase } from '@/api'
-import { isSupabaseBrowserConfigured } from '@/lib/supabaseBrowserClient'
+import { syncUserFromSupabase } from '@/api/userService'
+import { isSupabaseBrowserConfigured } from '@/utils/supabaseViteEnv'
 
 export function AccountRecoveryPage() {
   const navigate = useNavigate()

@@ -9,6 +9,19 @@ export default defineConfig(({ mode }) => {
   const apiProxyTarget =
     env.VITE_API_PROXY_TARGET || 'https://kirakiragarden.ru'
 
+  // В логах Vercel (Build): видит ли Vite VITE_* в момент сборки (значения не печатаем)
+  if (mode === 'production') {
+    const urlOk = Boolean(env.VITE_SUPABASE_URL?.trim())
+    const keyOk = Boolean(env.VITE_SUPABASE_ANON_KEY?.trim())
+    console.log('[kirakira build] VITE_SUPABASE_URL задан:', urlOk)
+    console.log('[kirakira build] VITE_SUPABASE_ANON_KEY задан:', keyOk)
+    if (!urlOk || !keyOk) {
+      console.warn(
+        '[kirakira build] В клиентском бандле не будет Supabase Auth — проверьте env в Vercel для Production и пересборку.'
+      )
+    }
+  }
+
   return {
   plugins: [
     react(),

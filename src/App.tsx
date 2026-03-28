@@ -106,10 +106,8 @@ import {
   setJWTToken,
 } from '@/utils/apiClient'
 import { exchangeSupabaseAccessTokenForKirakiraJwt } from '@/utils/kirakiraAuthExchange'
-import {
-  getSupabaseBrowserClient,
-  isSupabaseBrowserConfigured,
-} from '@/lib/supabaseBrowserClient'
+import { getSupabaseBrowserClient } from '@/lib/supabaseBrowserClient'
+import { isSupabaseBrowserConfigured } from '@/utils/supabaseViteEnv'
 import { hasGuestData, clearGuestData, loadGuestBundle } from '@/utils/storage'
 import { telegramStorage } from '@/utils/telegramStorage'
 import { importGuestData } from '@/api'

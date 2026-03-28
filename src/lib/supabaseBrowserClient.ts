@@ -1,12 +1,12 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import {
+  getSupabaseViteAnonKey,
+  getSupabaseViteUrl,
+} from '@/utils/supabaseViteEnv'
+
+export { isSupabaseBrowserConfigured } from '@/utils/supabaseViteEnv'
 
 let cachedClient: SupabaseClient | null = null
-
-export function isSupabaseBrowserConfigured(): boolean {
-  return Boolean(
-    import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY
-  )
-}
 
 /**
  * Клиент Supabase Auth в браузере (anon key). Сессия нужна только на этапе входа;
@@ -17,8 +17,8 @@ export function getSupabaseBrowserClient(): SupabaseClient {
     return cachedClient
   }
 
-  const url = import.meta.env.VITE_SUPABASE_URL
-  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+  const url = getSupabaseViteUrl()
+  const anonKey = getSupabaseViteAnonKey()
 
   if (!url || !anonKey) {
     throw new Error(
