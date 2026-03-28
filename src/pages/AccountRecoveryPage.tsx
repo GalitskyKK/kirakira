@@ -20,9 +20,9 @@ export function AccountRecoveryPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const [username, setUsername] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [code, setCode] = useState('')
-  const [step, setStep] = useState<'username' | 'code'>('username')
+  const [step, setStep] = useState<'identify' | 'code'>('identify')
   const [info, setInfo] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -32,7 +32,7 @@ export function AccountRecoveryPage() {
     setInfo(null)
     setLoading(true)
     try {
-      const result = await requestAccountRecoveryCode(username.trim())
+      const result = await requestAccountRecoveryCode(identifier.trim())
       setInfo(result.message)
       setStep('code')
     } catch (requestError) {
@@ -42,7 +42,7 @@ export function AccountRecoveryPage() {
     } finally {
       setLoading(false)
     }
-  }, [username])
+  }, [identifier])
 
   const handleConfirm = useCallback(async () => {
     setError(null)
@@ -123,26 +123,29 @@ export function AccountRecoveryPage() {
           <p className="text-sm text-neutral-600 dark:text-neutral-400">
             Доступно только если вы вошли по почте и на новом профиле ещё нет
             записей настроений и элементов сада. Код придёт в Telegram
-            (уведомление можно прочитать без открытия приложения).
+            (уведомление можно прочитать без открытия приложения). Укажите{' '}
+            <strong>@username</strong> или <strong>числовой ID</strong> из
+            профиля старого аккаунта (Профиль → блок «Перенос прогресса»), если в
+            базе нет username.
           </p>
         </div>
 
-        {step === 'username' ? (
+        {step === 'identify' ? (
           <div className={`${recoveryCardClass} space-y-4`}>
             <div>
               <label
-                htmlFor="recovery-username"
+                htmlFor="recovery-identifier"
                 className="mb-1 block text-xs font-medium text-neutral-600 dark:text-neutral-400"
               >
-                Telegram username
+                Telegram @username или ID
               </label>
               <input
-                id="recovery-username"
+                id="recovery-identifier"
                 type="text"
                 autoComplete="username"
-                placeholder="@username или username"
-                value={username}
-                onChange={event => setUsername(event.target.value)}
+                placeholder="@username, username или 123456789"
+                value={identifier}
+                onChange={event => setIdentifier(event.target.value)}
                 className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 outline-none ring-emerald-500/30 focus:ring-2 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
                 disabled={loading}
               />
@@ -153,7 +156,7 @@ export function AccountRecoveryPage() {
             <button
               type="button"
               onClick={() => void handleRequestCode()}
-              disabled={loading || !username.trim()}
+              disabled={loading || !identifier.trim()}
               className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 py-3 text-sm font-semibold text-white disabled:opacity-50"
             >
               {loading ? 'Отправка…' : 'Получить код в Telegram'}
@@ -202,7 +205,7 @@ export function AccountRecoveryPage() {
             <button
               type="button"
               onClick={() => {
-                setStep('username')
+                setStep('identify')
                 setCode('')
                 setError(null)
                 setInfo(null)

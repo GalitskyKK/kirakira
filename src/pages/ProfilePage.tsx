@@ -3,16 +3,22 @@ import { useNavigate } from 'react-router-dom'
 import { useUserSync, useGardenSync } from '@/hooks/index.v2'
 import { useTelegramId } from '@/hooks/useTelegramId'
 import { useProfile } from '@/hooks/useProfile'
-import { ProfileHeader } from '@/components/profile/ProfileHeader'
+import {
+  ProfileHeader,
+  ProfileRecoveryAccountId,
+} from '@/components/profile'
 import { ProfileStats } from '@/components/profile/ProfileStats'
 import { ProfileAchievements } from '@/components/profile/ProfileAchievements'
 import { LoadingSpinner } from '@/components/ui'
 import { useViewerLeaderboardPosition } from '@/hooks/queries/useLeaderboardQueries'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useUserContext } from '@/contexts/UserContext'
+import { isKirakiraSyntheticTelegramId } from '@/utils/kirakiraTelegramId'
 
 export function ProfilePage() {
   const navigate = useNavigate()
   const t = useTranslation()
+  const { isTelegramEnv } = useUserContext()
   // ✅ Получаем данные через React Query v2 хуки
   const telegramId = useTelegramId()
   const { data: userData, isLoading: userLoading } = useUserSync(
@@ -128,6 +134,11 @@ export function ProfilePage() {
     // Базовые поля - приоритет данным из API
     id: apiUser?.user_id ?? currentUser?.id ?? '',
     telegramId: apiUser?.telegram_id ?? currentUser?.telegramId ?? 0,
+    ...(apiUser?.auth_user_id != null && apiUser.auth_user_id !== ''
+      ? { authUserId: apiUser.auth_user_id }
+      : currentUser?.authUserId != null
+        ? { authUserId: currentUser.authUserId }
+        : {}),
     firstName: apiUser?.first_name ?? currentUser?.firstName ?? t.common.user,
     lastName: apiUser?.last_name ?? currentUser?.lastName ?? '',
     username: apiUser?.username ?? currentUser?.username ?? '',
@@ -211,6 +222,15 @@ export function ProfilePage() {
           isLoading: leaderboardPositionLoading,
         }}
       />
+
+      {isTelegramEnv &&
+        !isKirakiraSyntheticTelegramId(renderUser.telegramId) &&
+        renderUser.authUserId === undefined && (
+          <ProfileRecoveryAccountId
+            telegramId={renderUser.telegramId}
+            username={renderUser.username ?? ''}
+          />
+        )}
 
       {/* Кнопка просмотра роадмапа */}
       {/* <motion.div

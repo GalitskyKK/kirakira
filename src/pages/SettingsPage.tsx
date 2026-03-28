@@ -31,6 +31,7 @@ import {
 } from '@/lib/supabaseBrowserClient'
 import { clearAllData, clearGuestData } from '@/utils/storage'
 import { useTranslation } from '@/hooks/useTranslation'
+import { isKirakiraSyntheticTelegramId } from '@/utils/kirakiraTelegramId'
 
 export function SettingsPage() {
   const { isTelegramEnv } = useUserContext()
@@ -141,7 +142,10 @@ export function SettingsPage() {
           <FeedbackSettings />
         </SettingsSection>
 
-        {!isTelegramEnv && isSupabaseBrowserConfigured() && (
+        {!isTelegramEnv &&
+          isSupabaseBrowserConfigured() &&
+          currentUser.telegramId != null &&
+          isKirakiraSyntheticTelegramId(currentUser.telegramId) && (
           <SettingsSection
             title={t.settings.recoveryTitle}
             description={t.settings.recoveryDescription}
@@ -155,7 +159,7 @@ export function SettingsPage() {
               {t.settings.recoveryOpen}
             </Link>
           </SettingsSection>
-        )}
+          )}
 
         {!isTelegramEnv && (
           <SettingsSection

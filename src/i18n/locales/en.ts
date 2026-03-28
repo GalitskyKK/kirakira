@@ -44,7 +44,7 @@ export const en: Translations = {
       'We will clear the browser token and return to the login screen.',
     recoveryTitle: 'Progress from Telegram',
     recoveryDescription:
-      'If you signed in with email as a new user, you can restore your old account using your Telegram username and a code from the bot.',
+      'If you signed in with email as a new user, you can restore your old account using your Telegram @username or the numeric ID from your old profile in the app, plus a code in Telegram.',
     recoveryOpen: 'Open recovery',
     language: 'Language',
     languageDescription: 'Choose interface language',
@@ -680,6 +680,14 @@ export const en: Translations = {
     moodPattern: 'Mood Pattern',
     averageIntensity: 'Average Intensity',
     allTime: 'All Time',
+    recoveryAccountTitle: 'Moving progress to email',
+    recoveryAccountNoUsername:
+      'No @username is stored in the app — when restoring on email, use the ID below (save it beforehand; it cannot be guessed).',
+    recoveryAccountWithUsername:
+      'If @username does not work when moving to email, use this ID — it reliably finds your account in our database.',
+    recoveryTelegramId: 'KiraKira account ID',
+    recoveryCopyId: 'Copy',
+    recoveryCopied: 'Copied',
   },
 
   friendProfile: {

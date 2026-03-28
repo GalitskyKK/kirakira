@@ -43,7 +43,7 @@ export const ru: Translations = {
     logoutDescription: 'Очистим токен браузера и вернём на экран входа.',
     recoveryTitle: 'Прогресс из Telegram',
     recoveryDescription:
-      'Если вы вошли по почте как новый пользователь, можно вернуть старый аккаунт по Telegram username и коду из бота.',
+      'Если вы вошли по почте как новый пользователь, можно вернуть старый аккаунт по @username или числовому ID из профиля старого аккаунта и коду из Telegram.',
     recoveryOpen: 'Открыть восстановление',
     language: 'Язык',
     languageDescription: 'Выберите язык интерфейса',
@@ -684,6 +684,14 @@ export const ru: Translations = {
     moodPattern: 'Паттерн настроения',
     averageIntensity: 'Средняя интенсивность',
     allTime: 'За все время',
+    recoveryAccountTitle: 'Перенос прогресса на почту',
+    recoveryAccountNoUsername:
+      'В приложении не сохранён @username — при восстановлении на почте укажите ID ниже (его нельзя угадать; сохраните заранее).',
+    recoveryAccountWithUsername:
+      'Если при переносе на почту не сработает @username, используйте этот ID — он надёжнее для поиска аккаунта в базе.',
+    recoveryTelegramId: 'ID в KiraKira',
+    recoveryCopyId: 'Копировать',
+    recoveryCopied: 'Скопировано',
   },
 
   friendProfile: {

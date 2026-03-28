@@ -8,6 +8,8 @@ export interface User {
   readonly lastName?: string
   readonly photoUrl?: string
   readonly telegramId?: number
+  /** Supabase Auth user id; есть после привязки почты к профилю (в т.ч. после переноса) */
+  readonly authUserId?: string
   readonly lastVisitDate?: Date
   readonly registrationDate: Date
   readonly roomTheme?: string

@@ -90,6 +90,7 @@ export interface ShareGardenResponse {
 export interface DatabaseUser {
   readonly telegram_id: number
   readonly user_id: string
+  readonly auth_user_id?: string | null
   readonly username?: string
   readonly first_name?: string
   readonly last_name?: string

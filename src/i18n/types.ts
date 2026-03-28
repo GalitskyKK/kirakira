@@ -691,6 +691,12 @@ export interface Translations {
     moodPattern: string
     averageIntensity: string
     allTime: string
+    recoveryAccountTitle: string
+    recoveryAccountNoUsername: string
+    recoveryAccountWithUsername: string
+    recoveryTelegramId: string
+    recoveryCopyId: string
+    recoveryCopied: string
   }
 
   // Профиль друга

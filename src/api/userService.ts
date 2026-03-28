@@ -184,6 +184,10 @@ export function convertServerUserToClient(
       lastName: serverUser.last_name,
     }),
     ...(serverUser.username !== undefined && { username: serverUser.username }),
+    ...(serverUser.auth_user_id != null &&
+      serverUser.auth_user_id !== '' && {
+        authUserId: serverUser.auth_user_id,
+      }),
     ...(serverUser.photo_url !== undefined && {
       photoUrl: serverUser.photo_url,
     }),

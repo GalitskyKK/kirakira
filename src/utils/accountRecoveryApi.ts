@@ -1,13 +1,14 @@
 import { authenticatedFetch } from '@/utils/apiClient'
 import { parseApiResponseJson } from '@/utils/parseApiResponseJson'
 
+/** @param telegramUsernameOrId — @username, username без @ или числовой Telegram ID из профиля */
 export async function requestAccountRecoveryCode(
-  telegramUsername: string
+  telegramUsernameOrId: string
 ): Promise<{ readonly message: string; readonly expiresInMinutes: number }> {
   const response = await authenticatedFetch('/api/auth?action=recovery_request', {
     method: 'POST',
     body: JSON.stringify({
-      telegramUsername,
+      telegramUsername: telegramUsernameOrId,
       action: 'recovery_request',
     }),
   })

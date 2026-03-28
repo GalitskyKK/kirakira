@@ -1,6 +1,6 @@
 /**
  * Восстановление: привязка текущего входа по почте (synthetic telegram_id + auth_user_id)
- * к существующему профилю Telegram по username и коду из лички бота.
+ * к существующему профилю Telegram по @username или числовому telegram_id и коду из лички бота.
  */
 
 import crypto from 'crypto'
@@ -30,6 +30,45 @@ export function normalizeTelegramUsername(raw) {
   let s = raw.trim()
   if (s.startsWith('@')) s = s.slice(1)
   return s.toLowerCase()
+}
+
+/**
+ * Только цифры, 5–20 символов — считаем числовым Telegram ID (username не может быть только из цифр в TG).
+ * @param {string} raw
+ * @returns {number | null}
+ */
+export function parseTelegramIdForRecovery(raw) {
+  if (typeof raw !== 'string') return null
+  const s = raw.trim()
+  if (!/^\d{5,20}$/.test(s)) return null
+  const n = Number(s)
+  if (!Number.isSafeInteger(n) || n <= 0) return null
+  return n
+}
+
+/**
+ * @param {import('@supabase/supabase-js').SupabaseClient} admin
+ * @param {number} telegramId
+ * @returns {Promise<{ telegram_id: number, auth_user_id: string | null, username: string | null } | null>}
+ */
+async function findUserByTelegramId(admin, telegramId) {
+  if (!Number.isFinite(telegramId) || telegramId <= 0) return null
+
+  const { data, error } = await admin
+    .from('users')
+    .select('telegram_id, auth_user_id, username')
+    .eq('telegram_id', telegramId)
+    .maybeSingle()
+
+  if (error || !data || data.telegram_id == null) {
+    return null
+  }
+
+  return {
+    telegram_id: Number(data.telegram_id),
+    auth_user_id: data.auth_user_id ?? null,
+    username: data.username ?? null,
+  }
 }
 
 /**
@@ -239,13 +278,16 @@ export async function recoveryRequestHandler(auth, body) {
         : ''
 
   const usernameNorm = normalizeTelegramUsername(rawUsername)
-  if (!usernameNorm) {
+  const parsedTelegramId = parseTelegramIdForRecovery(rawUsername)
+
+  if (!usernameNorm && parsedTelegramId == null) {
     return {
       status: 400,
       body: {
         success: false,
         error: 'Bad request',
-        message: 'Укажите Telegram username (без @ или с @)',
+        message:
+          'Укажите Telegram @username или числовой ID из профиля старого аккаунта (Профиль → блок переноса).',
       },
     }
   }
@@ -284,14 +326,22 @@ export async function recoveryRequestHandler(auth, body) {
     }
   }
 
-  const target = await findUserByUsername(admin, usernameNorm)
+  let target =
+    parsedTelegramId != null
+      ? await findUserByTelegramId(admin, parsedTelegramId)
+      : null
+  if (!target && usernameNorm) {
+    target = await findUserByUsername(admin, usernameNorm)
+  }
+
   if (!target) {
     return {
       status: 404,
       body: {
         success: false,
         error: 'Not found',
-        message: 'Пользователь с таким username не найден в базе приложения.',
+        message:
+          'Аккаунт не найден. Проверьте @username или числовой ID из профиля старого аккаунта.',
       },
     }
   }
