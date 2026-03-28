@@ -154,9 +154,6 @@ function getOnboardingSteps(t: ReturnType<typeof useTranslation>) {
               </p>
             </div>
           </div>
-          {/* <p className="text-center text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
-            {t.onboarding.displayModes.paletteNote}
-          </p> */}
         </div>
       ),
     },
