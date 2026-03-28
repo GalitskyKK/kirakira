@@ -1,7 +1,5 @@
 /**
- * Только import.meta.env — без @supabase/supabase-js.
- * Ленивые чанки (AccountRecoveryPage) импортируют отсюда, чтобы не тянуть тяжёлый SDK
- * и не ловить TDZ в WebView Telegram.
+ * Только import.meta.env — без @supabase/supabase-js (чтобы не тянуть SDK в лёгкие модули).
  */
 
 export function getSupabaseViteUrl(): string {

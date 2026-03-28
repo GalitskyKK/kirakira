@@ -10,6 +10,7 @@ import {
   confirmAccountRecoveryCode,
   requestAccountRecoveryCode,
 } from '@/utils/accountRecoveryApi'
+import { syncUserFromSupabase } from '@/api/userService'
 import { isSupabaseBrowserConfigured } from '@/utils/supabaseViteEnv'
 
 const recoveryCardClass =
@@ -52,7 +53,6 @@ export function AccountRecoveryPage() {
       )
       setJWTToken(token)
       window.dispatchEvent(new Event(AUTH_RESET_EVENT))
-      const { syncUserFromSupabase } = await import('@/api/userService')
       await syncUserFromSupabase(telegramId)
       await queryClient.invalidateQueries({ queryKey: ['user'] })
       navigate('/', { replace: true })

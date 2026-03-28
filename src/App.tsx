@@ -92,7 +92,7 @@ const FriendProfilePage = lazyWithRetry(
   () => import('@/pages/FriendProfilePage')
 )
 const LeaderboardPage = lazyWithRetry(() => import('@/pages/LeaderboardPage'))
-// Не lazy: отдельный чанк page-AccountRecoveryPage давал TDZ после минификации (WebView / браузер)
+// Синхронно с App: маршрут /recovery без отдельного async-чанка (меньше сюрпризов в WebView).
 import { AccountRecoveryPage } from '@/pages/AccountRecoveryPage'
 import { TelegramDiagnostic } from '@/components/TelegramDiagnostic'
 import { useTelegram, useTelegramTheme, useAppInitialization } from '@/hooks'

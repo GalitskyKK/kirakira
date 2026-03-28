@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { TelegramLoginWidget } from './TelegramLoginWidget'
 import { useTelegram } from '@/hooks'
 import { useUserClientStore } from '@/hooks/index.v2'
-import { syncUserFromSupabase } from '@/api'
+import { syncUserFromSupabase } from '@/api/userService'
 import { AUTH_RESET_EVENT, setJWTToken } from '@/utils/apiClient'
 import { Card } from '@/components/ui'
 

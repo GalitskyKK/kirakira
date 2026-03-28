@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useQueryClient } from '@tanstack/react-query'
 import { Mail, Lock, LogIn, UserPlus } from 'lucide-react'
 import { useUserClientStore } from '@/hooks/index.v2'
-import { syncUserFromSupabase } from '@/api'
+import { syncUserFromSupabase } from '@/api/userService'
 import {
   AUTH_RESET_EVENT,
   setJWTToken,

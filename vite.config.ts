@@ -141,17 +141,13 @@ export default defineConfig(({ mode }) => {
     target: 'esnext',
     rollupOptions: {
       output: {
+        // Только vendor: принудительный chunk на каждый файл src/pages/ давал TDZ
+        // в проде («Cannot access 'X' before initialization») после terser — граф
+        // перетекал между page-* чанками. Lazy import() и так режет код; имя чанка
+        // будет от Rollup (не page-AuthPage), порядок инициализации стабильнее.
         manualChunks: id => {
           const normalized = id.replace(/\\/g, '/')
           if (normalized.includes('node_modules')) return 'vendor'
-          if (normalized.includes('/src/pages/')) {
-            // Отдельный чанк давал TDZ в проде (минификация + порядок модулей)
-            if (normalized.includes('AccountRecoveryPage')) {
-              return undefined
-            }
-            const name = path.basename(normalized, path.extname(normalized))
-            return `page-${name}`
-          }
           return undefined
         },
       },
