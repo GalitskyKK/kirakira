@@ -9,7 +9,8 @@ interface FriendsTabProps {
   readonly onSearchChange: (value: string) => void
   readonly filteredFriends: readonly Friend[]
   readonly isLoading?: boolean
-  readonly onInvite: () => void
+  /** Доступно только в Telegram Mini App. В браузере не передавать. */
+  readonly onInvite?: () => void
   readonly onViewGarden: (friend: Friend) => void
   readonly onViewProfile: (friend: Friend) => void
   readonly onMessageFriend: (friend: Friend) => void
@@ -94,13 +95,15 @@ export function FriendsTab({
             <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
               {t.friends.inviteFriends}
             </p>
-            <Button
-              onClick={onInvite}
-              size="sm"
-              className="bg-blue-500 hover:bg-blue-600"
-            >
-              {t.friends.sendInvite}
-            </Button>
+            {onInvite ? (
+              <Button
+                onClick={onInvite}
+                size="sm"
+                className="bg-blue-500 hover:bg-blue-600"
+              >
+                {t.friends.sendInvite}
+              </Button>
+            ) : null}
           </Card>
         ) : (
           filteredFriends.map((friend, index) => (

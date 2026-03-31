@@ -134,20 +134,28 @@ export async function exchangeSupabaseAccessTokenForKirakiraJWT(accessToken) {
   const { createAdminSupabaseClient } = await import('./_jwt.js')
   const admin = await createAdminSupabaseClient()
 
+  /** Для web-only аккаунта можно положить email в user_metadata; для уже привязанного TG — нельзя (перетирает БД). */
+  let isWebOnly = false
   let telegramId = await findTelegramIdByAuthUserId(admin, authUserId)
   if (telegramId == null) {
     telegramId = await createWebOnlyUserRow(admin, payload)
+    isWebOnly = true
   }
 
   const email = pickEmailFromPayload(payload)
   const localPart =
     email.includes('@') ? email.split('@')[0] : email || undefined
 
-  const token = generateSupabaseJWT(telegramId, {
-    firstName: localPart ?? undefined,
-    lastName: undefined,
-    username: localPart,
-  })
+  const token = generateSupabaseJWT(
+    telegramId,
+    isWebOnly
+      ? {
+          firstName: localPart ?? undefined,
+          lastName: undefined,
+          username: localPart,
+        }
+      : {}
+  )
 
   return { token, telegramId }
 }

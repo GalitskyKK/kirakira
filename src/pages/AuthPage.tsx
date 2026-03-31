@@ -1,8 +1,9 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { EmailPasswordAuth } from '@/components/auth'
 import { useTelegram } from '@/hooks'
 import { LoadingSpinner } from '@/components/ui'
+import { ensureTelegramLoginWidgetAvailable } from '@/utils/ensureTelegramLoginWidgetAvailable'
 
 const TelegramAuthLazy = lazy(async () => {
   const module = await import('@/components/auth/TelegramAuth')
@@ -17,6 +18,18 @@ interface AuthPageProps {
 
 export function AuthPage({ onSuccess, onError, onSkip }: AuthPageProps) {
   const { isTelegramEnv } = useTelegram()
+  const [telegramLoginAvailable, setTelegramLoginAvailable] = useState(false)
+
+  useEffect(() => {
+    if (isTelegramEnv) return
+    let cancelled = false
+    void ensureTelegramLoginWidgetAvailable({ timeoutMs: 2500 }).then(ok => {
+      if (!cancelled) setTelegramLoginAvailable(ok)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [isTelegramEnv])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-950">
@@ -48,6 +61,29 @@ export function AuthPage({ onSuccess, onError, onSkip }: AuthPageProps) {
                 Уже вошли по почте как новый пользователь и нужен старый прогресс из
                 Telegram? После входа откройте Настройки → «Прогресс из Telegram».
               </p>
+              {telegramLoginAvailable ? (
+                <>
+                  <div className="relative flex items-center justify-center">
+                    <div className="absolute inset-x-0 top-1/2 h-px bg-neutral-200 dark:bg-neutral-700" />
+                    <span className="relative bg-gradient-to-br from-blue-50 via-white to-green-50 px-3 text-xs font-medium text-neutral-500 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-950 dark:text-neutral-400">
+                      или через Telegram
+                    </span>
+                  </div>
+                  <Suspense
+                    fallback={
+                      <div className="flex justify-center py-8">
+                        <LoadingSpinner />
+                      </div>
+                    }
+                  >
+                    <TelegramAuthLazy
+                      onSuccess={onSuccess}
+                      onError={onError}
+                      onSkip={onSkip}
+                    />
+                  </Suspense>
+                </>
+              ) : null}
             </>
           )}
         </motion.div>

@@ -19,20 +19,6 @@ export function TelegramCommunity({ garden: _garden }: TelegramCommunityProps) {
   const { data: userData } = useUserSync(telegramId, telegramId != null)
   const currentUser = userData?.user
 
-  if (!isTelegramEnv) {
-    return (
-      <Card className="p-6 text-center">
-        <Users className="mx-auto mb-4 h-12 w-12 text-blue-500" />
-        <h3 className="mb-2 text-lg font-semibold">
-          {t.pages.community.title}
-        </h3>
-        <p className="text-gray-600 dark:text-gray-400">
-          {t.pages.community.telegramOnly}
-        </p>
-      </Card>
-    )
-  }
-
   return (
     <div className="space-y-4">
       <div className="glass-card flex min-h-[56px] items-center justify-between rounded-2xl px-4 py-3">
@@ -48,6 +34,11 @@ export function TelegramCommunity({ garden: _garden }: TelegramCommunityProps) {
 
       {/* Список друзей */}
       <FriendsList currentUser={currentUser ?? null} />
+      {!isTelegramEnv ? (
+        <Card className="p-4 text-center text-xs text-neutral-500 dark:text-neutral-400">
+          {t.pages.community.telegramOnly}
+        </Card>
+      ) : null}
     </div>
   )
 }

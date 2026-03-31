@@ -66,6 +66,8 @@ export function FriendsList({ currentUser }: FriendsListProps) {
     null
   )
 
+  const canUseTelegramInvites = isTelegramEnv && webApp != null
+
   const openRequestStatusModal = useCallback((message: string) => {
     setRequestStatusMessage(message)
   }, [])
@@ -414,18 +416,6 @@ export function FriendsList({ currentUser }: FriendsListProps) {
     )
   }
 
-  if (!isTelegramEnv) {
-    return (
-      <Card className="p-6 text-center">
-        <Users className="mx-auto mb-4 h-12 w-12 text-blue-500" />
-        <h3 className="mb-2 text-lg font-semibold">{t.friends.title}</h3>
-        <p className="text-gray-600 dark:text-gray-400">
-          {t.friends.telegramOnly}
-        </p>
-      </Card>
-    )
-  }
-
   return (
     <div className="space-y-6">
       {/* Заголовок */}
@@ -458,7 +448,9 @@ export function FriendsList({ currentUser }: FriendsListProps) {
             count: incomingRequests.length,
           },
           { id: 'find', label: t.friends.findTab, icon: Search },
-          { id: 'invites', label: t.friends.invitesTab, icon: UserPlus },
+          ...(canUseTelegramInvites
+            ? [{ id: 'invites', label: t.friends.invitesTab, icon: UserPlus }]
+            : []),
         ].map(tab => {
           const Icon = tab.icon
           return (
@@ -497,7 +489,9 @@ export function FriendsList({ currentUser }: FriendsListProps) {
             onSearchChange={setSearchQuery}
             filteredFriends={filteredFriends}
             isLoading={friendsQuery.isLoading}
-            onInvite={handleInviteSpecificFriend}
+            {...(canUseTelegramInvites
+              ? { onInvite: handleInviteSpecificFriend }
+              : {})}
             onViewGarden={handleViewFriendGarden}
             onViewProfile={handleViewFriendProfile}
             onMessageFriend={handleMessageFriend}
@@ -537,7 +531,7 @@ export function FriendsList({ currentUser }: FriendsListProps) {
           />
         )}
 
-        {activeView === 'invites' && (
+        {activeView === 'invites' && canUseTelegramInvites && (
           <InvitesTab
             referralCode={referralCode}
             friendsCount={friends.length}
@@ -549,6 +543,12 @@ export function FriendsList({ currentUser }: FriendsListProps) {
           />
         )}
       </AnimatePresence>
+
+      {!isTelegramEnv ? (
+        <Card className="p-4 text-center text-xs text-neutral-500 dark:text-neutral-400">
+          {t.friends.telegramOnly}
+        </Card>
+      ) : null}
 
       <Modal
         isOpen={requestStatusMessage !== null}
